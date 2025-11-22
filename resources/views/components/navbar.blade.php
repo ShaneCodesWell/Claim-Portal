@@ -11,7 +11,7 @@
                 <div>
                     <h1 class="text-xl font-bold text-gray-900">Insurance Claims</h1>
                     <p class="text-xs text-gray-500">
-                        Motor Accident Reporting System
+                        Motor Accident
                     </p>
                 </div>
             </div>
