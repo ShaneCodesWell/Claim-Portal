@@ -60,30 +60,16 @@
                         </div>
 
                         <!-- Hire Purchase/Loan Agreement Section -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Is the vehicle the subject of a hire purchase or loan
-                                agreement? <span class="text-red-500">*</span>
-                            </label>
-                            <div class="flex gap-4 mb-3">
-                                <label class="flex items-center">
-                                    <input type="radio" name="hirePurchase" value="yes" required class="mr-2" />
-                                    <span class="text-sm text-gray-700">Yes</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="hirePurchase" value="no" required class="mr-2" />
-                                    <span class="text-sm text-gray-700">No</span>
-                                </label>
-                            </div>
+                        <x-conditional-section
+                            question="Is the vehicle the subject of a hire purchase or loan agreement?"
+                            name="hire_purchase" yes-section-id="financeCompanySection" required="true">
 
-                            <div id="financeCompanySection" class="hidden overflow-hidden mt-3 p-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    If so, state the name of the finance company or lending
-                                    organization <span class="text-red-500">*</span>
-                                </label>
-                                <x-input name="financeCompany" id="financeCompany" required />
-                            </div>
-                        </div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                If so, state the name of the finance company or lending organization
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <x-input name="finance_company" required />
+                        </x-conditional-section>
 
                         <!-- Purpose of Vehicle Use -->
                         <div class="mb-6">
@@ -571,18 +557,144 @@
                             <x-textarea name="vehicle_purpose" required rows="2"
                                 placeholder="Please provide a detailed description of the damage to the vehicle..." />
                         </div>
-                        
+
+                        <!-- Claim Made -->
+                        <x-conditional-section question="Has any claim been made upon you?" name="claim_made"
+                            yes-section-id="claim_made" required="true">
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                State particulars below and note that any letter or communication
+                                received by you must be forwarded immediately unanswered, to this company.
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <x-textarea name="claim_made_details" required rows="3"
+                                placeholder="Describe the terms and conditions of the claim..." />
+                        </x-conditional-section>
+
+                        <!-- Accident Reported -->
+                        <x-conditional-section question="Was the accident reported to the police?"
+                            name="police_report" yes-section-id="police_report" required="true">
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                State when it was reported and at which Police Station.
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <x-textarea name="claim_made_details" required rows="2"
+                                placeholder="Describe the details of the reports..." />
+                        </x-conditional-section>
+
+                        <!-- Police Officer Details -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Name Police Officer who took particulars
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <x-input name="officer_details" id="officer_details" required />
+                        </div>
+
+                        <!-- Indemnifying Policy -->
+                        <x-conditional-section
+                            question="Do you hold more than one policy indemnifying you in respect of this accident?"
+                            name="indem_policy" yes-section-id="indem_policy" required="true">
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                State the details of the other policy.
+                            </label>
+                            <x-textarea name="claim_made_details" required rows="2"
+                                placeholder="Describe the details of the policy..." />
+                        </x-conditional-section>
+                    </section>
+
+                    {{-- Section 5 --}}
+                    <section>
+                        <!-- Declaration -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
+                                DECLARATION:
+                            </h3>
+
+                            <!-- Declaration Text -->
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                                <p class="text-sm text-gray-700 leading-relaxed mb-4">
+                                    I declare that the above statement is true in all respects to the best of my
+                                    knowledge and belief and I hereby leave in the hands of the
+                                    Company in accordance with the conditions of the Policy the conduct of all claims
+                                    and litigation arising out of this accident and to
+                                    which the Policy applies, to deal with, to prosecute and/or settle as they deem fit
+                                    without further reference to me; and I undertake to
+                                    give all such information and assistance as the Company may require.
+                                </p>
+
+                                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                                    <p class="text-sm text-gray-700">
+                                        <span class="font-semibold text-gray-900">Note:</span> The Company does not
+                                        admit liability by the
+                                        issue of this form.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Agreement Checkbox -->
+                            <div class="bg-white border-2 border-blue-200 rounded-lg p-4 mb-6">
+                                <label class="flex items-start cursor-pointer group">
+                                    <input type="checkbox" name="declaration_agreement" id="declaration_agreement"
+                                        required
+                                        class="mt-1 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+                                    <span class="ml-3 text-sm text-gray-700 select-none">
+                                        I have read and understood the declaration above. I confirm that all information
+                                        provided in this form is true and accurate to the best of my knowledge.
+                                        <span class="text-red-500">*</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Date and Claimant Name -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Date of Declaration <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="date" name="declaration_date" id="declaration_date" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
+                                </div>
+
+                                {{-- <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Full Name (Claimant) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="claimant_full_name" id="claimant_full_name" required
+                                        placeholder="Type your full name as confirmation"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
+                                </div> --}}
+                            </div>
+
+                            <!-- Optional: Digital Signature (Simple text input) -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Digital Signature <span class="text-xs text-gray-500">(Type your full name)</span>
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="digital_signature" id="digital_signature" required
+                                        placeholder="Type your full name as your digital signature"
+                                        class="w-full px-3 py-2 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-cursive text-lg"
+                                        style="font-family: 'Brush Script MT', cursive;" />
+                                    <div class="absolute bottom-2 left-3 right-3 border-b border-gray-300"></div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    By typing your name above, you are providing a legal digital signature for this
+                                    declaration.
+                                </p>
+                            </div>
+                        </div>
                     </section>
 
                     <!-- Submit Button -->
                     <div class="mt-8 pt-4 border-t border-t-gray-300">
                         <button type="submit"
                             class="w-full md:w-auto px-6 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                            <span>Continue to Next Section</span>
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
+                            <span>Submit Claim</span>
+                            <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
                 </form>
@@ -591,32 +703,37 @@
     </div>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Finance company toggle
-            const hirePurchaseYes = document.querySelector('input[name="hirePurchase"][value="yes"]');
-            const hirePurchaseNo = document.querySelector('input[name="hirePurchase"][value="no"]');
-            const financeSection = document.getElementById("financeCompanySection");
-            const financeInput = document.getElementById("financeCompany");
+            // Generic conditional section toggle
+            document.querySelectorAll('.conditional-radio').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+                    const isYes = this.value === 'yes';
 
-            hirePurchaseYes.addEventListener("change", function() {
-                if (this.checked) {
-                    financeSection.classList.remove("hidden");
-                    void financeSection.offsetWidth;
-                    financeSection.classList.remove("slide-up");
-                    financeSection.classList.add("slide-down");
-                    financeInput.required = true;
-                }
-            });
+                    if (isYes) {
+                        targetSection.classList.remove('hidden');
+                        void targetSection.offsetWidth;
+                        targetSection.classList.remove('slide-up');
+                        targetSection.classList.add('slide-down');
 
-            hirePurchaseNo.addEventListener("change", function() {
-                if (this.checked) {
-                    financeSection.classList.remove("slide-down");
-                    financeSection.classList.add("slide-up");
-                    setTimeout(() => {
-                        financeSection.classList.add("hidden");
-                    }, 300);
-                    financeInput.required = false;
-                    financeInput.value = "";
-                }
+                        // Make all inputs in the section required
+                        targetSection.querySelectorAll('input, textarea, select').forEach(input => {
+                            input.required = true;
+                        });
+                    } else {
+                        targetSection.classList.remove('slide-down');
+                        targetSection.classList.add('slide-up');
+                        setTimeout(() => {
+                            targetSection.classList.add('hidden');
+                        }, 300);
+
+                        // Remove required and clear values
+                        targetSection.querySelectorAll('input, textarea, select').forEach(input => {
+                            input.required = false;
+                            input.value = '';
+                        });
+                    }
+                });
             });
 
             // Driver selection logic
@@ -699,11 +816,6 @@
                 }
             });
 
-            // Form submission
-            document.getElementById("motorForm").addEventListener("submit", function(e) {
-                e.preventDefault();
-                alert("Form submitted successfully! (This is a UI demo - no backend connected)");
-            });
         });
 
         let yourVehicleCounter = 1;
