@@ -16,7 +16,7 @@
                     <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
                         Name
                     </p>
-                    <p class="text-sm font-medium text-gray-900">Shane Mensah</p>
+                    <p class="text-sm font-medium text-gray-900">Moses Adonoo</p>
                 </div>
             </div>
 

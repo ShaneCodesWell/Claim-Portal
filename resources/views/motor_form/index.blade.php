@@ -185,7 +185,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-                                        <input type="text" value="Shane Mensah" readonly
+                                        <input type="text" value="Moses Adonoo" readonly
                                             class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm text-gray-900 cursor-not-allowed">
                                     </div>
 
