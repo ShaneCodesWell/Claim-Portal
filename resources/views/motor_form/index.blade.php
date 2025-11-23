@@ -22,7 +22,7 @@
                     </p>
                 </div>
 
-                <form id="claimForm">
+                <form id="motorForm">
                     {{-- Section 1 --}}
                     <section>
                         <!-- Particulars of Motor Vehicle Section -->
@@ -276,8 +276,11 @@
                                 State name and address of the insurer of the person driving and number of the motor
                                 vehicle Policy held by him/her <span class="text-red-500">*</span>
                             </label>
-                            <x-textarea name="driver_insurance_details" id="driver_insurance_details" rows="4"
-                                placeholder="Please provide insurer name, address, and policy number..." />
+                            <div class="px-2">
+                                <x-textarea name="driver_insurance_details" id="driver_insurance_details"
+                                    rows="4"
+                                    placeholder="Please provide insurer name, address, and policy number..." />
+                            </div>
                         </div>
 
                     </section>
@@ -390,6 +393,185 @@
                                 </div>
                             </div>
                         </div>
+                    </section>
+
+                    {{-- Section 4 --}}
+                    <section>
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
+                                THIRD PARTIES INVOLVED IN ACCIDENT:
+                            </h3>
+
+                            <!-- Injured Persons in Your Vehicle -->
+                            <div class="mb-8">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="text-md font-semibold text-gray-700">Injured Persons in Your Vehicle
+                                    </h4>
+                                    <button type="button" onclick="addInjuredPerson('yourVehicle')"
+                                        class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
+                                        <i class="fas fa-plus mr-1"></i> Add Injured Person
+                                    </button>
+                                </div>
+
+                                <div id="yourVehicleInjuredPersons" class="space-y-4">
+                                    <!-- Initial row -->
+                                    <div class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Full
+                                                    Name</label>
+                                                <x-input name="your_vehicle_injured[0][name]"
+                                                    placeholder="Full name of injured person" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                                <x-input type="number" name="your_vehicle_injured[0][age]"
+                                                    placeholder="Age" min="1" max="120" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                                <x-input name="your_vehicle_injured[0][address]"
+                                                    placeholder="Full address" />
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-1 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Extent of
+                                                    Injuries</label>
+                                                <x-textarea name="your_vehicle_injured[0][injuries]" rows="2"
+                                                    placeholder="Describe the nature and extent of injuries..." />
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 flex justify-end">
+                                            <button type="button" onclick="removeInjuredPerson(this)"
+                                                class="text-red-600 hover:text-red-800 text-sm flex items-center">
+                                                <i class="fas fa-trash mr-1"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Injured Persons in Other Vehicle -->
+                            <div class="mb-8">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="text-md font-semibold text-gray-700">Injured Persons in Other Vehicle
+                                    </h4>
+                                    <button type="button" onclick="addInjuredPerson('otherVehicle')"
+                                        class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
+                                        <i class="fas fa-plus mr-1"></i> Add Injured Person
+                                    </button>
+                                </div>
+
+                                <div id="otherVehicleInjuredPersons" class="space-y-4">
+                                    <!-- Initial row -->
+                                    <div class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Full
+                                                    Name</label>
+                                                <x-input name="other_vehicle_injured[0][name]"
+                                                    placeholder="Full name of injured person" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                                <x-input type="number" name="other_vehicle_injured[0][age]"
+                                                    placeholder="Age" min="1" max="120" />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                                <x-input name="other_vehicle_injured[0][address]"
+                                                    placeholder="Full address" />
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-1 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Extent of
+                                                    Injuries</label>
+                                                <x-textarea name="other_vehicle_injured[0][injuries]" rows="2"
+                                                    placeholder="Describe the nature and extent of injuries..." />
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 flex justify-end">
+                                            <button type="button" onclick="removeInjuredPerson(this)"
+                                                class="text-red-600 hover:text-red-800 text-sm flex items-center">
+                                                <i class="fas fa-trash mr-1"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vehicle Involved Details -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                Details of vehicle involved
+                            </label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Registration
+                                        Number</label>
+                                    <x-input name="involved_vehicle_reg" id="involved_vehicle_reg" required
+                                        placeholder="Registration No." />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Make</label>
+                                    <x-input name="involved_vehicle_make" id="involved_vehicle_make" required
+                                        placeholder="Vehicle Make" />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Model</label>
+                                    <x-input name="involved_vehicle_model" id="involved_vehicle_model" required
+                                        placeholder="Vehicle Model" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Owner of Accident Vehicle Information -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                Owner of Accident Vehicle Information
+                            </label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name
+                                        <span class="text-red-500">*</span></label>
+                                    <x-input name="owner_fullname" id="owner_fullname" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Address
+                                        <span class="text-red-500">*</span></label>
+                                    <x-input name="owner_address" id="owner_address" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Telephone
+                                        <span class="text-red-500">*</span></label>
+                                    <x-input name="owner_telephone" id="owner_telephone" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Policy No.
+                                        <span class="text-red-500">*</span></label>
+                                    <x-input name="owner_policy" id="owner_policy" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Damage to Vehicle Details -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Details of damaged to this vehicle
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <x-textarea name="vehicle_purpose" required rows="2"
+                                placeholder="Please provide a detailed description of the damage to the vehicle..." />
+                        </div>
+                        
                     </section>
 
                     <!-- Submit Button -->
@@ -518,10 +700,67 @@
             });
 
             // Form submission
-            document.getElementById("claimForm").addEventListener("submit", function(e) {
+            document.getElementById("motorForm").addEventListener("submit", function(e) {
                 e.preventDefault();
                 alert("Form submitted successfully! (This is a UI demo - no backend connected)");
             });
         });
+
+        let yourVehicleCounter = 1;
+        let otherVehicleCounter = 1;
+
+        function addInjuredPerson(type) {
+            const container = type === 'yourVehicle' ?
+                document.getElementById('yourVehicleInjuredPersons') :
+                document.getElementById('otherVehicleInjuredPersons');
+
+            const counter = type === 'yourVehicle' ? yourVehicleCounter++ : otherVehicleCounter++;
+            const prefix = type === 'yourVehicle' ? 'your_vehicle_injured' : 'other_vehicle_injured';
+
+            const newRow = document.createElement('div');
+            newRow.className = 'injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50';
+            newRow.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <x-input name="${prefix}[${counter}][name]" placeholder="Full name of injured person" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                        <x-input type="number" name="${prefix}[${counter}][age]" placeholder="Age" min="1" max="120" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                        <x-input name="${prefix}[${counter}][address]" placeholder="Full address" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Extent of Injuries</label>
+                        <x-textarea name="${prefix}[${counter}][injuries]" rows="2" 
+                                placeholder="Describe the nature and extent of injuries..." />
+                    </div>
+                </div>
+                <div class="mt-2 flex justify-end">
+                    <button type="button" onclick="removeInjuredPerson(this)" 
+                            class="text-red-600 hover:text-red-800 text-sm flex items-center">
+                        <i class="fas fa-trash mr-1"></i> Remove
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(newRow);
+        }
+
+        function removeInjuredPerson(button) {
+            const row = button.closest('.injured-person-row');
+            // Don't remove if it's the last row
+            const container = row.parentElement;
+            if (container.querySelectorAll('.injured-person-row').length > 1) {
+                row.remove();
+            } else {
+                alert('You need at least one injured person section. You can clear the fields instead.');
+            }
+        }
     </script>
 </x-layouts.app>
