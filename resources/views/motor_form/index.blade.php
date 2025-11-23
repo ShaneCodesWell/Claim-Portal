@@ -655,7 +655,7 @@
                                         Date of Declaration <span class="text-red-500">*</span>
                                     </label>
                                     <input type="date" name="declaration_date" id="declaration_date" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
+                                        class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
                                 </div>
 
                                 {{-- <div>
