@@ -34,7 +34,7 @@
                         Address
                     </p>
                     <p class="text-sm text-gray-900">
-                        Old Ashongman, Accra Ghana.
+                        Cantonments, Accra, Ghana.
                     </p>
                 </div>
             </div>
@@ -51,7 +51,7 @@
                         Occupation
                     </p>
                     <p class="text-sm font-medium text-gray-900">
-                        Software Developer
+                        Head Of IT
                     </p>
                 </div>
             </div>
@@ -68,7 +68,7 @@
                         Telephone
                     </p>
                     <p class="text-sm font-medium text-gray-900">
-                        +233 50 384 5965
+                        +233 50 384 1234
                     </p>
                 </div>
             </div>

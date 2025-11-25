@@ -691,7 +691,7 @@
 
                     <!-- Submit Button -->
                     <div class="mt-8 pt-4 border-t border-t-gray-300">
-                        <button type="submit"
+                        <button type="submit" id="demoSubmitBtn"
                             class="w-full md:w-auto px-6 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
                             <span>Submit Claim</span>
                             <i class="fas fa-paper-plane"></i>
@@ -874,5 +874,16 @@
                 alert('You need at least one injured person section. You can clear the fields instead.');
             }
         }
+
+
+        document.getElementById("demoSubmitBtn").addEventListener("click", function() {
+            Swal.fire({
+                icon: "success",
+                title: "Claim Submitted Successfully",
+                text: "Your claim has been submitted. Our team will review it shortly.",
+                confirmButtonText: "OK",
+                confirmButtonColor: "#2563eb",
+            });
+        });
     </script>
 </x-layouts.app>
