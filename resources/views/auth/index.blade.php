@@ -174,7 +174,7 @@
                             popup: "animate__animated animate__fadeOutUp",
                         },
                     }).then(() => {
-                        window.location.href = "{{ route('motor-form') }}";
+                        window.location.href = "{{ route('dashboard') }}";
                     });
                 });
             });
