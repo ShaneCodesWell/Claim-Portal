@@ -70,7 +70,7 @@
                         <option value="">All Policy Types</option>
                         <option value="motor">Motor Insurance</option>
                         <option value="home">Home Insurance</option>
-                        <option value="health">Health Insurance</option>
+                        {{-- <option value="health">Health Insurance</option> --}}
                         <option value="life">Life Insurance</option>
                     </select>
 
@@ -191,18 +191,18 @@
                 renewalDate: "2023-09-05",
                 premium: "$750.00",
             },
-            {
-                id: 4,
-                number: "P-1001-203-2025-0000789",
-                type: "health",
-                typeName: "Health Insurance",
-                vehicle: "Family Plan",
-                coverage: "Comprehensive",
-                status: "active",
-                statusText: "Active",
-                renewalDate: "2024-01-10",
-                premium: "$2,400.00",
-            },
+            // {
+            //     id: 4,
+            //     number: "P-1001-203-2025-0000789",
+            //     type: "health",
+            //     typeName: "Health Insurance",
+            //     vehicle: "Family Plan",
+            //     coverage: "Comprehensive",
+            //     status: "active",
+            //     statusText: "Active",
+            //     renewalDate: "2024-01-10",
+            //     premium: "$2,400.00",
+            // },
         ];
 
         // Function to render policies in the table
