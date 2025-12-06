@@ -26,6 +26,9 @@
                     Manage your insurance policies and submit new claim requests.
                 </p>
             </div>
+            @if (session('status'))
+                <div class="mt-2 text-green-600">{{ session('status') }}</div>
+            @endif
 
             <div class="flex flex-wrap gap-3">
                 <div class="flex items-center gap-3 px-4 py-2 bg-blue-50 border border-blue-100 rounded-full">
@@ -98,58 +101,67 @@
                 </h2>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Policy Details
-                            </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Policy No.
-                            </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Product
-                            </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Premium
-                            </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Renewal Date
-                            </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200" id="policies-table-body">
-                        <!-- Policy rows will be populated by JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Empty State (initially hidden) -->
-            <div id="empty-state" class="hidden p-12 text-center">
-                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-search text-gray-400 text-3xl"></i>
-                </div>
+            @if (count($policies) === 0)
                 <h3 class="text-lg font-medium text-gray-900 mb-2">
-                    No policies found
-                </h3>
-                <p class="text-gray-500 max-w-md mx-auto">
-                    Try adjusting your search or filter to find what you're looking for.
-                </p>
-            </div>
+                        No policies found for this customer.
+                    </h3>
+                    <p class="text-gray-500 max-w-md mx-auto">
+                        Try adjusting your search or filter to find what you're looking for.
+                    </p>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Policy Details
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Policy No.
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Product
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Premium
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Renewal Date
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="policies-table-body">
+                            <!-- Policy rows currently be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State (initially hidden) -->
+                <div id="empty-state" class="hidden p-12 text-center">
+                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-search text-gray-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">
+                        No policies found
+                    </h3>
+                    <p class="text-gray-500 max-w-md mx-auto">
+                        Try adjusting your search or filter to find what you're looking for.
+                    </p>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -348,12 +360,12 @@
                 case 'motor':
                     routeUrl = '/motor-form';
                     break;
-                // case 'home':
-                //    routeUrl = '/home-form'; // You might want to create this route
-                //    break;
-                // case 'health':
-                //    routeUrl = '/health-form'; // You might want to create this route
-                //    break;
+                    // case 'home':
+                    //    routeUrl = '/home-form'; // You might want to create this route
+                    //    break;
+                    // case 'health':
+                    //    routeUrl = '/health-form'; // You might want to create this route
+                    //    break;
                 default:
                     routeUrl = '/claim-form'; // Default fallback
             }

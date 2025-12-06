@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    
+    'genova' => [
+        'base_url'   => env('GENOVA_BASE_URL'),
+        'basic_auth' => env('GENOVA_BASIC_AUTH'),
+    ],
 
 ];
