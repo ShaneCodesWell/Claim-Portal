@@ -19,10 +19,9 @@ class GenovaApiService
         $this->password = config('services.genova.password');
     }
 
-    // Step 1: Customer Verification - accepts phone, policy number, or vehicle number
+    // Step 1: Customer Verification - sends OTP immediately
     public function customerVerification($identifier, $type = 'mobile_no')
     {
-        // Determine which parameter to send based on type
         $params = [];
         
         switch ($type) {
@@ -48,32 +47,49 @@ class GenovaApiService
             ->post($this->baseUrl . '/cia/api/mobile/request-claim-otp', $params);
     }
 
-    // Step 2: Request 2FA (sends OTP to email or mobile)
-    public function request2FA($email = null, $mobile = null, $userId = null)
+    // Step 2: Verify Claim OTP (THIS IS THE CORRECT ENDPOINT)
+    public function verifyClaimOtp($userId, $twoFaCode)
     {
-        $params = array_filter([
-            'email' => $email,
-            'mobile' => $mobile,
+        Log::info('Calling verify-claim-otp with params:', [
             'user_id' => $userId,
+            'two_fa_code' => $twoFaCode
         ]);
 
         return Http::withBasicAuth($this->username, $this->password)
             ->timeout(30)
             ->asForm()
-            ->post($this->baseUrl . '/cia/api/mobile/request-2fa', $params);
-    }
-
-    // Step 3: Verify 2FA (verify the OTP code)
-    public function verify2FA($userId, $twoFaCode)
-    {
-        return Http::withBasicAuth($this->username, $this->password)
-            ->timeout(30)
-            ->asForm()
-            ->post($this->baseUrl . '/cia/api/mobile/verify-2fa', [
+            ->post($this->baseUrl . '/cia/api/mobile/verify-claim-otp', [
                 'user_id' => $userId,
                 'two_fa_code' => $twoFaCode,
             ]);
     }
+
+    // Optional: Request 2FA (separate flow - for regular 2FA, not claims)
+    // public function request2FA($email = null, $mobile = null, $userId = null)
+    // {
+    //     $params = array_filter([
+    //         'email' => $email,
+    //         'mobile' => $mobile,
+    //         'user_id' => $userId,
+    //     ]);
+
+    //     return Http::withBasicAuth($this->username, $this->password)
+    //         ->timeout(30)
+    //         ->asForm()
+    //         ->post($this->baseUrl . '/cia/api/mobile/request-2fa', $params);
+    // }
+
+    // Optional: Verify 2FA (separate flow - for regular 2FA, not claims)
+    // public function verify2FA($userId, $twoFaCode)
+    // {
+    //     return Http::withBasicAuth($this->username, $this->password)
+    //         ->timeout(30)
+    //         ->asForm()
+    //         ->post($this->baseUrl . '/cia/api/mobile/verify-2fa', [
+    //             'user_id' => $userId,
+    //             'two_fa_code' => $twoFaCode,
+    //         ]);
+    // }
 
     // Fetch Customer Policies
     public function getPolicies($customerCode)

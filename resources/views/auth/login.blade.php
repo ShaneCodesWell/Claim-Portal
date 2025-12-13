@@ -130,23 +130,15 @@
                     </div>
                 </div>
 
-                <!-- Compact Options -->
-                {{-- <div class="flex items-center justify-between pt-1">
-                    <div class="flex items-center">
-                        <input id="remember_me" name="remember_me" type="checkbox"
-                            class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-600 focus:ring-brand-500 border-slate-300 rounded">
-                        <label for="remember_me" class="ml-1.5 sm:ml-2 block text-xs sm:text-sm text-slate-700">Remember
-                            me</label>
-                    </div>
-                    <div class="text-xs sm:text-sm">
-                        <a href="#" class="font-medium text-brand-600 hover:text-brand-500">Forgot password?</a>
-                    </div>
-                </div> --}}
-
                 <!-- Submit Button - Compact -->
-                <button type="submit"
-                    class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-brand-500 transition-colors duration-200 mt-2">
-                    Login
+                <button type="submit" id="sendOtpBtn"
+                    class="w-full flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-brand-500 transition-colors duration-200 mt-2">
+                    <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                    Send OTP
                 </button>
             </form>
 

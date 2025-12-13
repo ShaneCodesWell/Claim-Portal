@@ -72,49 +72,10 @@
         </div>
 
         <div class="p-4 sm:p-5">
-            <!-- OTP Request Section -->
-            <div class="mb-5 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <p class="text-sm text-slate-700 mb-1">
-                            <span class="font-medium">Step 1:</span> Get verification code
-                        </p>
-                        <p class="text-xs text-slate-500">
-                            We'll send a 6-digit code to your registered phone
-                        </p>
-                    </div>
-
-                    <form action="{{ route('otp.send') }}" method="POST" class="ml-3">
-                        @csrf
-                        <button type="submit" id="sendOtpBtn"
-                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg shadow-sm text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-brand-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                            </svg>
-                            Send OTP
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Countdown Timer (hidden by default) -->
-                <div id="otpTimer" class="hidden mt-2 flex items-center text-xs text-slate-500">
-                    <svg class="h-3 w-3 mr-1 text-brand-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                        fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    <span id="timerText">Resend available in <span id="countdown">60</span>s</span>
-                </div>
-            </div>
 
             <!-- Compact instruction text -->
             <div class="mb-4 text-center">
-                <p class="text-slate-600 text-sm mb-1">
-                    <span class="font-medium">Step 2:</span> Enter the 6-digit verification code
-                </p>
+                <p class="text-slate-600 text-sm mb-1">Enter the 6-digit verification code.</p>
                 @if ($errors->any())
                     <div class="text-red-600 text-xs p-2 bg-red-50 rounded mt-2">
                         {{ $errors->first() }}
