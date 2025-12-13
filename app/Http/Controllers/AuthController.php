@@ -25,67 +25,101 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'username' => 'required'
+            'username' => 'required',
+            'login_type' => 'sometimes|in:mobile_no,policy_number,vehicle_number'
         ]);
 
-        $response = $this->api->customerLogin($request->username);
+        try {
+            // Determine the type of identifier (default to mobile_no)
+            $loginType = $request->input('login_type', 'mobile_no');
+            
+            $response = $this->api->customerVerification($request->username, $loginType);
 
-        if ($response->failed()) {
-            return back()->withErrors(['Invalid user. Try again.'])->withInput();
+            if ($response->failed()) {
+                Log::error('Customer Verification Failed:', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'identifier' => $request->username,
+                    'type' => $loginType
+                ]);
+                
+                $errorMessage = 'Invalid credentials. Please try again.';
+                
+                // Parse API error if available
+                if ($response->status() === 400) {
+                    $body = $response->json();
+                    $errorMessage = $body['message'] ?? $errorMessage;
+                }
+                
+                return back()->withErrors([$errorMessage])->withInput();
+            }
+
+            $data = $response->json('data');
+
+            // Store user info temporarily for OTP
+            session([
+                'user_id'       => $data['user_id'],
+                'name'          => $data['name'],
+                'username'      => $request->username,
+                'login_type'    => $loginType,
+                'search_used'   => $data['search_used'] ?? null,
+            ]);
+
+            Log::info('User verified, redirecting to OTP', [
+                'user_id' => $data['user_id'],
+                'name' => $data['name']
+            ]);
+
+            return redirect()->route('otp')->with('success', $data['message'] ?? 'OTP sent to your registered contact.');
+
+        } catch (\Exception $e) {
+            Log::error('Login Error: ' . $e->getMessage());
+            return back()->withErrors(['Connection failed: ' . $e->getMessage()])->withInput();
         }
-
-        $data = $response->json('data');
-
-        // Store user info temporarily for OTP
-        session([
-            'user_id'       => $data['user_id'],
-            'email'         => $data['email'],
-            'fullname'      => $data['fullname'],
-            'customer_code' => $data['customer_code'],
-            'username'      => $request->username,
-        ]);
-
-        return redirect()->route('otp');
     }
 
     // STEP 2 → OTP Screen
     public function showOtpForm()
     {
+        if (!session('user_id')) {
+            return redirect()->route('login')->withErrors(['Session expired. Please login again.']);
+        }
         return view('auth.otp');
     }
 
-    // STEP 2 → Send OTP
-    public function requestOtp()
-    {
-        $response = $this->api->requestOtp(
-            session('email'),
-            session('user_id')
-        );
-
-        if ($response->failed()) {
-            return back()->withErrors(['Failed to send OTP. Please try again.']);
-        }
-
-        return back()->with('success', 'OTP sent successfully!');
-    }
-
-    // STEP 3 → Verify OTP
+    // STEP 3 → Verify 2FA
     public function verifyOtp(Request $request)
     {
-        $request->validate(['otp' => 'required']);
+        $request->validate(['otp' => 'required|digits:6']);
 
-        $response = $this->api->verifyOtp(
-            session('user_id'),
-            $request->otp
-        );
-
-        if ($response->failed()) {
-            return back()->withErrors(['Invalid OTP. Please try again.']);
+        if (!session('user_id')) {
+            return redirect()->route('login')->withErrors(['Session expired. Please login again.']);
         }
 
-        // Mark user as fully authenticated
-        session(['authenticated' => true]);
+        try {
+            $response = $this->api->verify2FA(
+                session('user_id'),
+                $request->otp
+            );
 
-        return redirect()->route('dashboard');
+            if ($response->failed()) {
+                Log::error('Verify 2FA Failed:', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return back()->withErrors(['Invalid OTP. Please try again.']);
+            }
+
+            // Mark user as fully authenticated
+            session(['authenticated' => true]);
+
+            Log::info('User authenticated successfully', ['user_id' => session('user_id')]);
+
+            return redirect()->route('dashboard');
+
+        } catch (\Exception $e) {
+            Log::error('Verify OTP Error: ' . $e->getMessage());
+            return back()->withErrors(['Verification failed: ' . $e->getMessage()]);
+        }
     }
 }

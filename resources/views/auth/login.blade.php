@@ -92,6 +92,26 @@
             <form action="{{ route('login.submit') }}" method="POST" class="space-y-4" id="verificationForm">
                 @csrf
 
+                <!-- Dropdown - Styled to match form -->
+                <div class="mb-4">
+                    <label for="login_type" class="block text-sm font-medium text-slate-700 mb-1">Login with:</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <select name="login_type" id="login_type"
+                            class="block w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg bg-slate-50 focus:outline-none focus:bg-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 appearance-none transition duration-150 ease-in-out">
+                            <option value="mobile_no">Phone Number</option>
+                            <option value="policy_number">Policy Number</option>
+                            <option value="vehicle_number">Vehicle Number</option>
+                        </select>
+                    </div>
+                </div>
                 <!-- Phone Number Field - Compact -->
                 <div>
                     <label for="phone_number" class="block text-sm font-medium text-slate-700 mb-1">Mobile

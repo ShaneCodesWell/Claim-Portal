@@ -34,10 +34,16 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    
+
+    // 'genova' => [
+    //     'base_url'   => env('GENOVA_BASE_URL'),
+    //     'basic_auth' => env('GENOVA_BASIC_AUTH'),
+    // ],
+
     'genova' => [
-        'base_url'   => env('GENOVA_BASE_URL'),
-        'basic_auth' => env('GENOVA_BASIC_AUTH'),
+        'base_url' => env('GENOVA_BASE_URL', 'https://vanguard.genovainsure.com'),
+        'username' => env('GENOVA_USERNAME', 'Moses'),
+        'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
     ],
 
 ];

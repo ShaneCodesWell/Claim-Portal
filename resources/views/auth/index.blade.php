@@ -66,7 +66,7 @@
             <h1 class="text-2xl font-bold text-white mb-1">
                 Identity Verification
             </h1>
-            <p class="text-blue-200 text-sm">SecureGuard Claim Processing</p>
+            <p class="text-blue-200 text-sm">Vanguard Claim Processing</p>
         </div>
 
         <div class="p-8">
