@@ -17,6 +17,9 @@ Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.veri
 Route::middleware('auth.customer')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     // Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
-    //  0203003426 
-    // 0240112912 Default Nu,ber
 });
+
+// Test route for dashboard
+Route::get('/test-dashboard', [DashboardController::class, 'index'])->name('test-dashboard');
+
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

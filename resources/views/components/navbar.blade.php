@@ -16,27 +16,29 @@
                 </div>
             </div>
             <div class="flex items-center space-x-4">
-                <!-- Notifications -->
-                {{-- <button
-                    class="relative p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
-                    <i class="fas fa-bell text-lg"></i>
-                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button> --}}
-
                 <!-- User Display with Dropdown -->
-                @if (isset($customer))
+                @php
+                    // Get customer data from various sources
+                    $customerName = $customer['name'] ?? session('fullname') ?? session('name') ?? 'Guest User';
+                    $customerPhone = $customer['phone_number'] ?? session('phone_number') ?? session('mobile_no') ?? '';
+                    $customerInitials = strtoupper(substr($customerName, 0, 2));
+                @endphp
+
+                @if (session('customer_verified') || session('user_id'))
                     <div class="relative">
                         <button onclick="toggleUserDropdown()" id="user-dropdown-button"
                             class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <!-- User Avatar -->
                             <div
                                 class="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                MA
+                                {{ $customerInitials }}
                             </div>
                             <!-- User Info -->
                             <div class="text-left hidden md:block">
-                                <p class="text-sm font-semibold text-gray-900">{{ $customer['name'] ?? '—' }}</p>
-                                <p class="text-xs text-gray-500">{{ $customer['phone_number'] ?? '—' }}</p>
+                                <p class="text-sm font-semibold text-gray-900">{{ $customerName }}</p>
+                                @if($customerPhone)
+                                    <p class="text-xs text-gray-500">{{ $customerPhone }}</p>
+                                @endif
                             </div>
                             <!-- Dropdown Arrow -->
                             <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,19 +53,18 @@
                             <div class="py-1">
                                 <!-- User Info Header (for mobile) -->
                                 <div class="px-4 py-3 border-b border-gray-200 md:hidden">
-                                    <p class="text-sm font-semibold text-gray-900">{{ $customer['name'] ?? '—' }}</p>
-                                    <p class="text-xs text-gray-500">{{ $customer['phone_number'] ?? '—' }}</p>
+                                    <p class="text-sm font-semibold text-gray-900">{{ $customerName }}</p>
+                                    @if($customerPhone)
+                                        <p class="text-xs text-gray-500">{{ $customerPhone }}</p>
+                                    @endif
                                 </div>
 
                                 <!-- Menu Items -->
-                                {{-- <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i class="fas fa-user mr-3 text-gray-400"></i>
-                                My Profile
-                            </a> --}}
-                                {{-- <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i class="fas fa-cog mr-3 text-gray-400"></i>
-                                Settings
-                            </a> --}}
+                                <a href="{{ route('test-dashboard') }}"
+                                    class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-th-large mr-3 text-gray-400"></i>
+                                    Dashboard
+                                </a>
                                 <a href="#"
                                     class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-file-alt mr-3 text-gray-400"></i>
@@ -75,16 +76,22 @@
                                     Help & Support
                                 </a>
                                 <div class="border-t border-gray-200"></div>
-                                <a href="{{ route('home') }}"
-                                    class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                    <i class="fas fa-sign-out-alt mr-3"></i>
-                                    Logout
-                                </a>
+                                <form method="POST" action="{{ route('logout') }}" class="mb-0">
+                                    @csrf
+                                    <button type="submit"
+                                        class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                        <i class="fas fa-sign-out-alt mr-3"></i>
+                                        Logout
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
                 @else
-                    <p class="text-gray-600 mt-4">No customer verified.</p>
+                    <a href="{{ route('login') }}" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Login
+                    </a>
                 @endif
             </div>
         </div>
@@ -102,7 +109,7 @@
         const button = document.getElementById('user-dropdown-button');
         const dropdown = document.getElementById('user-dropdown');
 
-        if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+        if (button && dropdown && !button.contains(event.target) && !dropdown.contains(event.target)) {
             dropdown.classList.add('hidden');
         }
     });

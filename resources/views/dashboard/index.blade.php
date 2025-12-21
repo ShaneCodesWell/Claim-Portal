@@ -42,14 +42,13 @@
                         class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-green-600">
                         <span class="font-bold text-sm">2</span>
                     </div>
-                    <div class="text-sm font-medium text-green-700">Pending Claims</div>
+                    <div class="text-sm font-medium text-green-700">Pending Renewal</div>
                 </div>
-                <div class="flex items-center gap-3 px-4 py-2 bg-purple-50 border border-purple-100 rounded-full">
-                    <div
-                        class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-purple-600">
+                <div class="flex items-center gap-3 px-4 py-2 bg-red-50 border border-red-100 rounded-full">
+                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-red-600">
                         <span class="font-bold text-sm">5</span>
                     </div>
-                    <div class="text-sm font-medium text-purple-700">Processed</div>
+                    <div class="text-sm font-medium text-red-700">Expired</div>
                 </div>
             </div>
         </div>
@@ -71,10 +70,14 @@
                     <select id="policy-type"
                         class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">All Policy Types</option>
-                        <option value="motor">Motor Insurance</option>
-                        <option value="home">Home Insurance</option>
-                        {{-- <option value="health">Health Insurance</option> --}}
-                        <option value="life">Life Insurance</option>
+                        @if (isset($businessClasses) && count($businessClasses) > 0)
+                            @foreach ($businessClasses as $classId => $className)
+                                <option value="{{ $className }}">{{ $className }}</option>
+                            @endforeach
+                        @else
+                            <!-- Fallback options if API data isn't available -->
+                            <option value="">N/A</option>
+                        @endif
                     </select>
 
                     <select id="policy-status"
@@ -101,13 +104,19 @@
                 </h2>
             </div>
 
-            @if (count($policies) === 0)
-                <h3 class="text-lg font-medium text-gray-900 mb-2">
-                        No policies found for this customer.
+            @if (!isset($policies) || count($policies) === 0)
+                <!-- Empty State (initially hidden) -->
+                <div id="empty-state" class="p-12 text-center">
+                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-search text-gray-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">
+                        No policies found
                     </h3>
                     <p class="text-gray-500 max-w-md mx-auto">
                         Try adjusting your search or filter to find what you're looking for.
                     </p>
+                </div>
             @else
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -148,79 +157,125 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Empty State (initially hidden) -->
-                <div id="empty-state" class="hidden p-12 text-center">
-                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-search text-gray-400 text-3xl"></i>
-                    </div>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">
-                        No policies found
-                    </h3>
-                    <p class="text-gray-500 max-w-md mx-auto">
-                        Try adjusting your search or filter to find what you're looking for.
-                    </p>
+                <!-- Pagination Container -->
+                <div id="pagination-container" class="hidden">
+                    <!-- Pagination will be rendered here by JavaScript -->
                 </div>
             @endif
         </div>
     </div>
-
     <script>
-        // Sample policy data
-        const policies = [{
-                id: 1,
-                number: "P-1001-103-2025-0000123",
-                type: "motor",
-                typeName: "Motor Insurance",
-                vehicle: "Toyota Camry 2020",
-                coverage: "Comprehensive",
-                status: "active",
-                statusText: "Active",
-                renewalDate: "2023-10-15",
-                premium: "$1,200.00",
-            },
-            {
-                id: 2,
-                number: "P-1001-203-2025-0000456",
-                type: "home",
-                typeName: "Happy Home Insurance",
-                vehicle: "123 Main Street",
-                coverage: "Property Damage",
-                status: "active",
-                statusText: "Active",
-                renewalDate: "2024-03-22",
-                premium: "$850.00",
-            },
-            {
-                id: 3,
-                number: "P-1001-103-2025-0000456",
-                type: "motor",
-                typeName: "Motor Insurance",
-                vehicle: "Honda Civic 2018",
-                coverage: "Third Party",
-                status: "pending",
-                statusText: "Pending Renewal",
-                renewalDate: "2023-09-05",
-                premium: "$750.00",
-            },
-            // {
-            //     id: 4,
-            //     number: "P-1001-203-2025-0000789",
-            //     type: "health",
-            //     typeName: "Health Insurance",
-            //     vehicle: "Family Plan",
-            //     coverage: "Comprehensive",
-            //     status: "active",
-            //     statusText: "Active",
-            //     renewalDate: "2024-01-10",
-            //     premium: "$2,400.00",
-            // },
-        ];
+        // Get policies from backend (passed from controller)
+        const policies = @json($policies).map(policy => {
+            // Use the business class name from API
+            let policyClass = (policy.business_class_name || 'Unknown').toLowerCase();
+            let policyClassName = policy.business_class_name || 'Unknown Class';
+            let policyProduct = policy.product_name || 'Unknown Product';
+
+            // Normalize class names for filtering
+            if (policyClass.includes('motor')) {
+                policyClass = 'motor';
+            } else if (policyClass.includes('fire') || policyClass.includes('home')) {
+                policyClass = 'home';
+            } else if (policyClass.includes('life')) {
+                policyClass = 'life';
+            } else if (policyClass.includes('health')) {
+                policyClass = 'health';
+            }
+
+            // Determine status based on dates
+            const today = new Date();
+            const endDate = new Date(policy.policy_end_date);
+            const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+
+            let status = 'active';
+            let statusText = 'Active';
+
+            if (daysUntilExpiry < 0) {
+                status = 'expired';
+                statusText = 'Expired';
+            } else if (daysUntilExpiry <= 30) {
+                status = 'pending';
+                statusText = 'Pending Renewal';
+            }
+
+            return {
+                id: policy.policy_id,
+                number: policy.policy_number,
+                type: policyClass,
+                className: policyClassName,
+                productName: policyProduct,
+                vehicle: policy.vehicle_number || 'N/A',
+                status: status,
+                statusText: statusText,
+                renewalDate: policy.renewal_date,
+                premium: 'N/A', // Premium not in current API response
+                policy_start_date: policy.policy_start_date,
+                policy_end_date: policy.policy_end_date,
+                product_id: policy.product_id,
+                business_class_id: policy.business_class_id,
+                customer_name: policy.customer_name || '',
+                customer_code: policy.customer_code || '',
+                customer_phone: policy.customer_phone || '',
+                customer_email: policy.customer_email || ''
+            };
+        });
+
+        console.log('Loaded policies:', policies); // Debug log
+
+        // Calculate stats
+        const activePolicies = policies.filter(p => p.status === 'active').length;
+        const pendingRenewal = policies.filter(p => p.status === 'pending').length;
+        const expiredPolicies = policies.filter(p => p.status === 'expired').length;
+
+        // Pagination state
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let currentFilteredPolicies = policies;
+
+        // Update stats badges
+        document.addEventListener('DOMContentLoaded', () => {
+            const statBadges = document.querySelectorAll('.flex.items-center.gap-3.px-4.py-2');
+            if (statBadges.length >= 3) {
+                statBadges[0].querySelector('.font-bold').textContent = activePolicies;
+                statBadges[0].querySelector('.text-sm.font-medium').textContent = 'Active Policies';
+
+                statBadges[1].querySelector('.font-bold').textContent = pendingRenewal;
+                statBadges[1].querySelector('.text-sm.font-medium').textContent = 'Pending Renewal';
+
+                statBadges[2].querySelector('.font-bold').textContent = expiredPolicies;
+                statBadges[2].querySelector('.text-sm.font-medium').textContent = 'Expired';
+            }
+        });
+
+        // Function to get icon based on policy class
+        function getPolicyIcon(policyType) {
+            const iconMap = {
+                'motor': 'fa-car',
+                'home': 'fa-home',
+                'fire': 'fa-fire',
+                'health': 'fa-heartbeat',
+                'life': 'fa-user-shield',
+                'marine': 'fa-ship',
+                'aviation': 'fa-plane',
+                'engineering': 'fa-tools',
+                'bond': 'fa-handshake',
+                'liability': 'fa-shield-alt',
+                'agriculture': 'fa-tractor'
+            };
+
+            return iconMap[policyType] || 'fa-file-contract';
+        }
 
         // Function to render policies in the table
-        function renderPolicies(filteredPolicies = policies) {
+        function renderPolicies(filteredPolicies = policies, page = 1) {
             const tableBody = document.getElementById("policies-table-body");
             const emptyState = document.getElementById("empty-state");
+            const paginationContainer = document.getElementById("pagination-container");
+
+            // Store current filtered policies for pagination
+            currentFilteredPolicies = filteredPolicies;
+            currentPage = page;
 
             // Clear the table
             tableBody.innerHTML = "";
@@ -228,16 +283,23 @@
             if (filteredPolicies.length === 0) {
                 // Show empty state
                 tableBody.classList.add("hidden");
-                emptyState.classList.remove("hidden");
+                if (emptyState) emptyState.classList.remove("hidden");
+                if (paginationContainer) paginationContainer.classList.add("hidden");
                 return;
             }
 
             // Hide empty state
             tableBody.classList.remove("hidden");
-            emptyState.classList.add("hidden");
+            if (emptyState) emptyState.classList.add("hidden");
+
+            // Calculate pagination
+            const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedPolicies = filteredPolicies.slice(startIndex, endIndex);
 
             // Add policies to the table
-            filteredPolicies.forEach((policy) => {
+            paginatedPolicies.forEach((policy) => {
                 const row = document.createElement("tr");
                 row.className = "fade-in";
 
@@ -249,36 +311,29 @@
                     statusColor = "bg-red-100 text-red-800";
                 }
 
+                // Icon based on policy type
+                const icon = getPolicyIcon(policy.type);
+
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-file-contract text-blue-600 text-xl"></i>
+                                <i class="fas ${icon} text-blue-600 text-xl"></i>
                             </div>
                             <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">${
-                                  policy.typeName
-                                }</div>
-                                <div class="text-sm text-gray-500">${
-                                  policy.vehicle
-                                }</div>
+                                <div class="text-sm font-medium text-gray-900">${policy.className}</div>
+                                <div class="text-sm text-gray-500">${policy.vehicle}</div>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-500">${
-                                  policy.number
-                                }</div>
+                        <div class="text-sm text-gray-500">${policy.number}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${
-                          policy.coverage
-                        }</div>
+                        <div class="text-sm text-gray-900">${policy.productName}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-500">${
-                          policy.premium
-                        }</div>
+                        <div class="text-sm text-gray-500">${policy.premium}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">
@@ -286,9 +341,8 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${new Date(policy.renewalDate).toLocaleDateString(
-                          "en-US",
-                          { year: "numeric", month: "long", day: "numeric" }
+                        ${new Date(policy.renewalDate).toLocaleDateString("en-US", 
+                            { year: "numeric", month: "long", day: "numeric" }
                         )}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -323,35 +377,161 @@
 
                 tableBody.appendChild(row);
             });
+
+            // Render pagination controls
+            renderPagination(filteredPolicies.length, page);
         }
 
         // Function to filter policies based on search and filters
         function filterPolicies() {
-            const searchTerm = document
-                .getElementById("search-policies")
-                .value.toLowerCase();
+            const searchTerm = document.getElementById("search-policies").value.toLowerCase();
             const policyType = document.getElementById("policy-type").value;
             const policyStatus = document.getElementById("policy-status").value;
 
             const filteredPolicies = policies.filter((policy) => {
                 const matchesSearch =
                     policy.number.toLowerCase().includes(searchTerm) ||
-                    policy.typeName.toLowerCase().includes(searchTerm) ||
+                    policy.className.toLowerCase().includes(searchTerm) ||
+                    policy.productName.toLowerCase().includes(searchTerm) ||
                     policy.vehicle.toLowerCase().includes(searchTerm);
 
-                const matchesType = !policyType || policy.type === policyType;
+                // Match by either normalized type or full business class name
+                const matchesType = !policyType ||
+                    policy.type === policyType ||
+                    policy.className.toLowerCase() === policyType;
+
                 const matchesStatus = !policyStatus || policy.status === policyStatus;
 
                 return matchesSearch && matchesType && matchesStatus;
             });
 
-            renderPolicies(filteredPolicies);
+            renderPolicies(filteredPolicies, 1); // Reset to page 1 when filtering
+        }
+
+        // Function to render pagination controls
+        function renderPagination(totalItems, currentPage) {
+            const paginationContainer = document.getElementById("pagination-container");
+
+            if (!paginationContainer) return;
+
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            // Hide pagination if only one page
+            if (totalPages <= 1) {
+                paginationContainer.classList.add("hidden");
+                return;
+            }
+
+            paginationContainer.classList.remove("hidden");
+
+            let paginationHTML = '<div class="flex items-center justify-between px-6 py-4 border-t border-gray-200">';
+
+            // Showing X to Y of Z results
+            const startItem = (currentPage - 1) * itemsPerPage + 1;
+            const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+            paginationHTML += `
+                <div class="text-sm text-gray-700">
+                    Showing <span class="font-medium">${startItem}</span> to <span class="font-medium">${endItem}</span> of <span class="font-medium">${totalItems}</span> policies
+                </div>
+            `;
+
+            // Pagination buttons
+            paginationHTML += '<div class="flex gap-2">';
+
+            // Previous button
+            paginationHTML += `
+                <button onclick="changePage(${currentPage - 1})" 
+                        ${currentPage === 1 ? 'disabled' : ''}
+                        class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            // First page
+            if (startPage > 1) {
+                paginationHTML += `
+                    <button onclick="changePage(1)" 
+                            class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        1
+                    </button>
+                `;
+                if (startPage > 2) {
+                    paginationHTML += '<span class="px-2 py-2 text-gray-500">...</span>';
+                }
+            }
+
+            // Visible page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentPage;
+                paginationHTML += `
+                    <button onclick="changePage(${i})" 
+                            class="px-3 py-2 text-sm font-medium ${isActive ? 'text-white bg-blue-600' : 'text-gray-700 bg-white hover:bg-gray-50'} border border-gray-300 rounded-md">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            // Last page
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += '<span class="px-2 py-2 text-gray-500">...</span>';
+                }
+                paginationHTML += `
+                    <button onclick="changePage(${totalPages})" 
+                            class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        ${totalPages}
+                    </button>
+                `;
+            }
+
+            // Next button
+            paginationHTML += `
+                <button onclick="changePage(${currentPage + 1})" 
+                        ${currentPage === totalPages ? 'disabled' : ''}
+                        class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+
+            paginationHTML += '</div></div>';
+
+            paginationContainer.innerHTML = paginationHTML;
+        }
+
+        // Function to change page
+        function changePage(page) {
+            const totalPages = Math.ceil(currentFilteredPolicies.length / itemsPerPage);
+
+            if (page < 1 || page > totalPages) return;
+
+            renderPolicies(currentFilteredPolicies, page);
+
+            // Scroll to top of table
+            document.getElementById('policies-table-body').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
         }
 
         // Function to process claim - navigates to claim form
-        // Function to process claim - navigates to claim form
         function processClaim(policyId) {
             const policy = policies.find((p) => p.id === policyId);
+
+            if (!policy) {
+                console.error('Policy not found');
+                alert('Policy not found. Please try again.');
+                return;
+            }
 
             // Determine which form to navigate to based on policy type
             let routeUrl = '';
@@ -360,49 +540,63 @@
                 case 'motor':
                     routeUrl = '/motor-form';
                     break;
-                    // case 'home':
-                    //    routeUrl = '/home-form'; // You might want to create this route
-                    //    break;
-                    // case 'health':
-                    //    routeUrl = '/health-form'; // You might want to create this route
-                    //    break;
+                case 'home':
+                case 'fire':
+                    routeUrl = '/home-form';
+                    break;
+                case 'health':
+                    routeUrl = '/health-form';
+                    break;
+                case 'life':
+                    routeUrl = '/life-form';
+                    break;
                 default:
-                    routeUrl = '/claim-form'; // Default fallback
+                    routeUrl = '/claim-form';
             }
 
-            // Add policy ID as query parameter
-            const url = `${routeUrl}?policyId=${policyId}`;
+            // Store policy data in sessionStorage for the form
+            sessionStorage.setItem('selectedPolicy', JSON.stringify(policy));
 
             // Redirect to the appropriate form
-            window.location.href = url;
+            window.location.href = `${routeUrl}?policyId=${policyId}`;
 
-            // Optional: Log for debugging
-            console.log(`Redirecting to ${url} for policy: ${policy.number}`);
+            console.log(`Redirecting to ${routeUrl} for policy: ${policy.number}`);
         }
 
-        // Event listeners for search and filters
-        document
-            .getElementById("search-policies")
-            .addEventListener("input", filterPolicies);
-        document
-            .getElementById("policy-type")
-            .addEventListener("change", filterPolicies);
-        document
-            .getElementById("policy-status")
-            .addEventListener("change", filterPolicies);
+        function viewDetails(policyId) {
+            const policy = policies.find(p => p.id === policyId);
 
-        // Clear filters button
-        document.getElementById("clear-filters").addEventListener("click", () => {
-            document.getElementById("search-policies").value = "";
-            document.getElementById("policy-type").value = "";
-            document.getElementById("policy-status").value = "";
-            renderPolicies();
-        });
+            if (!policy) {
+                console.error('Policy not found');
+                return;
+            }
 
-        // Initial render
-        document.addEventListener("DOMContentLoaded", () => {
-            renderPolicies();
-        });
+            // Create a better formatted alert or modal
+            const details = `
+                === POLICY DETAILS ===
+
+                Policy Number: ${policy.number}
+                Business Class: ${policy.className}
+                Product: ${policy.productName}
+                Vehicle/Asset: ${policy.vehicle}
+                Status: ${policy.statusText}
+
+                Start Date: ${policy.policy_start_date}
+                End Date: ${policy.policy_end_date}
+                Renewal Date: ${new Date(policy.renewalDate).toLocaleDateString()}
+
+                Customer: ${policy.customer_name}
+                Customer Code: ${policy.customer_code}
+                Phone: ${policy.customer_phone}
+                Email: ${policy.customer_email}
+                    `.trim();
+
+            alert(details);
+            console.log('Policy details:', policy);
+
+            // Close dropdown
+            document.getElementById(`dropdown-${policyId}`).classList.add('hidden');
+        }
 
         function toggleDropdown(policyId) {
             const dropdown = document.getElementById(`dropdown-${policyId}`);
@@ -418,14 +612,24 @@
             dropdown.classList.toggle('hidden');
         }
 
-        function viewDetails(policyId) {
-            const policy = policies.find(p => p.id === policyId);
-            alert(`Viewing details for policy: ${policy.number}`);
-            console.log('Policy details:', policy);
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial render
+            renderPolicies();
 
-            // Close dropdown
-            document.getElementById(`dropdown-${policyId}`).classList.add('hidden');
-        }
+            // Search and filter listeners
+            document.getElementById("search-policies")?.addEventListener("input", filterPolicies);
+            document.getElementById("policy-type")?.addEventListener("change", filterPolicies);
+            document.getElementById("policy-status")?.addEventListener("change", filterPolicies);
+
+            // Clear filters button
+            document.getElementById("clear-filters")?.addEventListener("click", () => {
+                document.getElementById("search-policies").value = "";
+                document.getElementById("policy-type").value = "";
+                document.getElementById("policy-status").value = "";
+                renderPolicies(policies, 1); // Reset to page 1
+            });
+        });
 
         // Close dropdown when clicking outside
         document.addEventListener('click', (event) => {

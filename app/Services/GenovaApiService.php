@@ -23,7 +23,7 @@ class GenovaApiService
     public function customerVerification($identifier, $type = 'mobile_no')
     {
         $params = [];
-        
+
         switch ($type) {
             case 'mobile_no':
             case 'phone':
@@ -64,41 +64,69 @@ class GenovaApiService
             ]);
     }
 
-    // Optional: Request 2FA (separate flow - for regular 2FA, not claims)
-    // public function request2FA($email = null, $mobile = null, $userId = null)
-    // {
-    //     $params = array_filter([
-    //         'email' => $email,
-    //         'mobile' => $mobile,
-    //         'user_id' => $userId,
-    //     ]);
-
-    //     return Http::withBasicAuth($this->username, $this->password)
-    //         ->timeout(30)
-    //         ->asForm()
-    //         ->post($this->baseUrl . '/cia/api/mobile/request-2fa', $params);
-    // }
-
-    // Optional: Verify 2FA (separate flow - for regular 2FA, not claims)
-    // public function verify2FA($userId, $twoFaCode)
-    // {
-    //     return Http::withBasicAuth($this->username, $this->password)
-    //         ->timeout(30)
-    //         ->asForm()
-    //         ->post($this->baseUrl . '/cia/api/mobile/verify-2fa', [
-    //             'user_id' => $userId,
-    //             'two_fa_code' => $twoFaCode,
-    //         ]);
-    // }
-
-    // Fetch Customer Policies
-    public function getPolicies($customerCode)
+    // Fetch Business Classes
+    public function getBusinessClasses($phoneNumber)
     {
+        Log::info('Calling business-class with phone:', ['phone_number' => $phoneNumber]);
+
         return Http::withBasicAuth($this->username, $this->password)
             ->timeout(30)
             ->asForm()
-            ->post($this->baseUrl . '/cia/api/mobile/customer-policy', [
-                'customer_code' => $customerCode,
+            ->post($this->baseUrl . '/cia/api/mobile/business-class', [
+                'phone_number' => $phoneNumber,
             ]);
+    }
+
+    // Fetch Products by Business Class
+    public function getProductsByClass($businessClassId)
+    {
+        Log::info('Calling products-by-class with:', ['business_class_id' => $businessClassId]);
+
+        return Http::withBasicAuth($this->username, $this->password)
+            ->timeout(30)
+            ->asForm()
+            ->post($this->baseUrl . '/cia/api/mobile/products-by-class', [
+                'business_class_id' => $businessClassId,
+            ]);
+    }
+
+    // Fetch Customer Policies
+    // public function getPolicies($customerCodeOrPhone)
+    // {
+    //     return Http::withBasicAuth($this->username, $this->password)
+    //         ->timeout(30)
+    //         ->asForm()
+    //         ->post($this->baseUrl . '/cia/api/mobile/customer-search', [
+    //             'phone_number' => $customerCodeOrPhone,
+    //         ]);
+    // }
+
+    public function getPolicies($identifier, $type = 'phone_number')
+    {
+        $params = [];
+
+        switch ($type) {
+            case 'customer_code':
+            case 'client_code':
+                $params['client_code'] = $identifier;
+                break;
+            case 'customer_id':
+                $params['customer_id'] = $identifier;
+                break;
+            case 'email':
+                $params['ins_email'] = $identifier;
+                break;
+            case 'phone_number':
+            default:
+                $params['phone_number'] = $identifier;
+                break;
+        }
+
+        Log::info('Calling customer-search with params:', $params);
+
+        return Http::withBasicAuth($this->username, $this->password)
+            ->timeout(30)
+            ->asForm()
+            ->post($this->baseUrl . '/cia/api/mobile/customer-search', $params);
     }
 }
