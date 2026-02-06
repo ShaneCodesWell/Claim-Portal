@@ -556,10 +556,11 @@
 
             // Store policy data in sessionStorage for the form
             sessionStorage.setItem('selectedPolicy', JSON.stringify(policy));
-
+            
+            console.log('Policy type:', policy.type);
+            
             // Redirect to the appropriate form
             window.location.href = `${routeUrl}?policyId=${policyId}`;
-
             console.log(`Redirecting to ${routeUrl} for policy: ${policy.number}`);
         }
 
