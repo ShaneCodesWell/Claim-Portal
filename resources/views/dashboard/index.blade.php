@@ -525,28 +525,63 @@
 
         // Function to process claim - navigates to claim form
         function processClaim(policyId) {
-            const policy = policies.find(p => p.id === policyId);
-            if (!policy) return alert('Policy not found.');
+            const policy = policies.find((p) => p.id === policyId);
 
-            // Map policy type directly to routes
-            const typeToRoute = {
-                'motor': '/motor-form',
-                'general accident': '/general-accident-form',
-                'fire': '/fire-form',
-                'bond': '/bond-form',
-                'engineering': '/engineering-form',
-                'liability': '/liability-form',
-                'marine': '/marine-form',
-                'aviation': '/aviation-form',
-            };
+            if (!policy) {
+                console.error('Policy not found:', policyId);
+                alert('Policy not found. Please try again.');
+                return;
+            }
 
-            const routeUrl = typeToRoute[policy.type] || '/motor-form';
+            // Normalize the policy type
+            const originalType = policy.type;
+            const policyType = originalType ? originalType.trim().toLowerCase() : '';
 
-            // Store selected policy
+            // Determine which form to navigate to
+            let routeUrl = '/motor-form'; // default fallback
+
+            switch (policyType) {
+                case 'motor':
+                    routeUrl = '/motor-form';
+                    break;
+                case 'general accident':
+                    routeUrl = '/general-accident-form';
+                    break;
+                case 'fire':
+                    routeUrl = '/fire-form';
+                    break;
+                case 'bond':
+                    routeUrl = '/bond-form';
+                    break;
+                case 'engineering':
+                    routeUrl = '/engineering-form';
+                    break;
+                case 'liability':
+                    routeUrl = '/liability-form';
+                    break;
+                case 'marine':
+                    routeUrl = '/marine-form';
+                    break;
+                case 'aviation':
+                    routeUrl = '/aviation-form';
+                    break;
+                default:
+                    console.warn('Unknown policy type:', originalType, 'Defaulting to motor form.');
+                    routeUrl = '/motor-form';
+            }
+
+            // Store policy data in sessionStorage for the form
             sessionStorage.setItem('selectedPolicy', JSON.stringify(policy));
 
+            console.log('Process Claim:', {
+                policyId: policyId,
+                originalType: originalType,
+                normalizedType: policyType,
+                redirectTo: routeUrl
+            });
+
+            // Redirect to the appropriate form
             window.location.href = `${routeUrl}?policyId=${policyId}`;
-            console.log(`Redirecting to ${routeUrl} for policy: ${policy.number}`);
         }
 
         function viewDetails(policyId) {

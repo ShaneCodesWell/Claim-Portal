@@ -24,5 +24,6 @@ Route::middleware('auth.customer')->group(function () {
 
 // Test route for dashboard
 Route::get('/test-dashboard', [DashboardController::class, 'index'])->name('test-dashboard');
+Route::get('/test-form', [DashboardController::class, 'form'])->name('test-form');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

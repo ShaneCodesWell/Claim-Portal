@@ -203,6 +203,11 @@ class DashboardController extends Controller
         }
     }
 
+    public function form()
+    {
+        return view('dashboard.form');
+    }
+
     /**
      * Format business classes data from API response
      */
