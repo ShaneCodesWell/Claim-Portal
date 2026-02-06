@@ -525,41 +525,26 @@
 
         // Function to process claim - navigates to claim form
         function processClaim(policyId) {
-            const policy = policies.find((p) => p.id === policyId);
+            const policy = policies.find(p => p.id === policyId);
+            if (!policy) return alert('Policy not found.');
 
-            if (!policy) {
-                console.error('Policy not found');
-                alert('Policy not found. Please try again.');
-                return;
-            }
+            // Map policy type directly to routes
+            const typeToRoute = {
+                'motor': '/motor-form',
+                'general accident': '/general-accident-form',
+                'fire': '/fire-form',
+                'bond': '/bond-form',
+                'engineering': '/engineering-form',
+                'liability': '/liability-form',
+                'marine': '/marine-form',
+                'aviation': '/aviation-form',
+            };
 
-            // Determine which form to navigate to based on policy type
-            let routeUrl = '';
+            const routeUrl = typeToRoute[policy.type] || '/motor-form';
 
-            switch (policy.type) {
-                case 'motor':
-                    routeUrl = '/motor-form';
-                    break;
-                case 'home':
-                case 'fire':
-                    routeUrl = '/home-form';
-                    break;
-                case 'health':
-                    routeUrl = '/health-form';
-                    break;
-                case 'life':
-                    routeUrl = '/life-form';
-                    break;
-                default:
-                    routeUrl = '/claim-form';
-            }
-
-            // Store policy data in sessionStorage for the form
+            // Store selected policy
             sessionStorage.setItem('selectedPolicy', JSON.stringify(policy));
-            
-            console.log('Policy type:', policy.type);
-            
-            // Redirect to the appropriate form
+
             window.location.href = `${routeUrl}?policyId=${policyId}`;
             console.log(`Redirecting to ${routeUrl} for policy: ${policy.number}`);
         }

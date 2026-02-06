@@ -16,6 +16,11 @@ class MotorFormController extends Controller
         return view('motor_form.index');
     }
 
+    public function index2()
+    {
+        return view('general_accident_form.index');
+    }
+
     /**
      * Show the form for creating a new resource.
      */
