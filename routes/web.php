@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,7 +18,7 @@ Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.veri
 Route::middleware('auth.customer')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
-    Route::get('/general-accident-form', [MotorFormController::class, 'index2'])->name('general-accident-form');
+    Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
     Route::post('/motor-form/submit', [MotorFormController::class, 'store'])->name('motor-form.submit');
 });
 

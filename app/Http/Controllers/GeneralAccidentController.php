@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MotorForm;
-use App\Http\Requests\StoreMotorFormRequest;
-use App\Http\Requests\UpdateMotorFormRequest;
+use App\Http\Requests\StoreGeneralAccidentRequest;
+use App\Http\Requests\UpdateGeneralAccidentRequest;
+use App\Models\GeneralAccident;
 
-class MotorFormController extends Controller
+class GeneralAccidentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return view('motor_form.index');
+        return view('general_accident_form.index');
     }
 
     /**
@@ -27,7 +27,7 @@ class MotorFormController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreMotorFormRequest $request)
+    public function store(StoreGeneralAccidentRequest $request)
     {
         //
     }
@@ -35,7 +35,7 @@ class MotorFormController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(MotorForm $motorForm)
+    public function show(GeneralAccident $generalAccident)
     {
         //
     }
@@ -43,7 +43,7 @@ class MotorFormController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(MotorForm $motorForm)
+    public function edit(GeneralAccident $generalAccident)
     {
         //
     }
@@ -51,7 +51,7 @@ class MotorFormController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateMotorFormRequest $request, MotorForm $motorForm)
+    public function update(UpdateGeneralAccidentRequest $request, GeneralAccident $generalAccident)
     {
         //
     }
@@ -59,7 +59,7 @@ class MotorFormController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(MotorForm $motorForm)
+    public function destroy(GeneralAccident $generalAccident)
     {
         //
     }
