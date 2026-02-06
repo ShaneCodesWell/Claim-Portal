@@ -19,6 +19,16 @@ class GenovaApiService
         $this->password = config('services.genova.password');
     }
 
+    private function client()
+    {
+        return Http::withBasicAuth($this->username, $this->password)
+            ->withOptions([
+                'verify' => false,   // TEMPORARY – SSL chain issue on Genova side
+            ])
+            ->timeout(30)
+            ->asForm();
+    }
+
     // Step 1: Customer Verification - sends OTP immediately
     public function customerVerification($identifier, $type = 'mobile_no')
     {
@@ -41,10 +51,11 @@ class GenovaApiService
 
         Log::info('Calling request-claim-otp with params:', $params);
 
-        return Http::withBasicAuth($this->username, $this->password)
-            ->timeout(30)
-            ->asForm()
-            ->post($this->baseUrl . '/cia/api/mobile/request-claim-otp', $params);
+        // return Http::withBasicAuth($this->username, $this->password)
+        //     ->timeout(30)
+        //     ->asForm()
+        //     ->post($this->baseUrl . '/cia/api/mobile/request-claim-otp', $params);
+        return $this->client()->post($this->baseUrl . '/cia/api/mobile/request-claim-otp', $params);
     }
 
     // Step 2: Verify Claim OTP (THIS IS THE CORRECT ENDPOINT)
@@ -55,13 +66,18 @@ class GenovaApiService
             'two_fa_code' => $twoFaCode
         ]);
 
-        return Http::withBasicAuth($this->username, $this->password)
-            ->timeout(30)
-            ->asForm()
-            ->post($this->baseUrl . '/cia/api/mobile/verify-claim-otp', [
-                'user_id' => $userId,
-                'two_fa_code' => $twoFaCode,
-            ]);
+        // return Http::withBasicAuth($this->username, $this->password)
+        //     ->timeout(30)
+        //     ->asForm()
+        //     ->post($this->baseUrl . '/cia/api/mobile/verify-claim-otp', [
+        //         'user_id' => $userId,
+        //         'two_fa_code' => $twoFaCode,
+        //     ]);
+        return $this->client()->post($this->baseUrl . '/cia/api/mobile/verify-claim-otp', [
+            'user_id' => $userId,
+            'two_fa_code' => $twoFaCode,
+        ]);
+
     }
 
     // Fetch Business Classes
@@ -69,12 +85,16 @@ class GenovaApiService
     {
         Log::info('Calling business-class with phone:', ['phone_number' => $phoneNumber]);
 
-        return Http::withBasicAuth($this->username, $this->password)
-            ->timeout(30)
-            ->asForm()
-            ->post($this->baseUrl . '/cia/api/mobile/business-class', [
-                'phone_number' => $phoneNumber,
-            ]);
+        // return Http::withBasicAuth($this->username, $this->password)
+        //     ->timeout(30)
+        //     ->asForm()
+        //     ->post($this->baseUrl . '/cia/api/mobile/business-class', [
+        //         'phone_number' => $phoneNumber,
+        //     ]);
+        return $this->client()->post($this->baseUrl . '/cia/api/mobile/business-class', [
+            'phone_number' => $phoneNumber,
+        ]);
+
     }
 
     // Fetch Products by Business Class
@@ -82,12 +102,16 @@ class GenovaApiService
     {
         Log::info('Calling products-by-class with:', ['business_class_id' => $businessClassId]);
 
-        return Http::withBasicAuth($this->username, $this->password)
-            ->timeout(30)
-            ->asForm()
-            ->post($this->baseUrl . '/cia/api/mobile/products-by-class', [
-                'business_class_id' => $businessClassId,
-            ]);
+        // return Http::withBasicAuth($this->username, $this->password)
+        //     ->timeout(30)
+        //     ->asForm()
+        //     ->post($this->baseUrl . '/cia/api/mobile/products-by-class', [
+        //         'business_class_id' => $businessClassId,
+        //     ]);
+        return $this->client()->post($this->baseUrl . '/cia/api/mobile/products-by-class', [
+            'business_class_id' => $businessClassId,
+        ]);
+
     }
 
     // Fetch Customer Policies
@@ -124,9 +148,11 @@ class GenovaApiService
 
         Log::info('Calling customer-search with params:', $params);
 
-        return Http::withBasicAuth($this->username, $this->password)
-            ->timeout(30)
-            ->asForm()
-            ->post($this->baseUrl . '/cia/api/mobile/customer-search', $params);
+        // return Http::withBasicAuth($this->username, $this->password)
+        //     ->timeout(30)
+        //     ->asForm()
+        //     ->post($this->baseUrl . '/cia/api/mobile/customer-search', $params);
+        return $this->client()->post($this->baseUrl . '/cia/api/mobile/customer-search', $params);
+
     }
 }
