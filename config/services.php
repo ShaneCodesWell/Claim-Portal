@@ -36,7 +36,7 @@ return [
     ],
 
     'genova' => [
-        'base_url' => env('GENOVA_BASE_URL', 'https://vanguard.genovainsure.com'),
+        'base_url' => env('GENOVA_BASE_URL', 'https://glive.vanguardassurance.com'),
         'username' => env('GENOVA_USERNAME', 'Moses'),
         'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
     ],
