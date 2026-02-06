@@ -132,7 +132,19 @@ class AuthController extends Controller
                 return back()->withErrors(['Invalid OTP. Please try again.'])->withInput();
             }
 
-            $data = $response->json('data');
+            $payload = $response->json();
+
+            if (!isset($payload['data']) || !is_array($payload['data'])) {
+                Log::error('Unexpected Genova login payload', [
+                    'payload' => $payload
+                ]);
+
+                return back()->withErrors([
+                    'We could not verify your details at the moment. Please try again.'
+                ])->withInput();
+            }
+
+            $data = $payload['data'];
 
             // Update session with additional customer data
             session([
