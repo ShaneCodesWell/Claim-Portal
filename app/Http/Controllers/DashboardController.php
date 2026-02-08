@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Customer;
+use App\Models\Policy;
 use App\Services\GenovaApiService;
 use Illuminate\Support\Facades\Log;
 
@@ -23,7 +25,7 @@ class DashboardController extends Controller
             $customerCode = session('customer_code');
 
             // Prepare customer data from session
-            $customer = [
+            $sessionCustomer = [
                 'name' => session('fullname') ?? session('name'),
                 'phone_number' => $phoneNumber,
                 'user_id' => session('user_id'),
@@ -116,7 +118,7 @@ class DashboardController extends Controller
                             if (isset($customerInfo['policies']) && is_array($customerInfo['policies'])) {
                                 foreach ($customerInfo['policies'] as $policy) {
                                     // Enrich policy with product and business class information
-                                    $productId = $policy['product_id'];
+                                    $productId = $policy['product_id'] ?? null;
 
                                     if (isset($allProducts[$productId])) {
                                         $policy['product_name'] = $allProducts[$productId]['name'];
@@ -157,6 +159,45 @@ class DashboardController extends Controller
                 }
 
                 $policies = $allPolicies;
+                $policies = $policies ?? [];
+
+                if ($customerData && !empty($customerData['code'])) {
+                    $dbCustomer = Customer::updateOrCreate(
+                        [
+                            'external_customer_code' => $customerData['code'] ?? null,
+                        ],
+                        [
+                            'external_customer_id' => session('user_id'),
+                            'name'             => $customerData['name'] ?? $sessionCustomer['name'] ?? null,
+                            'phone'            => $customerData['phone_number'] ?? $phoneNumber,
+                            'email'            => $customerData['email'] ?? null,
+                            'last_synced_at'   => now(),
+                        ]
+                    );
+
+                foreach ($policies as $policy) {
+
+                    Policy::updateOrCreate(
+                        [
+                            'customer_id'  => $dbCustomer->id,
+                            'policy_number'=> $policy['policy_number'],
+                        ],
+                        [
+                            'external_policy_id'  => $policy['policy_id'] ?? null,
+                            'product_id'          => $policy['product_id'] ?? null,
+                            'product_name'        => $policy['product_name'] ?? null,
+                            'business_class_id'   => $policy['business_class_id'] ?? null,
+                            'business_class_name' => $policy['business_class_name'] ?? null,
+                            'start_date'          => $policy['start_date'] ?? null,
+                            'end_date'            => $policy['end_date'] ?? null,
+                            'status'              => $policy['status'] ?? null,
+                            // store full policy snapshot for safety
+                            'raw_payload'         => $policy,
+                            'last_synced_at'      => now(),
+                        ]
+                    );
+                }
+            }
 
                 Log::info('Policies filtered for logged-in customer', [
                     'total_policies' => count($policies),
@@ -174,12 +215,12 @@ class DashboardController extends Controller
             }
 
             return view('dashboard.index', [
-                'name' => $customer['name'] ?? 'Guest',
+                'name' => $sessionCustomer['name'] ?? 'Guest',
                 'policies' => $policies,
                 'customerData' => $customerData,
                 'businessClasses' => $businessClasses,
                 'allProducts' => $allProducts,
-                'customer' => $customer,
+                'customer' => $sessionCustomer,
             ]);
         } catch (\Exception $e) {
             Log::error('Dashboard error: ' . $e->getMessage(), [
@@ -202,6 +243,12 @@ class DashboardController extends Controller
             ]);
         }
     }
+
+    // For testing alternative dashboard view
+    // public function index2()
+    // {
+    //     return view('dashboard.index2');
+    // }
 
     public function form()
     {

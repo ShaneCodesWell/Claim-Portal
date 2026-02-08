@@ -75,6 +75,7 @@ class AuthController extends Controller
                 'sent_to'       => $data['sent_to'] ?? [],
                 'customer_verified' => true,
             ]);
+            session(['authenticated' => true]);
 
             Log::info('User verified and OTP sent', [
                 'user_id' => $data['user_id'],
@@ -86,7 +87,7 @@ class AuthController extends Controller
             $successMessage = $data['message'] ?? 'OTP sent to your registered contact.';
 
             // return redirect()->route('otp')->with('success', $successMessage); // Uncomment this when OTP verification is available
-            return redirect()->route('test-dashboard')->with('success', $successMessage);
+            return redirect()->route('dashboard')->with('success', $successMessage);
         } catch (\Exception $e) {
             Log::error('Login Error: ' . $e->getMessage());
             return back()->withErrors(['Connection failed: ' . $e->getMessage()])->withInput();

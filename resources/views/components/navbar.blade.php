@@ -60,7 +60,7 @@
                                 </div>
 
                                 <!-- Menu Items -->
-                                <a href="{{ route('test-dashboard') }}"
+                                <a href="{{ route('dashboard') }}"
                                     class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-th-large mr-3 text-gray-400"></i>
                                     Dashboard
