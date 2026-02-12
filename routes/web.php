@@ -17,6 +17,7 @@ Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.veri
 
 Route::middleware('auth.customer')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/sync-policies', [DashboardController::class, 'syncPolicies'])->name('dashboard.sync');
     Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
     Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
     Route::post('/motor-form/submit', [MotorFormController::class, 'store'])->name('motor-form.submit');

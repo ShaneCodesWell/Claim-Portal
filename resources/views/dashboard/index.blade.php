@@ -50,6 +50,11 @@
                     </div>
                     <div class="text-sm font-medium text-red-700">Expired</div>
                 </div>
+                <button onclick="syncPoliciesInBackground()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh Policies
+                </button>
             </div>
         </div>
 
@@ -164,7 +169,7 @@
             @endif
         </div>
     </div>
-    <script>
+    {{-- <script>
         // Get policies from backend (passed from controller)
         const policies = @json($policies).map(policy => {
             // Use the business class name from API
@@ -660,6 +665,575 @@
                     d.classList.add('hidden');
                 });
             }
+        });
+    </script> --}}
+
+    <script>
+        // Get policies from backend (passed from controller)
+        let policies = @json($policies).map(policy => {
+            // Use the business class name from API
+            let policyClass = (policy.business_class_name || 'Unknown').toLowerCase();
+            let policyClassName = policy.business_class_name || 'Unknown Class';
+            let policyProduct = policy.product_name || 'Unknown Product';
+
+            // Normalize class names for filtering
+            if (policyClass.includes('motor')) {
+                policyClass = 'motor';
+            } else if (policyClass.includes('fire') || policyClass.includes('home')) {
+                policyClass = 'home';
+            } else if (policyClass.includes('life')) {
+                policyClass = 'life';
+            } else if (policyClass.includes('health')) {
+                policyClass = 'health';
+            }
+
+            // Determine status based on dates
+            const today = new Date();
+            const endDate = new Date(policy.policy_end_date);
+            const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+
+            let status = 'active';
+            let statusText = 'Active';
+
+            if (daysUntilExpiry < 0) {
+                status = 'expired';
+                statusText = 'Expired';
+            } else if (daysUntilExpiry <= 30) {
+                status = 'pending';
+                statusText = 'Pending Renewal';
+            }
+
+            return {
+                id: policy.policy_id,
+                number: policy.policy_number,
+                type: policyClass,
+                className: policyClassName,
+                productName: policyProduct,
+                vehicle: policy.vehicle_number || 'N/A',
+                status: status,
+                statusText: statusText,
+                renewalDate: policy.renewal_date,
+                premium: 'N/A',
+                policy_start_date: policy.policy_start_date,
+                policy_end_date: policy.policy_end_date,
+                product_id: policy.product_id,
+                business_class_id: policy.business_class_id,
+                customer_name: policy.customer_name || '',
+                customer_code: policy.customer_code || '',
+                customer_phone: policy.customer_phone || '',
+                customer_email: policy.customer_email || ''
+            };
+        });
+
+        console.log('Loaded policies:', policies);
+
+        // Pagination state
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let currentFilteredPolicies = policies;
+
+        // Sync state
+        let isSyncing = false;
+        let syncInterval = null;
+
+        // Calculate and update stats
+        function updateStats() {
+            const activePolicies = policies.filter(p => p.status === 'active').length;
+            const pendingRenewal = policies.filter(p => p.status === 'pending').length;
+            const expiredPolicies = policies.filter(p => p.status === 'expired').length;
+
+            const statBadges = document.querySelectorAll('.flex.items-center.gap-3.px-4.py-2');
+            if (statBadges.length >= 3) {
+                statBadges[0].querySelector('.font-bold').textContent = activePolicies;
+                statBadges[0].querySelector('.text-sm.font-medium').textContent = 'Active Policies';
+                statBadges[1].querySelector('.font-bold').textContent = pendingRenewal;
+                statBadges[1].querySelector('.text-sm.font-medium').textContent = 'Pending Renewal';
+                statBadges[2].querySelector('.font-bold').textContent = expiredPolicies;
+                statBadges[2].querySelector('.text-sm.font-medium').textContent = 'Expired';
+            }
+        }
+
+        // Background sync function
+        async function syncPoliciesInBackground() {
+            if (isSyncing) {
+                console.log('Sync already in progress, skipping...');
+                return;
+            }
+
+            isSyncing = true;
+            console.log('Starting background policy sync...');
+            showSyncIndicator(true);
+
+            try {
+                const response = await fetch('/dashboard/sync-policies', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.policies && data.policies.length > 0) {
+                    console.log('Sync successful:', data.policies.length, 'policies updated');
+                    updatePoliciesData(data.policies);
+                    showNotification('Policies updated successfully', 'success');
+                } else {
+                    console.log('Sync completed but no new data');
+                }
+            } catch (error) {
+                console.error('Background sync failed:', error);
+                showNotification('Failed to sync policies', 'error');
+            } finally {
+                isSyncing = false;
+                showSyncIndicator(false);
+            }
+        }
+
+        // Update policies data and re-render
+        function updatePoliciesData(newPolicies) {
+            const mappedPolicies = newPolicies.map(policy => {
+                let policyClass = (policy.business_class_name || 'Unknown').toLowerCase();
+                let policyClassName = policy.business_class_name || 'Unknown Class';
+                let policyProduct = policy.product_name || 'Unknown Product';
+
+                if (policyClass.includes('motor')) {
+                    policyClass = 'motor';
+                } else if (policyClass.includes('fire') || policyClass.includes('home')) {
+                    policyClass = 'home';
+                } else if (policyClass.includes('life')) {
+                    policyClass = 'life';
+                } else if (policyClass.includes('health')) {
+                    policyClass = 'health';
+                }
+
+                const today = new Date();
+                const endDate = new Date(policy.policy_end_date);
+                const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+
+                let status = 'active';
+                let statusText = 'Active';
+
+                if (daysUntilExpiry < 0) {
+                    status = 'expired';
+                    statusText = 'Expired';
+                } else if (daysUntilExpiry <= 30) {
+                    status = 'pending';
+                    statusText = 'Pending Renewal';
+                }
+
+                return {
+                    id: policy.policy_id,
+                    number: policy.policy_number,
+                    type: policyClass,
+                    className: policyClassName,
+                    productName: policyProduct,
+                    vehicle: policy.vehicle_number || 'N/A',
+                    status: status,
+                    statusText: statusText,
+                    renewalDate: policy.renewal_date,
+                    premium: 'N/A',
+                    policy_start_date: policy.policy_start_date,
+                    policy_end_date: policy.policy_end_date,
+                    product_id: policy.product_id,
+                    business_class_id: policy.business_class_id,
+                    customer_name: policy.customer_name || '',
+                    customer_code: policy.customer_code || '',
+                    customer_phone: policy.customer_phone || '',
+                    customer_email: policy.customer_email || ''
+                };
+            });
+
+            policies.length = 0;
+            policies.push(...mappedPolicies);
+            updateStats();
+            filterPolicies();
+        }
+
+        function showSyncIndicator(show) {
+            let indicator = document.getElementById('sync-indicator');
+
+            if (show && !indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'sync-indicator';
+                indicator.className =
+                    'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50';
+                indicator.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Syncing policies...</span>
+            `;
+                document.body.appendChild(indicator);
+            } else if (!show && indicator) {
+                indicator.remove();
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            'bg-blue-500'
+        } text-white`;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        function getPolicyIcon(policyType) {
+            const iconMap = {
+                'motor': 'fa-car',
+                'home': 'fa-home',
+                'fire': 'fa-fire',
+                'health': 'fa-heartbeat',
+                'life': 'fa-user-shield',
+                'marine': 'fa-ship',
+                'aviation': 'fa-plane',
+                'engineering': 'fa-tools',
+                'bond': 'fa-handshake',
+                'liability': 'fa-shield-alt',
+                'agriculture': 'fa-tractor'
+            };
+            return iconMap[policyType] || 'fa-file-contract';
+        }
+
+        function renderPolicies(filteredPolicies = policies, page = 1) {
+            const tableBody = document.getElementById("policies-table-body");
+            const emptyState = document.getElementById("empty-state");
+            const paginationContainer = document.getElementById("pagination-container");
+
+            currentFilteredPolicies = filteredPolicies;
+            currentPage = page;
+            tableBody.innerHTML = "";
+
+            if (filteredPolicies.length === 0) {
+                tableBody.classList.add("hidden");
+                if (emptyState) emptyState.classList.remove("hidden");
+                if (paginationContainer) paginationContainer.classList.add("hidden");
+                return;
+            }
+
+            tableBody.classList.remove("hidden");
+            if (emptyState) emptyState.classList.add("hidden");
+
+            const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedPolicies = filteredPolicies.slice(startIndex, endIndex);
+
+            paginatedPolicies.forEach((policy) => {
+                const row = document.createElement("tr");
+                row.className = "fade-in";
+
+                let statusColor = "bg-green-100 text-green-800";
+                if (policy.status === "pending") statusColor = "bg-yellow-100 text-yellow-800";
+                else if (policy.status === "expired") statusColor = "bg-red-100 text-red-800";
+
+                const icon = getPolicyIcon(policy.type);
+
+                row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas ${icon} text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-sm font-medium text-gray-900">${policy.className}</div>
+                            <div class="text-sm text-gray-500">${policy.vehicle}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-500">${policy.number}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${policy.productName}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-500">${policy.premium}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">
+                        ${policy.statusText}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${new Date(policy.renewalDate).toLocaleDateString("en-US", 
+                        { year: "numeric", month: "long", day: "numeric" }
+                    )}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div class="relative inline-block text-left">
+                        <button onclick="toggleDropdown(${policy.id})" 
+                                id="dropdown-button-${policy.id}"
+                                class="text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md transition-colors inline-flex items-center">
+                            Actions
+                            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <div id="dropdown-${policy.id}" 
+                            class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-gray-300 ring-opacity-5 z-10">
+                            <div class="py-1">
+                                <button onclick="viewDetails(${policy.id})" 
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center">
+                                    <i class="fas fa-eye mr-2"></i>
+                                    View Details
+                                </button>
+                                <button onclick="processClaim(${policy.id})" 
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 flex items-center">
+                                    <i class="fas fa-file-invoice mr-2"></i>
+                                    Process Claim
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            `;
+                tableBody.appendChild(row);
+            });
+
+            renderPagination(filteredPolicies.length, page);
+        }
+
+        function filterPolicies() {
+            const searchTerm = document.getElementById("search-policies").value.toLowerCase();
+            const policyType = document.getElementById("policy-type").value;
+            const policyStatus = document.getElementById("policy-status").value;
+
+            const filteredPolicies = policies.filter((policy) => {
+                const matchesSearch =
+                    policy.number.toLowerCase().includes(searchTerm) ||
+                    policy.className.toLowerCase().includes(searchTerm) ||
+                    policy.productName.toLowerCase().includes(searchTerm) ||
+                    policy.vehicle.toLowerCase().includes(searchTerm);
+
+                const matchesType = !policyType ||
+                    policy.type === policyType ||
+                    policy.className.toLowerCase() === policyType;
+
+                const matchesStatus = !policyStatus || policy.status === policyStatus;
+
+                return matchesSearch && matchesType && matchesStatus;
+            });
+
+            renderPolicies(filteredPolicies, 1);
+        }
+
+        function renderPagination(totalItems, currentPage) {
+            const paginationContainer = document.getElementById("pagination-container");
+            if (!paginationContainer) return;
+
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            if (totalPages <= 1) {
+                paginationContainer.classList.add("hidden");
+                return;
+            }
+
+            paginationContainer.classList.remove("hidden");
+
+            let paginationHTML = '<div class="flex items-center justify-between px-6 py-4 border-t border-gray-200">';
+            const startItem = (currentPage - 1) * itemsPerPage + 1;
+            const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+            paginationHTML += `
+            <div class="text-sm text-gray-700">
+                Showing <span class="font-medium">${startItem}</span> to <span class="font-medium">${endItem}</span> of <span class="font-medium">${totalItems}</span> policies
+            </div>
+        `;
+
+            paginationHTML += '<div class="flex gap-2">';
+            paginationHTML += `
+            <button onclick="changePage(${currentPage - 1})" 
+                    ${currentPage === 1 ? 'disabled' : ''}
+                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        `;
+
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            if (startPage > 1) {
+                paginationHTML += `
+                <button onclick="changePage(1)" 
+                        class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    1
+                </button>
+            `;
+                if (startPage > 2) {
+                    paginationHTML += '<span class="px-2 py-2 text-gray-500">...</span>';
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentPage;
+                paginationHTML += `
+                <button onclick="changePage(${i})" 
+                        class="px-3 py-2 text-sm font-medium ${isActive ? 'text-white bg-blue-600' : 'text-gray-700 bg-white hover:bg-gray-50'} border border-gray-300 rounded-md">
+                    ${i}
+                </button>
+            `;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += '<span class="px-2 py-2 text-gray-500">...</span>';
+                }
+                paginationHTML += `
+                <button onclick="changePage(${totalPages})" 
+                        class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    ${totalPages}
+                </button>
+            `;
+            }
+
+            paginationHTML += `
+            <button onclick="changePage(${currentPage + 1})" 
+                    ${currentPage === totalPages ? 'disabled' : ''}
+                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+
+            paginationHTML += '</div></div>';
+            paginationContainer.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(currentFilteredPolicies.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+
+            renderPolicies(currentFilteredPolicies, page);
+            document.getElementById('policies-table-body').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        function processClaim(policyId) {
+            const policy = policies.find((p) => p.id === policyId);
+            if (!policy) {
+                alert('Policy not found. Please try again.');
+                return;
+            }
+
+            const policyType = policy.type ? policy.type.trim().toLowerCase() : '';
+            let routeUrl = '/motor-form';
+
+            switch (policyType) {
+                case 'motor':
+                    routeUrl = '/motor-form';
+                    break;
+                case 'general accident':
+                    routeUrl = '/general-accident-form';
+                    break;
+                case 'fire':
+                    routeUrl = '/fire-form';
+                    break;
+                case 'bond':
+                    routeUrl = '/bond-form';
+                    break;
+                case 'engineering':
+                    routeUrl = '/engineering-form';
+                    break;
+                case 'liability':
+                    routeUrl = '/liability-form';
+                    break;
+                case 'marine':
+                    routeUrl = '/marine-form';
+                    break;
+                case 'aviation':
+                    routeUrl = '/aviation-form';
+                    break;
+            }
+
+            sessionStorage.setItem('selectedPolicy', JSON.stringify(policy));
+            window.location.href = `${routeUrl}?policyId=${policyId}`;
+        }
+
+        function viewDetails(policyId) {
+            const policy = policies.find(p => p.id === policyId);
+            if (!policy) return;
+
+            const details = `
+                === POLICY DETAILS ===
+
+                Policy Number: ${policy.number}
+                Business Class: ${policy.className}
+                Product: ${policy.productName}
+                Vehicle/Asset: ${policy.vehicle}
+                Status: ${policy.statusText}
+
+                Start Date: ${policy.policy_start_date}
+                End Date: ${policy.policy_end_date}
+                Renewal Date: ${new Date(policy.renewalDate).toLocaleDateString()}
+
+                Customer: ${policy.customer_name}
+                Customer Code: ${policy.customer_code}
+                Phone: ${policy.customer_phone}
+                Email: ${policy.customer_email}
+                        `.trim();
+
+            alert(details);
+            document.getElementById(`dropdown-${policyId}`)?.classList.add('hidden');
+        }
+
+        function toggleDropdown(policyId) {
+            const dropdown = document.getElementById(`dropdown-${policyId}`);
+            document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
+                if (d.id !== `dropdown-${policyId}`) d.classList.add('hidden');
+            });
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStats();
+            renderPolicies();
+
+            document.getElementById("search-policies")?.addEventListener("input", filterPolicies);
+            document.getElementById("policy-type")?.addEventListener("change", filterPolicies);
+            document.getElementById("policy-status")?.addEventListener("change", filterPolicies);
+
+            document.getElementById("clear-filters")?.addEventListener("click", () => {
+                document.getElementById("search-policies").value = "";
+                document.getElementById("policy-type").value = "";
+                document.getElementById("policy-status").value = "";
+                renderPolicies(policies, 1);
+            });
+
+            // Start background sync after 2 seconds
+            setTimeout(() => {
+                syncPoliciesInBackground();
+                syncInterval = setInterval(syncPoliciesInBackground, 5 * 60 * 1000);
+            }, 2000);
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('[id^="dropdown-button-"]') &&
+                !event.target.closest('[id^="dropdown-"]')) {
+                document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
+                    d.classList.add('hidden');
+                });
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (syncInterval) clearInterval(syncInterval);
         });
     </script>
 </x-layouts.app>
