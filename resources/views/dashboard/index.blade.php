@@ -115,13 +115,13 @@
                     </div>
                     <div class="text-sm font-medium text-blue-700">Active Policies</div>
                 </div>
-                <div class="flex items-center gap-3 px-4 py-2 bg-green-50 border border-green-100 rounded-full">
+                {{-- <div class="flex items-center gap-3 px-4 py-2 bg-green-50 border border-green-100 rounded-full">
                     <div
                         class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-green-600">
                         <span class="font-bold text-sm" id="pending-count">0</span>
                     </div>
                     <div class="text-sm font-medium text-green-700">Pending Renewal</div>
-                </div>
+                </div> --}}
                 <div class="flex items-center gap-3 px-4 py-2 bg-red-50 border border-red-100 rounded-full">
                     <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-red-600">
                         <span class="font-bold text-sm" id="expired-count">0</span>
@@ -167,7 +167,7 @@
                         <option value="">All Statuses</option>
                         <option value="active">Active</option>
                         <option value="expired">Expired</option>
-                        <option value="pending">Pending Renewal</option>
+                        {{-- <option value="pending">Pending Renewal</option> --}}
                     </select>
 
                     <button id="clear-filters"
@@ -257,122 +257,7 @@
     </div>
 
     {{-- Policy Details Modal --}}
-    <div id="policyModal" class="modal">
-        <div class="modal-content">
-            {{-- Modal Header --}}
-            <div class="bg-blue-600 text-white px-6 py-4 rounded-t-xl">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-white/20 p-2 rounded-lg">
-                            <i class="fas fa-file-contract text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold">Policy Details</h3>
-                            <p class="text-blue-100 text-sm" id="modal-policy-number"></p>
-                        </div>
-                    </div>
-                    <button onclick="closeModal()" class="text-white hover:text-blue-100 transition-colors">
-                        <i class="fas fa-times text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-
-            {{-- Modal Body --}}
-            <div class="p-6 space-y-6">
-                {{-- Logo --}}
-                <div class="flex items-center justify-center pb-4 border-b border-gray-200">
-                    <img src="{{ asset('images/Vanguard.png') }}" alt="Logo" class="w-40 h-12">
-                </div>
-
-                {{-- Policy Information --}}
-                <div class="space-y-4">
-                    <h4 class="font-bold text-gray-900 text-base flex items-center gap-2">
-                        <i class="fas fa-info-circle text-blue-600"></i>
-                        Policy Information
-                    </h4>
-                    <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Business Class</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-business-class"></p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Product</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-product"></p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Vehicle/Asset</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-vehicle"></p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Status</p>
-                            <span class="text-sm font-bold" id="modal-status"></span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Coverage Period --}}
-                <div class="space-y-4">
-                    <h4 class="font-bold text-gray-900 text-base flex items-center gap-2">
-                        <i class="fas fa-calendar-alt text-blue-600"></i>
-                        Coverage Period
-                    </h4>
-                    <div class="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Start Date</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-start-date"></p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">End Date</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-end-date"></p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Renewal Date</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-renewal-date"></p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Customer Information --}}
-                <div class="space-y-4">
-                    <h4 class="font-bold text-gray-900 text-base flex items-center gap-2">
-                        <i class="fas fa-user text-blue-600"></i>
-                        Customer Information
-                    </h4>
-                    <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Name</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-customer-name"></p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Customer Code</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-customer-code"></p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Phone</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-customer-phone"></p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Email</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modal-customer-email"></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Modal Footer --}}
-            <div class="px-6 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200 flex justify-end gap-3">
-                <button onclick="closeModal()"
-                    class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
-                    Close
-                </button>
-                <button onclick="processClaimFromModal()"
-                    class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
-                    <i class="fas fa-file-invoice"></i>
-                    File Claim
-                </button>
-            </div>
-        </div>
-    </div>
+    <x-policy-details-modal />
 
     <script>
         let policies = @json($policies).map(policy => {
@@ -394,15 +279,15 @@
             const endDate = new Date(policy.policy_end_date);
             const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
 
-            let status = 'active';
-            let statusText = 'Active';
+            let status;
+            let statusText;
 
             if (daysUntilExpiry < 0) {
                 status = 'expired';
                 statusText = 'Expired';
-            } else if (daysUntilExpiry <= 30) {
-                status = 'pending';
-                statusText = 'Pending Renewal';
+            } else {
+                status = 'active';
+                statusText = 'Active';
             }
 
             return {
@@ -438,11 +323,11 @@
 
         function updateStats() {
             const activePolicies = policies.filter(p => p.status === 'active').length;
-            const pendingRenewal = policies.filter(p => p.status === 'pending').length;
+            // const pendingRenewal = policies.filter(p => p.status === 'pending').length;
             const expiredPolicies = policies.filter(p => p.status === 'expired').length;
 
             document.getElementById('active-count').textContent = activePolicies;
-            document.getElementById('pending-count').textContent = pendingRenewal;
+            // document.getElementById('pending-count').textContent = pendingRenewal;
             document.getElementById('expired-count').textContent = expiredPolicies;
         }
 
@@ -505,15 +390,15 @@
                 const endDate = new Date(policy.policy_end_date);
                 const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
 
-                let status = 'active';
-                let statusText = 'Active';
+                let status;
+                let statusText;
 
                 if (daysUntilExpiry < 0) {
                     status = 'expired';
                     statusText = 'Expired';
-                } else if (daysUntilExpiry <= 30) {
-                    status = 'pending';
-                    statusText = 'Pending Renewal';
+                } else {
+                    status = 'active';
+                    statusText = 'Active';
                 }
 
                 return {
@@ -637,7 +522,7 @@
 
                 let statusBadge = {
                     active: 'bg-green-100 text-green-700 border border-green-200',
-                    pending: 'bg-amber-100 text-amber-700 border border-amber-200',
+                    // pending: 'bg-amber-100 text-amber-700 border border-amber-200',
                     expired: 'bg-red-100 text-red-700 border border-red-200'
                 };
 
@@ -846,49 +731,72 @@
             document.getElementById('modal-vehicle').textContent = policy.vehicle;
 
             const statusColors = {
-                active: 'text-green-600',
-                pending: 'text-amber-600',
-                expired: 'text-red-600'
+                active: 'text-green-600 bg-green-50 px-3 py-1 rounded-full',
+                expired: 'text-red-600 bg-red-50 px-3 py-1 rounded-full'
             };
+            
             const statusElement = document.getElementById('modal-status');
             statusElement.textContent = policy.statusText;
-            statusElement.className = `text-sm font-bold ${statusColors[policy.status]}`;
+            statusElement.className = `text-sm font-bold ${statusColors[policy.status] || 'text-gray-600 bg-gray-50 px-3 py-1 rounded-full'}`;
 
-            document.getElementById('modal-start-date').textContent = new Date(policy.policy_start_date).toLocaleDateString(
-                "en-US", {
+            // Format dates nicely
+            const formatDate = (dateString) => {
+                if (!dateString) return 'N/A';
+                return new Date(dateString).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "long",
                     day: "numeric"
                 });
-            document.getElementById('modal-end-date').textContent = new Date(policy.policy_end_date).toLocaleDateString(
-                "en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric"
-                });
-            document.getElementById('modal-renewal-date').textContent = new Date(policy.renewalDate).toLocaleDateString(
-                "en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric"
-                });
+            };
 
-            document.getElementById('modal-customer-name').textContent = policy.customer_name;
-            document.getElementById('modal-customer-code').textContent = policy.customer_code;
-            document.getElementById('modal-customer-phone').textContent = policy.customer_phone;
+            document.getElementById('modal-start-date').textContent = formatDate(policy.policy_start_date);
+            document.getElementById('modal-end-date').textContent = formatDate(policy.policy_end_date);
+            document.getElementById('modal-renewal-date').textContent = formatDate(policy.renewalDate);
+
+            document.getElementById('modal-customer-name').textContent = policy.customer_name || 'N/A';
+            document.getElementById('modal-customer-code').textContent = policy.customer_code || 'N/A';
+            document.getElementById('modal-customer-phone').textContent = policy.customer_phone || 'N/A';
             document.getElementById('modal-customer-email').textContent = policy.customer_email || 'N/A';
 
-            // Show modal
-            document.getElementById('policyModal').classList.add('active');
+            // Show modal - remove hidden class and add flex
+            const modal = document.getElementById('policyModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Prevent body scrolling
+            document.body.style.overflow = 'hidden';
 
             // Close dropdown
             document.getElementById(`dropdown-${policyId}`)?.classList.add('hidden');
         }
 
         function closeModal() {
-            document.getElementById('policyModal').classList.remove('active');
+            const modal = document.getElementById('policyModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            
+            // Restore body scrolling
+            document.body.style.overflow = '';
+            
             currentPolicyId = null;
         }
+
+        // Update the click outside listener
+        document.getElementById('policyModal')?.addEventListener('click', (event) => {
+            if (event.target.id === 'policyModal') {
+                closeModal();
+            }
+        });
+
+        // Add ESC key handler
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('policyModal');
+                if (!modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            }
+        });
 
         function processClaimFromModal() {
             if (currentPolicyId) {
