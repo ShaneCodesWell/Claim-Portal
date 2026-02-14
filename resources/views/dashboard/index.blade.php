@@ -323,11 +323,9 @@
 
         function updateStats() {
             const activePolicies = policies.filter(p => p.status === 'active').length;
-            // const pendingRenewal = policies.filter(p => p.status === 'pending').length;
             const expiredPolicies = policies.filter(p => p.status === 'expired').length;
 
             document.getElementById('active-count').textContent = activePolicies;
-            // document.getElementById('pending-count').textContent = pendingRenewal;
             document.getElementById('expired-count').textContent = expiredPolicies;
         }
 
@@ -522,7 +520,6 @@
 
                 let statusBadge = {
                     active: 'bg-green-100 text-green-700 border border-green-200',
-                    // pending: 'bg-amber-100 text-amber-700 border border-amber-200',
                     expired: 'bg-red-100 text-red-700 border border-red-200'
                 };
 
@@ -711,7 +708,7 @@
                 // Position the dropdown
                 const rect = button.getBoundingClientRect();
                 dropdown.style.top = `${rect.bottom + window.scrollY + 4}px`;
-                dropdown.style.left = `${rect.right - 192 + window.scrollX}px`; // 192px = w-48
+                dropdown.style.left = `${rect.right - 192 + window.scrollX}px`;
                 dropdown.classList.remove('hidden');
             } else {
                 dropdown.classList.add('hidden');
@@ -722,7 +719,10 @@
             const policy = policies.find(p => p.id === policyId);
             if (!policy) return;
 
+            // Store the policy ID in the modal's data attribute
             currentPolicyId = policyId;
+            const modal = document.getElementById('policyModal');
+            modal.setAttribute('data-policy-id', policyId);
 
             // Populate modal
             document.getElementById('modal-policy-number').textContent = policy.number;
@@ -734,10 +734,11 @@
                 active: 'text-green-600 bg-green-50 px-3 py-1 rounded-full',
                 expired: 'text-red-600 bg-red-50 px-3 py-1 rounded-full'
             };
-            
+
             const statusElement = document.getElementById('modal-status');
             statusElement.textContent = policy.statusText;
-            statusElement.className = `text-sm font-bold ${statusColors[policy.status] || 'text-gray-600 bg-gray-50 px-3 py-1 rounded-full'}`;
+            statusElement.className =
+                `text-sm font-bold ${statusColors[policy.status] || 'text-gray-600 bg-gray-50 px-3 py-1 rounded-full'}`;
 
             // Format dates nicely
             const formatDate = (dateString) => {
@@ -758,11 +759,10 @@
             document.getElementById('modal-customer-phone').textContent = policy.customer_phone || 'N/A';
             document.getElementById('modal-customer-email').textContent = policy.customer_email || 'N/A';
 
-            // Show modal - remove hidden class and add flex
-            const modal = document.getElementById('policyModal');
+            // Show modal
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            
+
             // Prevent body scrolling
             document.body.style.overflow = 'hidden';
 
@@ -774,35 +774,12 @@
             const modal = document.getElementById('policyModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            
+            modal.setAttribute('data-policy-id', '');
+
             // Restore body scrolling
             document.body.style.overflow = '';
-            
+
             currentPolicyId = null;
-        }
-
-        // Update the click outside listener
-        document.getElementById('policyModal')?.addEventListener('click', (event) => {
-            if (event.target.id === 'policyModal') {
-                closeModal();
-            }
-        });
-
-        // Add ESC key handler
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
-                const modal = document.getElementById('policyModal');
-                if (!modal.classList.contains('hidden')) {
-                    closeModal();
-                }
-            }
-        });
-
-        function processClaimFromModal() {
-            if (currentPolicyId) {
-                closeModal();
-                processClaim(currentPolicyId);
-            }
         }
 
         function processClaim(policyId) {
@@ -867,6 +844,16 @@
             }
         });
 
+        // Add ESC key handler
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('policyModal');
+                if (!modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             updateStats();
             renderPolicies();
@@ -881,6 +868,24 @@
                 document.getElementById("policy-status").value = "";
                 renderPolicies(policies, 1);
             });
+
+            // ATTACH EVENT LISTENER TO FILE CLAIM BUTTON IN MODAL
+            const fileClaimBtn = document.getElementById('modal-file-claim-btn');
+            if (fileClaimBtn) {
+                fileClaimBtn.addEventListener('click', function() {
+                    const modal = document.getElementById('policyModal');
+                    const policyId = modal.getAttribute('data-policy-id');
+
+                    console.log('File Claim clicked, Policy ID:', policyId);
+
+                    if (policyId) {
+                        closeModal();
+                        processClaim(parseInt(policyId));
+                    } else {
+                        showNotification('No policy selected. Please try again.', 'error');
+                    }
+                });
+            }
 
             setTimeout(() => {
                 syncPoliciesInBackground();

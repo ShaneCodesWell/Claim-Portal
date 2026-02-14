@@ -1,4 +1,5 @@
-<div id="policyModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+<div id="policyModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50"
+    data-policy-id="">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {{-- Modal Header --}}
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
@@ -12,7 +13,8 @@
                     <span class="text-sm text-gray-500" id="modal-policy-number"></span>
                 </div>
             </div>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg p-2 transition-colors">
+            <button onclick="closeModal()"
+                class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg p-2 transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -87,10 +89,12 @@
 
         {{-- Modal Footer --}}
         <div class="px-6 py-4 bg-gray-50 rounded-b-xl border-t border-gray-100 flex justify-end gap-3 sticky bottom-0">
-            <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium rounded-lg hover:bg-gray-200 transition-colors">
+            <button onclick="closeModal()"
+                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium rounded-lg hover:bg-gray-200 transition-colors">
                 Close
             </button>
-            <button onclick="processClaimFromModal()" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm hover:shadow">
+            <button id="modal-file-claim-btn"
+                class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm hover:shadow">
                 <i class="fas fa-file-invoice"></i>
                 File Claim
             </button>
