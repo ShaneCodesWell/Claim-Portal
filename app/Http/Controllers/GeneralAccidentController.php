@@ -5,15 +5,21 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreGeneralAccidentRequest;
 use App\Http\Requests\UpdateGeneralAccidentRequest;
 use App\Models\GeneralAccident;
+use Illuminate\Http\Request;
+use App\Models\Policy;
+use Illuminate\Support\Facades\Auth;
 
 class GeneralAccidentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('general_accident_form.index');
+        $policyId = $request->query('policyId');
+        $policy = Policy::where('external_policy_id', $policyId)->firstOrFail();
+        $customer = $policy->customer;
+        return view('general_accident_form.index', compact('policy', 'customer'));
     }
 
     /**

@@ -16,11 +16,11 @@
                     <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
                         Name
                     </p>
-                    <p class="text-sm font-medium text-gray-900">Moses Adonoo</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $customer->name }}</p>
                 </div>
             </div>
 
-            <div class="flex items-start">
+            {{-- <div class="flex items-start">
                 <div class="shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
                     <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -37,9 +37,9 @@
                         Cantonments, Accra, Ghana.
                     </p>
                 </div>
-            </div>
+            </div> --}}
 
-            <div class="flex items-start">
+            {{-- <div class="flex items-start">
                 <div class="shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
                     <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -54,7 +54,7 @@
                         Head Of IT
                     </p>
                 </div>
-            </div>
+            </div> --}}
 
             <div class="flex items-start">
                 <div class="shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
@@ -68,7 +68,7 @@
                         Telephone
                     </p>
                     <p class="text-sm font-medium text-gray-900">
-                        +233 50 384 1234
+                        {{ $customer->phone }}
                     </p>
                 </div>
             </div>
@@ -85,7 +85,7 @@
                         Policy Number
                     </p>
                     <p class="text-sm font-medium text-gray-900">
-                        P-1001-103-2025-0000123
+                        {{ $policy->policy_number }}
                     </p>
                 </div>
             </div>
@@ -101,7 +101,8 @@
                     <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
                         Renewal Date
                     </p>
-                    <p class="text-sm font-medium text-gray-900">31/12/2026</p>
+                    <p class="text-sm font-medium text-gray-900">
+                        {{ \Carbon\Carbon::parse($policy->renewal_date)->format('M d, Y') }}</p>
                 </div>
             </div>
         </div>

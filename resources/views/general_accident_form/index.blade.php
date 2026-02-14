@@ -1,614 +1,430 @@
 <x-layouts.app>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Section - Claimant Information -->
-        <x-claimant-info />
+        <x-claimant-info :policy="$policy" :customer="$customer" />
 
         <!-- Right Section - Form -->
         <div class="lg:col-span-2">
             <div class="bg-white rounded-lg shadow px-10 py-6">
                 <h1 class="text-2xl font-bold text-gray-900 text-center mb-3 pb-3 border-b border-gray-600 mx-auto"
                     style="max-width: 400px;">
-                    GENERAL ACCIDENT REPORT FORM
+                    TRAVEL PROTECTION CLAIM FORM
                 </h1>
 
-                <div class="pb-4 mb-6">
-                    <p class="text-sm text-gray-700 leading-relaxed">
-                        Please note, it is necessary that great care should be taken in
-                        completing this form and the information given therein should be
-                        strictly accurate, whether it is in your favor or otherwise. You
-                        should not make any payment, offer or promise of any payment or
-                        admit liability in any way, as by so doing you may prejudice
-                        your position and make settlement of the claim difficult.
-                    </p>
+                <div class="bg-gray-50 border border-gray-200 p-4 mb-6 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <div class="shrink-0">
+                            <i class="fas fa-info-circle text-blue-600 text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                                NOTE - THE ORIGINAL CLAIM FORM AND DOCUMENTATION IS REQUIRED
+                            </p>
+                            <ul class="space-y-2 text-sm text-gray-600">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-blue-600 font-bold">•</span>
+                                    <span>THIS FORM MUST BE SIGNED AND DATED</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-blue-600 font-bold">•</span>
+                                    <span>A COPY OF YOUR TRAVEL INSURANCE CERTIFICATE MUST BE ATTACHED</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-blue-600 font-bold">•</span>
+                                    <span>SUPPORTING DOCUMENTATION SUBSTANTIATING THE CLAIM MUST BE SUBMITTED</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-blue-600 font-bold">•</span>
+                                    <span>ALL CLAIMS MUST BE PREPARED WITHIN 24 HOURS OF THE INCIDENT</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-blue-600 font-bold">•</span>
+                                    <span>ALL CLAIMS MUST BE SUBMITTED WITHIN 60 DAYS OF THE INCIDENT</span>
+                                </li>
+
+                                <li class="flex items-start gap-2 mt-2 font-semibold text-gray-700">
+                                    <span class="text-blue-600">•</span>
+                                    <span>DELAYED / LOSS OF LUGGAGE:</span>
+                                </li>
+                                <li class="flex items-start gap-2 ml-6">
+                                    <span class="text-gray-400">1</span>
+                                    <span>Kindly submit a complete baggage Inventory Claim Form from the airline</span>
+                                </li>
+                                <li class="flex items-start gap-2 ml-6">
+                                    <span class="text-gray-400">2</span>
+                                    <span>Travel Ticket</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <form id="generalAccidentForm">
-                    {{-- Section 1 --}}
-                    <section>
-                        <!-- Particulars of Motor Vehicle Section -->
-                        <div class="mb-6">
+                    {{-- Insured Person Section --}}
+                    <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                        <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
-                                PARTICULARS OF MOTOR VEHICLE CONCERNED:
+                                THIS FORM MUST BE COMPLETED IN FULL
                             </h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Registration Number
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Selling Agent/Broker
                                         <span class="text-red-500">*</span></label>
-                                    <x-input name="registration_no" id="registration_no" required />
+                                    <x-input name="agent_broker" id="agent_broker" required />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Make <span
-                                            class="text-red-500">*</span></label>
-                                    <x-input name="make" id="make" required />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Policy Number <span class="text-red-500">*</span>
+                                    </label>
+                                    <x-input name="policy_no" id="policy_no" :value="$policy->policy_number" required readonly />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Model <span
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Departure Date <span
                                             class="text-red-500">*</span></label>
-                                    <x-input name="model" id="model" required />
+                                    <input type="date" name="departure_date" id="departure_date" required
+                                        class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Year of Make <span
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Return Date <span
                                             class="text-red-500">*</span></label>
-                                    <input type="date" required
+                                    <input type="date" name="return_date" id="return_date" required
                                         class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Hire Purchase/Loan Agreement Section -->
-                        <x-conditional-section
-                            question="Is the vehicle the subject of a hire purchase or loan agreement?"
-                            name="hire_purchase" yes-section-id="financeCompanySection" required="true">
-
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                If so, state the name of the finance company or lending organization
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-input name="finance_company" required />
-                        </x-conditional-section>
-
-                        <!-- Purpose of Vehicle Use -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                State fully the purpose for which the vehicle was being used.
-                                <span class="text-red-500">*</span>
-                                <span class="text-xs text-gray-500 block mt-1">(It is not sufficient to state "Business"
-                                    or
-                                    "Private")</span>
-                            </label>
-                            <x-textarea name="vehicle_purpose" required rows="4"
-                                placeholder="Please provide detailed description of vehicle usage..." />
-                        </div>
-
-                        <!-- Vehicle Consent Section -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Was the vehicle being used with your consent?
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <div class="flex gap-4">
-                                <label class="flex items-center">
-                                    <input type="radio" name="vehicleConsent" value="yes" required
-                                        class="mr-2" />
-                                    <span class="text-sm text-gray-700">Yes</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="vehicleConsent" value="no" required
-                                        class="mr-2" />
-                                    <span class="text-sm text-gray-700">No</span>
-                                </label>
-                            </div>
-                        </div>
                     </section>
 
-                    {{-- Section 2 --}}
-                    <section>
-                        <!-- Particulars of Person Driving Vehicle Section -->
-                        <div class="mb-6">
+                    <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                        <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
-                                PARTICULARS OF PERSON DRIVING AT THE TIME OF ACCIDENT:
+                                INSURED PERSON
                             </h3>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Surname
                                         <span class="text-red-500">*</span></label>
-                                    <x-input name="fullname" id="fullname" required />
+                                    <x-input name="surname" id="surname" required />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Address<span
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name(s)<span
                                             class="text-red-500">*</span></label>
-                                    <x-input name="address" id="address" required />
+                                    <x-input name="firstname" id="firstname" required />
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Age<span
                                             class="text-red-500">*</span></label>
-                                    <x-input name="age" id="age" required />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Occupation <span
-                                            class="text-red-500">*</span></label>
-                                    <x-input name="age" id="age" required />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Telephone <span
-                                            class="text-red-500">*</span></label>
-                                    <x-input name="phone" id="phone" required />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Driving License No.
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="drivers_license" id="drivers_license" required />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Issue <span
-                                            class="text-red-500">*</span></label>
-                                    <input type="date" required
-                                        class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
+                                    <x-input name="insured_age" id="insured_age" required />
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Who was driving? -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Who was driving at the time of accident? <span class="text-red-500">*</span>
-                            </label>
-                            <select id="driverSelect" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
-                                <option value="">Select driver</option>
-                                <option value="self">Myself</option>
-                                <option value="spouse">Spouse</option>
-                                <option value="family_member">Family Member</option>
-                                <option value="employee">Employee</option>
-                                <option value="friend">Friend</option>
-                                <option value="other">Other Person</option>
-                            </select>
-                        </div>
-
-                        <!-- Driver Details - Shows for "Myself" (Readonly) -->
-                        <div id="driverDetailsSelf" class="hidden overflow-hidden mb-6">
-                            <h4 class="text-md font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
-                                DRIVER DETAILS:
-                            </h4>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-                                        <input type="text" value="Moses Adonoo" readonly
-                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm text-gray-900 cursor-not-allowed">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">Address</label>
-                                        <input type="text" value="Old Ashongman, Accra Ghana." readonly
-                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm text-gray-900 cursor-not-allowed">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">Telephone</label>
-                                        <input type="text" value="+233 50 354 5965" readonly
-                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded text-sm text-gray-900 cursor-not-allowed">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Driver Details - Shows for Other Persons (Input Fields) -->
-                        <div id="driverDetailsOther" class="hidden overflow-hidden mb-6 px-4">
-                            <h4 class="text-md font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
-                                DRIVER DETAILS:
-                            </h4>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="driver_fullname" id="driver_fullname" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Postal Address<span
+                                            class="text-red-500">*</span></label>
+                                    <x-input name="postal_address" id="postal_address" required />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Address
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="driver_address" id="driver_address" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
+                                    <x-input name="postal_code" id="postal_code" />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Age
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Physical Address
                                         <span class="text-red-500">*</span></label>
-                                    <x-input name="driver_age" id="driver_age" type="number" />
+                                    <x-input name="physical_address" id="physical_address" required />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Occupation
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="driver_occupation" id="driver_occupation" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Address Code</label>
+                                    <x-input name="address_code" id="address_code" />
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Business</label>
+                                    <x-input name="business" id="business" />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Telephone
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="driver_phone" id="driver_phone" type="tel" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">FAX</label>
+                                    <x-input name="fax" id="fax" />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Driving License No.
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="driver_license" id="driver_license" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Res/Cell</label>
+                                    <x-input name="res_cell" id="res_cell" />
                                 </div>
+                            </div>
 
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                <x-input name="email" id="email" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                        <!-- Contact Made -->
+                        <x-conditional-section question="Did you contact AAFIYA at the time of the occurence?"
+                            name="contacted_aafiya" yes-section-id="contactedAafiyaDetails" required="true">
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                If Yes, Please provide details...
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <x-textarea name="contacted_aafiya_details" id="contactedAafiyaDetails" required
+                                rows="3" placeholder="Describe the details here..." />
+                        </x-conditional-section>
+
+                        <!-- Others Insured -->
+                        <x-conditional-section question="Was the accident reported to the police?"
+                            name="police_report" yes-section-id="policeReportDetails" required="true">
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                If Yes, Please provide details...
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <x-textarea name="police_report_details" id="policeReportDetails" required rows="2"
+                                placeholder="Describe the details here..." />
+                        </x-conditional-section>
+                    </section>
+
+                    {{-- Section 1 --}}
+                    <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
+                                SECTION 1 – MEDICAL AND RELATED EXPENSES
+                            </h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Issue
-                                        <span class="text-red-500">*</span></label>
-                                    <input type="date" name="driver_license_date" id="driver_license_date"
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Illness /
+                                        Injury <span class="text-red-500">*</span></label>
+                                    <input type="date" name="illness_date" id="illness_date" required
                                         class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
                                 </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Place of Illness /
+                                        Injury
+                                        <span class="text-red-500">*</span></label>
+                                    <x-input name="place_of_illness" id="place_of_illness" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Cause of Illness /
+                                        Injury
+                                        <span class="text-red-500">*</span></label>
+                                    <x-input name="cause_of_illness" id="cause_of_illness" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Diagnosis
+                                        <span class="text-red-500">*</span></label>
+                                    <x-input name="diagnosis_sec1" id="diagnosis_sec1" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name of Doctor
+                                        Consulted<span class="text-red-500">*</span></label>
+                                    <x-input name="doctor_fullname_sec1" id="doctor_fullname_sec1" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Telephone of Doctor
+                                        Consulted<span class="text-red-500">*</span></label>
+                                    <x-input name="doctor_telephone" id="doctor_telephone" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Name Of Hospital
+                                        Admitted To<span class="text-red-500">*</span></label>
+                                    <x-input name="hospital_name" id="hospital_name" required />
+                                </div>
+                            </div>
+
+                            <!-- Total Amount Claimed -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Amount
+                                        Claimed<span class="text-red-500">*</span></label>
+                                    <x-input name="total_amount_claimed" id="total_amount_claimed" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Currency<span
+                                            class="text-red-500">*</span></label>
+                                    <x-input name="currency" id="currency" required />
+                                </div>
+                            </div>
+
+                            <x-conditional-section
+                                question="Have you previously received treatment or attention for this Illness/Condition?"
+                                name="treatment_received" yes-section-id="treatment_received_details"
+                                required="true">
+
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    If Yes, a report from you treating doctor detailing your medical history
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <x-textarea name="treatment_received_details" id="treatment_received_details" required
+                                    rows="3" placeholder="Describe the details here..." />
+                            </x-conditional-section>
+
+                            <!-- Submitted Accounts Paid -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Have Submitted accounts been paid?
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="submitted_accounts_yn" value="yes" required
+                                            class="mr-2" />
+                                        <span class="text-sm text-gray-700">Yes</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="submitted_accounts_yn" value="no" required
+                                            class="mr-2" />
+                                        <span class="text-sm text-gray-700">No</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
+                    </section>
 
-                        <!-- Driver Insurance Details -->
-                        <div id="driverInsuranceSection" class="hidden overflow-hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                State name and address of the insurer of the person driving and number of the motor
-                                vehicle Policy held by him/her <span class="text-red-500">*</span>
-                            </label>
-                            <div class="px-2">
-                                <x-textarea name="driver_insurance_details" id="driver_insurance_details"
-                                    rows="4"
-                                    placeholder="Please provide insurer name, address, and policy number..." />
+                    {{-- Section 2 --}}
+                    <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
+                                SECTION 2 – DETAILS OF CLAIM
+                            </h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name Of Subject Of
+                                        Claim <span class="text-red-500">*</span></label>
+                                    <x-input name="claim_subject_name" id="claim_subject_name" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date Of Birth <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="date" name="dob_claim" id="dob_claim" required
+                                        class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date Of Illness /
+                                        Injury <span class="text-red-500">*</span></label>
+                                    <input type="date" name="illness_date_sec2" id="illness_date_sec2" required
+                                        class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Attending Doctor's Full
+                                        Name
+                                        <span class="text-red-500">*</span></label>
+                                    <x-input name="doctor_fullname_sec2" id="doctor_fullname_sec2" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Diagnosis
+                                        <span class="text-red-500">*</span></label>
+                                    <x-input name="diagnosis_sec2" id="diagnosis_sec2" required />
+                                </div>
                             </div>
-                        </div>
+                            <x-conditional-section
+                                question="Has the above-mentioned person suffered previously from Illness/Injury"
+                                name="previous_injury" yes-section-id="previous_injury_details" required="true">
 
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    If Yes, A report from the treating doctor detailing medical history is required
+                                    <span class="text-red-500">*</span>
+                                </label>
+
+                                <x-textarea name="previous_injury_details" id="previous_injury_details" required
+                                    rows="3" placeholder="Describe the details here..." />
+                            </x-conditional-section>
+                        </div>
                     </section>
 
                     {{-- Section 3 --}}
-                    <section>
-                        <!-- Particulars of Motor Vehicle Section -->
-                        <div class="mb-6">
+                    <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                        <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
-                                CIRCUMSTANCES OF ACCIDENT:
+                                SECTION 3 – ELECTRONIC FUNDS TRANSFER, DECLARATION AND AUTHORITY
                             </h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Account Holder's Name
                                         <span class="text-red-500">*</span></label>
-                                    <input type="date" name="accident_date" id="accident_date" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Time
-                                        <span class="text-red-500">*</span></label>
-                                    <input type="time" name="accident_time" id="accident_time" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Exact Location -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Exact location of incident
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-input name="exact_location" id="exact_location" required />
-                        </div>
-
-                        <!-- People in the vehicle -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                How many people were in your vehicle at the time of the accident?
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-input name="people_in_vehicle" id="people_in_vehicle" required />
-                        </div>
-
-                        <!-- Vehicle Report Date -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                If you were not in the vehicle, when was the accident reported to you?
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-input name="report_date" id="report_date" required />
-                        </div>
-
-                        <!-- Full Accident Description -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Give full description of how the accident happened
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-textarea name="vehicle_purpose" required rows="4"
-                                placeholder="Please provide a detailed description of how the accident happened..." />
-                        </div>
-
-                        <!-- Who caused the accident -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                In your opinion, was the accident caused by you or your driver? If not, by whom?
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-input name="fault_person" id="fault_person" required />
-                        </div>
-
-                        <!-- Damage to Vehicle -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Describe the damage to your vehicle
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-textarea name="vehicle_purpose" required rows="2"
-                                placeholder="Please provide a detailed description of the damage to the vehicle..." />
-                        </div>
-
-                        <!-- Accident Location-->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                State exact current location of the damaged vehicle
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-input name="accident_location" id="accident_location" required />
-                        </div>
-
-                        <!-- Name and Address of Repairer -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-3">
-                                Repairer Information
-                            </label>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="repairer_fullname" id="repairer_fullname" />
+                                    <x-input name="account_holder_name" id="account_holder_name" required />
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Address
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="repairer_address" id="repairer_address" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Account Number <span
+                                            class="text-red-500">*</span></label>
+                                    <x-input name="account_number" id="account_number" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Name Of Bank <span
+                                            class="text-red-500">*</span></label>
+                                    <x-input name="bank_name" id="bank_name" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Type Of Account <span
+                                            class="text-red-500">*</span></label>
+                                    <x-input name="account_type" id="account_type" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Branch Name <span
+                                            class="text-red-500">*</span></label>
+                                    <x-input name="branch_name" id="branch_name" required />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Branch Code <span
+                                            class="text-red-500">*</span></label>
+                                    <x-input name="branch_code" id="branch_code" required />
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    {{-- Section 4 --}}
-                    <section>
-                        <div class="mb-6">
+                    {{-- General Section --}}
+                    <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                        <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
-                                THIRD PARTIES INVOLVED IN ACCIDENT:
+                                General Section
                             </h3>
-
-                            <!-- Injured Persons in Your Vehicle -->
-                            <div class="mb-8">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h4 class="text-md font-semibold text-gray-700">Injured Persons in Your Vehicle
-                                    </h4>
-                                    <button type="button" onclick="addInjuredPerson('yourVehicle')"
-                                        class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
-                                        <i class="fas fa-plus mr-1"></i> Add Injured Person
-                                    </button>
-                                </div>
-
-                                <div id="yourVehicleInjuredPersons" class="space-y-4">
-                                    <!-- Initial row -->
-                                    <div class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Full
-                                                    Name</label>
-                                                <x-input name="your_vehicle_injured[0][name]"
-                                                    placeholder="Full name of injured person" />
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                                                <x-input type="number" name="your_vehicle_injured[0][age]"
-                                                    placeholder="Age" min="1" max="120" />
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                                <x-input name="your_vehicle_injured[0][address]"
-                                                    placeholder="Full address" />
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-1 gap-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Extent of
-                                                    Injuries</label>
-                                                <x-textarea name="your_vehicle_injured[0][injuries]" rows="2"
-                                                    placeholder="Describe the nature and extent of injuries..." />
-                                            </div>
-                                        </div>
-                                        <div class="mt-2 flex justify-end">
-                                            <button type="button" onclick="removeInjuredPerson(this)"
-                                                class="text-red-600 hover:text-red-800 text-sm flex items-center">
-                                                <i class="fas fa-trash mr-1"></i> Remove
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Injured Persons in Other Vehicle -->
-                            <div class="mb-8">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h4 class="text-md font-semibold text-gray-700">Injured Persons in Other Vehicle
-                                    </h4>
-                                    <button type="button" onclick="addInjuredPerson('otherVehicle')"
-                                        class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
-                                        <i class="fas fa-plus mr-1"></i> Add Injured Person
-                                    </button>
-                                </div>
-
-                                <div id="otherVehicleInjuredPersons" class="space-y-4">
-                                    <!-- Initial row -->
-                                    <div class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Full
-                                                    Name</label>
-                                                <x-input name="other_vehicle_injured[0][name]"
-                                                    placeholder="Full name of injured person" />
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                                                <x-input type="number" name="other_vehicle_injured[0][age]"
-                                                    placeholder="Age" min="1" max="120" />
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                                <x-input name="other_vehicle_injured[0][address]"
-                                                    placeholder="Full address" />
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-1 gap-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">Extent of
-                                                    Injuries</label>
-                                                <x-textarea name="other_vehicle_injured[0][injuries]" rows="2"
-                                                    placeholder="Describe the nature and extent of injuries..." />
-                                            </div>
-                                        </div>
-                                        <div class="mt-2 flex justify-end">
-                                            <button type="button" onclick="removeInjuredPerson(this)"
-                                                class="text-red-600 hover:text-red-800 text-sm flex items-center">
-                                                <i class="fas fa-trash mr-1"></i> Remove
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Have you incurred any
+                                    travel claims in the past 5 years, If so, Please supply details below:</label>
+                                <x-textarea name="general_section" id="general_section" required rows="2"
+                                    placeholder="Describe the details here..." />
                             </div>
                         </div>
-
-                        <!-- Vehicle Involved Details -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-3">
-                                Details of vehicle involved
-                            </label>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Registration
-                                        Number</label>
-                                    <x-input name="involved_vehicle_reg" id="involved_vehicle_reg" required
-                                        placeholder="Registration No." />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Make</label>
-                                    <x-input name="involved_vehicle_make" id="involved_vehicle_make" required
-                                        placeholder="Vehicle Make" />
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Model</label>
-                                    <x-input name="involved_vehicle_model" id="involved_vehicle_model" required
-                                        placeholder="Vehicle Model" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Owner of Accident Vehicle Information -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-3">
-                                Owner of Accident Vehicle Information
-                            </label>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="owner_fullname" id="owner_fullname" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Address
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="owner_address" id="owner_address" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Telephone
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="owner_telephone" id="owner_telephone" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Policy No.
-                                        <span class="text-red-500">*</span></label>
-                                    <x-input name="owner_policy" id="owner_policy" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Damage to Vehicle Details -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Details of damaged to this vehicle
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-textarea name="vehicle_purpose" required rows="2"
-                                placeholder="Please provide a detailed description of the damage to the vehicle..." />
-                        </div>
-
-                        <!-- Claim Made -->
-                        <x-conditional-section question="Has any claim been made upon you?" name="claim_made"
-                            yes-section-id="claim_made" required="true">
-
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                State particulars below and note that any letter or communication
-                                received by you must be forwarded immediately unanswered, to this company.
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-textarea name="claim_made_details" required rows="3"
-                                placeholder="Describe the terms and conditions of the claim..." />
-                        </x-conditional-section>
-
-                        <!-- Accident Reported -->
-                        <x-conditional-section question="Was the accident reported to the police?"
-                            name="police_report" yes-section-id="police_report" required="true">
-
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                State when it was reported and at which Police Station.
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-textarea name="claim_made_details" required rows="2"
-                                placeholder="Describe the details of the reports..." />
-                        </x-conditional-section>
-
-                        <!-- Police Officer Details -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Name Police Officer who took particulars
-                                <span class="text-red-500">*</span>
-                            </label>
-                            <x-input name="officer_details" id="officer_details" required />
-                        </div>
-
-                        <!-- Indemnifying Policy -->
-                        <x-conditional-section
-                            question="Do you hold more than one policy indemnifying you in respect of this accident?"
-                            name="indem_policy" yes-section-id="indem_policy" required="true">
-
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                State the details of the other policy.
-                            </label>
-                            <x-textarea name="claim_made_details" required rows="2"
-                                placeholder="Describe the details of the policy..." />
-                        </x-conditional-section>
                     </section>
 
-                    {{-- Section 5 --}}
-                    <section>
-                        <!-- Declaration -->
-                        <div class="mb-6">
+                    {{-- Declaration Section --}}
+                    <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                        <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-b-gray-300 pb-2">
                                 DECLARATION:
                             </h3>
@@ -657,15 +473,6 @@
                                     <input type="date" name="declaration_date" id="declaration_date" required
                                         class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
                                 </div>
-
-                                {{-- <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        Full Name (Claimant) <span class="text-red-500">*</span>
-                                    </label>
-                                    <input type="text" name="claimant_full_name" id="claimant_full_name" required
-                                        placeholder="Type your full name as confirmation"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
-                                </div> --}}
                             </div>
 
                             <!-- Optional: Digital Signature (Simple text input) -->
@@ -701,13 +508,16 @@
             </div>
         </div>
     </div>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Generic conditional section toggle
+            // Generic conditional section toggle (keeps component behavior)
             document.querySelectorAll('.conditional-radio').forEach(radio => {
                 radio.addEventListener('change', function() {
                     const targetId = this.getAttribute('data-target');
                     const targetSection = document.getElementById(targetId);
+                    if (!targetSection) return; // guard
+
                     const isYes = this.value === 'yes';
 
                     if (isYes) {
@@ -730,159 +540,25 @@
                         // Remove required and clear values
                         targetSection.querySelectorAll('input, textarea, select').forEach(input => {
                             input.required = false;
-                            input.value = '';
+                            try {
+                                input.value = '';
+                            } catch (e) {}
                         });
                     }
                 });
             });
 
-            // Driver selection logic
-            const driverSelect = document.getElementById("driverSelect");
-            const driverDetailsSelf = document.getElementById("driverDetailsSelf");
-            const driverDetailsOther = document.getElementById("driverDetailsOther");
-            const driverInsuranceSection = document.getElementById("driverInsuranceSection");
-
-            // Get all input fields in the "other driver" section
-            const otherDriverInputs = driverDetailsOther.querySelectorAll('input, textarea');
-            const insuranceTextarea = document.getElementById("driver_insurance_details");
-
-            driverSelect.addEventListener("change", function() {
-                const selectedValue = this.value;
-
-                // Hide all sections first with animation
-                if (!driverDetailsSelf.classList.contains("hidden")) {
-                    driverDetailsSelf.classList.remove("slide-down");
-                    driverDetailsSelf.classList.add("slide-up");
-                    setTimeout(() => driverDetailsSelf.classList.add("hidden"), 300);
-                }
-
-                if (!driverDetailsOther.classList.contains("hidden")) {
-                    driverDetailsOther.classList.remove("slide-down");
-                    driverDetailsOther.classList.add("slide-up");
-                    setTimeout(() => driverDetailsOther.classList.add("hidden"), 300);
-                    // Remove required from other driver inputs
-                    otherDriverInputs.forEach(input => {
-                        input.required = false;
-                        input.value = "";
-                    });
-                }
-
-                if (!driverInsuranceSection.classList.contains("hidden")) {
-                    driverInsuranceSection.classList.remove("slide-down");
-                    driverInsuranceSection.classList.add("slide-up");
-                    setTimeout(() => driverInsuranceSection.classList.add("hidden"), 300);
-                    insuranceTextarea.required = false;
-                    insuranceTextarea.value = "";
-                }
-
-                // Show appropriate section based on selection
-                if (selectedValue === "self") {
-                    // Show readonly section for "Myself"
-                    setTimeout(() => {
-                        driverDetailsSelf.classList.remove("hidden");
-                        void driverDetailsSelf.offsetWidth;
-                        driverDetailsSelf.classList.remove("slide-up");
-                        driverDetailsSelf.classList.add("slide-down");
-                    }, 100);
-
-                    // Show insurance section
-                    setTimeout(() => {
-                        driverInsuranceSection.classList.remove("hidden");
-                        void driverInsuranceSection.offsetWidth;
-                        driverInsuranceSection.classList.remove("slide-up");
-                        driverInsuranceSection.classList.add("slide-down");
-                        insuranceTextarea.required = true;
-                    }, 200);
-
-                } else if (selectedValue !== "") {
-                    // Show input fields for other persons
-                    setTimeout(() => {
-                        driverDetailsOther.classList.remove("hidden");
-                        void driverDetailsOther.offsetWidth;
-                        driverDetailsOther.classList.remove("slide-up");
-                        driverDetailsOther.classList.add("slide-down");
-                        // Make other driver inputs required
-                        otherDriverInputs.forEach(input => input.required = true);
-                    }, 100);
-
-                    // Show insurance section
-                    setTimeout(() => {
-                        driverInsuranceSection.classList.remove("hidden");
-                        void driverInsuranceSection.offsetWidth;
-                        driverInsuranceSection.classList.remove("slide-up");
-                        driverInsuranceSection.classList.add("slide-down");
-                        insuranceTextarea.required = true;
-                    }, 200);
-                }
-            });
-
-        });
-
-        let yourVehicleCounter = 1;
-        let otherVehicleCounter = 1;
-
-        function addInjuredPerson(type) {
-            const container = type === 'yourVehicle' ?
-                document.getElementById('yourVehicleInjuredPersons') :
-                document.getElementById('otherVehicleInjuredPersons');
-
-            const counter = type === 'yourVehicle' ? yourVehicleCounter++ : otherVehicleCounter++;
-            const prefix = type === 'yourVehicle' ? 'your_vehicle_injured' : 'other_vehicle_injured';
-
-            const newRow = document.createElement('div');
-            newRow.className = 'injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50';
-            newRow.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                        <x-input name="${prefix}[${counter}][name]" placeholder="Full name of injured person" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                        <x-input type="number" name="${prefix}[${counter}][age]" placeholder="Age" min="1" max="120" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                        <x-input name="${prefix}[${counter}][address]" placeholder="Full address" />
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Extent of Injuries</label>
-                        <x-textarea name="${prefix}[${counter}][injuries]" rows="2" 
-                                placeholder="Describe the nature and extent of injuries..." />
-                    </div>
-                </div>
-                <div class="mt-2 flex justify-end">
-                    <button type="button" onclick="removeInjuredPerson(this)" 
-                            class="text-red-600 hover:text-red-800 text-sm flex items-center">
-                        <i class="fas fa-trash mr-1"></i> Remove
-                    </button>
-                </div>
-            `;
-
-            container.appendChild(newRow);
-        }
-
-        function removeInjuredPerson(button) {
-            const row = button.closest('.injured-person-row');
-            // Don't remove if it's the last row
-            const container = row.parentElement;
-            if (container.querySelectorAll('.injured-person-row').length > 1) {
-                row.remove();
-            } else {
-                alert('You need at least one injured person section. You can clear the fields instead.');
-            }
-        }
-
-
-        document.getElementById("demoSubmitBtn").addEventListener("click", function() {
-            Swal.fire({
-                icon: "success",
-                title: "Claim Submitted Successfully",
-                text: "Your claim has been submitted. Our team will review it shortly.",
-                confirmButtonText: "OK",
-                confirmButtonColor: "#2563eb",
+            // Submit handler (demo)
+            const form = document.getElementById('generalAccidentForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // demo behavior - prevents actual submission
+                Swal.fire({
+                    icon: "success",
+                    title: "Claim Submitted Successfully",
+                    text: "Your claim has been submitted. Our team will review it shortly.",
+                    confirmButtonText: "OK",
+                    confirmButtonColor: "#2563eb",
+                });
             });
         });
     </script>
