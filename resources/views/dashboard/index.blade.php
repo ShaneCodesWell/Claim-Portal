@@ -101,6 +101,7 @@
     
         $nudgeCustomer = \App\Models\Customer::where('phone', $phoneNumber)
             ->orWhere('external_customer_code', $customerCode)
+            ->orWhere('external_customer_id', session('user_id'))
             ->first();
     
         $showNudge = $nudgeCustomer
@@ -109,7 +110,7 @@
     @endphp
     @if ($showNudge)
         <div id="passwordNudge"
-            class="mx-4 mt-4 sm:mx-6 flex items-start justify-between gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg shadow-sm">
+            class="mx-4 mt-4 mb-4 sm:mx-6 flex items-start justify-between gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg shadow-sm">
     
             <div class="flex items-start gap-2">
                 <svg class="h-4 w-4 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -151,13 +152,13 @@
     @endif
 
     @if (session('success'))
-        <div class="mx-4 mt-4 sm:mx-6 p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800 font-medium">
+        <div class="mx-4 mt-4 mb-4 sm:mx-6 p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800 font-medium">
             {{ session('success') }}
         </div>
     @endif
     
     @if (session('error'))
-        <div class="mx-4 mt-4 sm:mx-6 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 font-medium">
+        <div class="mx-4 mt-4 mb-4 sm:mx-6 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 font-medium">
             {{ session('error') }}
         </div>
     @endif
@@ -955,7 +956,7 @@
 
             setTimeout(() => {
                 syncPoliciesInBackground();
-                syncInterval = setInterval(syncPoliciesInBackground, 5 * 60 * 1000);
+                syncInterval = setInterval(syncPoliciesInBackground, 10 * 60 * 1000);
             }, 2000);
         });
 

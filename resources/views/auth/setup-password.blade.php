@@ -45,7 +45,7 @@
 
         {{-- Header --}}
         <div class="bg-brand-900 p-3 sm:p-4 text-center relative">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-brand-600"></div>
+            <div class="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-blue-400 to-brand-600"></div>
             <div class="flex items-center justify-center mb-2 sm:mb-3">
                 <div class="bg-white/10 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20 mr-2 sm:mr-3">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,7 +63,7 @@
 
             {{-- Info box --}}
             <div class="mb-4 flex items-start gap-2 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                <svg class="h-4 w-4 text-brand-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="h-4 w-4 text-brand-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p class="text-xs text-blue-700">
@@ -121,13 +121,13 @@
                 {{-- Password rules --}}
                 <ul class="space-y-1 text-xs">
                     <li id="rule-length" class="flex items-center gap-1.5 text-slate-400 transition-colors duration-200">
-                        <span class="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0"></span> At least 8 characters
+                        <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span> At least 8 characters
                     </li>
                     <li id="rule-letter" class="flex items-center gap-1.5 text-slate-400 transition-colors duration-200">
-                        <span class="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0"></span> Contains a letter
+                        <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span> Contains a letter
                     </li>
                     <li id="rule-number" class="flex items-center gap-1.5 text-slate-400 transition-colors duration-200">
-                        <span class="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0"></span> Contains a number
+                        <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span> Contains a number
                     </li>
                 </ul>
 

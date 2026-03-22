@@ -19,6 +19,8 @@ class Customer extends Authenticatable
         'phone',
         'password',
         'last_synced_at',
+        'local_password',
+        'local_password_set_at',
     ];
 
     public function policies()

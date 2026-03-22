@@ -271,12 +271,13 @@ class AuthController extends Controller
             'password.regex' => 'Password must contain at least one letter and one number.',
         ]);
 
-        $phoneNumber = session('phone_number') ?? session('mobile_no');
+        $phoneNumber  = session('phone_number') ?? session('mobile_no');
         $customerCode = session('customer_code');
 
         // Find the customer record — same lookup logic as the dashboard
         $customer = Customer::where('phone', $phoneNumber)
             ->orWhere('external_customer_code', $customerCode)
+            ->orWhere('external_customer_id', session('user_id'))
             ->first();
 
         if (!$customer) {
