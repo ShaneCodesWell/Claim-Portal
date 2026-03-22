@@ -90,7 +90,7 @@
             </div>
 
             <!-- OTP Verification Form -->
-            <form action="{{ route('otp.verify') }}" method="POST" class="space-y-4" id="verificationForm">
+            <form action="{{ route('otp.verify.submit') }}" method="POST" class="space-y-4" id="verificationForm">
                 @csrf
 
                 <!-- OTP Input Field -->

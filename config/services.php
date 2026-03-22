@@ -35,9 +35,15 @@ return [
         ],
     ],
 
+    // 'genova' => [
+    //     'base_url' => env('GENOVA_BASE_URL', 'https://glive.vanguardassurance.com'),
+    //     'username' => env('GENOVA_USERNAME', 'VACADMIN'),
+    //     'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
+    // ],
+
     'genova' => [
         'base_url' => env('GENOVA_BASE_URL', 'https://glive.vanguardassurance.com'),
-        'username' => env('GENOVA_USERNAME', 'Moses'),
+        'username' => env('GENOVA_USERNAME', 'VACADMIN'),
         'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
     ],
 

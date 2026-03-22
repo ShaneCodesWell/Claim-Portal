@@ -142,14 +142,14 @@
                 </button>
             </form>
 
-            <!-- Compact Help Link -->
-            {{-- <div class="mt-4 flex items-center justify-center">
+            <!-- Password Login -->
+            <div class="mt-4 flex items-center justify-center">
                 <div class="text-xs sm:text-sm">
-                    <a href="#" class="font-medium text-brand-600 hover:text-brand-500">
-                        Need help?
+                    <a href="{{ route('login.local') }}" class="font-medium text-brand-600 hover:text-brand-500">
+                        Login with Password
                     </a>
                 </div>
-            </div> --}}
+            </div>
         </div>
 
         <!-- Compact Footer -->

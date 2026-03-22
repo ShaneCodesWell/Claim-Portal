@@ -31,13 +31,16 @@ class DashboardController extends Controller
                 'user_id' => session('user_id'),
             ];
 
-            if (!$phoneNumber && !$customerCode) {
+            if (!session('user_id') && !$phoneNumber && !$customerCode) {
                 return redirect()->route('login')->with('error', 'Session expired. Please login again.');
             }
 
             // STEP 1: Load from database first
+            $userId = session('user_id');
+
             $dbCustomer = Customer::where('phone', $phoneNumber)
                 ->orWhere('external_customer_code', $customerCode)
+                ->orWhere('external_customer_id', $userId)
                 ->first();
 
             $policies = [];

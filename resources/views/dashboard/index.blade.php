@@ -95,6 +95,72 @@
             }
         }
     </style>
+    @php
+        $phoneNumber  = session('phone_number') ?? session('mobile_no');
+        $customerCode = session('customer_code');
+    
+        $nudgeCustomer = \App\Models\Customer::where('phone', $phoneNumber)
+            ->orWhere('external_customer_code', $customerCode)
+            ->first();
+    
+        $showNudge = $nudgeCustomer
+            && is_null($nudgeCustomer->local_password)
+            && ! session('nudge_dismissed');
+    @endphp
+    @if ($showNudge)
+        <div id="passwordNudge"
+            class="mx-4 mt-4 sm:mx-6 flex items-start justify-between gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg shadow-sm">
+    
+            <div class="flex items-start gap-2">
+                <svg class="h-4 w-4 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <p class="text-xs text-amber-800">
+                    <span class="font-semibold">Set up a local password</span> to access the portal even when the verification service is down.
+                    <a href="{{ route('password.setup') }}" class="underline font-semibold hover:text-amber-900 ml-1">Set it up now →</a>
+                </p>
+            </div>
+    
+            {{-- Dismiss button (session-level, no page reload) --}}
+            <button
+                onclick="dismissNudge()"
+                class="text-amber-400 hover:text-amber-600 shrink-0 mt-0.5 transition-colors"
+                aria-label="Dismiss">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    
+        <script>
+            function dismissNudge() {
+                // Hide the banner immediately
+                document.getElementById('passwordNudge').style.display = 'none';
+    
+                // Tell the server to suppress it for the rest of this session
+                fetch('{{ route("nudge.dismiss") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+            }
+        </script>
+    @endif
+
+    @if (session('success'))
+        <div class="mx-4 mt-4 sm:mx-6 p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800 font-medium">
+            {{ session('success') }}
+        </div>
+    @endif
+    
+    @if (session('error'))
+        <div class="mx-4 mt-4 sm:mx-6 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 font-medium">
+            {{ session('error') }}
+        </div>
+    @endif
     {{-- Header Section --}}
     <div class="max-w-7xl mx-auto px-6 pb-12 space-y-8">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
