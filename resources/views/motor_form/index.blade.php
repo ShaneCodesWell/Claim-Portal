@@ -1,7 +1,7 @@
 <x-layouts.app>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Section - Claimant Information -->
-        <x-claimant-info />
+        {{-- <x-claimant-info /> --}}
 
         <!-- Right Section - Form -->
         <div class="lg:col-span-2">

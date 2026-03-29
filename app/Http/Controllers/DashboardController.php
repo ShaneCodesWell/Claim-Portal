@@ -20,134 +20,102 @@ class DashboardController extends Controller
     public function index()
     {
         try {
-            // Get phone number and customer info from session
-            $phoneNumber = session('phone_number') ?? session('mobile_no');
+            $phoneNumber  = session('phone_number') ?? session('mobile_no');
             $customerCode = session('customer_code');
+            $userId       = session('user_id');
 
-            // Prepare customer data from session
             $sessionCustomer = [
-                'name' => session('fullname') ?? session('name'),
+                'name'        => session('fullname') ?? session('name'),
                 'phone_number' => $phoneNumber,
-                'user_id' => session('user_id'),
+                'user_id'     => $userId,
             ];
 
-            if (!session('user_id') && !$phoneNumber && !$customerCode) {
-                return redirect()->route('login')->with('error', 'Session expired. Please login again.');
+            if (!$userId && !$phoneNumber && !$customerCode) {
+                return redirect()->route('login')
+                    ->with('error', 'Session expired. Please login again.');
             }
 
-            // STEP 1: Load from database first
-            $userId = session('user_id');
-
+            // Load customer and policies from DB — instant, no API calls
             $dbCustomer = Customer::where('phone', $phoneNumber)
                 ->orWhere('external_customer_code', $customerCode)
                 ->orWhere('external_customer_id', $userId)
                 ->first();
 
-            $policies = [];
+            $policies     = [];
             $customerData = null;
+            $businessClasses = [];
 
             if ($dbCustomer) {
-                // Load policies from database
                 $dbPolicies = Policy::where('customer_id', $dbCustomer->id)
                     ->orderBy('last_synced_at', 'desc')
                     ->get();
 
-                // Convert database policies to array format expected by view
-                $policies = $dbPolicies->map(function($policy) use ($dbCustomer) {
+                $policies = $dbPolicies->map(function ($policy) use ($dbCustomer) {
                     return [
-                        'policy_id' => $policy->external_policy_id,
-                        'policy_number' => $policy->policy_number,
-                        'product_id' => $policy->product_id,
-                        'product_name' => $policy->product_name,
-                        'business_class_id' => $policy->business_class_id,
+                        'policy_id'           => $policy->external_policy_id,
+                        'policy_number'       => $policy->policy_number,
+                        'product_id'          => $policy->product_id,
+                        'product_name'        => $policy->product_name,
+                        'business_class_id'   => $policy->business_class_id,
                         'business_class_name' => $policy->business_class_name,
-                        'policy_start_date' => $policy->start_date,
-                        'policy_end_date' => $policy->end_date,
-                        'renewal_date' => $policy->renewal_date,
-                        'effective_date' => $policy->effective_date,
-                        'status' => $policy->status,
-                        'vehicle_number' => $policy->raw_payload['vehicle_number'] ?? null,
-                        'customer_name' => $dbCustomer->name,
-                        'customer_code' => $dbCustomer->external_customer_code,
-                        'customer_phone' => $dbCustomer->phone,
-                        'customer_email' => $dbCustomer->email,
+                        'policy_start_date'   => $policy->start_date,
+                        'policy_end_date'     => $policy->end_date,
+                        'renewal_date'        => $policy->renewal_date,
+                        'effective_date'      => $policy->effective_date,
+                        'status'              => $policy->status,
+                        'vehicle_number'      => $policy->raw_payload['vehicle_number'] ?? null,
+                        'customer_name'       => $dbCustomer->name,
+                        'customer_code'       => $dbCustomer->external_customer_code,
+                        'customer_phone'      => $dbCustomer->phone,
+                        'customer_email'      => $dbCustomer->email,
                     ];
                 })->toArray();
 
+                // Build business classes from what's already stored in policies
+                // No API call needed — we already have this data locally
+                $businessClasses = $dbPolicies
+                    ->whereNotNull('business_class_id')
+                    ->unique('business_class_id')
+                    ->pluck('business_class_name', 'business_class_id')
+                    ->toArray();
+
                 $customerData = [
-                    'name' => $dbCustomer->name,
-                    'code' => $dbCustomer->external_customer_code,
+                    'name'         => $dbCustomer->name,
+                    'code'         => $dbCustomer->external_customer_code,
                     'phone_number' => $dbCustomer->phone,
-                    'email' => $dbCustomer->email,
+                    'email'        => $dbCustomer->email,
                 ];
 
-                Log::info('Loaded policies from database', [
-                    'customer_id' => $dbCustomer->id,
-                    'total_policies' => count($policies)
+                Log::info('Loaded from DB instantly', [
+                    'customer_id'    => $dbCustomer->id,
+                    'total_policies' => count($policies),
                 ]);
             }
 
-            // STEP 2: Fetch business classes (needed for both DB and API data)
-            $businessClassesResponse = $this->api->getBusinessClasses($phoneNumber);
-            $businessClasses = [];
-
-            if ($businessClassesResponse->successful()) {
-                $businessClassesData = $businessClassesResponse->json('data.content');
-                $businessClasses = $this->formatBusinessClasses($businessClassesData);
-                Log::info('Business classes fetched:', ['classes' => $businessClasses]);
-            }
-
-            // STEP 3: Fetch all products
-            $allProducts = [];
-            foreach ($businessClasses as $classId => $className) {
-                $productsResponse = $this->api->getProductsByClass($classId);
-
-                if ($productsResponse->successful()) {
-                    $productsData = $productsResponse->json('data.content');
-                    if ($productsData && is_array($productsData)) {
-                        foreach ($productsData as $productId => $product) {
-                            $allProducts[$productId] = [
-                                'id' => $product['id'],
-                                'name' => $product['name'],
-                                'business_class_id' => $classId,
-                                'business_class_name' => $className
-                            ];
-                        }
-                    }
-                }
-            }
-
-            // STEP 4: Background sync from API (async or queued would be better)
-            // This refreshes the data but doesn't block the page load
-            $this->syncPoliciesFromApi($phoneNumber, $customerCode, $allProducts);
-
+            // Render immediately — background JS sync handles API refresh
             return view('dashboard.index', [
-                'name' => $sessionCustomer['name'] ?? 'Guest',
-                'policies' => $policies,
-                'customerData' => $customerData,
+                'name'           => $sessionCustomer['name'] ?? 'Guest',
+                'policies'       => $policies,
+                'customerData'   => $customerData,
                 'businessClasses' => $businessClasses,
-                'allProducts' => $allProducts,
-                'customer' => $sessionCustomer,
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Dashboard error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'allProducts'    => [], // populated by background sync
+                'customer'       => $sessionCustomer,
             ]);
 
+        } catch (\Exception $e) {
+            Log::error('Dashboard error: ' . $e->getMessage());
+
             return view('dashboard.index', [
-                'name' => session('fullname') ?? session('name') ?? 'Guest',
-                'policies' => [],
-                'customerData' => null,
+                'name'           => session('fullname') ?? session('name') ?? 'Guest',
+                'policies'       => [],
+                'customerData'   => null,
                 'businessClasses' => [],
-                'allProducts' => [],
-                'customer' => [
-                    'name' => session('fullname') ?? session('name'),
+                'allProducts'    => [],
+                'customer'       => [
+                    'name'         => session('fullname') ?? session('name'),
                     'phone_number' => session('phone_number') ?? session('mobile_no'),
                 ],
-                'error' => 'Unable to load dashboard data. Please try again.'
+                'error' => 'Unable to load dashboard data. Please try again.',
             ]);
         }
     }
@@ -237,11 +205,8 @@ class DashboardController extends Controller
             $phoneNumber = session('phone_number') ?? session('mobile_no');
             $customerCode = session('customer_code');
 
-            if (!$phoneNumber && !$customerCode) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Session expired'
-                ], 401);
+            if (!session('user_id') && !$phoneNumber && !$customerCode) {
+                return response()->json(['success' => false, 'message' => 'Session expired'], 401);
             }
 
             $businessClassesResponse = $this->api->getBusinessClasses($phoneNumber);

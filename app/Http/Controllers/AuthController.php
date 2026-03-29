@@ -87,8 +87,8 @@ class AuthController extends Controller
 
             $successMessage = $data['message'] ?? 'OTP sent to your registered contact.';
 
-            // return redirect()->route('otp')->with('success', $successMessage); // ← Uncomment when OTP is live
-            return redirect()->route('dashboard')->with('success', $successMessage);
+            return redirect()->route('otp')->with('success', $successMessage); // ← Uncomment when OTP is live
+            // return redirect()->route('dashboard')->with('success', $successMessage);
 
         } catch (\Exception $e) {
             Log::error('Login Error: ' . $e->getMessage());

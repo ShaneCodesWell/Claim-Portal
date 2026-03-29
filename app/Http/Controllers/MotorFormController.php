@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MotorForm;
+use Illuminate\Http\Request;
+use App\Models\Policy;
 use App\Http\Requests\StoreMotorFormRequest;
 use App\Http\Requests\UpdateMotorFormRequest;
 
@@ -11,8 +13,12 @@ class MotorFormController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        // $policyId = $request->query('policyId');
+        // $policy = Policy::where('external_policy_id', $policyId)->firstOrFail();
+        // $customer = $policy->customer;
+        // return view('motor_form.index', compact('policy', 'customer'));
         return view('motor_form.index');
     }
 
