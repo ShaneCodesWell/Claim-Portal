@@ -1,5 +1,5 @@
-<div id="policyModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50"
-    data-policy-id="">
+<div id="policyModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm items-center justify-center p-4 z-50"
+    data-policy-id="" style="display: none;">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {{-- Modal Header --}}
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
