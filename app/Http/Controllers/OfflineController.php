@@ -16,6 +16,21 @@ class OfflineController extends Controller
         return view('offline.index');
     }
 
+    public function motorForm()
+    {
+        return view('offline.motor-form');
+    }
+
+    public function generalAccidentForm()
+    {
+        return view('offline.general-accident-form');
+    }
+
+    public function fireForm()
+    {
+        return view('offline.fire-form');
+    }
+
     /**
      * Show the form for creating a new resource.
      */

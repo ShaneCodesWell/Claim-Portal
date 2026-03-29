@@ -221,7 +221,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 font-mono text-sm">P-001-MOTOR</td>
+                            <td class="px-6 py-4 font-mono text-sm">P-1001-101-2026-000001</td>
                             <td class="px-6 py-4 text-sm">Comprehensive</td>
                             <td class="px-6 py-4">
                                 <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-50 text-green-600">
@@ -230,9 +230,9 @@
                             </td>
                             <td class="px-6 py-4 text-sm">24-04-26</td>
                             <td class="px-6 py-4 text-right">
-                                <button onclick="openModal('Motor Policy')" class="text-blue-600 font-medium">
+                                <a href="{{ route('offline.motor-form') }}" class="text-blue-600 font-medium">
                                     View
-                                </button>
+                                </a>
                             </td>
                         </tr>
 
@@ -245,12 +245,12 @@
                                     </div>
                                     <div class="ml-4">
                                         <div class="text-sm font-semibold text-gray-900">Fire Policy</div>
-                                        <div class="text-xs text-gray-500">Warehouse Cover</div>
+                                        <div class="text-xs text-gray-500">East Legon</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 font-mono text-sm">P-002-FIRE</td>
-                            <td class="px-6 py-4 text-sm">Fire & Allied Perils</td>
+                            <td class="px-6 py-4 font-mono text-sm">P-1003-201-2026-000001</td>
+                            <td class="px-6 py-4 text-sm">Landlords' Insurance</td>
                             <td class="px-6 py-4">
                                 <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-50 text-green-600">
                                     Active
@@ -258,9 +258,9 @@
                             </td>
                             <td class="px-6 py-4 text-sm">12-06-26</td>
                             <td class="px-6 py-4 text-right">
-                                <button onclick="openModal('Fire Policy')" class="text-blue-600 font-medium">
+                                <a href="{{ route('offline.fire-form') }}" class="text-blue-600 font-medium">
                                     View
-                                </button>
+                                </a>
                             </td>
                         </tr>
 
@@ -272,13 +272,13 @@
                                         <i class="fas fa-plane text-purple-600"></i>
                                     </div>
                                     <div class="ml-4">
-                                        <div class="text-sm font-semibold text-gray-900">Travel Policy</div>
-                                        <div class="text-xs text-gray-500">UK Trip</div>
+                                        <div class="text-sm font-semibold text-gray-900">General Accident Policy</div>
+                                        <div class="text-xs text-gray-500">South Africa</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 font-mono text-sm">P-003-TRAVEL</td>
-                            <td class="px-6 py-4 text-sm">Travel Insurance</td>
+                            <td class="px-6 py-4 font-mono text-sm">P-1001-310-2026-000001</td>
+                            <td class="px-6 py-4 text-sm">Vanguard Safe Travel (VST)</td>
                             <td class="px-6 py-4">
                                 <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-50 text-red-600">
                                     Expired
@@ -286,9 +286,9 @@
                             </td>
                             <td class="px-6 py-4 text-sm">01-01-25</td>
                             <td class="px-6 py-4 text-right">
-                                <button onclick="openModal('Travel Policy')" class="text-blue-600 font-medium">
+                                <a href="{{ route('offline.general-accident-form') }}" class="text-blue-600 font-medium">
                                     View
-                                </button>
+                                </a>
                             </td>
                         </tr>
 
