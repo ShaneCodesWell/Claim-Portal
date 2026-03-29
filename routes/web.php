@@ -47,7 +47,9 @@ Route::middleware('auth.customer')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Offline Application
-Route::get('/offline-dashboard', [OfflineController::class, 'index'])->name('offline-dashboard');
-Route::get('/offline-motor-form', [OfflineController::class, 'motorForm'])->name('offline.motor-form');
-Route::get('/offline-general-accident-form', [OfflineController::class, 'generalAccidentForm'])->name('offline.general-accident-form');
-Route::get('/offline-fire-form', [OfflineController::class, 'fireForm'])->name('offline.fire-form');
+Route::prefix('offline')->name('offline.')->group(function () {
+    Route::get('/dashboard', [OfflineController::class, 'index'])->name('dashboard');
+    Route::get('/motor-form', [OfflineController::class, 'motorForm'])->name('motor-form');
+    Route::get('/general-accident-form', [OfflineController::class, 'generalAccidentForm'])->name('general-accident-form');
+    Route::get('/fire-form', [OfflineController::class, 'fireForm'])->name('fire-form');
+});
