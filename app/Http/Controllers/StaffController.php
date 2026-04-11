@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -10,10 +11,36 @@ class StaffController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function dashboard()
     {
-        $staff = User::latest()->paginate(10);
-        return view('staff.index', compact('staff'));
+
+        return view('staff.dashboard.index');
+    }
+
+    public function allClaims()
+    {
+        return view('staff.all-claims.index');
+    }
+
+    public function claimForms()
+    {
+        return view('staff.claim-forms.index');
+    }
+
+    public function claimDouments()
+    {
+        return view('staff.claim-documents.index');
+    }
+
+    public function customers()
+    {
+        $customers = Customer::latest()->paginate(10);
+        return view('staff.customers.index', compact('customers'));
+    }
+
+    public function settings()
+    {
+        return view('staff.settings.index');
     }
 
     /**

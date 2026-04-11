@@ -12,34 +12,34 @@
 
         <!-- Navigation Links -->
         <nav class="flex-1 px-3 py-6 space-y-1.5">
-            <a href="#"
+            {{-- <a href="#"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-indigo-50 text-indigo-700 font-medium">
                 <i class="fas fa-tachometer-alt w-5"></i>
                 <span>Dashboard</span>
-            </a>
-            <a href="#"
+            </a> --}}
+            <a href="{{ route('all-claims') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-clipboard-list w-5"></i>
                 <span>All Claims</span>
                 <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">12</span>
             </a>
-            <a href="#"
+            <a href="{{ route('claim-form') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-file-alt w-5"></i>
                 <span>Claim Forms</span>
             </a>
-            <a href="#"
+            <a href="{{ route('claim-documents') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-folder-open w-5"></i>
                 <span>Documents</span>
             </a>
-            <a href="#"
+            <a href="{{ route('customers') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-users w-5"></i>
-                <span>CRM</span>
+                <span>Customer List</span>
             </a>
             <div class="pt-4 mt-4 border-t border-gray-100">
-                <a href="#"
+                <a href="{{ route('settings') }}"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                     <i class="fas fa-cog w-5"></i>
                     <span>Settings</span>

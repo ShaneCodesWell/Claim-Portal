@@ -9,19 +9,15 @@ use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 
+// Auth Routes
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-
 Route::get('/otp', [AuthController::class, 'showOtpForm'])->name('otp');
 Route::post('/otp/request', [AuthController::class, 'requestOtp'])->name('otp.send');
-
 Route::get('/otp/verify-form', [AuthController::class, 'verifyOtpForm'])->name('otp.verify');
 Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.verify.submit');
-
 Route::get('/login/local', [AuthController::class, 'showLocalLoginForm'])->name('login.local');
 Route::post('/login/local', [AuthController::class, 'localLogin'])->name('login.local.submit');
-
-// Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Customers Routes
@@ -49,7 +45,13 @@ Route::middleware('auth.customer')->group(function () {
 });
 
 // Claim Staff Routes
-Route::get('/staff/dashboard', [StaffController::class, 'index'])->name('staff-dashboard');
+Route::get('/staff/dashboard', [StaffController::class, 'dashboard'])->name('staff-dashboard');
+Route::get('/staff/all-claims', [StaffController::class, 'allClaims'])->name('all-claims');
+Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
+Route::get('/staff/claim-documents', [StaffController::class, 'claimDouments'])->name('claim-documents');
+Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers');
+
+Route::get('/staff/settings', [StaffController::class, 'settings'])->name('settings');
 
 // Offline Application
 Route::prefix('offline')->name('offline.')->group(function () {
