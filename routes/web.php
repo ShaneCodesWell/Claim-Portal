@@ -6,6 +6,7 @@ use App\Http\Controllers\FireController;
 use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
 use App\Http\Controllers\OfflineController;
+use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
@@ -20,6 +21,10 @@ Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.veri
 Route::get('/login/local', [AuthController::class, 'showLocalLoginForm'])->name('login.local');
 Route::post('/login/local', [AuthController::class, 'localLogin'])->name('login.local.submit');
 
+// Logout
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Customers Routes
 Route::middleware('auth.customer')->group(function () {
     // Customer Auth
     Route::get('/setup-password', [AuthController::class, 'showSetupPasswordForm'])->name('password.setup');
@@ -43,8 +48,8 @@ Route::middleware('auth.customer')->group(function () {
     Route::post('/fire-form/submit', [FireController::class, 'create'])->name('fire-form.submit');
 });
 
-// Logout
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// Claim Staff Routes
+Route::get('/staff/dashboard', [StaffController::class, 'index'])->name('staff-dashboard');
 
 // Offline Application
 Route::prefix('offline')->name('offline.')->group(function () {

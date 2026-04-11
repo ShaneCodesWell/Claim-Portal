@@ -1,0 +1,41 @@
+/* custom styles for details/summary and sidebar transitions */
+details > summary {
+    list-style: none;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+details > summary::-webkit-details-marker {
+    display: none;
+}
+details > summary::before {
+    content: "▶";
+    font-size: 0.7rem;
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.1s;
+    color: #3b82f6;
+}
+details[open] > summary::before {
+    content: "▼";
+}
+/* custom scrollbar */
+.custom-scroll::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+/* sidebar transition */
+.sidebar-transition {
+    transition: transform 0.2s ease-in-out;
+}
+/* prevent body scroll when mobile sidebar open (simple overlay) */
+.no-scroll {
+    overflow: hidden;
+}
