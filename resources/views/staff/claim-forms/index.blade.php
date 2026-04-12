@@ -101,7 +101,7 @@
                         police_report_scanned.pdf</span>
                 </div>
             </div>
-            <div class="bg-gray-50 px-5 py-3 border-t flex justify-between">
+            <div class="bg-gray-50 px-5 py-3 border-t border-gray-300 flex justify-between">
                 <button class="text-indigo-600 text-sm font-medium hover:underline">
                     <i class="far fa-eye"></i> Preview form
                 </button>
@@ -172,7 +172,7 @@
                         damage_inventory.xlsx</span>
                 </div>
             </div>
-            <div class="bg-gray-50 px-5 py-3 border-t flex justify-between">
+            <div class="bg-gray-50 px-5 py-3 border-t border-gray-300 flex justify-between">
                 <button class="text-indigo-600 text-sm">
                     <i class="far fa-eye"></i> Preview form</button><button class="text-gray-600 text-sm">
                     <i class="fas fa-paperclip"></i> Documents (3)
@@ -237,7 +237,7 @@
                         doctor_note_signed.jpg</span>
                 </div>
             </div>
-            <div class="bg-gray-50 px-5 py-3 border-t flex justify-between">
+            <div class="bg-gray-50 px-5 py-3 border-t border-gray-300 flex justify-between">
                 <button class="text-indigo-600 text-sm">Preview form</button><button
                     class="text-gray-600 text-sm">Documents (2)</button>
             </div>
@@ -302,7 +302,7 @@
                             class="fas fa-image"></i> lost_luggage_tag.jpg</span>
                 </div>
             </div>
-            <div class="bg-gray-50 px-5 py-3 border-t flex justify-between">
+            <div class="bg-gray-50 px-5 py-3 border-t border-gray-300 flex justify-between">
                 <button class="text-indigo-600 text-sm">Preview form</button><button
                     class="text-gray-600 text-sm">Documents (3)</button>
             </div>
@@ -367,7 +367,7 @@
                         contractor_quote.pdf</span>
                 </div>
             </div>
-            <div class="bg-gray-50 px-5 py-3 border-t flex justify-between">
+            <div class="bg-gray-50 px-5 py-3 border-t border-gray-300 flex justify-between">
                 <button class="text-indigo-600 text-sm">Preview form</button><button
                     class="text-gray-600 text-sm">Documents (3)</button>
             </div>
@@ -427,7 +427,7 @@
                             class="fas fa-receipt"></i> invoice_medication.pdf</span>
                 </div>
             </div>
-            <div class="bg-gray-50 px-5 py-3 border-t flex justify-between">
+            <div class="bg-gray-50 px-5 py-3 border-t border-gray-300 flex justify-between">
                 <button class="text-indigo-600 text-sm">Preview form</button><button
                     class="text-gray-600 text-sm">Documents (2)</button>
             </div>
@@ -437,19 +437,19 @@
     <!-- Pagination UI (static) -->
     <div class="mt-8 flex justify-center">
         <div class="flex gap-2 items-center">
-            <button class="px-3 py-1 border rounded-md text-sm bg-white text-gray-600">
+            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white text-gray-600">
                 <i class="fas fa-chevron-left"></i> Previous
             </button>
             <button class="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm">
                 1
             </button>
-            <button class="px-3 py-1 border rounded-md text-sm bg-white">
+            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
                 2
             </button>
-            <button class="px-3 py-1 border rounded-md text-sm bg-white">
+            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
                 3
             </button>
-            <button class="px-3 py-1 border rounded-md text-sm bg-white">
+            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
                 Next <i class="fas fa-chevron-right"></i>
             </button>
         </div>

@@ -52,7 +52,7 @@
         <!-- Document Card 1: damage_estimate.pdf (Auto claim) -->
         <div
             class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition file-card">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
                     <div>
@@ -92,7 +92,7 @@
 
         <!-- Card 2: car_damage_front.jpg -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-image text-blue-500 text-3xl"></i>
                     <div>
@@ -125,7 +125,7 @@
 
         <!-- Card 3: police_report_scanned.pdf -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
                     <div>
@@ -157,7 +157,7 @@
 
         <!-- Card 4: plumber_invoice.pdf (Home claim) -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
                     <div>
@@ -190,7 +190,7 @@
 
         <!-- Card 5: water_damage_photo1.jpg -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-image text-blue-500 text-3xl"></i>
                     <div>
@@ -222,7 +222,7 @@
 
         <!-- Card 6: damage_inventory.xlsx -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-excel text-green-600 text-3xl"></i>
                     <div>
@@ -254,7 +254,7 @@
 
         <!-- Card 7: medical_certificate.pdf (Life) -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
                     <div>
@@ -287,7 +287,7 @@
 
         <!-- Card 8: doctor_note_signed.jpg -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-image text-indigo-500 text-3xl"></i>
                     <div>
@@ -319,7 +319,7 @@
 
         <!-- Card 9: flight_cancellation.pdf (Travel) -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
                     <div>
@@ -352,7 +352,7 @@
 
         <!-- Card 10: baggage_claim_receipt.pdf -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-receipt text-gray-600 text-3xl"></i>
                     <div>
@@ -384,7 +384,7 @@
 
         <!-- Card 11: lost_luggage_tag.jpg -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-image text-blue-500 text-3xl"></i>
                     <div>
@@ -416,7 +416,7 @@
 
         <!-- Card 12: roof_inspection_report.pdf (Commercial) -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
                     <div>
@@ -449,7 +449,7 @@
 
         <!-- Card 13: hail_damage_photo.png -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-image text-blue-500 text-3xl"></i>
                     <div>
@@ -481,7 +481,7 @@
 
         <!-- Card 14: contractor_quote.pdf -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
                     <div>
@@ -513,7 +513,7 @@
 
         <!-- Card 15: vet_report_luna.pdf (Pet claim extra) -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
                     <div>
@@ -546,7 +546,7 @@
 
         <!-- Card 16: invoice_medication.pdf -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-4 flex items-center justify-between border-b">
+            <div class="bg-gray-50 p-4 flex items-center justify-between border-b border-gray-300">
                 <div class="flex gap-3">
                     <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
                     <div>
@@ -580,19 +580,19 @@
     <!-- Pagination (static) -->
     <div class="mt-8 flex justify-center">
         <div class="flex gap-2 items-center">
-            <button class="px-3 py-1 border rounded-md text-sm bg-white text-gray-600">
+            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white text-gray-600">
                 <i class="fas fa-chevron-left"></i> Previous
             </button>
             <button class="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm">
                 1
             </button>
-            <button class="px-3 py-1 border rounded-md text-sm bg-white">
+            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
                 2
             </button>
-            <button class="px-3 py-1 border rounded-md text-sm bg-white">
+            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
                 3
             </button>
-            <button class="px-3 py-1 border rounded-md text-sm bg-white">
+            <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
                 Next <i class="fas fa-chevron-right"></i>
             </button>
         </div>

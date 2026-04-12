@@ -45,7 +45,7 @@
             </div>
             <div class="p-6 space-y-5">
                 <div class="flex flex-col sm:flex-row gap-6">
-                    <div class="flex-shrink-0 text-center">
+                    <div class="shrink-0 text-center">
                         <div class="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto">
                             <i class="fas fa-user-shield text-indigo-600 text-4xl"></i>
                         </div>
