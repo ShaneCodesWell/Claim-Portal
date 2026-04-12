@@ -80,20 +80,17 @@
                             Contact
                         </th>
                         <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy Number
-                        </th>
-                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Product
+                            Customer Code
                         </th>
                         <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policy Period
                         </th>
                         <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Claims
+                            Policies
                         </th>
-                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        {{-- <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Status
-                        </th>
+                        </th> --}}
                         <th class="px-5 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Actions
                         </th>
@@ -110,31 +107,21 @@
                                 </div>
                                 <div>
                                     <p class="font-medium text-gray-800">John Davis</p>
-                                    <p class="text-xs text-gray-400">Client since 2022</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-5 py-4 text-sm text-gray-600">
-                            john.davis@email.com<br /><span class="text-xs text-gray-400">(555) 123-4567</span>
+                            john.davis@email.com<br /><span class="text-xs text-gray-400">(233) 123-4567</span>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm">POL-AU-8723-01</td>
-                        <td class="px-5 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><i
-                                    class="fas fa-car"></i> Auto</span>
-                        </td>
+                        <td class="px-5 py-4 font-mono text-sm">C0921029POW03</td>
                         <td class="px-5 py-4 text-sm">01/15/2024 - 01/14/2025</td>
                         <td class="px-5 py-4">
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">1 claim</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Active</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">4 Policies</span>
                         </td>
                         <td class="px-5 py-4 text-center">
-                            <button class="text-indigo-600 hover:text-indigo-800 mx-1">
-                                <i class="fas fa-eye"></i></button><button
-                                class="text-gray-500 hover:text-gray-700 mx-1">
-                                <i class="fas fa-edit"></i>
+                            <button
+                                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
                         </td>
                     </tr>
@@ -148,31 +135,21 @@
                                 </div>
                                 <div>
                                     <p class="font-medium">Sarah Mitchell</p>
-                                    <p class="text-xs text-gray-400">Client since 2023</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-5 py-4 text-sm">
-                            sarah.m@email.com<br /><span class="text-xs text-gray-400">(555) 234-5678</span>
+                            sarah.m@email.com<br /><span class="text-xs text-gray-400">(233) 234-5678</span>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm">HOM-4562-89B</td>
-                        <td class="px-5 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800"><i
-                                    class="fas fa-home"></i> Home</span>
-                        </td>
+                        <td class="px-5 py-4 font-mono text-sm">C0921029POW09</td>
                         <td class="px-5 py-4 text-sm">09/10/2023 - 09/09/2024</td>
                         <td class="px-5 py-4">
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">1 claim</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full">Renewal
-                                due</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">2 Policies</span>
                         </td>
                         <td class="px-5 py-4 text-center">
-                            <button class="text-indigo-600">
-                                <i class="fas fa-eye"></i></button><button class="text-gray-500 ml-2">
-                                <i class="fas fa-edit"></i>
+                            <button
+                                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
                         </td>
                     </tr>
@@ -186,30 +163,21 @@
                                 </div>
                                 <div>
                                     <p class="font-medium">Michael Chen</p>
-                                    <p class="text-xs text-gray-400">Client since 2020</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-5 py-4 text-sm">
-                            mchen@email.com<br /><span class="text-xs">(555) 345-6789</span>
+                            mchen@email.com<br /><span class="text-xs text-gray-400">(233) 345-6789</span>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm">LIFE-9983-X2C</td>
-                        <td class="px-5 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800"><i
-                                    class="fas fa-heartbeat"></i> Life</span>
-                        </td>
+                        <td class="px-5 py-4 font-mono text-sm">C0921029POW02</td>
                         <td class="px-5 py-4 text-sm">05/20/2020 - 05/19/2035</td>
                         <td class="px-5 py-4">
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">1 claim</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Active</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">1 Policy</span>
                         </td>
                         <td class="px-5 py-4 text-center">
-                            <button class="text-indigo-600">
-                                <i class="fas fa-eye"></i></button><button class="text-gray-500 ml-2">
-                                <i class="fas fa-edit"></i>
+                            <button
+                                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
                         </td>
                     </tr>
@@ -223,30 +191,21 @@
                                 </div>
                                 <div>
                                     <p class="font-medium">Olivia Rodriguez</p>
-                                    <p class="text-xs">Client since 2024</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-5 py-4 text-sm">
-                            olivia.r@email.com<br /><span class="text-xs">(555) 456-7890</span>
+                            olivia.r@email.com<br /><span class="text-xs text-gray-400">(233) 456-7890</span>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm">TRV-1256-4AA</td>
-                        <td class="px-5 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800"><i
-                                    class="fas fa-plane"></i> Travel</span>
-                        </td>
+                        <td class="px-5 py-4 font-mono text-sm">C0921029POW04</td>
                         <td class="px-5 py-4 text-sm">03/01/2024 - 09/01/2024</td>
                         <td class="px-5 py-4">
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">1 claim</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">Expired</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">3 Policies</span>
                         </td>
                         <td class="px-5 py-4 text-center">
-                            <button class="text-indigo-600">
-                                <i class="fas fa-eye"></i></button><button class="text-gray-500 ml-2">
-                                <i class="fas fa-edit"></i>
+                            <button
+                                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
                         </td>
                     </tr>
@@ -260,30 +219,21 @@
                                 </div>
                                 <div>
                                     <p class="font-medium">David Kim</p>
-                                    <p class="text-xs">Client since 2022</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-5 py-4 text-sm">
-                            david.kim@email.com<br /><span class="text-xs">(555) 567-8901</span>
+                            david.kim@email.com<br /><span class="text-xs text-gray-400">(233) 567-8901</span>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm">COM-7789-3BZ</td>
-                        <td class="px-5 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800"><i
-                                    class="fas fa-building"></i> Commercial</span>
-                        </td>
+                        <td class="px-5 py-4 font-mono text-sm">C0921029POW05</td>
                         <td class="px-5 py-4 text-sm">11/01/2022 - 11/01/2024</td>
                         <td class="px-5 py-4">
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">1 claim</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Active</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">2 Policy</span>
                         </td>
                         <td class="px-5 py-4 text-center">
-                            <button class="text-indigo-600">
-                                <i class="fas fa-eye"></i></button><button class="text-gray-500 ml-2">
-                                <i class="fas fa-edit"></i>
+                            <button
+                                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
                         </td>
                     </tr>
@@ -297,30 +247,21 @@
                                 </div>
                                 <div>
                                     <p class="font-medium">Emily Watson</p>
-                                    <p class="text-xs">Client since 2023</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-5 py-4 text-sm">
-                            emily.w@email.com<br /><span class="text-xs">(555) 678-9012</span>
+                            emily.w@email.com<br /><span class="text-xs text-gray-400">(233) 678-9012</span>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm">PET-3321-7GG</td>
-                        <td class="px-5 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-pink-100 text-pink-800"><i
-                                    class="fas fa-paw"></i> Pet</span>
-                        </td>
+                        <td class="px-5 py-4 font-mono text-sm">C0921029POW06</td>
                         <td class="px-5 py-4 text-sm">01/10/2023 - 01/09/2025</td>
                         <td class="px-5 py-4">
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">1 claim</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Active</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">1 Policy</span>
                         </td>
                         <td class="px-5 py-4 text-center">
-                            <button class="text-indigo-600">
-                                <i class="fas fa-eye"></i></button><button class="text-gray-500 ml-2">
-                                <i class="fas fa-edit"></i>
+                            <button
+                                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
                         </td>
                     </tr>
@@ -334,30 +275,21 @@
                                 </div>
                                 <div>
                                     <p class="font-medium">Robert Turner</p>
-                                    <p class="text-xs">Client since 2024</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-5 py-4 text-sm">
-                            robert.t@email.com<br /><span class="text-xs">(555) 789-0123</span>
+                            robert.t@email.com<br /><span class="text-xs text-gray-400">(233) 789-0123</span>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm">AUTO-4421-9FF</td>
-                        <td class="px-5 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><i
-                                    class="fas fa-car"></i> Auto</span>
-                        </td>
+                        <td class="px-5 py-4 font-mono text-sm">C0921029POW07</td>
                         <td class="px-5 py-4 text-sm">03/15/2024 - 03/14/2025</td>
                         <td class="px-5 py-4">
-                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">0 claims</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Active</span>
+                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">0 Policies</span>
                         </td>
                         <td class="px-5 py-4 text-center">
-                            <button class="text-indigo-600">
-                                <i class="fas fa-eye"></i></button><button class="text-gray-500 ml-2">
-                                <i class="fas fa-edit"></i>
+                            <button
+                                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
                         </td>
                     </tr>
@@ -371,30 +303,21 @@
                                 </div>
                                 <div>
                                     <p class="font-medium">Lisa Garcia</p>
-                                    <p class="text-xs">Client since 2021</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-5 py-4 text-sm">
-                            lisa.g@email.com<br /><span class="text-xs">(555) 890-1234</span>
+                            lisa.g@email.com<br /><span class="text-xs text-gray-400">(233) 890-1234</span>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm">HOME-2387-4KK</td>
-                        <td class="px-5 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800"><i
-                                    class="fas fa-home"></i> Home</span>
-                        </td>
+                        <td class="px-5 py-4 font-mono text-sm">C0921029POW08</td>
                         <td class="px-5 py-4 text-sm">07/22/2021 - 07/21/2025</td>
                         <td class="px-5 py-4">
-                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">0 claims</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Active</span>
+                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">0 Policies</span>
                         </td>
                         <td class="px-5 py-4 text-center">
-                            <button class="text-indigo-600">
-                                <i class="fas fa-eye"></i></button><button class="text-gray-500 ml-2">
-                                <i class="fas fa-edit"></i>
+                            <button
+                                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-edit"></i> Edit
                             </button>
                         </td>
                     </tr>
@@ -402,16 +325,16 @@
             </table>
         </div>
         <!-- Pagination -->
-        <div class="bg-gray-50 px-6 py-3 border-t flex justify-between items-center flex-wrap gap-3">
+        <div class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
             <div class="text-sm text-gray-500">
                 Showing 8 of 124 policyholders
             </div>
             <div class="flex gap-2">
-                <button class="px-3 py-1 border rounded-md text-sm bg-white">
+                <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
                     Previous</button><button class="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm">
-                    1</button><button class="px-3 py-1 border rounded-md text-sm bg-white">
-                    2</button><button class="px-3 py-1 border rounded-md text-sm bg-white">
-                    3</button><button class="px-3 py-1 border rounded-md text-sm bg-white">
+                    1</button><button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
+                    2</button><button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
+                    3</button><button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">
                     Next
                 </button>
             </div>
@@ -419,7 +342,7 @@
     </div>
 
     <!-- Recently added / quick actions -->
-    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    {{-- <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="font-semibold text-gray-800">
@@ -500,5 +423,5 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 </x-layouts.staff>

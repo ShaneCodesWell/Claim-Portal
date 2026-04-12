@@ -48,6 +48,7 @@ Route::middleware('auth.customer')->group(function () {
 Route::get('/staff/dashboard', [StaffController::class, 'dashboard'])->name('staff-dashboard');
 Route::get('/staff/all-claims', [StaffController::class, 'allClaims'])->name('all-claims');
 Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
+Route::get('/staff/claim-forms/create', [StaffController::class, 'createClaimForms'])->name('create-claim-form');
 Route::get('/staff/claim-documents', [StaffController::class, 'claimDouments'])->name('claim-documents');
 Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers');
 

@@ -33,47 +33,47 @@
             <table class="min-w-[1000px] md:min-w-full w-full table-auto">
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200">
-                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Client Name</th>
-                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policy Number</th>
-                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Product</th>
-                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policy Start</th>
-                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policy End</th>
-                        <th class="px-5 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="px-3 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Claim Form</th>
-                        <th class="px-5 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="px-3 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Documents</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     <!-- Row 1: John Davis -->
                     <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-5 py-4">
+                        <td class="px-3 py-4">
                             <div class="flex items-center gap-2">
                                 <div
                                     class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-sm font-semibold">
                                     JD</div>
-                                <span class="font-medium text-gray-800">John Davis</span>
+                                <span class="font-medium text-sm text-gray-800">John Davis</span>
                             </div>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm text-gray-700">POL-AU-8723-01</td>
-                        <td class="px-5 py-4">
+                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1001-101-2026-000020</td>
+                        <td class="px-3 py-4">
                             <span
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><i
                                     class="fas fa-car text-xs"></i> Comprehensive</span>
                         </td>
-                        <td class="px-5 py-4 text-sm">2024-01-15</td>
-                        <td class="px-5 py-4 text-sm">2025-01-14</td>
-                        <td class="px-5 py-4 text-center">
+                        <td class="px-3 py-4 text-sm">2024-01-15</td>
+                        <td class="px-3 py-4 text-sm">2025-01-14</td>
+                        <td class="px-3 py-4 text-center">
                             <button onclick="openClaimFormModal(1)"
                                 class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
                                     class="fas fa-eye mr-1"></i> View Form</button>
                         </td>
-                        <td class="px-5 py-4 text-center">
+                        <td class="px-3 py-4 text-center">
                             <button onclick="openDocumentsModal(1)"
                                 class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
                                     class="fas fa-paperclip mr-1"></i> Documents (3)</button>
@@ -81,86 +81,86 @@
                     </tr>
                     <!-- Row 2: Sarah Mitchell -->
                     <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-5 py-4">
+                        <td class="px-3 py-4">
                             <div class="flex items-center gap-2">
                                 <div
                                     class="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-sm font-semibold">
                                     SM</div>
-                                <span class="font-medium text-gray-800">Sarah Mitchell</span>
+                                <span class="font-medium text-sm text-gray-800">Sarah Mitchell</span>
                             </div>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm text-gray-700">HOM-4562-89B</td>
-                        <td class="px-5 py-4">
+                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1001-102-2026-000095</td>
+                        <td class="px-3 py-4">
                             <span
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800"><i
                                     class="fas fa-home text-xs"></i> Happy Home</span>
                         </td>
-                        <td class="px-5 py-4 text-sm">2023-09-10</td>
-                        <td class="px-5 py-4 text-sm">2024-09-09</td>
-                        <td class="px-5 py-4 text-center">
+                        <td class="px-3 py-4 text-sm">2023-09-10</td>
+                        <td class="px-3 py-4 text-sm">2024-09-09</td>
+                        <td class="px-3 py-4 text-center">
                             <button onclick="openClaimFormModal(2)"
                                 class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
                                     class="fas fa-eye mr-1"></i> View Form</button>
                         </td>
-                        <td class="px-5 py-4 text-center">
+                        <td class="px-3 py-4 text-center">
                             <button onclick="openDocumentsModal(2)"
                                 class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
                                     class="fas fa-paperclip mr-1"></i> Documents (3)</button>
                         </td>
                     </tr>
                     <!-- Row 3: Michael Chen -->
-                    {{-- <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-5 py-4">
+                    <tr class="hover:bg-gray-50 transition duration-150">
+                        <td class="px-3 py-4">
                             <div class="flex items-center gap-2">
                                 <div
-                                    class="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 text-sm font-semibold">
-                                    MC</div>
-                                <span class="font-medium text-gray-800">Michael Chen</span>
+                                    class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-sm font-semibold">
+                                    JD</div>
+                                <span class="font-medium text-sm text-gray-800">Marcus Davis</span>
                             </div>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm text-gray-700">LIFE-9983-X2C</td>
-                        <td class="px-5 py-4">
+                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1001-101-2026-000023</td>
+                        <td class="px-3 py-4">
                             <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800"><i
-                                    class="fas fa-heartbeat text-xs"></i> Vanguard Life</span>
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><i
+                                    class="fas fa-car text-xs"></i> Comprehensive</span>
                         </td>
-                        <td class="px-5 py-4 text-sm">2020-05-20</td>
-                        <td class="px-5 py-4 text-sm">2035-05-19</td>
-                        <td class="px-5 py-4 text-center">
-                            <button onclick="openClaimFormModal(3)"
+                        <td class="px-3 py-4 text-sm">2024-01-15</td>
+                        <td class="px-3 py-4 text-sm">2025-01-14</td>
+                        <td class="px-3 py-4 text-center">
+                            <button onclick="openClaimFormModal(1)"
                                 class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
                                     class="fas fa-eye mr-1"></i> View Form</button>
                         </td>
-                        <td class="px-5 py-4 text-center">
-                            <button onclick="openDocumentsModal(3)"
+                        <td class="px-3 py-4 text-center">
+                            <button onclick="openDocumentsModal(1)"
                                 class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-paperclip mr-1"></i> Documents (2)</button>
+                                    class="fas fa-paperclip mr-1"></i> Documents (3)</button>
                         </td>
-                    </tr> --}}
+                    </tr>
                     <!-- Row 4: Olivia Rodriguez -->
                     <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-5 py-4">
+                        <td class="px-3 py-4">
                             <div class="flex items-center gap-2">
                                 <div
                                     class="h-8 w-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-700 text-sm font-semibold">
                                     OR</div>
-                                <span class="font-medium text-gray-800">Olivia Rodriguez</span>
+                                <span class="font-medium text-sm text-gray-800">Olivia Rodriguez</span>
                             </div>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm text-gray-700">TRV-1256-4AA</td>
-                        <td class="px-5 py-4">
+                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1003-310-2026-000150</td>
+                        <td class="px-3 py-4">
                             <span
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800"><i
                                     class="fas fa-plane text-xs"></i> Vanguard Safe Travel</span>
                         </td>
-                        <td class="px-5 py-4 text-sm">2024-03-01</td>
-                        <td class="px-5 py-4 text-sm">2024-09-01</td>
-                        <td class="px-5 py-4 text-center">
+                        <td class="px-3 py-4 text-sm">2024-03-01</td>
+                        <td class="px-3 py-4 text-sm">2024-09-01</td>
+                        <td class="px-3 py-4 text-center">
                             <button onclick="openClaimFormModal(4)"
                                 class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
                                     class="fas fa-eye mr-1"></i> View Form</button>
                         </td>
-                        <td class="px-5 py-4 text-center">
+                        <td class="px-3 py-4 text-center">
                             <button onclick="openDocumentsModal(4)"
                                 class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
                                     class="fas fa-paperclip mr-1"></i> Documents (3)</button>
@@ -168,28 +168,28 @@
                     </tr>
                     <!-- Row 5: David Kim -->
                     <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-5 py-4">
+                        <td class="px-3 py-4">
                             <div class="flex items-center gap-2">
                                 <div
                                     class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 text-sm font-semibold">
                                     DK</div>
-                                <span class="font-medium text-gray-800">David Kim</span>
+                                <span class="font-medium text-sm text-gray-800">David Kim</span>
                             </div>
                         </td>
-                        <td class="px-5 py-4 font-mono text-sm text-gray-700">COM-7789-3BZ</td>
-                        <td class="px-5 py-4">
+                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1001-103-2026-000035</td>
+                        <td class="px-3 py-4">
                             <span
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800"><i
                                     class="fas fa-building text-xs"></i> Commercial Fire</span>
                         </td>
-                        <td class="px-5 py-4 text-sm">2022-11-01</td>
-                        <td class="px-5 py-4 text-sm">2024-11-01</td>
-                        <td class="px-5 py-4 text-center">
+                        <td class="px-3 py-4 text-sm">2022-11-01</td>
+                        <td class="px-3 py-4 text-sm">2024-11-01</td>
+                        <td class="px-3 py-4 text-center">
                             <button onclick="openClaimFormModal(5)"
                                 class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
                                     class="fas fa-eye mr-1"></i> View Form</button>
                         </td>
-                        <td class="px-5 py-4 text-center">
+                        <td class="px-3 py-4 text-center">
                             <button onclick="openDocumentsModal(5)"
                                 class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
                                     class="fas fa-paperclip mr-1"></i> Documents (3)</button>
@@ -203,7 +203,8 @@
                 <i class="fas fa-clipboard-list mr-1"></i> Showing 5 of 5 registered claims
             </div>
             <div class="flex gap-2">
-                <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white"><i class="fas fa-chevron-left"></i>
+                <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white"><i
+                        class="fas fa-chevron-left"></i>
                     Previous</button>
                 <button class="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm">1</button>
                 <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">2</button>
@@ -233,7 +234,6 @@
     <x-documents-modal />
 
     <script>
-        
         const claimsData = {
             1: {
                 claimForm: {
@@ -418,14 +418,14 @@
                 contentDiv.innerHTML = `
                     <div class="space-y-2">
                         ${docs.map(doc => `
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                    <div class="flex items-center gap-3">
-                                        <i class="${doc.icon} ${doc.color} text-lg"></i>
-                                        <div><p class="font-medium text-gray-800">${doc.name}</p><p class="text-xs text-gray-400">${doc.size}</p></div>
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                        <div class="flex items-center gap-3">
+                                            <i class="${doc.icon} ${doc.color} text-lg"></i>
+                                            <div><p class="font-medium text-gray-800">${doc.name}</p><p class="text-xs text-gray-400">${doc.size}</p></div>
+                                        </div>
+                                        <button onclick="alert('Download: ${doc.name} (demo)')" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-download"></i></button>
                                     </div>
-                                    <button onclick="alert('Download: ${doc.name} (demo)')" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-download"></i></button>
-                                </div>
-                            `).join('')}
+                                `).join('')}
                     </div>
                 `;
             }
