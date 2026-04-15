@@ -10,7 +10,12 @@ use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 
 // Auth Routes
-Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/', [AuthController::class, 'showUserSelectForm'])->name('user.select');
+
+Route::get('/login-user', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/staff-login', [AuthController::class, 'staffLogin'])->name('staff.login');
+Route::get('/agent-login', [AuthController::class, 'agentLogin'])->name('agent.login');
+
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::get('/otp', [AuthController::class, 'showOtpForm'])->name('otp');
 Route::post('/otp/request', [AuthController::class, 'requestOtp'])->name('otp.send');
@@ -45,8 +50,10 @@ Route::middleware('auth.customer')->group(function () {
 });
 
 // Claim Staff Routes
+
 Route::get('/staff/dashboard', [StaffController::class, 'dashboard'])->name('staff-dashboard');
 Route::get('/staff/all-claims', [StaffController::class, 'allClaims'])->name('all-claims');
+Route::get('/staff/my-claims', [StaffController::class, 'myClaims'])->name('my-claims');
 Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
 Route::get('/staff/claim-forms/create', [StaffController::class, 'createClaimForms'])->name('create-claim-form');
 Route::get('/staff/claim-documents', [StaffController::class, 'claimDouments'])->name('claim-documents');

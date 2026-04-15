@@ -143,7 +143,7 @@
                     <label class="toggle-switch"><input type="checkbox" checked /><span class="slider"></span></label>
                 </div>
             </div>
-            <div class="bg-gray-50 px-6 py-3 border-t flex justify-end">
+            <div class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-end">
                 <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm">
                     Update Preferences
                 </button>
@@ -204,7 +204,7 @@
                     </button>
                 </div>
             </div>
-            <div class="bg-gray-50 px-6 py-3 border-t flex justify-end gap-3">
+            <div class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-end gap-3">
                 <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm">
                     Cancel
                 </button>
@@ -217,77 +217,158 @@
 
     <!-- Team & Roles (Admin permissions) -->
     <div id="section-team" class="settings-section hidden">
-        <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden mb-8">
-            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                <h3 class="font-semibold text-gray-800">
-                    <i class="fas fa-users-cog text-indigo-500 mr-2"></i> Team
-                    Members & Roles
-                </h3>
-                <button class="text-indigo-600 text-sm flex items-center gap-1">
-                    <i class="fas fa-plus-circle"></i> Invite Member
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/70 flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-users-cog text-indigo-500"></i>
+                        Team Members & Roles
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Manage access levels for claims operations
+                    </p>
+                </div>
+
+                <button
+                    class="inline-flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-2 rounded-lg transition">
+                    <i class="fas fa-plus-circle text-xs"></i>
+                    Invite Member
                 </button>
             </div>
+
+            <!-- Table -->
             <div class="overflow-x-auto">
                 <table class="min-w-full">
-                    <thead class="bg-gray-50 border-b">
+                    <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs text-gray-500">
-                                Name
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Member
                             </th>
-                            <th class="px-6 py-3 text-left text-xs text-gray-500">
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Role
                             </th>
-                            <th class="px-6 py-3 text-left text-xs text-gray-500">
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Status
                             </th>
-                            <th class="px-6 py-3 text-left text-xs text-gray-500">
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Actions
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y">
-                        <tr>
-                            <td class="px-6 py-3 text-sm">Moses Vanguard</td>
-                            <td class="px-6 py-3 text-sm">Super Admin</td>
-                            <td class="px-6 py-3">
-                                <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Active</span>
+
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-semibold">
+                                        MV
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">Moses Vanguard</p>
+                                        <p class="text-xs text-gray-500">moses@claims.local</p>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="px-6 py-3">
-                                <button class="text-gray-400">
-                                    <i class="fas fa-edit"></i>
+
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                                    Super Admin
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    Active
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-right">
+                                <button class="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-500 transition">
+                                    <i class="fas fa-edit text-sm"></i>
                                 </button>
                             </td>
                         </tr>
-                        <tr>
-                            <td class="px-6 py-3 text-sm">Shane Miller</td>
-                            <td class="px-6 py-3 text-sm">Claims Adjuster</td>
-                            <td class="px-6 py-3">
-                                <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Active</span>
+
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="h-9 w-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-semibold">
+                                        CM
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">Chase Miller</p>
+                                        <p class="text-xs text-gray-500">chase@claims.local</p>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="px-6 py-3">
-                                <button class="text-gray-400">
-                                    <i class="fas fa-edit"></i>
+
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                    Claims Staff
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    Active
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-right">
+                                <button class="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-500 transition">
+                                    <i class="fas fa-edit text-sm"></i>
                                 </button>
                             </td>
                         </tr>
-                        <tr>
-                            <td class="px-6 py-3 text-sm">Lisa Crawford</td>
-                            <td class="px-6 py-3 text-sm">Reviewer</td>
-                            <td class="px-6 py-3">
-                                <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full">Pending
-                                    invite</span>
+
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="h-9 w-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-semibold">
+                                        LC
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">Lisa Crawford</p>
+                                        <p class="text-xs text-gray-500">lisa@claims.local</p>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="px-6 py-3">
-                                <button class="text-gray-400">
-                                    <i class="fas fa-envelope"></i>
+
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                    Claims Admin
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                                    Pending Invite
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-right">
+                                <button class="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-500 transition">
+                                    <i class="fas fa-envelope text-sm"></i>
                                 </button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div class="bg-gray-50 px-6 py-3 border-t text-right">
-                <button class="text-indigo-600 text-sm">
+
+            <!-- Footer -->
+            <div class="bg-gray-50 px-6 py-3 border-t border-gray-200 text-right">
+                <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium transition">
                     Manage roles & permissions →
                 </button>
             </div>
@@ -304,7 +385,7 @@
                 </h3>
             </div>
             <div class="p-6 space-y-4">
-                <div class="flex items-center justify-between">
+                {{-- <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                             <i class="fab fa-slack text-blue-600 text-sm"></i>
@@ -313,6 +394,38 @@
                             <p class="font-medium">Slack Notifications</p>
                             <p class="text-xs text-gray-500">
                                 Send claim alerts to #claims channel
+                            </p>
+                        </div>
+                    </div>
+                    <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
+                        Connect
+                    </button>
+                </div> --}}
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="fab fa-slack text-blue-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Genova Insure</p>
+                            <p class="text-xs text-gray-500">
+                                Connect to Genova Insure
+                            </p>
+                        </div>
+                    </div>
+                    <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
+                        Connect
+                    </button>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="fab fa-slack text-blue-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">GLIMS</p>
+                            <p class="text-xs text-gray-500">
+                                Connect to GLIMS
                             </p>
                         </div>
                     </div>
@@ -342,7 +455,7 @@
                         <div>
                             <p class="font-medium">Email Digest</p>
                             <p class="text-xs text-gray-500">
-                                Daily summary to admin@claimpulse.com
+                                Daily summary to admin@nissitechnologies.com
                             </p>
                         </div>
                     </div>

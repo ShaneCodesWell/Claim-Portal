@@ -78,7 +78,7 @@
                         class="bg-white/10 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
                         <i class="fas fa-lock text-white text-sm"></i>
                     </div>
-                    <h2 class="text-lg font-semibold text-white">Customer Login Portal</h2>
+                    <h2 class="text-lg font-semibold text-white">Agent Login portal</h2>
                 </div>
                 <p class="text-blue-200 text-xs">Vanguard Assurance Claims Portal</p>
             </div>

@@ -27,189 +27,279 @@
         </div>
     </div>
 
-    <!-- Claims Table (static HTML rows) -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+    <!-- Claims Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="overflow-x-auto custom-scroll">
-            <table class="min-w-[1000px] md:min-w-full w-full table-auto">
-                <thead>
-                    <tr class="bg-gray-50 border-b border-gray-200">
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Client Name</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy Number</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Product</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy Start</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy End</th>
-                        <th class="px-3 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Claim Form</th>
-                        <th class="px-3 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Documents</th>
+            <table class="min-w-[1100px] md:min-w-full w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Client
+                        </th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Policy Number
+                        </th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Product
+                        </th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Policy Period
+                        </th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Assigned To
+                        </th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <!-- Row 1: John Davis -->
-                    <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-3 py-4">
-                            <div class="flex items-center gap-2">
+
+                <tbody class="divide-y divide-gray-200">
+                    <!-- Row 1 -->
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-3">
                                 <div
-                                    class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-sm font-semibold">
-                                    JD</div>
-                                <span class="font-medium text-sm text-gray-800">John Davis</span>
+                                    class="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-semibold">
+                                    JD
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">John Davis</p>
+                                    <p class="text-xs text-gray-500">Motor claim</p>
+                                </div>
                             </div>
                         </td>
-                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1001-101-2026-000020</td>
-                        <td class="px-3 py-4">
+
+                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
+                            P-1001-101-2026-000020
+                        </td>
+
+                        <td class="px-4 py-4">
                             <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><i
-                                    class="fas fa-car text-xs"></i> Comprehensive</span>
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="fas fa-car text-[10px]"></i>
+                                Comprehensive
+                            </span>
                         </td>
-                        <td class="px-3 py-4 text-sm">2024-01-15</td>
-                        <td class="px-3 py-4 text-sm">2025-01-14</td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openClaimFormModal(1)"
-                                class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-eye mr-1"></i> View Form</button>
+
+                        <td class="px-4 py-4 text-sm text-gray-700">
+                            <div>2024-01-15</div>
+                            <div class="text-xs text-gray-400">to 2025-01-14</div>
                         </td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openDocumentsModal(1)"
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-paperclip mr-1"></i> Documents (3)</button>
+
+                        <td class="px-4 py-4 text-sm text-gray-700">
+                            Chase Miller
+                        </td>
+
+                        <td class="px-4 py-4">
+                            <span
+                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                                Pending Review
+                            </span>
+                        </td>
+
+                        <td class="px-4 py-4 text-right relative" x-data="{ open: false }">
+                            <button @click="open = !open"
+                                class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+
+                            <!-- Dropdown -->
+                            <div x-show="open" @click.outside="open = false" x-transition
+                                class="absolute right-4 top-12 z-20 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+
+                                <button onclick="openClaimFormModal(1)"
+                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-eye text-xs text-indigo-500"></i>
+                                    View Form
+                                </button>
+
+                                <button onclick="openDocumentsModal(1)"
+                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-paperclip text-xs text-gray-500"></i>
+                                    View Documents
+                                </button>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <button onclick="assignClaim(1)"
+                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-user-check text-xs text-emerald-500"></i>
+                                    Assign Claim
+                                </button>
+                            </div>
                         </td>
                     </tr>
-                    <!-- Row 2: Sarah Mitchell -->
-                    <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-3 py-4">
-                            <div class="flex items-center gap-2">
+
+                    <!-- Row 2 -->
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-3">
                                 <div
-                                    class="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-sm font-semibold">
-                                    SM</div>
-                                <span class="font-medium text-sm text-gray-800">Sarah Mitchell</span>
+                                    class="h-9 w-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-semibold">
+                                    SM
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">Sarah Mitchell</p>
+                                    <p class="text-xs text-gray-500">Property claim</p>
+                                </div>
                             </div>
                         </td>
-                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1001-102-2026-000095</td>
-                        <td class="px-3 py-4">
+
+                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
+                            P-1001-102-2026-000095
+                        </td>
+
+                        <td class="px-4 py-4">
                             <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800"><i
-                                    class="fas fa-home text-xs"></i> Happy Home</span>
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+                                <i class="fas fa-home text-[10px]"></i>
+                                Happy Home
+                            </span>
                         </td>
-                        <td class="px-3 py-4 text-sm">2023-09-10</td>
-                        <td class="px-3 py-4 text-sm">2024-09-09</td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openClaimFormModal(2)"
-                                class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-eye mr-1"></i> View Form</button>
+
+                        <td class="px-4 py-4 text-sm text-gray-700">
+                            <div>2023-09-10</div>
+                            <div class="text-xs text-gray-400">to 2024-09-09</div>
                         </td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openDocumentsModal(2)"
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-paperclip mr-1"></i> Documents (3)</button>
+
+                        <td class="px-4 py-4 text-sm text-gray-700">
+                            Lisa Crawford
+                        </td>
+
+                        <td class="px-4 py-4">
+                            <span
+                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                Assigned
+                            </span>
+                        </td>
+
+                        <td class="px-4 py-4 text-right relative" x-data="{ open: false }">
+                            <button @click="open = !open"
+                                class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+
+                            <!-- Dropdown -->
+                            <div x-show="open" @click.outside="open = false" x-transition
+                                class="absolute right-4 top-12 z-20 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+
+                                <button onclick="openClaimFormModal(1)"
+                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-eye text-xs text-indigo-500"></i>
+                                    View Form
+                                </button>
+
+                                <button onclick="openDocumentsModal(1)"
+                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-paperclip text-xs text-gray-500"></i>
+                                    View Documents
+                                </button>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <button onclick="assignClaim(1)"
+                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-user-check text-xs text-emerald-500"></i>
+                                    Assign Claim
+                                </button>
+                            </div>
                         </td>
                     </tr>
-                    <!-- Row 3: Michael Chen -->
-                    <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-3 py-4">
-                            <div class="flex items-center gap-2">
+
+                    <!-- Row 3 -->
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-3">
                                 <div
-                                    class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-sm font-semibold">
-                                    JD</div>
-                                <span class="font-medium text-sm text-gray-800">Marcus Davis</span>
+                                    class="h-9 w-9 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-sm font-semibold">
+                                    OR
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">Olivia Rodriguez</p>
+                                    <p class="text-xs text-gray-500">Travel claim</p>
+                                </div>
                             </div>
                         </td>
-                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1001-101-2026-000023</td>
-                        <td class="px-3 py-4">
+
+                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
+                            P-1003-310-2026-000150
+                        </td>
+
+                        <td class="px-4 py-4">
                             <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><i
-                                    class="fas fa-car text-xs"></i> Comprehensive</span>
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
+                                <i class="fas fa-plane text-[10px]"></i>
+                                Safe Travel
+                            </span>
                         </td>
-                        <td class="px-3 py-4 text-sm">2024-01-15</td>
-                        <td class="px-3 py-4 text-sm">2025-01-14</td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openClaimFormModal(1)"
-                                class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-eye mr-1"></i> View Form</button>
+
+                        <td class="px-4 py-4 text-sm text-gray-700">
+                            <div>2024-03-01</div>
+                            <div class="text-xs text-gray-400">to 2024-09-01</div>
                         </td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openDocumentsModal(1)"
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-paperclip mr-1"></i> Documents (3)</button>
+
+                        <td class="px-4 py-4 text-sm text-gray-700">
+                            Unassigned
                         </td>
-                    </tr>
-                    <!-- Row 4: Olivia Rodriguez -->
-                    <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-3 py-4">
-                            <div class="flex items-center gap-2">
-                                <div
-                                    class="h-8 w-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-700 text-sm font-semibold">
-                                    OR</div>
-                                <span class="font-medium text-sm text-gray-800">Olivia Rodriguez</span>
+
+                        <td class="px-4 py-4">
+                            <span
+                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                New
+                            </span>
+                        </td>
+
+                        <td class="px-4 py-4 text-right relative" x-data="{ open: false }">
+                            <button @click="open = !open"
+                                class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+
+                            <!-- Dropdown -->
+                            <div x-show="open" @click.outside="open = false" x-transition
+                                class="absolute right-4 top-12 z-20 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+
+                                <button onclick="openClaimFormModal(1)"
+                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-eye text-xs text-indigo-500"></i>
+                                    View Form
+                                </button>
+
+                                <button onclick="openDocumentsModal(1)"
+                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-paperclip text-xs text-gray-500"></i>
+                                    View Documents
+                                </button>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <button onclick="assignClaim(1)"
+                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-user-check text-xs text-emerald-500"></i>
+                                    Assign Claim
+                                </button>
                             </div>
-                        </td>
-                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1003-310-2026-000150</td>
-                        <td class="px-3 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800"><i
-                                    class="fas fa-plane text-xs"></i> Vanguard Safe Travel</span>
-                        </td>
-                        <td class="px-3 py-4 text-sm">2024-03-01</td>
-                        <td class="px-3 py-4 text-sm">2024-09-01</td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openClaimFormModal(4)"
-                                class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-eye mr-1"></i> View Form</button>
-                        </td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openDocumentsModal(4)"
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-paperclip mr-1"></i> Documents (3)</button>
-                        </td>
-                    </tr>
-                    <!-- Row 5: David Kim -->
-                    <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-3 py-4">
-                            <div class="flex items-center gap-2">
-                                <div
-                                    class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 text-sm font-semibold">
-                                    DK</div>
-                                <span class="font-medium text-sm text-gray-800">David Kim</span>
-                            </div>
-                        </td>
-                        <td class="px-3 py-4 font-mono text-sm text-gray-700">P-1001-103-2026-000035</td>
-                        <td class="px-3 py-4">
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800"><i
-                                    class="fas fa-building text-xs"></i> Commercial Fire</span>
-                        </td>
-                        <td class="px-3 py-4 text-sm">2022-11-01</td>
-                        <td class="px-3 py-4 text-sm">2024-11-01</td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openClaimFormModal(5)"
-                                class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-eye mr-1"></i> View Form</button>
-                        </td>
-                        <td class="px-3 py-4 text-center">
-                            <button onclick="openDocumentsModal(5)"
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 mx-auto"><i
-                                    class="fas fa-paperclip mr-1"></i> Documents (3)</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
+
+        <!-- Footer -->
+        <div class="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center flex-wrap gap-3">
             <div class="text-sm text-gray-500">
-                <i class="fas fa-clipboard-list mr-1"></i> Showing 5 of 5 registered claims
+                <i class="fas fa-clipboard-list mr-1"></i>
+                Showing 3 of 3 registered claims
             </div>
+
             <div class="flex gap-2">
-                <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white"><i
-                        class="fas fa-chevron-left"></i>
-                    Previous</button>
-                <button class="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm">1</button>
-                <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">2</button>
-                <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">Next <i
-                        class="fas fa-chevron-right"></i></button>
+                <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <button class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm">
+                    1
+                </button>
+                <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -230,8 +320,8 @@
     </div>
 
     <!-- Modals (Blade components) -->
-    <x-claim-form-modal />
-    <x-documents-modal />
+    {{-- <x-claim-form-modal />
+    <x-documents-modal /> --}}
 
     <script>
         const claimsData = {
@@ -418,14 +508,14 @@
                 contentDiv.innerHTML = `
                     <div class="space-y-2">
                         ${docs.map(doc => `
-                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                        <div class="flex items-center gap-3">
-                                            <i class="${doc.icon} ${doc.color} text-lg"></i>
-                                            <div><p class="font-medium text-gray-800">${doc.name}</p><p class="text-xs text-gray-400">${doc.size}</p></div>
-                                        </div>
-                                        <button onclick="alert('Download: ${doc.name} (demo)')" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-download"></i></button>
-                                    </div>
-                                `).join('')}
+                                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                                        <div class="flex items-center gap-3">
+                                                            <i class="${doc.icon} ${doc.color} text-lg"></i>
+                                                            <div><p class="font-medium text-gray-800">${doc.name}</p><p class="text-xs text-gray-400">${doc.size}</p></div>
+                                                        </div>
+                                                        <button onclick="alert('Download: ${doc.name} (demo)')" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-download"></i></button>
+                                                    </div>
+                                                `).join('')}
                     </div>
                 `;
             }

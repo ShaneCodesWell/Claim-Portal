@@ -24,6 +24,21 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    public function showUserSelectForm()
+    {
+        return view('auth.user-select');
+    }
+
+    public function staffLogin()
+    {
+        return view('auth.staff-login');
+    }
+
+    public function agentLogin()
+    {
+        return view('auth.agent-login');
+    }
+
     public function login(Request $request)
     {
         $request->validate([

@@ -21,6 +21,11 @@ class StaffController extends Controller
     {
         return view('staff.all-claims.index');
     }
+    
+    public function myClaims()
+    {
+        return view('staff.my-claims.index');
+    }
 
     public function claimForms()
     {
