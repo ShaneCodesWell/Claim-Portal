@@ -16,17 +16,19 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             $table->string('external_policy_id')->nullable()->index();
             $table->string('policy_number')->index();
+            $table->string('insured_name')->nullable();
             $table->string('business_class_id')->nullable();
             $table->string('business_class_name')->nullable();
             $table->string('product_id')->nullable();
             $table->string('product_name')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+            $table->date('effective_date')->nullable();
+            $table->timestamp('renewal_date')->nullable();
             $table->string('status')->nullable();
             $table->json('raw_payload')->nullable();
             $table->timestamp('last_synced_at')->nullable();
             $table->timestamps();
-            $table->unique(['customer_id','policy_number']);
         });
     }
 
