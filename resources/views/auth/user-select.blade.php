@@ -85,7 +85,7 @@
                     <div
                         class="bg-gray-50 px-6 py-3 border-t border-gray-100 text-xs text-gray-500 flex justify-center gap-4">
                         <span><i class="fas fa-file-alt mr-1"></i> File claims</span>
-                        <span><i class="fas fa-chart-line mr-1"></i> Track coverage</span>
+                        {{-- <span><i class="fas fa-chart-line mr-1"></i> Track coverage</span> --}}
                     </div>
                 </div>
             </a>
@@ -102,9 +102,7 @@
                         </div>
                         <h2 class="text-2xl font-bold text-gray-800 mb-2">Intermediary</h2>
                         <p class="text-gray-500 text-sm mb-6">
-                            Broker, agent, or partner – manage client policies, submit claims on behalf of customers,
-                            and
-                            access reports.
+                            Broker, agent, or partner - manage client policies, submit claims on behalf of customers.
                         </p>
                         <div
                             class="inline-flex items-center gap-2 text-emerald-600 font-medium text-sm border border-emerald-200 px-4 py-2 rounded-full group-hover:bg-emerald-50 transition">
@@ -115,7 +113,7 @@
                     <div
                         class="bg-gray-50 px-6 py-3 border-t border-gray-100 text-xs text-gray-500 flex justify-center gap-4">
                         <span><i class="fas fa-users mr-1"></i> Client management</span>
-                        <span><i class="fas fa-chart-simple mr-1"></i> Analytics</span>
+                        {{-- <span><i class="fas fa-chart-simple mr-1"></i> Analytics</span> --}}
                     </div>
                 </div>
             </a>

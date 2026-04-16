@@ -404,7 +404,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <i class="fab fa-slack text-blue-600 text-sm"></i>
+                            <i class="fa fa-cog fa-spin text-sm fa-fw text-blue-600"></i>
                         </div>
                         <div>
                             <p class="font-medium">Genova Insure</p>
@@ -420,7 +420,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <i class="fab fa-slack text-blue-600 text-sm"></i>
+                            <i class="fa fa-cog fa-spin text-sm fa-fw text-blue-600"></i>
                         </div>
                         <div>
                             <p class="font-medium">GLIMS</p>
@@ -447,7 +447,7 @@
                     </div>
                     <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Configured</span>
                 </div>
-                <div class="flex items-center justify-between">
+                {{-- <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                             <i class="fas fa-envelope-open-text text-purple-600 text-sm"></i>
@@ -460,7 +460,7 @@
                         </div>
                     </div>
                     <button class="text-indigo-600 text-sm">Edit settings</button>
-                </div>
+                </div> --}}
             </div>
         </div>
     </div>
