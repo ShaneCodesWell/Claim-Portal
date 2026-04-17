@@ -23,7 +23,7 @@
                 <button id="userMenuBtn"
                     class="flex items-center gap-2 bg-white border border-gray-200 rounded-full pl-3 pr-2 py-1 shadow-sm hover:shadow-md transition focus:outline-none">
                     <i class="fas fa-user-circle text-gray-500 text-xl"></i>
-                    <span class="text-sm font-medium text-gray-700 hidden sm:inline">Moses Vanguard</span>
+                    <span class="text-sm font-medium text-gray-700 hidden sm:inline">{{ Auth::user()->name }}</span>
                     <i id="dropdownIcon"
                         class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200"></i>
                 </button>
@@ -32,27 +32,30 @@
                     class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 hidden transition-all duration-150 origin-top-right">
                     <div class="px-4 py-3 border-b border-gray-100">
                         <p class="text-sm font-semibold text-gray-800">
-                            Moses Vanguard
+                            {{ Auth::user()->name }}
                         </p>
                         <p class="text-xs text-gray-500 truncate">
-                            moses@claimpulse.com
+                            {{ Auth::user()->email }}
                         </p>
                     </div>
-                    <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('my-claims') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-user-circle w-4 text-gray-400"></i> My
-                        Profile
+                        Claims
                     </a>
-                    <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    {{-- <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-bell w-4 text-gray-400"></i> Notifications
                         <span class="ml-auto bg-red-100 text-red-600 text-xs px-1.5 rounded-full">3</span>
-                    </a>
-                    <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    </a> --}}
+                    <a href="{{ route('settings') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-cog w-4 text-gray-400"></i> Settings
                     </a>
                     <hr class="my-1 border-gray-200" />
-                    <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                        <i class="fas fa-sign-out-alt w-4"></i> Sign out
-                    </a>
+                    <form action="{{ route('logout') }}" method="POST" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                        @csrf
+                        <button type="submit" >
+                            <i class="fas fa-sign-out-alt w-4"></i> Sign out
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

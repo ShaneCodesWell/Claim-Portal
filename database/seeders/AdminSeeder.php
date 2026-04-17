@@ -1,8 +1,7 @@
 <?php
-
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class AdminSeeder extends Seeder
@@ -12,6 +11,15 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        User::updateOrCreate(
+            ['email' => 'admin@vanguardassurance.com'],
+            [
+                'name'     => 'Super Admin',
+                'password' => bcrypt('password'),
+                'is_admin' => true,
+                'role'     => 'admin',
+                'department'     => 'admin',
+            ]
+        );
     }
 }

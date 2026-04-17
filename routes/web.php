@@ -13,10 +13,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [AuthController::class, 'showUserSelectForm'])->name('user.select');
 
 Route::get('/login-user', [AuthController::class, 'showLoginForm'])->name('login');
-Route::get('/staff-login', [AuthController::class, 'staffLogin'])->name('staff.login');
+Route::get('/staff-login', [AuthController::class, 'staffLoginForm'])->name('staff.login');
 Route::get('/agent-login', [AuthController::class, 'agentLogin'])->name('agent.login');
 
+
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/staff-login', [AuthController::class, 'staffLogin'])->name('staff.login.submit');
+
 Route::get('/otp', [AuthController::class, 'showOtpForm'])->name('otp');
 Route::post('/otp/request', [AuthController::class, 'requestOtp'])->name('otp.send');
 Route::get('/otp/verify-form', [AuthController::class, 'verifyOtpForm'])->name('otp.verify');
@@ -24,6 +27,7 @@ Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.veri
 Route::get('/login/local', [AuthController::class, 'showLocalLoginForm'])->name('login.local');
 Route::post('/login/local', [AuthController::class, 'localLogin'])->name('login.local.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
 
 // Customers Routes
 Route::middleware('auth.customer')->group(function () {
@@ -49,17 +53,31 @@ Route::middleware('auth.customer')->group(function () {
     Route::post('/fire-form/submit', [FireController::class, 'create'])->name('fire-form.submit');
 });
 
-// Claim Staff Routes
+// Staff routes — accessible by ALL staff including admins
+Route::middleware(['staff'])->prefix('admin')->group(function () {
 
-Route::get('/staff/dashboard', [StaffController::class, 'dashboard'])->name('staff-dashboard');
-Route::get('/staff/all-claims', [StaffController::class, 'allClaims'])->name('all-claims');
-Route::get('/staff/my-claims', [StaffController::class, 'myClaims'])->name('my-claims');
-Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
-Route::get('/staff/claim-forms/create', [StaffController::class, 'createClaimForms'])->name('create-claim-form');
-Route::get('/staff/claim-documents', [StaffController::class, 'claimDouments'])->name('claim-documents');
-Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers');
+    // Dashboard and Claims
+    Route::get('/staff/dashboard', [StaffController::class, 'dashboard'])->name('staff-dashboard');
+    Route::get('/staff/all-claims', [StaffController::class, 'allClaims'])->name('all-claims');
+    Route::get('/staff/my-claims', [StaffController::class, 'myClaims'])->name('my-claims');
 
-Route::get('/staff/settings', [StaffController::class, 'settings'])->name('settings');
+    // Claim Forms & Documents
+    Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
+    Route::get('/staff/claim-forms/create', [StaffController::class, 'createClaimForms'])->name('create-claim-form');
+    Route::get('/staff/claim-documents', [StaffController::class, 'claimDouments'])->name('claim-documents');
+
+    // Customers
+    Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers');
+
+    // Settings (view only)
+    Route::get('/staff/settings', [StaffController::class, 'settings'])->name('settings');
+});
+
+// Admin-only routes — only admins can access
+Route::middleware(['admin'])->prefix('admin')->group(function () {
+    Route::get('/staff/settings/add-staff', [StaffController::class, 'addStaff'])->name('settings.add-staff');
+    Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+});
 
 // Offline Application
 Route::prefix('offline')->name('offline.')->group(function () {

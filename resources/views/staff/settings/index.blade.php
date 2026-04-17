@@ -56,22 +56,22 @@
                     <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label><input
-                                type="text" value="Moses Vanguard"
+                                type="text" value="{{ Auth::user()->name }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-800" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label><input
-                                type="email" value="moses.vanguard@claimpulse.com"
+                                type="email" value="{{ Auth::user()->email }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Role</label><input
-                                type="text" value="Claims Administrator (Super Admin)"
+                                type="text" value="{{ Auth::user()->role }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Department</label><input
-                                type="text" value="Claims Management"
+                                type="text" value="{{ Auth::user()->department }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" />
                         </div>
                     </div>
@@ -230,11 +230,11 @@
                     </p>
                 </div>
 
-                <button
+                <a href="{{ route('settings.add-staff') }}"
                     class="inline-flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-2 rounded-lg transition">
                     <i class="fas fa-plus-circle text-xs"></i>
-                    Invite Member
-                </button>
+                    Add Staff Member
+                </a>
             </div>
 
             <!-- Table -->
@@ -258,42 +258,43 @@
                     </thead>
 
                     <tbody class="divide-y divide-gray-200">
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-semibold">
-                                        MV
+                        @forelse ($staffMembers as $staff)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-semibold">
+                                            MV
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-800">{{ $staff->name }}</p>
+                                            <p class="text-xs text-gray-500">{{ $staff->email }}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-800">Moses Vanguard</p>
-                                        <p class="text-xs text-gray-500">moses@claims.local</p>
-                                    </div>
-                                </div>
-                            </td>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                                        {{ $staff->role }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                        Active
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-500 transition">
+                                        <i class="fas fa-edit text-sm"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                        @endforelse
 
-                            <td class="px-6 py-4">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
-                                    Super Admin
-                                </span>
-                            </td>
 
-                            <td class="px-6 py-4">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                    Active
-                                </span>
-                            </td>
-
-                            <td class="px-6 py-4 text-right">
-                                <button class="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-500 transition">
-                                    <i class="fas fa-edit text-sm"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <tr class="hover:bg-gray-50 transition">
+                        {{-- <tr class="hover:bg-gray-50 transition">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div
@@ -361,7 +362,7 @@
                                     <i class="fas fa-envelope text-sm"></i>
                                 </button>
                             </td>
-                        </tr>
+                        </tr> --}}
                     </tbody>
                 </table>
             </div>

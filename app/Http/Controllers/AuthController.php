@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Services\GenovaApiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -29,7 +30,7 @@ class AuthController extends Controller
         return view('auth.user-select');
     }
 
-    public function staffLogin()
+    public function staffLoginForm()
     {
         return view('auth.staff-login');
     }
@@ -130,11 +131,11 @@ class AuthController extends Controller
     }
 
     // STEP 3 → Verify OTP
-    public function verifyOtpForm ()
+    public function verifyOtpForm()
     {
         return view('auth.otp');
     }
-    
+
     public function verifyOtp(Request $request)
     {
         $request->validate([
@@ -145,7 +146,7 @@ class AuthController extends Controller
             $userId = session('user_id');
             $otp    = $request->otp;
 
-            if (!$userId) {
+            if (! $userId) {
                 return redirect()->route('login')->withErrors(['Session expired. Please login again.']);
             }
 
@@ -162,7 +163,7 @@ class AuthController extends Controller
 
             $payload = $response->json();
 
-            if (!isset($payload['data']) || !is_array($payload['data'])) {
+            if (! isset($payload['data']) || ! is_array($payload['data'])) {
                 Log::error('Unexpected Genova login payload', ['payload' => $payload]);
                 return back()->withErrors(['We could not verify your details at the moment. Please try again.'])->withInput();
             }
@@ -216,7 +217,7 @@ class AuthController extends Controller
         $customer = Customer::where('phone', $request->phone)->first();
 
         // Check customer exists and has a local password set
-        if (!$customer || !$customer->local_password) {
+        if (! $customer || ! $customer->local_password) {
             RateLimiter::hit($throttleKey, 60);
 
             return back()->withErrors([
@@ -225,7 +226,7 @@ class AuthController extends Controller
         }
 
         // Verify the password
-        if (!Hash::check($request->password, $customer->local_password)) {
+        if (! Hash::check($request->password, $customer->local_password)) {
             RateLimiter::hit($throttleKey, 60);
 
             return back()->withErrors([
@@ -260,7 +261,7 @@ class AuthController extends Controller
     // Show the password setup page.
     public function showSetupPasswordForm()
     {
-        if (!session('authenticated')) {
+        if (! session('authenticated')) {
             return redirect()->route('login');
         }
 
@@ -270,7 +271,7 @@ class AuthController extends Controller
     // Save the customer's local password.
     public function setupPassword(Request $request)
     {
-        if (!session('authenticated')) {
+        if (! session('authenticated')) {
             return redirect()->route('login');
         }
 
@@ -295,7 +296,7 @@ class AuthController extends Controller
             ->orWhere('external_customer_id', session('user_id'))
             ->first();
 
-        if (!$customer) {
+        if (! $customer) {
             // Customer record doesn't exist yet (sync hasn't run)
             // Redirect to dashboard and let sync create the record first
             return redirect()->route('dashboard')
@@ -311,6 +312,59 @@ class AuthController extends Controller
 
         return redirect()->route('dashboard')
             ->with('success', 'Password set successfully. You can now log in even when the system is offline.');
+    }
+
+    // public function staffLogin(Request $request)
+    // {
+    //     $request->validate([
+    //         'email'    => 'required|email',
+    //         'password' => 'required|string',
+    //     ]);
+
+    //     $credentials = $request->only('email', 'password');
+
+    //     if (Auth::attempt($credentials)) {
+    //         $request->session()->regenerate();
+    //         return redirect()->intended('/admin/staff/dashboard');
+    //     }
+
+    //     return back()->withErrors([
+    //         'email' => 'The provided credentials do not match our records.',
+    //     ])->withInput();
+    // }
+
+    public function staffLogin(Request $request)
+    {
+        $credentials = $request->validate([
+            'email'    => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        $remember = $request->boolean('remember');
+
+        if (Auth::attempt($credentials, $remember)) {
+            $user = Auth::user();
+
+            // Make sure it's actually a staff/admin user
+            if (! $user->is_admin && $user->role === null) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'You do not have staff access.',
+                ])->onlyInput('email');
+            }
+
+            $request->session()->regenerate();
+
+            // Redirect based on role
+            return match ($user->role) {
+                'Admin'           => redirect()->route('staff-dashboard'),
+                default           => redirect()->route('all-claims'),
+            };
+        }
+
+        return back()->withErrors([
+            'email' => 'These credentials do not match our records.',
+        ])->onlyInput('email');
     }
 
     // Logout

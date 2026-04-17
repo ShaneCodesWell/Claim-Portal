@@ -53,9 +53,11 @@
     <nav class="absolute top-0 left-0 w-full p-6 z-20 flex justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="bg-white/10 p-2 rounded-lg border border-white/20 backdrop-blur-sm">
-                <i class="fas fa-shield-alt text-white text-xl"></i>
+                <img src="{{ asset('images/Vanguard.png') }}" alt="Vanguard Assurance Logo"
+                    class="h-10 w-auto object-contain" />
+                {{-- <i class="fas fa-shield-alt text-white text-xl"></i> --}}
             </div>
-            <span class="text-white font-bold text-xl tracking-tight drop-shadow-md">Vanguard Assurance</span>
+            {{-- <span class="text-white font-bold text-xl tracking-tight drop-shadow-md">Vanguard Assurance</span> --}}
         </div>
         <div class="flex gap-4">
             <a href="/" class="text-white/80 hover:text-white text-sm font-medium transition-colors">
@@ -83,14 +85,22 @@
                 <p class="text-blue-200 text-xs">Secure access for claims team & administrators</p>
             </div>
 
+            {{-- Errors --}}
+            @if ($errors->any())
+                <div
+                    class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
             <!-- Form content -->
             <div class="p-6">
                 <div class="mb-4 text-center">
                     <p class="text-gray-600 text-sm">Enter your staff credentials to continue</p>
                 </div>
 
-                {{-- <form action="{{ route('staff.login.submit') }}" method="POST" class="space-y-5" id="staffLoginForm"> --}}
-                <form action="" method="POST" class="space-y-5" id="staffLoginForm">
+                <form action="{{ route('staff.login.submit') }}" method="POST" class="space-y-5" id="staffLoginForm">
                     @csrf
 
                     <!-- Email / Username field -->
