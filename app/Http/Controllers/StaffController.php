@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -45,19 +46,26 @@ class StaffController extends Controller
 
     public function customers()
     {
-        $customers = Customer::latest()->paginate(10);
-        return view('staff.customers.index', compact('customers'));
+        $customers = Customer::withCount('policies')->latest()->paginate(5);
+
+        $stats = [
+            'total_customers' => Customer::count(),
+            'active_policies' => Policy::where('status', 'active')->count(),
+            // 'pending_claims'  => Claim::where('status', 'pending')->count(),
+        ];
+
+        return view('staff.customers.index', compact('customers', 'stats'));
     }
 
     public function settings()
     {
-        $staffMembers = User::latest()->paginate(10);
+        $staffMembers = User::latest()->paginate(5);
         return view('staff.settings.index', compact('staffMembers'));
     }
 
     public function addStaff()
     {
-        $staffMembers = User::latest()->paginate(10);
+        $staffMembers = User::latest()->paginate(5);
         return view('staff.settings.add-staff', compact('staffMembers'));
     }
 

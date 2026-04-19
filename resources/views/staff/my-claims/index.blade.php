@@ -113,14 +113,13 @@
                                 <span class="text-sm font-medium text-gray-900">John Davis</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4 font-mono text-sm text-gray-600">P-1001-101-2026-000020</td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
+                            <div>P-1001-101-2026-000020</div>
                             <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                <i class="fas fa-car text-[10px]"></i> Comprehensive
-                            </span>
+                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-green-100 text-green-700">GLIMS</span>
                         </td>
-                        <td class="px-4 py-4 text-sm text-gray-600">Jan 15, 2024 → Jan 14, 2025</td>
+                        <td class="px-4 py-4 text-sm font-medium text-gray-900">Comprehensive</td>
+                        <td class="px-4 py-4 text-sm text-gray-600">Jan 15, 2024 - Jan 14, 2025</td>
                         <td class="px-4 py-4 text-sm text-gray-600">Shane Miller</td>
                         <td class="px-4 py-4">
                             <span
@@ -146,14 +145,13 @@
                                 <span class="text-sm font-medium text-gray-900">Marcus Davis</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4 font-mono text-sm text-gray-600">P-1001-101-2026-000023</td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
+                            <div>P-1001-101-2026-000023</div>
                             <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                <i class="fas fa-car text-[10px]"></i> Comprehensive
-                            </span>
+                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-blue-100 text-blue-700">Genova</span>
                         </td>
-                        <td class="px-4 py-4 text-sm text-gray-600">Jan 15, 2024 → Jan 14, 2025</td>
+                        <td class="px-4 py-4 text-sm font-medium text-gray-900">Comprehensive</td>
+                        <td class="px-4 py-4 text-sm text-gray-600">Jan 15, 2024 - Jan 14, 2025</td>
                         <td class="px-4 py-4 text-sm text-gray-600">Admin Team</td>
                         <td class="px-4 py-4">
                             <span
@@ -179,14 +177,13 @@
                                 <span class="text-sm font-medium text-gray-900">David Kim</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4 font-mono text-sm text-gray-600">P-1001-103-2026-000035</td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
+                            <div>P-1001-103-2026-000035</div>
                             <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                <i class="fas fa-building text-[10px]"></i> Commercial Fire
-                            </span>
+                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-blue-100 text-blue-700">Genova</span>
                         </td>
-                        <td class="px-4 py-4 text-sm text-gray-600">Nov 01, 2022 → Nov 01, 2024</td>
+                        <td class="px-4 py-4 text-sm font-medium text-gray-900">Commercial Fire</td>
+                        <td class="px-4 py-4 text-sm text-gray-600">Nov 01, 2022 - Nov 01, 2024</td>
                         <td class="px-4 py-4 text-sm text-gray-600">Lisa Crawford</td>
                         <td class="px-4 py-4">
                             <span

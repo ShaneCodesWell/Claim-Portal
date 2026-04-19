@@ -2,7 +2,7 @@
     <!-- Settings Header -->
     <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <i class="fas fa-sliders-h text-indigo-500 text-2xl"></i>
+            <i class="fas fa-sliders-h text-blue-500 text-2xl"></i>
             Preferences & Configuration
         </h2>
         <p class="text-gray-500 text-sm mt-1">
@@ -14,7 +14,7 @@
     <!-- Settings Tabs (FUNCTIONAL) -->
     <div class="flex flex-wrap gap-1 border-b border-gray-200 mb-6">
         <button data-tab="profile"
-            class="settings-tab px-5 py-2.5 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600">
+            class="settings-tab px-5 py-2.5 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
             Profile
         </button>
         <button data-tab="notifications"
@@ -39,17 +39,17 @@
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden mb-8">
             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                 <h3 class="font-semibold text-gray-800">
-                    <i class="fas fa-user-circle text-indigo-500 mr-2"></i>
+                    <i class="fas fa-user-circle text-blue-500 mr-2"></i>
                     Administrator Profile
                 </h3>
             </div>
             <div class="p-6 space-y-5">
                 <div class="flex flex-col sm:flex-row gap-6">
                     <div class="shrink-0 text-center">
-                        <div class="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto">
-                            <i class="fas fa-user-shield text-indigo-600 text-4xl"></i>
+                        <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                            <i class="fas fa-user-shield text-blue-600 text-4xl"></i>
                         </div>
-                        <button class="mt-2 text-xs text-indigo-600 hover:underline">
+                        <button class="mt-2 text-xs text-blue-600 hover:underline">
                             Change avatar
                         </button>
                     </div>
@@ -80,7 +80,7 @@
                     <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
                         Cancel
                     </button>
-                    <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
                         Save Changes
                     </button>
                 </div>
@@ -93,7 +93,7 @@
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden mb-8">
             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                 <h3 class="font-semibold text-gray-800">
-                    <i class="fas fa-bell text-indigo-500 mr-2"></i> Notification
+                    <i class="fas fa-bell text-blue-500 mr-2"></i> Notification
                     Settings
                 </h3>
             </div>
@@ -144,7 +144,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-end">
-                <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
                     Update Preferences
                 </button>
             </div>
@@ -156,7 +156,7 @@
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden mb-8">
             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                 <h3 class="font-semibold text-gray-800">
-                    <i class="fas fa-lock text-indigo-500 mr-2"></i> Security &
+                    <i class="fas fa-lock text-blue-500 mr-2"></i> Security &
                     Authentication
                 </h3>
             </div>
@@ -188,7 +188,7 @@
                         </p>
                     </div>
                     <button
-                        class="px-3 py-1.5 border border-indigo-300 text-indigo-600 rounded-lg text-sm hover:bg-indigo-50">
+                        class="px-3 py-1.5 border border-blue-300 text-blue-600 rounded-lg text-sm hover:bg-blue-50">
                         Enable 2FA
                     </button>
                 </div>
@@ -208,7 +208,7 @@
                 <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm">
                     Cancel
                 </button>
-                <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
                     Update Password
                 </button>
             </div>
@@ -222,7 +222,7 @@
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/70 flex items-center justify-between">
                 <div>
                     <h3 class="font-semibold text-gray-800 flex items-center gap-2">
-                        <i class="fas fa-users-cog text-indigo-500"></i>
+                        <i class="fas fa-users-cog text-blue-500"></i>
                         Team Members & Roles
                     </h3>
                     <p class="text-xs text-gray-500 mt-1">
@@ -231,7 +231,7 @@
                 </div>
 
                 <a href="{{ route('settings.add-staff') }}"
-                    class="inline-flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium px-3 py-2 rounded-lg transition">
+                    class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg transition">
                     <i class="fas fa-plus-circle text-xs"></i>
                     Add Staff Member
                 </a>
@@ -263,8 +263,8 @@
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-semibold">
-                                            MV
+                                            class="h-9 w-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
+                                            {{ strtoupper(substr($staff->name, 0, 1)) }}{{ strtoupper(substr(strrchr($staff->name, ' '), 1, 1)) }}
                                         </div>
                                         <div>
                                             <p class="text-sm font-medium text-gray-800">{{ $staff->name }}</p>
@@ -274,7 +274,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                                         {{ $staff->role }}
                                     </span>
                                 </td>
@@ -291,87 +291,31 @@
                                 </td>
                             </tr>
                         @empty
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    No staff members found. Click "Add Staff Member" to get started.
+                                </td>
+                            </tr>
                         @endforelse
-
-
-                        {{-- <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="h-9 w-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-semibold">
-                                        CM
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-800">Chase Miller</p>
-                                        <p class="text-xs text-gray-500">chase@claims.local</p>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <td class="px-6 py-4">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                    Claims Staff
-                                </span>
-                            </td>
-
-                            <td class="px-6 py-4">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                    Active
-                                </span>
-                            </td>
-
-                            <td class="px-6 py-4 text-right">
-                                <button class="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-500 transition">
-                                    <i class="fas fa-edit text-sm"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="h-9 w-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-semibold">
-                                        LC
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-800">Lisa Crawford</p>
-                                        <p class="text-xs text-gray-500">lisa@claims.local</p>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <td class="px-6 py-4">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                                    Claims Admin
-                                </span>
-                            </td>
-
-                            <td class="px-6 py-4">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
-                                    Pending Invite
-                                </span>
-                            </td>
-
-                            <td class="px-6 py-4 text-right">
-                                <button class="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-500 transition">
-                                    <i class="fas fa-envelope text-sm"></i>
-                                </button>
-                            </td>
-                        </tr> --}}
                     </tbody>
                 </table>
             </div>
 
-            <!-- Footer -->
-            <div class="bg-gray-50 px-6 py-3 border-t border-gray-200 text-right">
-                <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium transition">
-                    Manage roles & permissions →
-                </button>
+            <!-- Pagination -->
+            <div
+                class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-users mr-1"></i>
+                    @if ($staffMembers->firstItem())
+                        Showing {{ $staffMembers->lastItem() }} of {{ $staffMembers->total() }}
+                        staff members
+                    @else
+                        No staff members found
+                    @endif
+                </div>
+                <div class="flex gap-2">
+                    {{ $staffMembers->links() }}
+                </div>
             </div>
         </div>
     </div>
@@ -381,7 +325,7 @@
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                 <h3 class="font-semibold text-gray-800">
-                    <i class="fas fa-plug text-indigo-500 mr-2"></i> Connected
+                    <i class="fas fa-plug text-blue-500 mr-2"></i> Connected
                     Services
                 </h3>
             </div>
@@ -420,8 +364,8 @@
                 </div>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <i class="fa fa-cog fa-spin text-sm fa-fw text-blue-600"></i>
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fa fa-cog fa-spin text-sm fa-fw text-green-600"></i>
                         </div>
                         <div>
                             <p class="font-medium">GLIMS</p>
@@ -436,8 +380,8 @@
                 </div>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-cloud-upload-alt text-green-600 text-sm"></i>
+                        <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-cloud-upload-alt text-yellow-600 text-sm"></i>
                         </div>
                         <div>
                             <p class="font-medium">AWS S3 Backup</p>
@@ -460,7 +404,7 @@
                             </p>
                         </div>
                     </div>
-                    <button class="text-indigo-600 text-sm">Edit settings</button>
+                    <button class="text-blue-600 text-sm">Edit settings</button>
                 </div> --}}
             </div>
         </div>
@@ -508,15 +452,15 @@
                     if (btnTabId === tabId) {
                         tab.classList.remove("text-gray-500", "hover:text-gray-700");
                         tab.classList.add(
-                            "text-indigo-600",
+                            "text-blue-600",
                             "border-b-2",
-                            "border-indigo-600",
+                            "border-blue-600",
                         );
                     } else {
                         tab.classList.remove(
-                            "text-indigo-600",
+                            "text-blue-600",
                             "border-b-2",
-                            "border-indigo-600",
+                            "border-blue-600",
                         );
                         tab.classList.add("text-gray-500", "hover:text-gray-700");
                     }

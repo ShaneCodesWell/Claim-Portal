@@ -13,7 +13,7 @@
                     </div>
                     <h1 class="text-xl md:text-xl font-bold text-gray-800 tracking-tight">
                         E-Claim
-                        <span class="font-medium text-indigo-600">Dashboard</span>
+                        <span class="font-medium text-blue-600">Dashboard</span>
                     </h1>
                 </div>
             </div>

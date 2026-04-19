@@ -126,8 +126,9 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div
-                                        class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-sm">
-                                        MV</div>
+                                        class="h-9 w-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
+                                        {{ strtoupper(substr($staff->name, 0, 1)) }}{{ strtoupper(substr(strrchr($staff->name, ' '), 1, 1)) }}
+                                    </div>
                                     <div class="ml-3">
                                         <p class="font-medium text-gray-800">{{ $staff->name }}</p>
                                     </div>
@@ -153,14 +154,19 @@
                 </tbody>
             </table>
         </div>
-        <div class="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center">
-            <div class="text-sm text-gray-500">Showing <span id="showingCount">3</span> of <span
-                    id="totalCount">3</span> staff</div>
-            <div class="flex gap-2"><button
-                    class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">Previous</button><button
-                    class="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm">1</button><button
-                    class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">2</button><button
-                    class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">Next</button></div>
+        <!-- Pagination -->
+        <div class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
+            <div class="text-sm text-gray-500">
+                @if ($staffMembers->firstItem())
+                    Showing {{ $staffMembers->lastItem() }} of {{ $staffMembers->total() }}
+                    staff members
+                @else
+                    No staff members found
+                @endif
+            </div>
+            <div class="flex gap-2">
+                {{ $staffMembers->links() }}
+            </div>
         </div>
     </div>
 

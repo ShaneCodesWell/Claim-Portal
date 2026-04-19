@@ -50,11 +50,13 @@
                     <i class="fas fa-cog w-5"></i>
                     <span>Settings</span>
                 </a>
-                <a href="#"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 transition">
-                    <i class="fas fa-sign-out-alt w-5"></i>
-                    <span>Logout</span>
-                </a>
+                <form action="{{ route('logout') }}" method="POST" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 transition">
+                    @csrf
+                    <button type="submit" class="flex items-center gap-3 w-full text-left">
+                        <i class="fas fa-sign-out-alt w-5"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </div>
         </nav>
         <div class="p-4 text-center text-xs text-gray-400 border-t border-gray-100">
