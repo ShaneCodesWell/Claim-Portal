@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
             <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <i class="fas fa-users text-indigo-500 text-2xl"></i>
+                <i class="fas fa-users text-blue-500 text-2xl"></i>
                 Staff Management
             </h2>
             <p class="text-gray-500 text-sm mt-1">
@@ -17,7 +17,7 @@
         <!-- Single Staff Form -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <i class="fas fa-user-plus text-indigo-500"></i> Add Single Staff
+                <i class="fas fa-user-plus text-blue-500"></i> Add Single Staff
             </h3>
             <form action="{{ route('staff.store') }}" id="singleStaffForm" class="space-y-4">
 
@@ -25,12 +25,12 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
                         <input type="text" name="name" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
                         <input type="email" name="email" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -59,7 +59,7 @@
                 </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit"
-                        class="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
+                        class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
                         <i class="fas fa-save mr-2"></i>Add Staff
                     </button>
                 </div>
@@ -72,26 +72,26 @@
                 <i class="fas fa-file-excel text-green-600"></i> Bulk Upload (Excel)
             </h3>
             <div
-                class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-300 transition">
+                class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-300 transition">
                 <i class="fas fa-cloud-upload-alt text-gray-400 text-4xl mb-3"></i>
                 <p class="text-sm text-gray-600 mb-2">Upload an Excel (.xlsx, .xls) or CSV file</p>
                 <p class="text-xs text-gray-400 mb-4">File must contain columns: name, email, role, department,
                     password</p>
                 <label
-                    class="cursor-pointer bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition">
+                    class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition">
                     <i class="fas fa-upload"></i> Choose File
                     <input type="file" id="bulkFile" accept=".xlsx, .xls, .csv" class="hidden">
                 </label>
                 <p id="fileNameDisplay" class="text-xs text-gray-500 mt-2 hidden"></p>
                 <button id="uploadBulkBtn"
-                    class="mt-4 bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50"
+                    class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50"
                     disabled>
                     <i class="fas fa-upload mr-2"></i>Upload & Process
                 </button>
             </div>
             <div class="mt-4 text-xs text-gray-500">
                 <i class="fas fa-download mr-1"></i>
-                <a href="#" class="text-indigo-600 hover:underline">Download sample Excel template</a>
+                <a href="#" class="text-blue-600 hover:underline">Download sample Excel template</a>
             </div>
         </div>
     </div>
@@ -99,7 +99,7 @@
     <!-- Existing Staff List -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
-            <h3 class="font-semibold text-gray-800"><i class="fas fa-list-ul text-indigo-500 mr-2"></i>Current Staff
+            <h3 class="font-semibold text-gray-800"><i class="fas fa-list-ul text-blue-500 mr-2"></i>Current Staff
                 Members</h3>
             <div class="relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
@@ -140,7 +140,7 @@
                             <td class="px-6 py-4"><span
                                     class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">Active</span>
                             </td>
-                            <td class="px-6 py-4 text-right space-x-2"><button class="text-indigo-600"><i
+                            <td class="px-6 py-4 text-right space-x-2"><button class="text-blue-600"><i
                                         class="fas fa-edit"></i></button><button class="text-red-500"><i
                                         class="fas fa-trash-alt"></i></button></td>
                         </tr>
@@ -239,7 +239,7 @@
             const tableBody = document.getElementById('staffTableBody');
             const initials = staff.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
-            const colors = ['bg-indigo-100 text-indigo-700', 'bg-emerald-100 text-emerald-700',
+            const colors = ['bg-blue-100 text-blue-700', 'bg-emerald-100 text-emerald-700',
                 'bg-amber-100 text-amber-700', 'bg-rose-100 text-rose-700'
             ];
             const colorClass = colors[Math.floor(Math.random() * colors.length)];
@@ -264,7 +264,7 @@
                     <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">Active</span>
                 </td>
                 <td class="px-6 py-4 text-right space-x-2">
-                    <button class="text-indigo-600"><i class="fas fa-edit"></i></button>
+                    <button class="text-blue-600"><i class="fas fa-edit"></i></button>
                     <button class="text-red-500"><i class="fas fa-trash-alt"></i></button>
                 </td>
             `;

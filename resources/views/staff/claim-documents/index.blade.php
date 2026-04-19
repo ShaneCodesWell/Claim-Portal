@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
             <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <i class="fas fa-folder-open text-indigo-500 text-2xl"></i>
+                <i class="fas fa-folder-open text-blue-500 text-2xl"></i>
                 All Claim Attachments
             </h2>
             <p class="text-gray-500 text-sm mt-1">
@@ -22,7 +22,7 @@
                 <i class="fas fa-filter"></i> Filter
             </button>
             <button
-                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm shadow-sm flex items-center gap-2">
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow-sm flex items-center gap-2">
                 <i class="fas fa-upload"></i> Upload New
             </button>
         </div>
@@ -31,7 +31,7 @@
     <!-- Document Type Tabs (Functional) -->
     <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-2">
         <button data-type="all"
-            class="type-tab px-4 py-2 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600">
+            class="type-tab px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
             All Documents (<span id="allCount">0</span>)
         </button>
         <button data-type="pdf" class="type-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
@@ -60,7 +60,7 @@
             <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white text-gray-600">
                 <i class="fas fa-chevron-left"></i> Previous
             </button>
-            <button class="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm">1</button>
+            <button class="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">1</button>
             <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">2</button>
             <button class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white">Next <i
                     class="fas fa-chevron-right"></i></button>
@@ -69,9 +69,9 @@
 
     <!-- Summary stats footer -->
     <div
-        class="mt-6 bg-indigo-50/40 rounded-xl border border-indigo-100 p-4 flex flex-wrap justify-between items-center gap-3">
-        <div class="flex items-center gap-3 text-sm text-indigo-800">
-            <i class="fas fa-database text-indigo-500"></i><span><strong>Document storage:</strong> <span
+        class="mt-6 bg-blue-50/40 rounded-xl border border-blue-100 p-4 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center gap-3 text-sm text-blue-800">
+            <i class="fas fa-database text-blue-500"></i><span><strong>Document storage:</strong> <span
                     id="totalFilesCount">0</span> files · Total size 24.6 MB · Last updated today</span>
         </div>
         <div class="flex gap-2">
@@ -92,7 +92,7 @@
             </div>
             <div class="flex justify-end gap-2 mt-4">
                 <button id="closePreviewBtn" class="px-4 py-2 border rounded">Close</button>
-                <button id="downloadFromPreview" class="px-4 py-2 bg-indigo-600 text-white rounded">Download</button>
+                <button id="downloadFromPreview" class="px-4 py-2 bg-blue-600 text-white rounded">Download</button>
             </div>
         </div>
     </div>
@@ -184,7 +184,7 @@
                         name: "doctor_note_signed.jpg",
                         type: "image",
                         icon: "fas fa-file-image",
-                        color: "text-indigo-500",
+                        color: "text-blue-500",
                         size: "0.9 MB",
                         uploaded: "2024-02-18"
                     }
@@ -357,7 +357,7 @@
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="previewDocument('${doc.name}')" class="text-gray-500 hover:text-gray-700"><i class="far fa-eye"></i></button>
-                                <button onclick="downloadDocument('${doc.name}')" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-download"></i></button>
+                                <button onclick="downloadDocument('${doc.name}')" class="text-blue-600 hover:text-blue-800"><i class="fas fa-download"></i></button>
                             </div>
                         </div>
                     `;
@@ -416,11 +416,11 @@
             tab.addEventListener('click', () => {
                 activeTab = tab.getAttribute('data-type');
                 document.querySelectorAll('.type-tab').forEach(t => {
-                    t.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                    t.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
                     t.classList.add('text-gray-500');
                 });
                 tab.classList.remove('text-gray-500');
-                tab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                tab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
                 renderPolicies();
             });
         });
@@ -438,12 +438,12 @@
             searchQuery = '';
             activeTab = 'all';
             document.querySelectorAll('.type-tab').forEach(t => {
-                t.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                t.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
                 t.classList.add('text-gray-500');
             });
             document.querySelector('.type-tab[data-type="all"]').classList.remove('text-gray-500');
-            document.querySelector('.type-tab[data-type="all"]').classList.add('text-indigo-600', 'border-b-2',
-                'border-indigo-600');
+            document.querySelector('.type-tab[data-type="all"]').classList.add('text-blue-600', 'border-b-2',
+                'border-blue-600');
             renderPolicies();
         });
 
