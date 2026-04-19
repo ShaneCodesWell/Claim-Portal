@@ -11,64 +11,71 @@
             </p>
         </div>
         <div class="flex flex-wrap gap-3">
-            <div class="relative">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                <input type="text" placeholder="Search by name, policy..."
-                    class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm w-64 bg-white" />
-            </div>
             <button
-                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                <i class="fas fa-filter"></i> Filter
-            </button>
-            {{-- <button
                 class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow-sm flex items-center gap-2">
                 <i class="fas fa-user-plus"></i> Add Policyholder
-            </button> --}}
+            </button>
         </div>
     </div>
 
-    <!-- Stats cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm">Total Customers</p>
-                <p class="text-2xl font-bold text-gray-800">{{ number_format($stats['total_customers']) }}</p>
-            </div>
-            <div class="bg-indigo-100 p-3 rounded-full">
-                <i class="fas fa-user-friends text-indigo-600 text-xl"></i>
-            </div>
+    <!-- Compact Neutral Stat Pills -->
+    <div class="flex flex-wrap gap-3 mb-6">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+            <span class="text-sm text-gray-600">Total Customers</span>
+            <span class="text-sm font-semibold text-gray-900">{{ number_format($stats['total_customers']) }}</span>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm">Active Policies</p>
-                <p class="text-2xl font-bold text-gray-800">{{ number_format($stats['active_policies']) }}</p>
-            </div>
-            <div class="bg-emerald-100 p-3 rounded-full">
-                <i class="fas fa-check-circle text-emerald-600 text-xl"></i>
-            </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span class="text-sm text-gray-600">Active Policies</span>
+            <span class="text-sm font-semibold text-gray-900">{{ number_format($stats['active_policies']) }}</span>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm">Pending Claims</p>
-                <p class="text-2xl font-bold text-gray-800">0</p>
-            </div>
-            <div class="bg-yellow-100 p-3 rounded-full">
-                <i class="fas fa-clock text-yellow-600 text-xl"></i>
-            </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+            <span class="text-sm text-gray-600">Pending Claims</span>
+            <span class="text-sm font-semibold text-gray-900">2</span>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm">Processed Claims</p>
-                <p class="text-2xl font-bold text-gray-800">0</p>
-            </div>
-            <div class="bg-blue-100 p-3 rounded-full">
-                <i class="fas fa-file-contract text-blue-600 text-xl"></i>
-            </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-blue-400"></span>
+            <span class="text-sm text-gray-600">Processed Claims</span>
+            <span class="text-sm font-semibold text-gray-900">1</span>
         </div>
     </div>
 
     <!-- Policyholders Table -->
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+
+        <!-- Embedded Toolbar -->
+        <div
+            class="px-5 py-4 border-b border-gray-200 bg-gray-50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900">
+                    Policyholder Directory
+                </h3>
+                <p class="text-xs text-gray-500 mt-0.5">
+                    Browse customer records, view linked policies, and access claim activity
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input type="text" placeholder="Search client or policy..."
+                        class="pl-8 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 w-64 bg-white" />
+                </div>
+
+                <button
+                    class="bg-white border border-gray-300 hover:bg-gray-50 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 transition flex items-center gap-2">
+                    <i class="fas fa-filter text-xs"></i>
+                    Filter
+                </button>
+            </div>
+        </div>
+
+        <!-- Table -->
         <div class="overflow-x-auto custom-scroll">
             <table class="min-w-[900px] w-full">
                 <thead>

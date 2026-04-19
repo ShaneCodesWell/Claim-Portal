@@ -24,6 +24,26 @@ class StaffController extends Controller
         return view('staff.all-claims.index');
     }
 
+    // public function processClaim()
+    // {
+    //     return view('staff.process-claim.index');
+    // }
+
+    public function processClaimMotor()
+    {
+        return view('staff.process-claim.motor');
+    }
+
+    public function processClaimFire()
+    {
+        return view('staff.process-claim.fire');
+    }
+
+    public function processClaimGeneralAccident()
+    {
+        return view('staff.process-claim.general-accident');
+    }
+
     public function myClaims()
     {
         return view('staff.my-claims.index');

@@ -4,12 +4,12 @@
         <div class="flex justify-between items-center py-4 md:py-5">
             <div class="flex items-center gap-3">
                 <!-- Mobile menu button -->
-                <button id="mobileMenuBtn" class="md:hidden text-gray-600 hover:text-indigo-600 focus:outline-none">
+                <button id="mobileMenuBtn" class="md:hidden text-gray-600 hover:text-blue-600 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 <div class="flex items-center gap-2">
-                    <div class="bg-indigo-100 rounded-lg p-1.5 shadow-sm md:hidden">
-                        <i class="fas fa-shield-alt text-indigo-600 text-sm"></i>
+                    <div class="bg-blue-100 rounded-lg p-1.5 shadow-sm md:hidden">
+                        <i class="fas fa-shield-alt text-blue-600 text-sm"></i>
                     </div>
                     <h1 class="text-xl md:text-xl font-bold text-gray-800 tracking-tight">
                         E-Claim

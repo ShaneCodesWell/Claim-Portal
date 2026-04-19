@@ -5,9 +5,9 @@
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
                     <p class="text-sm text-gray-500 font-medium mb-1">
-                        Welcome back, Shane
+                        Welcome back, <span class="font-bold text-blue-500">{{ Auth::user()->name }}</span>
                     </p>
-                    <h2 class="text-2xl font-semibold text-gray-900">
+                    <h2 class="text-xl font-semibold text-gray-900">
                         Your Assigned Claims
                     </h2>
                     <p class="text-sm text-gray-500 mt-1">
@@ -16,7 +16,7 @@
                 </div>
 
                 <button
-                    class="bg-gray-900 hover:bg-black text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm transition flex items-center gap-2">
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm transition flex items-center gap-2">
                     <i class="fas fa-download text-xs"></i>
                     Export Claims
                 </button>
@@ -27,7 +27,7 @@
     <!-- Compact Neutral Stat Pills -->
     <div class="flex flex-wrap gap-3 mb-6">
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
-            <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+            <span class="h-2 w-2 rounded-full bg-indigo-400"></span>
             <span class="text-sm text-gray-600">Total</span>
             <span class="text-sm font-semibold text-gray-900">5</span>
         </div>
@@ -119,8 +119,8 @@
                                 class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-green-100 text-green-700">GLIMS</span>
                         </td>
                         <td class="px-4 py-4 text-sm font-medium text-gray-900">Comprehensive</td>
-                        <td class="px-4 py-4 text-sm text-gray-600">Jan 15, 2024 - Jan 14, 2025</td>
-                        <td class="px-4 py-4 text-sm text-gray-600">Shane Miller</td>
+                        <td class="px-4 py-4 text-xs text-gray-600">Jan 15, 2024 - Jan 14, 2025</td>
+                        <td class="px-4 py-4 text-sm text-gray-600">Kwesi Miller</td>
                         <td class="px-4 py-4">
                             <span
                                 class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
@@ -151,7 +151,7 @@
                                 class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-blue-100 text-blue-700">Genova</span>
                         </td>
                         <td class="px-4 py-4 text-sm font-medium text-gray-900">Comprehensive</td>
-                        <td class="px-4 py-4 text-sm text-gray-600">Jan 15, 2024 - Jan 14, 2025</td>
+                        <td class="px-4 py-4 text-xs text-gray-600">Jan 15, 2024 - Jan 14, 2025</td>
                         <td class="px-4 py-4 text-sm text-gray-600">Admin Team</td>
                         <td class="px-4 py-4">
                             <span
@@ -183,7 +183,7 @@
                                 class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-blue-100 text-blue-700">Genova</span>
                         </td>
                         <td class="px-4 py-4 text-sm font-medium text-gray-900">Commercial Fire</td>
-                        <td class="px-4 py-4 text-sm text-gray-600">Nov 01, 2022 - Nov 01, 2024</td>
+                        <td class="px-4 py-4 text-xs text-gray-600">Nov 01, 2022 - Nov 01, 2024</td>
                         <td class="px-4 py-4 text-sm text-gray-600">Lisa Crawford</td>
                         <td class="px-4 py-4">
                             <span

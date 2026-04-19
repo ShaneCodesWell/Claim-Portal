@@ -16,7 +16,7 @@
                     <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
                         Name
                     </p>
-                    <p class="text-sm font-medium text-gray-900">{{ $customer->name }}</p>
+                    {{-- <p class="text-sm font-medium text-gray-900">{{ $customer->name }}</p> --}}
                 </div>
             </div>
 
@@ -67,9 +67,9 @@
                     <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
                         Telephone
                     </p>
-                    <p class="text-sm font-medium text-gray-900">
+                    {{-- <p class="text-sm font-medium text-gray-900">
                         {{ $customer->phone }}
-                    </p>
+                    </p> --}}
                 </div>
             </div>
 
@@ -85,7 +85,7 @@
                         Policy Number
                     </p>
                     <p class="text-sm font-medium text-gray-900">
-                        {{ $policy->policy_number }}
+                        {{-- {{ $policy->policy_number }} --}}
                     </p>
                 </div>
             </div>
@@ -102,7 +102,7 @@
                         Renewal Date
                     </p>
                     <p class="text-sm font-medium text-gray-900">
-                        {{ \Carbon\Carbon::parse($policy->renewal_date)->format('M d, Y') }}</p>
+                        {{-- {{ \Carbon\Carbon::parse($policy->renewal_date)->format('M d, Y') }}</p> --}}
                 </div>
             </div>
         </div>
