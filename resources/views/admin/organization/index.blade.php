@@ -1,0 +1,491 @@
+<x-layouts.staff>
+    <!-- Organization Header -->
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <i class="fas fa-building text-blue-500 text-2xl"></i>
+            Organization Management
+        </h2>
+        <p class="text-gray-500 text-sm mt-1">
+            Manage company profile, branches, departments, and team members.
+        </p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex flex-wrap gap-1 border-b border-gray-200 mb-6">
+        <button data-tab="profile"
+            class="org-tab px-5 py-2.5 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
+            Company Profile
+        </button>
+        <button data-tab="branches" class="org-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
+            Branches
+        </button>
+        <button data-tab="departments" class="org-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
+            Departments
+        </button>
+        <button data-tab="team" class="org-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
+            Team & Roles
+        </button>
+    </div>
+
+    <!-- Tab Content: Company Profile -->
+    <div id="tab-profile" class="org-section">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
+                <h3 class="font-semibold text-gray-800">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                    Company Information
+                </h3>
+            </div>
+            <div class="p-6 space-y-5">
+                <div class="flex flex-col sm:flex-row gap-6">
+                    <!-- Logo Section (larger) -->
+                    <div class="shrink-0 text-center">
+                        <div
+                            class="w-32 h-32 bg-gray-100 rounded-xl flex items-center justify-center mx-auto border border-gray-200">
+                            <img src="{{ $company->logo_path ? Storage::url($company->logo_path) : asset('images/Vanguard.png') }}"
+                                alt="{{ $company->name }} Logo" class="w-36 h-12 object-contain" />
+                        </div>
+                        <button class="mt-2 text-xs text-blue-600 hover:underline">Change logo</button>
+                    </div>
+
+                    <!-- Fields Grid (2 columns) -->
+                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                            <input type="text" value="{{ $company->name }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
+                            <input type="text" value="{{ $company->tagline }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email (General)</label>
+                            <input type="email" value="{{ $company->email }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Claims Email</label>
+                            <input type="email" value="{{ $company->claims_email }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Primary Phone</label>
+                            <input type="text" value="{{ $company->phone_primary }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Secondary Phone</label>
+                            <input type="text" value="{{ $company->phone_secondary }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tertiary Phone</label>
+                            <input type="text" value="{{ $company->phone_tertiary }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                            <input type="url" value="{{ $company->website }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Postal Address</label>
+                            <input type="text" value="{{ $company->postal_address }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Physical Address</label>
+                            <input type="text" value="{{ $company->physical_address }}"
+                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-4 flex justify-end gap-3">
+                    <button
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Save
+                        Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content: Branches -->
+    <div id="tab-branches" class="org-section hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
+                <h3 class="font-semibold text-gray-800">
+                    <i class="fas fa-store text-blue-500 mr-2"></i>
+                    Branches / Locations
+                </h3>
+                <button
+                    class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg transition">
+                    <i class="fas fa-plus-circle text-xs"></i> Add Branch
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Branch Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Location / Address</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Phone</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 font-medium text-sm  text-gray-700">Head Office</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Accra Central, PMB 1868</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">030 266 6485</td>
+                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                style="overflow: visible;">
+                                <button @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                </button>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                    </a>
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 font-medium text-sm  text-gray-700">Kumasi Branch</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Adum, Kumasi</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">032 204 5678</td>
+                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                style="overflow: visible;">
+                                <button @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                </button>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                    </a>
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 font-medium text-sm  text-gray-700">Takoradi Branch</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Market Circle, Takoradi</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">031 209 1234</td>
+                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                style="overflow: visible;">
+                                <button @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                </button>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                    </a>
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content: Departments -->
+    <div id="tab-departments" class="org-section hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
+                <h3 class="font-semibold text-gray-800">
+                    <i class="fas fa-sitemap text-blue-500 mr-2"></i>
+                    Departments
+                </h3>
+                <button
+                    class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg transition">
+                    <i class="fas fa-plus-circle text-xs"></i> Add Department
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Department Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Head of Department</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Employees</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-700">Claims</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Moses Vanguard</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">12</td>
+                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                style="overflow: visible;">
+                                <button @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                </button>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                    </a>
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-700">Underwriting</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Sarah Adjei</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">8</td>
+                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                style="overflow: visible;">
+                                <button @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                </button>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                    </a>
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-700">Finance</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Kwame Asare</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">6</td>
+                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                style="overflow: visible;">
+                                <button @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                </button>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                    </a>
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-700">IT & Support</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Nana Yaw</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">5</td>
+                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                style="overflow: visible;">
+                                <button @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                </button>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                    </a>
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content: Team & Roles -->
+    <div id="tab-team" class="org-section hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
+                <div>
+                    <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-users-cog text-blue-500"></i>
+                        Team Members & Roles
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">Manage access levels for claims operations</p>
+                </div>
+                <a href="{{ route('settings.add-staff') }}"
+                    class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg transition">
+                    <i class="fas fa-plus-circle text-xs"></i>
+                    Add Staff Member
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Member</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Status</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @forelse ($staffMembers as $staff)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="h-9 w-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
+                                            {{ strtoupper(substr($staff->name, 0, 1)) }}{{ strtoupper(substr(strrchr($staff->name, ' '), 1, 1)) }}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-800">{{ $staff->name }}</p>
+                                            <p class="text-xs text-gray-500">{{ $staff->email }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                        {{ $staff->role }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                        Active
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                    style="overflow: visible;">
+                                    <button @click="open = !open"
+                                        class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                        Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                    </button>
+                                    <div x-show="open" @click.outside="open = false" x-transition
+                                        class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                        <a href="#"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                            <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                        </a>
+                                        <a href="#"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                            <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    No staff members found. Click "Add Staff Member" to get started.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div
+                class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-users mr-1"></i>
+                    @if ($staffMembers->firstItem())
+                        Showing {{ $staffMembers->lastItem() }} of {{ $staffMembers->total() }}
+                        staff members
+                    @else
+                        No staff members found
+                    @endif
+                </div>
+                <div class="flex gap-2">
+                    {{ $staffMembers->links() }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const tabs = document.querySelectorAll('.org-tab');
+            const sections = {
+                profile: document.getElementById('tab-profile'),
+                branches: document.getElementById('tab-branches'),
+                departments: document.getElementById('tab-departments'),
+                team: document.getElementById('tab-team')
+            };
+
+            function activateTab(tabId) {
+                // Hide all sections
+                Object.values(sections).forEach(section => {
+                    if (section) section.classList.add('hidden');
+                });
+                // Show selected section
+                if (sections[tabId]) sections[tabId].classList.remove('hidden');
+                // Update tab styles
+                tabs.forEach(tab => {
+                    const btnTabId = tab.getAttribute('data-tab');
+                    if (btnTabId === tabId) {
+                        tab.classList.remove('text-gray-500', 'hover:text-gray-700');
+                        tab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                    } else {
+                        tab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                        tab.classList.add('text-gray-500', 'hover:text-gray-700');
+                    }
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const tabId = tab.getAttribute('data-tab');
+                    if (tabId) activateTab(tabId);
+                });
+            });
+
+            // Default to profile tab
+            activateTab('profile');
+        })();
+    </script>
+</x-layouts.staff>

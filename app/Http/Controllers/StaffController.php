@@ -80,13 +80,13 @@ class StaffController extends Controller
     public function settings()
     {
         $staffMembers = User::latest()->paginate(5);
-        return view('staff.settings.index', compact('staffMembers'));
+        return view('admin.settings.index', compact('staffMembers'));
     }
 
     public function addStaff()
     {
         $staffMembers = User::latest()->paginate(5);
-        return view('staff.settings.add-staff', compact('staffMembers'));
+        return view('admin.settings.add-staff', compact('staffMembers'));
     }
 
     /**

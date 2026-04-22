@@ -25,9 +25,9 @@
             class="settings-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
             Security
         </button>
-        <button data-tab="team" class="settings-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
+        {{-- <button data-tab="team" class="settings-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
             Team & Roles
-        </button>
+        </button> --}}
         <button data-tab="integrations"
             class="settings-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
             Integrations
@@ -215,111 +215,6 @@
         </div>
     </div>
 
-    <!-- Team & Roles (Admin permissions) -->
-    <div id="section-team" class="settings-section hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/70 flex items-center justify-between">
-                <div>
-                    <h3 class="font-semibold text-gray-800 flex items-center gap-2">
-                        <i class="fas fa-users-cog text-blue-500"></i>
-                        Team Members & Roles
-                    </h3>
-                    <p class="text-xs text-gray-500 mt-1">
-                        Manage access levels for claims operations
-                    </p>
-                </div>
-
-                <a href="{{ route('settings.add-staff') }}"
-                    class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg transition">
-                    <i class="fas fa-plus-circle text-xs"></i>
-                    Add Staff Member
-                </a>
-            </div>
-
-            <!-- Table -->
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                                Member
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                                Role
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                                Status
-                            </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-gray-200">
-                        @forelse ($staffMembers as $staff)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="h-9 w-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
-                                            {{ strtoupper(substr($staff->name, 0, 1)) }}{{ strtoupper(substr(strrchr($staff->name, ' '), 1, 1)) }}
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-800">{{ $staff->name }}</p>
-                                            <p class="text-xs text-gray-500">{{ $staff->email }}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                        {{ $staff->role }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                        Active
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button class="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-500 transition">
-                                        <i class="fas fa-edit text-sm"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
-                                    No staff members found. Click "Add Staff Member" to get started.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <div
-                class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
-                <div class="text-sm text-gray-500">
-                    <i class="fas fa-users mr-1"></i>
-                    @if ($staffMembers->firstItem())
-                        Showing {{ $staffMembers->lastItem() }} of {{ $staffMembers->total() }}
-                        staff members
-                    @else
-                        No staff members found
-                    @endif
-                </div>
-                <div class="flex gap-2">
-                    {{ $staffMembers->links() }}
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Integrations -->
     <div id="section-integrations" class="settings-section hidden">
         <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
@@ -330,22 +225,6 @@
                 </h3>
             </div>
             <div class="p-6 space-y-4">
-                {{-- <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <i class="fab fa-slack text-blue-600 text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="font-medium">Slack Notifications</p>
-                            <p class="text-xs text-gray-500">
-                                Send claim alerts to #claims channel
-                            </p>
-                        </div>
-                    </div>
-                    <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
-                        Connect
-                    </button>
-                </div> --}}
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -392,20 +271,6 @@
                     </div>
                     <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Configured</span>
                 </div>
-                {{-- <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-envelope-open-text text-purple-600 text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="font-medium">Email Digest</p>
-                            <p class="text-xs text-gray-500">
-                                Daily summary to admin@nissitechnologies.com
-                            </p>
-                        </div>
-                    </div>
-                    <button class="text-blue-600 text-sm">Edit settings</button>
-                </div> --}}
             </div>
         </div>
     </div>
@@ -435,7 +300,6 @@
                 profile: document.getElementById("section-profile"),
                 notifications: document.getElementById("section-notifications"),
                 security: document.getElementById("section-security"),
-                team: document.getElementById("section-team"),
                 integrations: document.getElementById("section-integrations"),
             };
 

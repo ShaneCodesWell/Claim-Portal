@@ -125,11 +125,23 @@
                                     {{ Str::plural('Policy', $customer->policies_count) }}
                                 </span>
                             </td>
-                            <td class="px-5 py-4 text-center">
-                                <button
-                                    class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                                    <i class="fas fa-edit"></i> Edit
+                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                style="overflow: visible;">
+                                <button @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
                                 </button>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                    </a>
+                                    <a href="#"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     @empty

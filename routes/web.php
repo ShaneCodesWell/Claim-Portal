@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FireController;
 use App\Http\Controllers\GeneralAccidentController;
@@ -16,7 +17,6 @@ Route::get('/login-user', [AuthController::class, 'showLoginForm'])->name('login
 Route::get('/staff-login', [AuthController::class, 'staffLoginForm'])->name('staff.login');
 Route::get('/agent-login', [AuthController::class, 'agentLogin'])->name('agent.login');
 
-
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/staff-login', [AuthController::class, 'staffLogin'])->name('staff.login.submit');
 
@@ -27,7 +27,6 @@ Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.veri
 Route::get('/login/local', [AuthController::class, 'showLocalLoginForm'])->name('login.local');
 Route::post('/login/local', [AuthController::class, 'localLogin'])->name('login.local.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
 
 // Customers Routes
 Route::middleware('auth.customer')->group(function () {
@@ -73,12 +72,16 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     // Customers
     Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers');
 
-    // Settings (view only)
-    Route::get('/staff/settings', [StaffController::class, 'settings'])->name('settings');
 });
 
 // Admin-only routes — only admins can access
 Route::middleware(['admin'])->prefix('admin')->group(function () {
+    // Organization
+    Route::get('/organization', [CompanyController::class, 'index'])->name('organization');
+    // Settings
+    Route::get('/settings', [StaffController::class, 'settings'])->name('settings');
+    Route::get('/settings/company', [CompanyController::class, 'edit'])->name('settings.company');
+    Route::put('/settings/company', [CompanyController::class, 'update'])->name('settings.company.update');
     Route::get('/staff/settings/add-staff', [StaffController::class, 'addStaff'])->name('settings.add-staff');
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
 });
