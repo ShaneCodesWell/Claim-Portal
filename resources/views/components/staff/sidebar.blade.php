@@ -45,12 +45,12 @@
                 <span>Customer List</span>
             </a>
             <div class="pt-4 mt-4 border-t border-gray-100">
-                <a href="{{ route('organization') }}"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
-                    <i class="fas fa-building w-5"></i>
-                    <span>Organization</span>
-                </a>
                 @if (Auth::user()->isAdmin())
+                    <a href="{{ route('organization') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+                        <i class="fas fa-building w-5"></i>
+                        <span>Organization</span>
+                    </a>
                     <a href="{{ route('settings') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                         <i class="fas fa-cog w-5"></i>

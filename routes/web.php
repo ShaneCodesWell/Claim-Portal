@@ -82,8 +82,10 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/settings', [StaffController::class, 'settings'])->name('settings');
     Route::get('/settings/company', [CompanyController::class, 'edit'])->name('settings.company');
     Route::put('/settings/company', [CompanyController::class, 'update'])->name('settings.company.update');
-    Route::get('/staff/settings/add-staff', [StaffController::class, 'addStaff'])->name('settings.add-staff');
-    Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+    
+    // Staff Management
+    Route::get('/settings/add-staff', [StaffController::class, 'addStaff'])->name('settings.add-staff');
+    Route::post('/settings/staff-store', [StaffController::class, 'store'])->name('staff.store');
 });
 
 // Offline Application

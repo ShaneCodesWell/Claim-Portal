@@ -1,0 +1,84 @@
+<?php
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreBranchRequest;
+use App\Http\Requests\UpdateBranchRequest;
+use App\Models\Branch;
+use App\Models\Company;
+
+class BranchController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $branches = Branch::withCount('users')->latest()->paginate(10);
+        return view('admin.organization.index', compact('branches'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreBranchRequest $request)
+    {
+        $validated = $request->validated();
+        $company = Company::firstOrFail();
+
+        Branch::create([
+             ...$validated,
+            'company_id' => $company->id,
+        ]);
+
+        return back()->with('success', 'Branch created successfully.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Branch $branch)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Branch $branch)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateBranchRequest $request, Branch $branch)
+    {
+
+        $validated = $request->validated();
+        $branch->update($validated);
+
+        return back()->with('success', 'Branch updated successfully.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Branch $branch)
+    {
+        if ($branch->users()->count() > 0) {
+            return back()->with('error', 'Cannot delete a branch that has staff members assigned to it.');
+        }
+
+        $branch->delete();
+        return back()->with('success', 'Branch deleted successfully.');
+    }
+}

@@ -245,7 +245,7 @@
                     <tbody class="divide-y divide-gray-200">
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-6 py-4 text-sm font-medium text-gray-700">Claims</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">Moses Vanguard</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">Clark Kent</td>
                             <td class="px-6 py-4 text-sm text-gray-700">12</td>
                             <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                 style="overflow: visible;">
@@ -367,7 +367,11 @@
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Role</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                                Status</th>
+                                Branch</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Department</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Contact</th>
                             <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Actions</th>
                         </tr>
@@ -388,16 +392,16 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                        {{ $staff->role }}
-                                    </span>
+                                    <span class="text-sm text-gray-700">{{ $staff->role ?? 'Claims Officer' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                        Active
-                                    </span>
+                                    <span class="text-sm text-gray-700">{{ $staff->branch ?? 'Head Office' }}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-gray-700">{{ $staff->department ?? 'Claims' }}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-gray-700">{{ $staff->contact ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                     style="overflow: visible;">
@@ -420,7 +424,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                                     No staff members found. Click "Add Staff Member" to get started.
                                 </td>
                             </tr>
@@ -434,8 +438,7 @@
                 <div class="text-sm text-gray-500">
                     <i class="fas fa-users mr-1"></i>
                     @if ($staffMembers->firstItem())
-                        Showing {{ $staffMembers->lastItem() }} of {{ $staffMembers->total() }}
-                        staff members
+                        Showing {{ $staffMembers->lastItem() }} of {{ $staffMembers->total() }} staff members
                     @else
                         No staff members found
                     @endif
