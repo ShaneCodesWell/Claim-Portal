@@ -132,6 +132,8 @@
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Branch Name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                Branch Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Location / Address</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Phone</th>
@@ -140,75 +142,38 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-medium text-sm  text-gray-700">Head Office</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">Accra Central, PMB 1868</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">030 266 6485</td>
-                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
-                                style="overflow: visible;">
-                                <button @click="open = !open"
-                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
-                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
-                                </button>
-                                <div x-show="open" @click.outside="open = false" x-transition
-                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                    <a href="#"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
-                                    </a>
-                                    <a href="#"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-medium text-sm  text-gray-700">Kumasi Branch</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">Adum, Kumasi</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">032 204 5678</td>
-                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
-                                style="overflow: visible;">
-                                <button @click="open = !open"
-                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
-                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
-                                </button>
-                                <div x-show="open" @click.outside="open = false" x-transition
-                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                    <a href="#"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
-                                    </a>
-                                    <a href="#"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-medium text-sm  text-gray-700">Takoradi Branch</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">Market Circle, Takoradi</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">031 209 1234</td>
-                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
-                                style="overflow: visible;">
-                                <button @click="open = !open"
-                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
-                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
-                                </button>
-                                <div x-show="open" @click.outside="open = false" x-transition
-                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                    <a href="#"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
-                                    </a>
-                                    <a href="#"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
+                        @forelse ($branches as $branch)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 font-medium text-sm  text-gray-700">{{ $branch->name }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->code }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->location }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->phone }}</td>
+                                <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                    style="overflow: visible;">
+                                    <button @click="open = !open"
+                                        class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                        Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                    </button>
+                                    <div x-show="open" @click.outside="open = false" x-transition
+                                        class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                        <a href="#"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                            <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                        </a>
+                                        <a href="#"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                            <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    No branches found. Click "Add Branch" to get started.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -243,29 +208,38 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-700">Claims</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">Clark Kent</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">12</td>
-                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
-                                style="overflow: visible;">
-                                <button @click="open = !open"
-                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
-                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
-                                </button>
-                                <div x-show="open" @click.outside="open = false" x-transition
-                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                    <a href="#"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
-                                    </a>
-                                    <a href="#"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
+                        @forelse ($departments as $department)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 text-sm font-medium text-gray-700">{{ $department->name }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $department->head?->name ?? 'N/A' }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $department->employees_count ?? 0 }}</td>
+                                <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                    style="overflow: visible;">
+                                    <button @click="open = !open"
+                                        class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                                        Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                    </button>
+                                    <div x-show="open" @click.outside="open = false" x-transition
+                                        class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                        <a href="#"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                            <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                        </a>
+                                        <a href="#"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                            <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    No departments found. Click "Add Department" to get started.
+                                </td>
+                            </tr>
+                        @endforelse
+                        
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-6 py-4 text-sm font-medium text-gray-700">Underwriting</td>
                             <td class="px-6 py-4 text-sm text-gray-700">Sarah Adjei</td>

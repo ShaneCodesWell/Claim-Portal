@@ -1,12 +1,15 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreStaffRequest;
+use App\Http\Requests\UpdateStaffRequest;
+use App\Enums\UserRole;
+use App\Models\Branch;
 use App\Models\Customer;
+use App\Models\Department;
 use App\Models\Policy;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Auth;
 
 class StaffController extends Controller
 {
@@ -86,7 +89,12 @@ class StaffController extends Controller
     public function addStaff()
     {
         $staffMembers = User::latest()->paginate(5);
-        return view('admin.settings.add-staff', compact('staffMembers'));
+        $roles = UserRole::staffRoles();
+        $roleLabels = UserRole::labels();
+        $departments = Department::where('is_active', true)->get();
+        $branches = Branch::where('is_active', true)->get();
+
+        return view('admin.settings.add-staff', compact('staffMembers', 'roles', 'roleLabels', 'departments', 'branches'));
     }
 
     /**
@@ -94,42 +102,23 @@ class StaffController extends Controller
      */
     public function create()
     {
-        //
+        $branches    = Branch::where('is_active', true)->get();
+        $departments = Department::where('is_active', true)->get();
+        $roles       = UserRole::labels();
+        return view('admin.settings.add-staff', compact('branches', 'departments', 'roles'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreStaffRequest $request)
     {
-        $validated = $request->validate([
-            'name'       => ['required', 'string', 'max:255'],
-            'email'      => ['required', 'email', 'unique:users,email'],
-            'role'       => ['required', 'in:Claims Adjuster,Reviewer,Admin,Viewer'],
-            'department' => ['nullable', 'string', 'max:255'],
-            'password'   => ['required', 'confirmed', Password::min(8)],
-        ]);
+        $validated             = $request->validated();
+        $validated['password'] = bcrypt($validated['password']);
 
-        $staff = User::create([
-            'name'       => $validated['name'],
-            'email'      => $validated['email'],
-            'role'       => $validated['role'],
-            'department' => $validated['department'] ?? null,
-            'password'   => Hash::make($validated['password']),
-            'is_admin'   => $validated['role'] === 'Admin',
-        ]);
+        User::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Staff member added successfully',
-            'staff'   => [
-                'id'         => $staff->id,
-                'name'       => $staff->name,
-                'email'      => $staff->email,
-                'role'       => $staff->role,
-                'department' => $staff->department,
-            ],
-        ]);
+        return redirect()->route('settings.staff.index')->with('success', 'Staff member added successfully.');
     }
 
     /**
@@ -143,24 +132,45 @@ class StaffController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(User $staff)
     {
-        //
+        $branches    = Branch::where('is_active', true)->get();
+        $departments = Department::where('is_active', true)->get();
+        $roles       = UserRole::labels();
+
+        return view('staff.settings.team.edit', compact('staff', 'branches', 'departments', 'roles'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateStaffRequest $request, User $staff)
     {
-        //
+        $validated = $request->validated();
+
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        } else {
+            $validated['password'] = bcrypt($validated['password']);
+        }
+
+        $staff->update($validated);
+
+        return redirect()->route('settings.staff.index')
+            ->with('success', 'Staff member updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(User $staff)
     {
-        //
+        if ($staff->id === Auth::id()) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        $staff->delete();
+
+        return back()->with('success', 'Staff member removed.');
     }
 }

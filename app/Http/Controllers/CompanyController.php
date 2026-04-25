@@ -1,10 +1,13 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Company;
+use App\Models\Branch;
+use App\Models\Department;
+use App\Enums\UserRole;
 use App\Http\Requests\StoreCompanyRequest;
 use App\Http\Requests\UpdateCompanyRequest;
-use App\Models\Company;
-use App\Models\User;
 
 class CompanyController extends Controller
 {
@@ -13,9 +16,12 @@ class CompanyController extends Controller
      */
     public function index()
     {
+        $branches = Branch::all();
         $company = Company::firstOrFail();
         $staffMembers = User::latest()->paginate(5);
-        return view('admin.organization.index', compact('company', 'staffMembers'));
+        $departments = Department::all();
+        // $staffMembers = User::with(['branch', 'department'])->whereIn('role', UserRole::staffRoles())->latest()->paginate(10);
+        return view('admin.organization.index', compact('company', 'staffMembers', 'departments', 'branches'));
     }
 
     /**
