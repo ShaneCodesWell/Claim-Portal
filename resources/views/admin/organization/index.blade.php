@@ -6,8 +6,16 @@
                     icon: 'success',
                     title: 'Success',
                     text: @json(session('success')),
-                    confirmButtonColor: '#4f46e5'
                 });
+            });
+        </script>
+    @endif
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "{{ session('error') }}"
             });
         </script>
     @endif
@@ -401,13 +409,13 @@
                                     <div x-show="open" @click.outside="open = false" x-transition
                                         class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
                                         <!-- Edit -->
-                                        <a href="{{ route('staff.edit', $staff->id) }}"
+                                        <a href="{{ route('staff.edit', $staff) }}"
                                             class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                             <i class="fas fa-edit text-xs text-blue-500"></i>
                                             Edit
                                         </a>
                                         <!-- Delete -->
-                                        <form method="POST" action="{{ route('staff.destroy', $staff->id) }}"
+                                        <form method="POST" action="{{ route('staff.destroy', $staff) }}"
                                             class="delete-staff-form">
                                             @csrf
                                             @method('DELETE')
@@ -494,31 +502,53 @@
                 activateTab('profile');
             }
         })();
-        document.querySelectorAll('.delete-staff-form').forEach(form => {
 
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.delete-staff-form').forEach(form => {
 
-                Swal.fire({
-                    title: 'Delete staff member?',
-                    text: 'This action cannot be undone.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete',
-                    cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#dc2626',
-                    reverseButtons: true
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
 
-                }).then((result) => {
+                    const isAdmin = form.dataset.isAdmin === '1';
+                    const isSelf = form.dataset.isSelf === '1';
 
-                    if (result.isConfirmed) {
-                        form.submit();
+                    // Block conditions first
+                    if (isSelf) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Action not allowed',
+                            text: 'You cannot delete your own account.'
+                        });
+                        return;
                     }
 
+                    if (isAdmin) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Action not allowed',
+                            text: 'Admin accounts cannot be deleted.'
+                        });
+                        return;
+                    }
+
+                    // Otherwise confirm delete
+                    Swal.fire({
+                        title: 'Delete staff member?',
+                        text: 'This action cannot be undone.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, delete',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#dc2626',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+
                 });
-
             });
-
         });
     </script>
 </x-layouts.staff>
