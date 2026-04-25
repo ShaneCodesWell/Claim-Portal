@@ -340,7 +340,7 @@
                     </h3>
                     <p class="text-xs text-gray-500 mt-1">Manage access levels for claims operations</p>
                 </div>
-                <a href="{{ route('settings.add-staff') }}"
+                <a href="{{ route('staff.create') }}"
                     class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg transition">
                     <i class="fas fa-plus-circle text-xs"></i>
                     Add Staff Member
@@ -383,13 +383,14 @@
                                     <span class="text-sm text-gray-700">{{ $staff->role ?? 'Claims Officer' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-sm text-gray-700">{{ $staff->branch_id ?? 'N/A' }}</span>
+                                    <span class="text-sm text-gray-700">{{ $staff->branch?->name ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-sm text-gray-700">{{ $staff->department_id ?? 'N/A' }}</span>
+                                    <span
+                                        class="text-sm text-gray-700">{{ $staff->department?->name ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-sm text-gray-700">{{ $staff->contact ?? 'N/A' }}</span>
+                                    <span class="text-sm text-gray-700">{{ $staff->phone ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                     style="overflow: visible;">
@@ -399,14 +400,23 @@
                                     </button>
                                     <div x-show="open" @click.outside="open = false" x-transition
                                         class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                        <a href="#"
+                                        <!-- Edit -->
+                                        <a href="{{ route('staff.edit', $staff->id) }}"
                                             class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                            <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                            <i class="fas fa-edit text-xs text-blue-500"></i>
+                                            Edit
                                         </a>
-                                        <a href="#"
-                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                            <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
-                                        </a>
+                                        <!-- Delete -->
+                                        <form method="POST" action="{{ route('staff.destroy', $staff->id) }}"
+                                            class="delete-staff-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                                <i class="fas fa-trash-alt text-xs text-red-500"></i>
+                                                Delete
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -475,8 +485,40 @@
                 });
             });
 
-            // Default to profile tab
-            activateTab('profile');
+            const params = new URLSearchParams(window.location.search);
+            const requestedTab = params.get('tab');
+
+            if (requestedTab && sections[requestedTab.replace('tab-', '')]) {
+                activateTab(requestedTab.replace('tab-', ''));
+            } else {
+                activateTab('profile');
+            }
         })();
+        document.querySelectorAll('.delete-staff-form').forEach(form => {
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Delete staff member?',
+                    text: 'This action cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#dc2626',
+                    reverseButtons: true
+
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+
+                });
+
+            });
+
+        });
     </script>
 </x-layouts.staff>

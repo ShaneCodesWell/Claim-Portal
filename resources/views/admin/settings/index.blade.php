@@ -25,9 +25,6 @@
             class="settings-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
             Security
         </button>
-        {{-- <button data-tab="team" class="settings-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
-            Team & Roles
-        </button> --}}
         <button data-tab="integrations"
             class="settings-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
             Integrations
@@ -71,7 +68,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Department</label><input
-                                type="text" value="{{ Auth::user()->department }}"
+                                type="text" value="{{ Auth::user()->department?->name ?? 'N/A' }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" />
                         </div>
                     </div>

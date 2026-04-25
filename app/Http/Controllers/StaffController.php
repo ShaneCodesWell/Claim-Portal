@@ -1,9 +1,9 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Http\Requests\StoreStaffRequest;
 use App\Http\Requests\UpdateStaffRequest;
-use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Department;
@@ -86,29 +86,18 @@ class StaffController extends Controller
         return view('admin.settings.index', compact('staffMembers'));
     }
 
-    // public function addStaff()
-    // {
-    //     $staffMembers = User::latest()->paginate(5);
-    //     $roles = UserRole::staffRoles();
-    //     $roleLabels = UserRole::labels();
-    //     $departments = Department::where('is_active', true)->get();
-    //     $branches = Branch::where('is_active', true)->get();
-
-    //     return view('admin.settings.add-staff', compact('staffMembers', 'roles', 'roleLabels', 'departments', 'branches'));
-    // }
-
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
         $staffMembers = User::latest()->paginate(5);
-        $roles = UserRole::staffRoles();
-        $roleLabels = UserRole::labels();
-        $departments = Department::where('is_active', true)->get();
-        $branches = Branch::where('is_active', true)->get();
+        $roles        = UserRole::staffRoles();
+        $roleLabels   = UserRole::labels();
+        $departments  = Department::where('is_active', true)->get();
+        $branches     = Branch::where('is_active', true)->get();
 
-        return view('admin.settings.add-staff', compact('staffMembers', 'roles', 'roleLabels', 'departments', 'branches'));
+        return view('admin.organization.staff.create', compact('staffMembers', 'roles', 'roleLabels', 'departments', 'branches'));
     }
 
     /**
@@ -120,7 +109,7 @@ class StaffController extends Controller
         $validated['password'] = bcrypt($validated['password']);
 
         // If role is admin, set is_admin to true
-        $isAdmin = $request->boolean('is_admin') || $validated['role'] === 'admin';
+        $isAdmin               = $request->boolean('is_admin') || $validated['role'] === 'admin';
         $validated['is_admin'] = $isAdmin;
 
         User::create($validated);
@@ -139,33 +128,33 @@ class StaffController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    // public function edit(User $staff)
-    // {
-    //     $branches    = Branch::where('is_active', true)->get();
-    //     $departments = Department::where('is_active', true)->get();
-    //     $roles       = UserRole::labels();
+    public function edit(User $staff)
+    {
+        $branches    = Branch::where('is_active', true)->get();
+        $departments = Department::where('is_active', true)->get();
+        $roles       = UserRole::staffRoles();
+        $roleLabels  = UserRole::labels();
 
-    //     return view('staff.settings.team.edit', compact('staff', 'branches', 'departments', 'roles'));
-    // }
+        return view('admin.organization.staff.edit', compact('staff', 'branches', 'departments', 'roles', 'roleLabels'));
+    }
 
     /**
      * Update the specified resource in storage.
      */
-    // public function update(UpdateStaffRequest $request, User $staff)
-    // {
-    //     $validated = $request->validated();
+    public function update(UpdateStaffRequest $request, User $staff)
+    {
+        $validated = $request->validated();
 
-    //     if (empty($validated['password'])) {
-    //         unset($validated['password']);
-    //     } else {
-    //         $validated['password'] = bcrypt($validated['password']);
-    //     }
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        } else {
+            $validated['password'] = bcrypt($validated['password']);
+        }
 
-    //     $staff->update($validated);
+        $staff->update($validated);
 
-    //     return redirect()->route('admin.settings.index')
-    //         ->with('success', 'Staff member updated successfully.');
-    // }
+        return redirect()->route('organization', ['tab' => 'team'])->with('success', 'Staff member updated successfully.');
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -174,6 +163,10 @@ class StaffController extends Controller
     {
         if ($staff->id === Auth::id()) {
             return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        if ($staff->role === 'admin') {
+            return back()->with('error', 'Admin accounts cannot be deleted.');
         }
 
         $staff->delete();
