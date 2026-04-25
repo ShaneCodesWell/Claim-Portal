@@ -14,11 +14,14 @@ class AdminSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'admin@vanguardassurance.com'],
             [
-                'name'     => 'Super Admin',
-                'password' => bcrypt('password'),
-                'is_admin' => true,
-                'role'     => 'admin',
-                'department'     => 'admin',
+                'name'          => 'Super Admin',
+                'password'      => bcrypt('password'),
+                'is_admin'      => true,
+                'role'          => 'admin',
+                'branch_id'     => 1,
+                'department_id' => 1,
+                'phone'         => null,
+                'is_active'     => true,
             ]
         );
     }

@@ -19,8 +19,8 @@
             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <i class="fas fa-user-plus text-blue-500"></i> Add Single Staff
             </h3>
-            <form action="{{ route('staff.store') }}" id="singleStaffForm" class="space-y-4">
-
+            <form action="{{ route('staff.store') }}" id="singleStaffForm" class="space-y-4" method="POST">
+                @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
@@ -33,22 +33,41 @@
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <input type="text" name="phone" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
                         <select name="role" class="w-full border border-gray-300 rounded-lg px-3 py-2">
                             @foreach ($roles as $role)
-                                <option value="{{ $role }}" @selected(old('role', $user->role ?? null) === $role)>
+                                <option value="{{ $role }}">
                                     {{ $roleLabels[$role] }}
                                 </option>
                             @endforeach
                         </select>
-                    </div>
+                    </div> 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
                         <select name="department_id" class="w-full border border-gray-300 rounded-lg px-3 py-2">
                             <option value="">Select Department</option>
                             @foreach ($departments as $department)
-                                <option value="{{ $department->id }}" @selected(old('department_id', $user->department_id ?? null) == $department->id)>
+                                <option value="{{ $department->id }}">
                                     {{ $department->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Branch
+                        </label>
+
+                        <select name="branch_id" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                            <option value="">Select Branch</option>
+
+                            @foreach ($branches as $branch)
+                                <option value="{{ $branch->id }}">
+                                    {{ $branch->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -64,6 +83,25 @@
                             class="w-full border border-gray-300 rounded-lg px-3 py-2">
                     </div>
                 </div>
+                <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Administrator Access
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_admin" value="1" class="sr-only peer">
+                            <div
+                                class="relative w-11 h-6 bg-gray-200 rounded-full
+                                    peer peer-checked:after:translate-x-full
+                                    after:content-[''] after:absolute after:top-0.5
+                                    after:left-0.5 after:bg-white after:rounded-full
+                                    after:h-5 after:w-5 after:transition-all
+                                    peer-checked:bg-blue-600">
+                            </div>
+                            <span class="ml-3 text-sm text-gray-700">
+                                Grant admin privileges
+                            </span>
+                        </label>
+                    </div>
                 <div class="flex justify-end pt-2">
                     <button type="submit"
                         class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
@@ -104,67 +142,6 @@
     </div>
 
     <script>
-        // Handle single staff form submission (demo)
-        document.getElementById('singleStaffForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Adding Staff...`;
-
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-
-            try {
-                const response = await fetch('{{ route('staff.store') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            'content')
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Staff Added!',
-                        text: `${result.staff.name} has been added successfully.`,
-                        confirmButtonColor: '#4f46e5',
-                        confirmButtonText: 'Great!',
-                    });
-
-                    this.reset();
-
-                } else {
-                    const errorMessage = result.errors ?
-                        Object.values(result.errors).flat().join('\n') :
-                        result.message ?? 'Something went wrong.';
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Failed to Add Staff',
-                        text: errorMessage,
-                        confirmButtonColor: '#4f46e5',
-                    });
-                }
-
-            } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Unexpected Error',
-                    text: 'An error occurred. Please try again.',
-                    confirmButtonColor: '#4f46e5',
-                });
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="fas fa-save mr-2"></i>Add Staff`;
-            }
-        });
-
         // Bulk upload file selection preview
         const fileInput = document.getElementById('bulkFile');
         const fileNameDisplay = document.getElementById('fileNameDisplay');

@@ -1,4 +1,16 @@
 <x-layouts.staff>
+    @if (session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: @json(session('success')),
+                    confirmButtonColor: '#4f46e5'
+                });
+            });
+        </script>
+    @endif
     <!-- Organization Header -->
     <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -211,8 +223,10 @@
                         @forelse ($departments as $department)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 text-sm font-medium text-gray-700">{{ $department->name }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-700">{{ $department->head?->name ?? 'N/A' }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-700">{{ $department->employees_count ?? 0 }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $department->head?->name ?? 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $department->employees_count ?? 0 }}
+                                </td>
                                 <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                     style="overflow: visible;">
                                     <button @click="open = !open"
@@ -239,7 +253,7 @@
                                 </td>
                             </tr>
                         @endforelse
-                        
+
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-6 py-4 text-sm font-medium text-gray-700">Underwriting</td>
                             <td class="px-6 py-4 text-sm text-gray-700">Sarah Adjei</td>
@@ -369,10 +383,10 @@
                                     <span class="text-sm text-gray-700">{{ $staff->role ?? 'Claims Officer' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-sm text-gray-700">{{ $staff->branch ?? 'Head Office' }}</span>
+                                    <span class="text-sm text-gray-700">{{ $staff->branch_id ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-sm text-gray-700">{{ $staff->department ?? 'Claims' }}</span>
+                                    <span class="text-sm text-gray-700">{{ $staff->department_id ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="text-sm text-gray-700">{{ $staff->contact ?? 'N/A' }}</span>

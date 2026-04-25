@@ -23,7 +23,6 @@ class User extends Authenticatable
         'password',
         'is_admin',
         'role',
-        'department',
         'branch_id',
         'department_id',
         'phone',

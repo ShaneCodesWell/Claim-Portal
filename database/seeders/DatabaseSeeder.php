@@ -16,20 +16,20 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            ['name' => 'Test User'],
-            ['password'   => bcrypt('password')],
-            ['is_admin'   => true],
-            ['role'       => 'admin'],
-            ['department' => 'admin'],
-        );
+        // User::firstOrCreate(
+        //     ['email' => 'test@example.com'],
+        //     ['name' => 'Test User'],
+        //     ['password'   => bcrypt('password')],
+        //     ['is_admin'   => true],
+        //     ['role'       => 'admin'],
+        //     ['department' => 'department_id'],
+        // );
 
         $this->call([
-            AdminSeeder::class,
             CompanySeeder::class,
             BranchSeeder::class,
             DepartmentSeeder::class,
+            AdminSeeder::class,
         ]);
 
     }

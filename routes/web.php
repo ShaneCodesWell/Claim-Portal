@@ -84,7 +84,7 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::put('/settings/company', [CompanyController::class, 'update'])->name('settings.company.update');
     
     // Staff Management
-    Route::get('/settings/add-staff', [StaffController::class, 'addStaff'])->name('settings.add-staff');
+    Route::get('/settings/add-staff', [StaffController::class, 'create'])->name('settings.add-staff');
     Route::post('/settings/staff-store', [StaffController::class, 'store'])->name('staff.store');
 });
 
