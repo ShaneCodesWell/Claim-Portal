@@ -104,7 +104,12 @@
                             </span>
                         </label>
                     </div>
-                <div class="flex justify-end pt-2">
+                <div class="flex justify-end pt-2 gap-3">
+                    <a href="{{ route('organization') }}?tab=tab-team"
+                            class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+                            <i class="fas fa-arrow-left text-xs"></i>
+                            Back
+                        </a>
                     <button type="submit"
                         class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
                         <i class="fas fa-save mr-2"></i>Update Staff

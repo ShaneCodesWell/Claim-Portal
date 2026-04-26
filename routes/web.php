@@ -79,9 +79,9 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
 Route::middleware(['admin'])->prefix('admin')->group(function () {
     // Organization
     Route::get('/organization', [CompanyController::class, 'index'])->name('organization');
-    
+
     // Settings
-    Route::get('/settings', [CompanyController::class, 'index'])->name('settings');
+    Route::get('/settings', [CompanyController::class, 'settings'])->name('settings');
     Route::get('/settings/company', [CompanyController::class, 'edit'])->name('settings.company');
     Route::put('/settings/company', [CompanyController::class, 'update'])->name('settings.company.update');
 

@@ -70,7 +70,8 @@
                                     alt="{{ $company->name }} Logo" class="w-36 h-12 object-contain" />
                                 <input type="file" name="logo" class="hidden" id="logoInput">
                             </div>
-                            <button type="button" class="mt-2 text-xs text-blue-600 hover:underline">Change logo</button>
+                            <button type="button" class="mt-2 text-xs text-blue-600 hover:underline">Change
+                                logo</button>
                         </div>
 
                         <!-- Fields Grid (2 columns) -->
@@ -134,8 +135,10 @@
                         </div>
                     </div>
                     <div class="pt-4 flex justify-end gap-3">
-                        <button
-                            class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
+                        <button type="button" onclick="location.reload();"
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
                         <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Save
                             Changes</button>
                     </div>
@@ -188,14 +191,19 @@
                                     </button>
                                     <div x-show="open" @click.outside="open = false" x-transition
                                         class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                        <a href="#"
+                                        <a href="{{ route('branches.edit', $branch->id) }}"
                                             class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                             <i class="fas fa-edit text-xs text-blue-500"></i> Edit
                                         </a>
-                                        <a href="#"
-                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                            <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
-                                        </a>
+                                        <form action="{{ route('branches.destroy', $branch->id) }}" method="POST"
+                                            class="w-full delete-branch-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                                <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -525,7 +533,7 @@
                 });
             });
 
-            // Delete SweetAlert
+            // Delet Staff SweetAlert
             document.querySelectorAll('.delete-staff-form').forEach(form => {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -553,6 +561,28 @@
 
                     Swal.fire({
                         title: 'Delete staff member?',
+                        text: 'This action cannot be undone.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, delete',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#dc2626',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+
+            // Delete Branch SweetAlert
+            document.querySelectorAll('.delete-branch-form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    Swal.fire({
+                        title: 'Delete branch?',
                         text: 'This action cannot be undone.',
                         icon: 'warning',
                         showCancelButton: true,

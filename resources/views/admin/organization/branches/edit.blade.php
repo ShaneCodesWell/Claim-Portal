@@ -32,7 +32,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Branch Name <span
                                     class="text-red-500">*</span></label>
-                            <input type="text" name="name" placeholder="Head Office"
+                            <input type="text" name="name" placeholder="Head Office" value="{{ $branch->name }}"
                                 class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                         </div>
 
@@ -40,7 +40,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Branch Code <span
                                     class="text-red-500">*</span></label>
-                            <input type="text" name="code" placeholder="HO-001"
+                            <input type="text" name="code" placeholder="HO-001" value="{{ $branch->code }}"
                                 class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                         </div>
 
@@ -48,6 +48,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                             <input type="email" name="email" placeholder="branch@vanguardassurance.com"
+                                value="{{ $branch->email }}"
                                 class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                         </div>
 
@@ -55,7 +56,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Phone <span
                                     class="text-red-500">*</span></label>
-                            <input type="text" name="phone" placeholder="030 266 6485"
+                            <input type="text" name="phone" placeholder="030 266 6485" value="{{ $branch->phone }}"
                                 class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                         </div>
 
@@ -76,7 +77,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
                             <textarea name="address" rows="2"
                                 class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                                placeholder="P.O. Box 1868, Accra Central, Ghana"></textarea>
+                                placeholder="P.O. Box 1868, Accra Central, Ghana">{{ $branch->address }}</textarea>
                         </div>
 
                         <!-- Status (is_active) -->
@@ -85,7 +86,8 @@
                                 Is Active
                             </label>
                             <label class="inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_active" value="1" class="sr-only peer">
+                                <input type="checkbox" name="is_active" value="1" class="sr-only peer"
+                                    {{ $branch->is_active ? 'checked' : '' }}>
                                 <div
                                     class="relative w-11 h-6 bg-gray-200 rounded-full
                                     peer peer-checked:after:translate-x-full
@@ -103,15 +105,15 @@
 
                     <!-- Form Actions -->
                     <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end gap-3">
-                        <a href="{{ route('organization') }}"
+                        <a href="{{ route('organization') }}?tab=tab-branches"
                             class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition">
                             <i class="fas fa-arrow-left text-xs"></i>
                             Back
                         </a>
-                        <a href="{{ route('organization') }}"
+                        <a href="{{ route('organization') }}?tab=tab-branches"
                             class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition">Cancel</a>
                         <button type="submit"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">Create
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">Update
                             Branch</button>
                     </div>
                 </form>

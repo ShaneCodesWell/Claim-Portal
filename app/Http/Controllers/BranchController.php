@@ -57,7 +57,8 @@ class BranchController extends Controller
      */
     public function edit(Branch $branch)
     {
-        return view('admin.organization.branches.edit', compact('branch'));
+        $staffMembers = User::all();
+        return view('admin.organization.branches.edit', compact('branch', 'staffMembers'));
     }
 
     /**

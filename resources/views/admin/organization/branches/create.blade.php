@@ -99,12 +99,12 @@
 
                     <!-- Form Actions -->
                     <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end gap-3">
-                        <a href="{{ route('organization') }}"
+                        <a href="{{ route('organization') }}?tab=tab-branches"
                             class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition">
                             <i class="fas fa-arrow-left text-xs"></i>
                             Back
                         </a>
-                        <a href="{{ route('organization') }}"
+                        <a href="{{ route('organization') }}?tab=tab-branches"
                             class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition">Cancel</a>
                         <button type="submit"
                             class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">Create

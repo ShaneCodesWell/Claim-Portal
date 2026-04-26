@@ -80,4 +80,10 @@ class CompanyController extends Controller
     {
         //
     }
+
+    public function settings()
+    {
+        $staffMembers = User::latest()->paginate(5);
+        return view('admin.settings.index', compact('staffMembers'));
+    }
 }

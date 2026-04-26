@@ -74,7 +74,8 @@
                     </div>
                 </div>
                 <div class="pt-4 flex justify-end gap-3">
-                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
+                    <button type="button" onclick="location.reload();"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
                         Cancel
                     </button>
                     <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
