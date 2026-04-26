@@ -22,6 +22,7 @@ class StoreDepartmentRequest extends FormRequest
     {
         return [
             'branch_id'   => 'required|exists:branches,id',
+            'department_head_id' => 'nullable|exists:users,id',
             'name'        => 'required|string|max:255',
             'code'        => 'required|string|max:50|unique:departments,code',
             'description' => 'nullable|string|max:500',

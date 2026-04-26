@@ -33,7 +33,7 @@ class BranchController extends Controller
     public function store(StoreBranchRequest $request)
     {
         $validated = $request->validated();
-        $company = Company::firstOrFail();
+        $company   = Company::firstOrFail();
 
         Branch::create([
              ...$validated,
@@ -70,7 +70,6 @@ class BranchController extends Controller
         $validated = $request->validated();
         $branch->update($validated);
 
-        // return back()->with('success', 'Branch updated successfully.');
         return redirect()->route('organization', ['tab' => 'branches'])->with('success', 'Branch updated successfully.');
     }
 

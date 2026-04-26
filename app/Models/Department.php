@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,11 +12,12 @@ class Department extends Model
     use HasFactory;
 
     protected $fillable = [
-        'company_id', 
-        'branch_id', 
-        'name', 
-        'code', 
-        'description', 
+        'company_id',
+        'branch_id',
+        'department_head_id',
+        'name',
+        'code',
+        'description',
         'is_active',
     ];
 
@@ -34,5 +34,10 @@ class Department extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function head()
+    {
+        return $this->belongsTo(User::class, 'department_head_id');
     }
 }

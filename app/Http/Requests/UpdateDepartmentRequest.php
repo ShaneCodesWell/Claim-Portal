@@ -29,6 +29,7 @@ class UpdateDepartmentRequest extends FormRequest
                     ->ignore($this->route('department'))],
             'description' => 'nullable|string|max:500',
             'is_active'   => 'boolean',
+            'department_head_id' => 'nullable|exists:users,id',
         ];
     }
 }

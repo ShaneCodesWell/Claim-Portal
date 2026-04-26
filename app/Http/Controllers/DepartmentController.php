@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreDepartmentRequest;
 use App\Http\Requests\UpdateDepartmentRequest;
 use App\Models\Branch;
+use App\Models\User;
 use App\Models\Company;
 use App\Models\Department;
 
@@ -14,7 +15,7 @@ class DepartmentController extends Controller
      */
     public function index()
     {
-        $departments = Department::with('branch')->withCount('users')->latest()->paginate(10);
+        $departments = Department::with('branch')->with('head')->withCount('users')->latest()->paginate(10);
         $branches    = Branch::where('is_active', true)->get();
 
         return view('admin.organization.index', compact('departments', 'branches'));
@@ -25,7 +26,9 @@ class DepartmentController extends Controller
      */
     public function create()
     {
-        //
+        $staffMembers = User::all();
+        $branches    = Branch::where('is_active', true)->get();
+        return view('admin.organization.departments.create', compact('staffMembers', 'branches'));
     }
 
     /**
@@ -40,7 +43,7 @@ class DepartmentController extends Controller
             'company_id' => Company::first()->id,
         ]);
 
-        return back()->with('success', 'Department created successfully.');
+        return redirect()->route('organization', ['tab' => 'departments'])->with('success', 'Department created successfully.');
     }
 
     /**
@@ -56,7 +59,9 @@ class DepartmentController extends Controller
      */
     public function edit(Department $department)
     {
-        //
+        $staffMembers = User::all();
+        $branches    = Branch::where('is_active', true)->get();
+        return view('admin.organization.departments.edit', compact('department', 'staffMembers', 'branches'));
     }
 
     /**
@@ -65,8 +70,7 @@ class DepartmentController extends Controller
     public function update(UpdateDepartmentRequest $request, Department $department)
     {
         $department->update($request->validated());
-
-        return back()->with('success', 'Department updated successfully.');
+        return redirect()->route('organization', ['tab' => 'departments'])->with('success', 'Department updated successfully.');
     }
 
     /**
@@ -75,11 +79,11 @@ class DepartmentController extends Controller
     public function destroy(Department $department)
     {
         if ($department->users()->count() > 0) {
-            return back()->with('error', 'Cannot delete a department that has staff members assigned to it.');
+            return redirect()->route('organization', ['tab' => 'departments'])->with('error', 'Cannot delete a department that has staff members assigned to it.');
         }
 
         $department->delete();
 
-        return back()->with('success', 'Department deleted.');
+        return redirect()->route('organization', ['tab' => 'departments'])->with('success', 'Department deleted.');
     }
 }

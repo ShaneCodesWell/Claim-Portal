@@ -9,6 +9,7 @@ use App\Http\Controllers\MotorFormController;
 use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\DepartmentController;
 use Illuminate\Support\Facades\Route;
 
 // Auth Routes
@@ -92,6 +93,14 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/settings/branches/{branch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
     Route::put('/settings/branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
     Route::delete('/settings/branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
+
+    // Department
+    Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
+    Route::get('/settings/departments/create', [DepartmentController::class, 'create'])->name('departments.create');
+    Route::post('/settings/departments', [DepartmentController::class, 'store'])->name('departments.store');
+    Route::get('/settings/departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit');
+    Route::put('/settings/departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
+    Route::delete('/settings/departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
     
     // Staff Management
     Route::get('/settings/create-staff', [StaffController::class, 'create'])->name('staff.create');
