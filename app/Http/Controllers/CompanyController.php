@@ -1,13 +1,12 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Department;
-use App\Enums\UserRole;
 use App\Http\Requests\StoreCompanyRequest;
 use App\Http\Requests\UpdateCompanyRequest;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Department;
+use App\Models\User;
 
 class CompanyController extends Controller
 {
@@ -16,10 +15,10 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $branches = Branch::all();
-        $company = Company::firstOrFail();
+        $branches     = Branch::all();
+        $company      = Company::firstOrFail();
         $staffMembers = User::latest()->paginate(5);
-        $departments = Department::all();
+        $departments  = Department::all();
         // $staffMembers = User::with(['branch', 'department'])->whereIn('role', UserRole::staffRoles())->latest()->paginate(10);
         return view('admin.organization.index', compact('company', 'staffMembers', 'departments', 'branches'));
     }
@@ -54,15 +53,16 @@ class CompanyController extends Controller
     public function edit(Company $company)
     {
         $company = Company::firstOrFail();
-        return view('admin.settings.index', compact('company'));
+        return view('admin.organization.index', compact('company'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCompanyRequest $request, Company $company)
+    public function update(UpdateCompanyRequest $request)
     {
         $validated = $request->validated();
+        $company   = Company::firstOrFail();
 
         if ($request->hasFile('logo')) {
             $validated['logo_path'] = $request->file('logo')->store('company', 'public');

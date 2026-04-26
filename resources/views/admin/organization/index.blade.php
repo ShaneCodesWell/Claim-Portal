@@ -56,79 +56,91 @@
                     Company Information
                 </h3>
             </div>
-            <div class="p-6 space-y-5">
-                <div class="flex flex-col sm:flex-row gap-6">
-                    <!-- Logo Section (larger) -->
-                    <div class="shrink-0 text-center">
-                        <div
-                            class="w-32 h-32 bg-gray-100 rounded-xl flex items-center justify-center mx-auto border border-gray-200">
-                            <img src="{{ $company->logo_path ? Storage::url($company->logo_path) : asset('images/Vanguard.png') }}"
-                                alt="{{ $company->name }} Logo" class="w-36 h-12 object-contain" />
+            <form action="{{ route('settings.company.update') }}" id="companyProfileForm" class="space-y-4"
+                method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                <div class="p-6 space-y-5">
+                    <div class="flex flex-col sm:flex-row gap-6">
+                        <!-- Logo Section (larger) -->
+                        <div class="shrink-0 text-center">
+                            <div
+                                class="w-32 h-32 bg-gray-100 rounded-xl flex items-center justify-center mx-auto border border-gray-200">
+                                <img src="{{ $company->logo_path ? Storage::url($company->logo_path) : asset('images/Vanguard.png') }}"
+                                    alt="{{ $company->name }} Logo" class="w-36 h-12 object-contain" />
+                                <input type="file" name="logo" class="hidden" id="logoInput">
+                            </div>
+                            <button type="button" class="mt-2 text-xs text-blue-600 hover:underline">Change logo</button>
                         </div>
-                        <button class="mt-2 text-xs text-blue-600 hover:underline">Change logo</button>
-                    </div>
 
-                    <!-- Fields Grid (2 columns) -->
-                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
-                            <input type="text" value="{{ $company->name }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
-                            <input type="text" value="{{ $company->tagline }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email (General)</label>
-                            <input type="email" value="{{ $company->email }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Claims Email</label>
-                            <input type="email" value="{{ $company->claims_email }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Primary Phone</label>
-                            <input type="text" value="{{ $company->phone_primary }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Secondary Phone</label>
-                            <input type="text" value="{{ $company->phone_secondary }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tertiary Phone</label>
-                            <input type="text" value="{{ $company->phone_tertiary }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                            <input type="url" value="{{ $company->website }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Postal Address</label>
-                            <input type="text" value="{{ $company->postal_address }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Physical Address</label>
-                            <input type="text" value="{{ $company->physical_address }}"
-                                class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                        <!-- Fields Grid (2 columns) -->
+                        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                                <input type="text" name="name" value="{{ old('name', $company->name) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
+                                <input type="text" name="tagline" value="{{ old('tagline', $company->tagline) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email (General)</label>
+                                <input type="email" name="email" value="{{ old('email', $company->email) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Claims Email</label>
+                                <input type="email" name="claims_email"
+                                    value="{{ old('claims_email', $company->claims_email) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Primary Phone</label>
+                                <input type="text" name="phone_primary"
+                                    value="{{ old('phone_primary', $company->phone_primary) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Secondary Phone</label>
+                                <input type="text" name="phone_secondary"
+                                    value="{{ old('phone_secondary', $company->phone_secondary) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tertiary Phone</label>
+                                <input type="text" name="phone_tertiary"
+                                    value="{{ old('phone_tertiary', $company->phone_tertiary) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                                <input type="url" name="website" value="{{ old('website', $company->website) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Postal Address</label>
+                                <input type="text" name="postal_address"
+                                    value="{{ old('postal_address', $company->postal_address) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Physical Address</label>
+                                <input type="text" name="physical_address"
+                                    value="{{ old('physical_address', $company->physical_address) }}"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                            </div>
                         </div>
                     </div>
+                    <div class="pt-4 flex justify-end gap-3">
+                        <button
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Save
+                            Changes</button>
+                    </div>
                 </div>
-                <div class="pt-4 flex justify-end gap-3">
-                    <button
-                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Save
-                        Changes</button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -457,62 +469,70 @@
     </div>
 
     <script>
-        (function() {
-            const tabs = document.querySelectorAll('.org-tab');
-            const sections = {
-                profile: document.getElementById('tab-profile'),
-                branches: document.getElementById('tab-branches'),
-                departments: document.getElementById('tab-departments'),
-                team: document.getElementById('tab-team')
-            };
+        document.addEventListener('DOMContentLoaded', function() {
 
-            function activateTab(tabId) {
-                // Hide all sections
-                Object.values(sections).forEach(section => {
-                    if (section) section.classList.add('hidden');
-                });
-                // Show selected section
-                if (sections[tabId]) sections[tabId].classList.remove('hidden');
-                // Update tab styles
+            // Tabs
+            (function() {
+                const tabs = document.querySelectorAll('.org-tab');
+                const sections = {
+                    profile: document.getElementById('tab-profile'),
+                    branches: document.getElementById('tab-branches'),
+                    departments: document.getElementById('tab-departments'),
+                    team: document.getElementById('tab-team')
+                };
+
+                function activateTab(tabId) {
+                    Object.values(sections).forEach(section => {
+                        if (section) section.classList.add('hidden');
+                    });
+
+                    if (sections[tabId]) sections[tabId].classList.remove('hidden');
+
+                    tabs.forEach(tab => {
+                        const btnTabId = tab.getAttribute('data-tab');
+
+                        if (btnTabId === tabId) {
+                            tab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                            tab.classList.remove('text-gray-500', 'hover:text-gray-700');
+                        } else {
+                            tab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                            tab.classList.add('text-gray-500', 'hover:text-gray-700');
+                        }
+                    });
+                }
+
                 tabs.forEach(tab => {
-                    const btnTabId = tab.getAttribute('data-tab');
-                    if (btnTabId === tabId) {
-                        tab.classList.remove('text-gray-500', 'hover:text-gray-700');
-                        tab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-                    } else {
-                        tab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                        tab.classList.add('text-gray-500', 'hover:text-gray-700');
-                    }
+                    tab.addEventListener('click', () => {
+                        const tabId = tab.getAttribute('data-tab');
+                        if (tabId) activateTab(tabId);
+                    });
                 });
-            }
 
-            tabs.forEach(tab => {
-                tab.addEventListener('click', (e) => {
-                    const tabId = tab.getAttribute('data-tab');
-                    if (tabId) activateTab(tabId);
+                const params = new URLSearchParams(window.location.search);
+                const requestedTab = params.get('tab');
+
+                if (requestedTab && sections[requestedTab.replace('tab-', '')]) {
+                    activateTab(requestedTab.replace('tab-', ''));
+                } else {
+                    activateTab('profile');
+                }
+            })();
+
+            // Logo trigger
+            document.querySelectorAll('[data-logo-trigger]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('logoInput').click();
                 });
             });
 
-            const params = new URLSearchParams(window.location.search);
-            const requestedTab = params.get('tab');
-
-            if (requestedTab && sections[requestedTab.replace('tab-', '')]) {
-                activateTab(requestedTab.replace('tab-', ''));
-            } else {
-                activateTab('profile');
-            }
-        })();
-
-        document.addEventListener('DOMContentLoaded', function() {
+            // Delete SweetAlert
             document.querySelectorAll('.delete-staff-form').forEach(form => {
-
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
 
                     const isAdmin = form.dataset.isAdmin === '1';
                     const isSelf = form.dataset.isSelf === '1';
 
-                    // Block conditions first
                     if (isSelf) {
                         Swal.fire({
                             icon: 'error',
@@ -531,7 +551,6 @@
                         return;
                     }
 
-                    // Otherwise confirm delete
                     Swal.fire({
                         title: 'Delete staff member?',
                         text: 'This action cannot be undone.',
@@ -546,7 +565,6 @@
                             form.submit();
                         }
                     });
-
                 });
             });
         });
