@@ -11,14 +11,7 @@ enum UserRole: string {
 
     public static function all(): array
     {
-        return [
-            self::ADMIN->value,
-            self::CLAIM_HEAD->value,
-            self::STAFF->value,
-            self::CLAIMS_ADJUSTER->value,
-            self::REVIEWER->value,
-            self::BROKER->value,
-        ];
+        return array_column(self::cases(), 'value');
     }
 
     public static function staffRoles(): array

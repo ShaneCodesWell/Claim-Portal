@@ -136,7 +136,7 @@
                     <div>
                         <button onclick="syncPoliciesInBackground()"
                             class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition flex items-center gap-2">
-                            <i class="fas fa-sync-alt"></i> Refresh
+                            <i class="fas fa-sync-alt"></i> Sync Policies
                         </button>
                     </div>
                 </div>
@@ -151,9 +151,9 @@
                     <p class="text-gray-500 max-w-md mx-auto mb-6">
                         Try adjusting your search or filter criteria, or refresh to sync the latest policies.
                     </p>
-                    <button onclick="syncPoliciesInBackground()"
+                    <button onclick="location.reload()"
                         class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition inline-flex items-center gap-2">
-                        <i class="fas fa-sync-alt"></i> Sync Policies
+                        <i class="fas fa-sync-alt"></i> Refresh
                     </button>
                 </div>
             @else
@@ -196,44 +196,17 @@
     <x-policy-details-modal />
 
     <script>
-        // ==================== PRESERVE ALL EXISTING JAVASCRIPT LOGIC ====================
-        let policies = @json($policies).map(policy => {
-            let policyClass = (policy.business_class_name || 'Unknown').toLowerCase();
-            let policyClassName = policy.business_class_name || 'Unknown Class';
-            let policyProduct = policy.product_name || 'Unknown Product';
+        // ==================== EXISTING JAVASCRIPT LOGIC ====================
+        let policies = @json($policies).map(mapPolicy);
 
-            if (policyClass.includes('motor')) policyClass = 'motor';
-            else if (policyClass.includes('fire') || policyClass.includes('home')) policyClass = 'home';
-            else if (policyClass.includes('life')) policyClass = 'life';
-            else if (policyClass.includes('health')) policyClass = 'health';
-
-            const today = new Date();
-            const endDate = new Date(policy.policy_end_date);
-            const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-            let status = daysUntilExpiry < 0 ? 'expired' : 'active';
-            let statusText = daysUntilExpiry < 0 ? 'Expired' : 'Active';
-
-            return {
-                id: policy.policy_id,
-                number: policy.policy_number,
-                type: policyClass,
-                className: policyClassName,
-                productName: policyProduct,
-                vehicle: policy.vehicle_number || 'N/A',
-                status: status,
-                statusText: statusText,
-                renewalDate: policy.renewal_date,
-                premium: 'N/A',
-                policy_start_date: policy.policy_start_date,
-                policy_end_date: policy.policy_end_date,
-                product_id: policy.product_id,
-                business_class_id: policy.business_class_id,
-                customer_name: policy.customer_name || '',
-                customer_code: policy.customer_code || '',
-                customer_phone: policy.customer_phone || '',
-                customer_email: policy.customer_email || ''
-            };
-        });
+        // And in updatePoliciesData
+        function updatePoliciesData(newPolicies) {
+            const mappedPolicies = newPolicies.map(mapPolicy);
+            policies.length = 0;
+            policies.push(...mappedPolicies);
+            updateStats();
+            filterPolicies();
+        }
 
         console.log('Loaded policies:', policies);
 
@@ -267,8 +240,10 @@
                 const data = await response.json();
                 if (data.success && data.policies && data.policies.length > 0) {
                     updatePoliciesData(data.policies);
+                    sessionStorage.setItem('lastPolicySync', Date.now().toString());
                     showNotification('Policies updated successfully', 'success');
                 } else {
+                    sessionStorage.setItem('lastPolicySync', Date.now().toString());
                     showNotification('Your policies are up to date', 'info');
                 }
             } catch (error) {
@@ -280,48 +255,37 @@
             }
         }
 
-        function updatePoliciesData(newPolicies) {
-            const mappedPolicies = newPolicies.map(policy => {
-                let policyClass = (policy.business_class_name || 'Unknown').toLowerCase();
-                let policyClassName = policy.business_class_name || 'Unknown Class';
-                let policyProduct = policy.product_name || 'Unknown Product';
+        function mapPolicy(policy) {
+            const rawClass = (policy.business_class_name || 'Unknown').toLowerCase().trim();
 
-                if (policyClass.includes('motor')) policyClass = 'motor';
-                else if (policyClass.includes('fire') || policyClass.includes('home')) policyClass = 'home';
-                else if (policyClass.includes('life')) policyClass = 'life';
-                else if (policyClass.includes('health')) policyClass = 'health';
-
-                const today = new Date();
-                const endDate = new Date(policy.policy_end_date);
-                const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-                let status = daysUntilExpiry < 0 ? 'expired' : 'active';
-                let statusText = daysUntilExpiry < 0 ? 'Expired' : 'Active';
-
-                return {
-                    id: policy.policy_id,
-                    number: policy.policy_number,
-                    type: policyClass,
-                    className: policyClassName,
-                    productName: policyProduct,
-                    vehicle: policy.vehicle_number || 'N/A',
-                    status: status,
-                    statusText: statusText,
-                    renewalDate: policy.renewal_date,
-                    premium: 'N/A',
-                    policy_start_date: policy.policy_start_date,
-                    policy_end_date: policy.policy_end_date,
-                    product_id: policy.product_id,
-                    business_class_id: policy.business_class_id,
-                    customer_name: policy.customer_name || '',
-                    customer_code: policy.customer_code || '',
-                    customer_phone: policy.customer_phone || '',
-                    customer_email: policy.customer_email || ''
-                };
-            });
-            policies.length = 0;
-            policies.push(...mappedPolicies);
-            updateStats();
-            filterPolicies();
+            return {
+                id: policy.policy_id,
+                number: policy.policy_number,
+                type: rawClass,
+                className: policy.business_class_name || 'Unknown Class',
+                productName: policy.product_name || 'Unknown Product',
+                vehicle: policy.vehicle_number || 'N/A',
+                status: (() => {
+                    const daysUntilExpiry = Math.ceil((new Date(policy.policy_end_date) - new Date()) / (1000 * 60 *
+                        60 * 24));
+                    return daysUntilExpiry < 0 ? 'expired' : 'active';
+                })(),
+                statusText: (() => {
+                    const daysUntilExpiry = Math.ceil((new Date(policy.policy_end_date) - new Date()) / (1000 * 60 *
+                        60 * 24));
+                    return daysUntilExpiry < 0 ? 'Expired' : 'Active';
+                })(),
+                renewalDate: policy.renewal_date,
+                premium: 'N/A',
+                policy_start_date: policy.policy_start_date,
+                policy_end_date: policy.policy_end_date,
+                product_id: policy.product_id,
+                business_class_id: policy.business_class_id,
+                customer_name: policy.customer_name || '',
+                customer_code: policy.customer_code || '',
+                customer_phone: policy.customer_phone || '',
+                customer_email: policy.customer_email || ''
+            };
         }
 
         function showSyncIndicator(show) {
@@ -365,18 +329,15 @@
         function getPolicyIcon(policyType) {
             const iconMap = {
                 'motor': 'fa-car',
-                'home': 'fa-home',
+                'general accident': 'fa-shield-alt',
                 'fire': 'fa-fire',
-                'health': 'fa-heartbeat',
-                'life': 'fa-user-shield',
+                'bond': 'fa-handshake',
+                'engineering': 'fa-tools',
+                'liability': 'fa-balance-scale',
                 'marine': 'fa-ship',
                 'aviation': 'fa-plane',
-                'engineering': 'fa-tools',
-                'bond': 'fa-handshake',
-                'liability': 'fa-shield-alt',
-                'agriculture': 'fa-tractor'
             };
-            return iconMap[policyType] || 'fa-file-contract';
+            return iconMap[policyType] ?? 'fa-file-contract';
         }
 
         function renderPolicies(filteredPolicies = policies, page = 1) {
@@ -580,35 +541,22 @@
                 showNotification('Policy not found. Please try again.', 'error');
                 return;
             }
-            const policyType = policy.type ? policy.type.trim().toLowerCase() : '';
-            let routeUrl = '/motor-form';
-            switch (policyType) {
-                case 'motor':
-                    routeUrl = '/motor-form';
-                    break;
-                case 'general accident':
-                    routeUrl = '/general-accident-form';
-                    break;
-                case 'fire':
-                    routeUrl = '/fire-form';
-                    break;
-                case 'bond':
-                    routeUrl = '/bond-form';
-                    break;
-                case 'engineering':
-                    routeUrl = '/engineering-form';
-                    break;
-                case 'liability':
-                    routeUrl = '/liability-form';
-                    break;
-                case 'marine':
-                    routeUrl = '/marine-form';
-                    break;
-                case 'aviation':
-                    routeUrl = '/aviation-form';
-                    break;
-            }
-            sessionStorage.setItem('selectedPolicy', JSON.stringify(policy));
+
+            const policyType = policy.type.trim().toLowerCase();
+
+            const routeMap = {
+                'motor': '/motor-form',
+                'general accident': '/general-accident-form',
+                'fire': '/fire-form',
+                'bond': '/bond-form',
+                'engineering': '/engineering-form',
+                'liability': '/liability-form',
+                'marine': '/marine-form',
+                'aviation': '/aviation-form',
+            };
+
+            const routeUrl = routeMap[policyType] ?? '/motor-form';
+
             document.getElementById(`dropdown-${policyId}`)?.classList.add('hidden');
             window.location.href = `${routeUrl}?policyId=${policyId}`;
         }
@@ -648,9 +596,21 @@
                     } else showNotification('No policy selected. Please try again.', 'error');
                 });
             }
+            //Commented out for now - we can enable it later if needed. We don't want to overwhelm users with syncs right now, especially if they have a lot of policies or a slow connection. We can always add a manual "Sync" button for users who want to refresh their data on demand.
+            // setTimeout(() => {
+            //     syncPoliciesInBackground();
+            //     syncInterval = setInterval(syncPoliciesInBackground, 10 * 60 * 1000);
+            // }, 2000);
             setTimeout(() => {
-                syncPoliciesInBackground();
-                syncInterval = setInterval(syncPoliciesInBackground, 10 * 60 * 1000);
+                const lastSync = sessionStorage.getItem('lastPolicySync');
+                const tenMinutes = 10 * 60 * 1000;
+
+                // Only auto-sync if we haven't synced in the last 10 minutes
+                if (!lastSync || (Date.now() - parseInt(lastSync)) > tenMinutes) {
+                    syncPoliciesInBackground();
+                }
+
+                syncInterval = setInterval(syncPoliciesInBackground, 20 * 60 * 1000);
             }, 2000);
         });
         window.addEventListener('beforeunload', () => {

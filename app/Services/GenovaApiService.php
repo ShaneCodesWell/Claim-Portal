@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
 
 class GenovaApiService
