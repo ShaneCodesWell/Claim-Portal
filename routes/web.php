@@ -8,6 +8,7 @@ use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
 use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\BranchController;
 use Illuminate\Support\Facades\Route;
 
 // Auth Routes
@@ -78,10 +79,19 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
 Route::middleware(['admin'])->prefix('admin')->group(function () {
     // Organization
     Route::get('/organization', [CompanyController::class, 'index'])->name('organization');
+    
     // Settings
-    Route::get('/settings', [StaffController::class, 'settings'])->name('settings');
+    Route::get('/settings', [CompanyController::class, 'index'])->name('settings');
     Route::get('/settings/company', [CompanyController::class, 'edit'])->name('settings.company');
     Route::put('/settings/company', [CompanyController::class, 'update'])->name('settings.company.update');
+
+    // Branch
+    Route::get('/settings/branches', [BranchController::class, 'index'])->name('branches.index');
+    Route::get('/settings/branches/create', [BranchController::class, 'create'])->name('branches.create');
+    Route::post('/settings/branches', [BranchController::class, 'store'])->name('branches.store');
+    Route::get('/settings/branches/{branch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
+    Route::put('/settings/branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
+    Route::delete('/settings/branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
     
     // Staff Management
     Route::get('/settings/create-staff', [StaffController::class, 'create'])->name('staff.create');

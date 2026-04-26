@@ -80,12 +80,6 @@ class StaffController extends Controller
         return view('staff.customers.index', compact('customers', 'stats'));
     }
 
-    public function settings()
-    {
-        $staffMembers = User::latest()->paginate(5);
-        return view('admin.settings.index', compact('staffMembers'));
-    }
-
     /**
      * Show the form for creating a new resource.
      */

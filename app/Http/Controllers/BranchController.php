@@ -5,6 +5,7 @@ use App\Http\Requests\StoreBranchRequest;
 use App\Http\Requests\UpdateBranchRequest;
 use App\Models\Branch;
 use App\Models\Company;
+use App\Models\User;
 
 class BranchController extends Controller
 {
@@ -14,7 +15,7 @@ class BranchController extends Controller
     public function index()
     {
         $branches = Branch::withCount('users')->latest()->paginate(10);
-        return view('admin.organization.index', compact('branches'));
+        return view('admin.organization.index', ['tab' => 'branches'])->with('branches', $branches);
     }
 
     /**
@@ -22,7 +23,8 @@ class BranchController extends Controller
      */
     public function create()
     {
-        //
+        $staffMembers = User::all();
+        return view('admin.organization.branches.create', compact('staffMembers'));
     }
 
     /**
@@ -38,7 +40,8 @@ class BranchController extends Controller
             'company_id' => $company->id,
         ]);
 
-        return back()->with('success', 'Branch created successfully.');
+        // return back()->with('success', 'Branch created successfully.');
+        return redirect()->route('organization', ['tab' => 'branches'])->with('success', 'Branch created successfully.');
     }
 
     /**
@@ -54,7 +57,7 @@ class BranchController extends Controller
      */
     public function edit(Branch $branch)
     {
-        //
+        return view('admin.organization.branches.edit', compact('branch'));
     }
 
     /**
@@ -66,7 +69,8 @@ class BranchController extends Controller
         $validated = $request->validated();
         $branch->update($validated);
 
-        return back()->with('success', 'Branch updated successfully.');
+        // return back()->with('success', 'Branch updated successfully.');
+        return redirect()->route('organization', ['tab' => 'branches'])->with('success', 'Branch updated successfully.');
     }
 
     /**
@@ -79,6 +83,6 @@ class BranchController extends Controller
         }
 
         $branch->delete();
-        return back()->with('success', 'Branch deleted successfully.');
+        return redirect()->route('organization', ['tab' => 'branches'])->with('success', 'Branch deleted successfully.');
     }
 }

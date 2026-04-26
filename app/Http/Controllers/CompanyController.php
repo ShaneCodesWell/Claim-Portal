@@ -53,7 +53,7 @@ class CompanyController extends Controller
     public function edit(Company $company)
     {
         $company = Company::firstOrFail();
-        return view('admin.organization.index', compact('company'));
+        return view('admin.organization.index', ['tab' => 'profile'])->with('company', $company);
     }
 
     /**
