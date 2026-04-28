@@ -103,7 +103,9 @@
 
                     <form id="generalAccidentForm">
                         @csrf
-
+                        <input type="hidden" name="policy_id" value="{{ $policyId }}" />
+                        <input type="hidden" name="claim_type" value="general_accident" />
+                        
                         <!-- Section: THIS FORM MUST BE COMPLETED IN FULL -->
                         <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                             <h3

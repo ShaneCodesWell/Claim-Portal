@@ -10,6 +10,8 @@ use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DepartmentController;
+use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
+use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
 use Illuminate\Support\Facades\Route;
 
 // Auth Routes
@@ -43,15 +45,17 @@ Route::middleware('auth.customer')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/sync-policies', [DashboardController::class, 'syncPolicies'])->name('dashboard.sync');
 
-    // Motor Forms
+    // Claims
+    Route::post('claims', [CustomerClaimController::class, 'store'])->name('claims.store');
+    Route::get('claims', [CustomerClaimController::class, 'index'])->name('claims.index');
+    Route::get('claims/{claim}', [CustomerClaimController::class, 'show'])->name('claims.show');
+
+    // Forms for now - we can remove these later when we build the dynamic form builder
     Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
-
-    // General Accident Forms
     Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
-
-    // Fire Forms
     Route::get('/fire-form', [FireController::class, 'index'])->name('fire-form');
-    Route::post('/fire-form/submit', [FireController::class, 'create'])->name('fire-form.submit');
+
+    // Route::post('/submit', [FireController::class, 'create'])->name('fire-form.submit');
 });
 
 // Staff routes — accessible by ALL staff including admins
@@ -60,6 +64,17 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     // Dashboard and Claims
     Route::get('/staff/dashboard', [StaffController::class, 'dashboard'])->name('staff-dashboard');
     Route::get('/staff/all-claims', [StaffController::class, 'allClaims'])->name('all-claims');
+
+    // Claims
+    Route::get('claims', [StaffClaimController::class, 'index'])->name('staff.claims.index');
+    Route::get('claims/my-queue', [StaffClaimController::class, 'myQueue'])->name('staff.claims.my-queue');
+    Route::get('claims/{claim}', [StaffClaimController::class, 'show'])->name('staff.claims.show');
+    Route::post('claims/{claim}/assign', [StaffClaimController::class, 'assign'])->name('staff.claims.assign');
+    Route::post('claims/{claim}/status', [StaffClaimController::class, 'updateStatus'])->name('staff.claims.status');
+    Route::post('claims/{claim}/request-info', [StaffClaimController::class, 'requestInfo'])->name('staff.claims.request-info');
+    Route::post('claims/{claim}/form-data', [StaffClaimController::class, 'updateFormData'])->name('staff.claims.form-data');
+
+    //Show the Claim forms for each claim type
     // Route::get('/staff/process-claim', [StaffController::class, 'processClaim'])->name('process-claim');
     Route::get('/staff/process-claim/motor', [StaffController::class, 'processClaimMotor'])->name('process-claim-motor');
     Route::get('/staff/process-claim/fire', [StaffController::class, 'processClaimFire'])->name('process-claim-fire');
@@ -108,6 +123,11 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/settings/edit-staff/{staff}', [StaffController::class, 'edit'])->name('staff.edit');
     Route::put('/settings/staff-update/{staff}', [StaffController::class, 'update'])->name('staff.update');
     Route::delete('/settings/staff-delete/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
+});
+
+// Agent routes — only agents can access
+Route::middleware(['agent'])->prefix('agent')->group(function () {
+    // mirrors customer claim routes but with ClaimSource::AGENT_PORTAL
 });
 
 // Offline Application

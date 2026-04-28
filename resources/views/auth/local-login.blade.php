@@ -54,7 +54,7 @@
     <nav class="absolute top-0 left-0 w-full p-6 z-20 flex justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="bg-white/10 p-2 rounded-lg border border-white/20 backdrop-blur-sm">
-                <img src="images/Vanguard.png" alt="Vanguard Assurance Logo" class="w-40 h-12 object-contain" />
+                <img src="{{ asset('images/Vanguard.png') }}" alt="Vanguard Assurance Logo" class="w-40 h-12 object-contain" />
             </div>
             <span class="text-white font-bold text-xl tracking-tight drop-shadow-md">Vanguard Assurance</span>
         </div>

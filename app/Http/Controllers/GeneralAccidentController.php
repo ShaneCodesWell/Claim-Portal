@@ -1,13 +1,11 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreGeneralAccidentRequest;
 use App\Http\Requests\UpdateGeneralAccidentRequest;
 use App\Models\GeneralAccident;
-use Illuminate\Http\Request;
 use App\Models\Policy;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class GeneralAccidentController extends Controller
 {
@@ -17,9 +15,10 @@ class GeneralAccidentController extends Controller
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
-        $policy = Policy::where('external_policy_id', $policyId)->firstOrFail();
-        $customer = $policy->customer;
-        return view('general_accident_form.index', compact('policy', 'customer'));
+        // $policy = Policy::where('external_policy_id', $policyId)->firstOrFail(); // For now, we will just use the policy ID to find the policy. In the future, we can use the external policy ID to find the policy and then pass the policy ID to the form.
+        $policy   = $policyId ? Policy::find($policyId) : null;
+        $customer = $policy ? $policy->customer : null;
+        return view('general_accident_form.index', compact('policy', 'customer', 'policyId'));
     }
 
     /**

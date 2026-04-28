@@ -91,7 +91,7 @@ class DashboardController extends Controller
                 ];
             }
 
-            return view('dashboard.index', [
+            return view('customer.dashboard.index', [
                 'name'            => $sessionCustomer['name'] ?? 'Guest',
                 'policies'        => $policies,
                 'customerData'    => $customerData,
@@ -102,7 +102,7 @@ class DashboardController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Dashboard error: ' . $e->getMessage());
-            return view('dashboard.index', [
+            return view('customer.dashboard.index', [
                 'name'            => session('fullname') ?? session('name') ?? 'Guest',
                 'policies'        => [],
                 'customerData'    => null,
@@ -229,11 +229,6 @@ class DashboardController extends Controller
                 }
             }
         }
-    }
-
-    public function form()
-    {
-        return view('dashboard.form');
     }
 
     private function formatBusinessClasses($businessClassesData): array
