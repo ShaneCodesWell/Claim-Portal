@@ -1,7 +1,7 @@
 <x-layouts.app>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- <x-claimant-info :policy="$policy" :customer="$customer" /> --}}
-        <x-claimant-info />
+
+        <x-claimant-info :policy="$policy" :customer="$customer" />
 
         <div class="lg:col-span-2">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

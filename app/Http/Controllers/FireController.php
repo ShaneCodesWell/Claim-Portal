@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Policy;
+use App\Models\Fire;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreFireRequest;
 use App\Http\Requests\UpdateFireRequest;
-use App\Models\Fire;
 
 class FireController extends Controller
 {
@@ -16,9 +17,9 @@ class FireController extends Controller
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
-        // $policy = Policy::where('external_policy_id', $policyId)->firstOrFail(); // For now, we will just use the policy ID to find the policy. In the future, we can use the external policy ID to find the policy and then pass the policy ID to the form.
-        $policy   = $policyId ? Policy::find($policyId) : null;
-        $customer = $policy ? $policy->customer : null;
+        $policy   = Policy::where('external_policy_id', $policyId)->firstOrFail();
+        $customer = Customer::where('id', $policy->customer_id)->first();
+
         return view('forms.fire_form.index', compact('policy', 'policyId', 'customer'));
     }
 

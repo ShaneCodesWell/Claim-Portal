@@ -78,9 +78,9 @@ class ClaimController extends Controller
         $claims = Claim::where('customer_id', $customer?->id)
             ->with(['policy'])
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
 
-        return view('customer.claims.index', compact('claims'));
+        return view('customer.claims.index', compact('claims', 'customer'));
     }
 
     public function show(Claim $claim)

@@ -1,8 +1,8 @@
 <x-layouts.app>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
         <!-- Left sidebar (optional) – you can add claimant info or keep empty -->
-        {{-- <x-claimant-info :policy="$policy" :customer="$customer" /> --}}
-        <x-claimant-info />
+        <x-claimant-info :policy="$policy" :customer="$customer" />
 
         <!-- Main form -->
         <div class="lg:col-span-2">

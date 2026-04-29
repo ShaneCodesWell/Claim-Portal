@@ -1,18 +1,18 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FireController;
 use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
 use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
-use App\Http\Controllers\BranchController;
-use App\Http\Controllers\DepartmentController;
+use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
 use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
-use Illuminate\Support\Facades\Route;
 
 // Auth Routes
 Route::get('/', [AuthController::class, 'showUserSelectForm'])->name('user.select');
@@ -116,7 +116,7 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/settings/departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit');
     Route::put('/settings/departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
     Route::delete('/settings/departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
-    
+
     // Staff Management
     Route::get('/settings/create-staff', [StaffController::class, 'create'])->name('staff.create');
     Route::post('/settings/staff-store', [StaffController::class, 'store'])->name('staff.store');

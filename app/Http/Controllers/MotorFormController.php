@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MotorForm;
 use Illuminate\Http\Request;
 use App\Models\Policy;
+use App\Models\Customer;
 use App\Http\Requests\StoreMotorFormRequest;
 use App\Http\Requests\UpdateMotorFormRequest;
 
@@ -15,10 +16,10 @@ class MotorFormController extends Controller
      */
     public function index(Request $request)
     {
+
         $policyId = $request->query('policyId');
-        // $policy = Policy::where('external_policy_id', $policyId)->firstOrFail(); // For now, we will just use the policy ID to find the policy. In the future, we can use the external policy ID to find the policy and then pass the policy ID to the form.
-        $policy   = $policyId ? Policy::find($policyId) : null;
-        $customer = $policy ? $policy->customer : null;
+        $policy   = Policy::where('external_policy_id', $policyId)->firstOrFail();
+        $customer = Customer::where('id', $policy->customer_id)->first();
 
         return view('forms.motor_form.index', compact('policy', 'policyId', 'customer'));
     }

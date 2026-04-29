@@ -19,14 +19,15 @@
                 <!-- User Display with Dropdown -->
                 @php
                     // Get customer data from various sources
-                    $customerName = $customer['name'] ?? session('fullname') ?? session('name') ?? 'Guest User';
-                    $customerPhone = $customer['phone_number'] ?? session('phone_number') ?? session('mobile_no') ?? '';
+                    $customerName = $customer['name'] ?? (session('fullname') ?? (session('name') ?? 'Guest User'));
+                    $customerPhone =
+                        $customer['phone_number'] ?? (session('phone_number') ?? (session('mobile_no') ?? ''));
                     $customerInitials = strtoupper(substr($customerName, 0, 2));
                 @endphp
 
                 @if (session('customer_verified') || session('user_id'))
                     <div class="relative">
-                        <button onclick="toggleUserDropdown()" id="user-dropdown-button"
+                        {{-- <button onclick="toggleUserDropdown()" id="user-dropdown-button"
                             class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <!-- User Avatar -->
                             <div
@@ -36,7 +37,7 @@
                             <!-- User Info -->
                             <div class="text-left hidden md:block">
                                 <p class="text-sm font-semibold text-gray-900">{{ $customerName }}</p>
-                                @if($customerPhone)
+                                @if ($customerPhone)
                                     <p class="text-xs text-gray-500">{{ $customerPhone }}</p>
                                 @endif
                             </div>
@@ -45,6 +46,14 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 9l-7 7-7-7" />
                             </svg>
+                        </button> --}}
+                        <button onclick="toggleUserDropdown()" id="user-dropdown-button"
+                            class="flex items-center gap-2 bg-white border border-gray-200 rounded-full pl-3 pr-2 py-2 shadow-sm hover:shadow-md transition focus:outline-none">
+                            <i class="fas fa-user-circle text-gray-500 text-xl"></i>
+                            <span
+                                class="text-sm font-medium text-gray-700 hidden sm:inline">{{ $customerName }}</span>
+                            <i id="dropdownIcon"
+                                class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200"></i>
                         </button>
 
                         <!-- Dropdown Menu -->
@@ -54,7 +63,7 @@
                                 <!-- User Info Header (for mobile) -->
                                 <div class="px-4 py-3 border-b border-gray-200 md:hidden">
                                     <p class="text-sm font-semibold text-gray-900">{{ $customerName }}</p>
-                                    @if($customerPhone)
+                                    @if ($customerPhone)
                                         <p class="text-xs text-gray-500">{{ $customerPhone }}</p>
                                     @endif
                                 </div>
@@ -65,7 +74,7 @@
                                     <i class="fas fa-th-large mr-3 text-gray-400"></i>
                                     Dashboard
                                 </a>
-                                <a href="#"
+                                <a href="{{ route('claims.index') }}"
                                     class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-file-alt mr-3 text-gray-400"></i>
                                     My Claims
@@ -88,7 +97,7 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" 
+                    <a href="{{ route('login') }}"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                         Login
                     </a>
