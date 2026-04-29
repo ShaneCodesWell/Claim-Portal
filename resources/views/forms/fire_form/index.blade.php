@@ -1,4 +1,4 @@
-<x-layouts.staff>
+<x-layouts.app>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- <x-claimant-info :policy="$policy" :customer="$customer" /> --}}
         <x-claimant-info />
@@ -301,14 +301,15 @@
     </div>
 
     <script>
+        // ==================== PROPERTY TABLE ====================
         function setupRowAutoCalc(row) {
             const priceInput = row.querySelector('input[name="prop_price[]"]');
             const deprecInput = row.querySelector('input[name="prop_deprec[]"]');
             const claimInput = row.querySelector('input[name="prop_claim[]"]');
             if (priceInput && deprecInput) {
-                const updateClaim = () => autoCalculateClaim(row);
-                priceInput.addEventListener('input', updateClaim);
-                deprecInput.addEventListener('input', updateClaim);
+                const update = () => autoCalculateClaim(row);
+                priceInput.addEventListener('input', update);
+                deprecInput.addEventListener('input', update);
             }
             if (claimInput) claimInput.addEventListener('input', () => updateTotalClaim());
         }
@@ -316,8 +317,8 @@
         function updateTotalClaim() {
             let total = 0;
             document.querySelectorAll('#propertyTable tbody input[name="prop_claim[]"]').forEach(input => {
-                let val = parseFloat(input.value);
-                if (!isNaN(val)) total += val;
+                const v = parseFloat(input.value);
+                if (!isNaN(v)) total += v;
             });
             document.getElementById('totalClaimDisplay').innerText = total.toFixed(2);
         }
@@ -356,79 +357,138 @@
             updateTotalClaim();
         }
 
+        // ==================== IMAGE UPLOAD ====================
+        let uploadedFiles = [];
+
+        function renderPreviews() {
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            previewContainer.innerHTML = '';
+            uploadedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg border border-gray-200 shadow-sm">
+                    <button type="button" onclick="removeImage(${index})"
+                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">✕</button>
+                `;
+                    previewContainer.appendChild(div);
+                };
+                if (file) reader.readAsDataURL(file);
+            });
+        }
+
+        window.removeImage = function(index) {
+            uploadedFiles.splice(index, 1);
+            renderPreviews();
+            const dt = new DataTransfer();
+            uploadedFiles.forEach(f => dt.items.add(f));
+            document.getElementById('imageUpload').files = dt.files;
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
+
+            // ==================== POLICE CONDITIONAL ====================
             const policeRadios = document.querySelectorAll('input[name="police_reported"]');
             const policeSection = document.getElementById('policeDetails');
+
             policeRadios.forEach(radio => {
                 radio.addEventListener('change', (e) => {
                     policeSection.classList.toggle('hidden', e.target.value !== 'yes');
                 });
             });
 
+            // ==================== PROPERTY TABLE INIT ====================
             document.querySelectorAll('#propertyTable tbody .property-row').forEach(row => setupRowAutoCalc(row));
             updateTotalClaim();
 
-            document.getElementById('fireClaimForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                alert('Fire claim submitted successfully for processing.');
-            });
-
-            // Image upload handling
+            // ==================== IMAGE UPLOAD INIT ====================
             const dropzone = document.getElementById('dropzone');
             const fileInput = document.getElementById('imageUpload');
-            const previewContainer = document.getElementById('imagePreviewContainer');
-            let uploadedFiles = []; // store files for later submission
 
-            function renderPreviews() {
-                previewContainer.innerHTML = '';
-                uploadedFiles.forEach((file, index) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const div = document.createElement('div');
-                        div.className = 'relative group';
-                        div.innerHTML = `
-                <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg border border-gray-200 shadow-sm">
-                <button type="button" onclick="removeImage(${index})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">✕</button>
-            `;
-                        previewContainer.appendChild(div);
-                    };
-                    if (file) reader.readAsDataURL(file);
-                });
-            }
-
-            window.removeImage = (index) => {
-                uploadedFiles.splice(index, 1);
-                renderPreviews();
-                // Update file input's FileList (optional: you can recreate a new DataTransfer)
-                const dataTransfer = new DataTransfer();
-                uploadedFiles.forEach(f => dataTransfer.items.add(f));
-                fileInput.files = dataTransfer.files;
-            };
-
-            dropzone.addEventListener('click', () => fileInput.click());
-            dropzone.addEventListener('dragover', (e) => {
+            dropzone?.addEventListener('click', () => fileInput.click());
+            dropzone?.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 dropzone.classList.add('border-blue-500', 'bg-blue-50');
             });
-            dropzone.addEventListener('dragleave', () => {
+            dropzone?.addEventListener('dragleave', () => {
                 dropzone.classList.remove('border-blue-500', 'bg-blue-50');
             });
-            dropzone.addEventListener('drop', (e) => {
+            dropzone?.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropzone.classList.remove('border-blue-500', 'bg-blue-50');
                 const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
                 uploadedFiles.push(...files);
                 renderPreviews();
-                // Sync file input
-                const dataTransfer = new DataTransfer();
-                uploadedFiles.forEach(f => dataTransfer.items.add(f));
-                fileInput.files = dataTransfer.files;
             });
-            fileInput.addEventListener('change', (e) => {
-                const newFiles = Array.from(e.target.files);
-                uploadedFiles.push(...newFiles);
+            fileInput?.addEventListener('change', (e) => {
+                uploadedFiles.push(...Array.from(e.target.files));
                 renderPreviews();
+            });
+
+            // ==================== PRE-FILL FROM POLICY ====================
+            @if ($policy)
+                const prefill = {
+                    'policy_no': '{{ $policy->policy_number ?? '' }}',
+                    'insured_name': '{{ $policy->insured_name ?? '' }}',
+                    'renewal_date': '{{ $policy->renewal_date ? \Carbon\Carbon::parse($policy->renewal_date)->format('Y-m-d') : '' }}',
+                };
+                Object.entries(prefill).forEach(([name, value]) => {
+                    const el = document.querySelector(`[name="${name}"]`);
+                    if (el && value) el.value = value;
+                });
+            @endif
+
+            // ==================== FORM SUBMISSION ====================
+            document.getElementById('fireClaimForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                if (!isChecked('declaration_agreement')) {
+                    showClaimError('Please read and accept the declaration before submitting.');
+                    return;
+                }
+
+                if (!val('digital_signature').trim()) {
+                    showClaimError('Please provide your digital signature before submitting.');
+                    return;
+                }
+
+                const formData = {
+                    policy_id: val('policy_id') || '{{ $policyId }}',
+                    claim_type: 'fire',
+                    form_data: {
+                        // Section 1 — Policy & Insured
+                        policy_no: val('policy_no'),
+                        renewal_date: val('renewal_date'),
+                        insured_name: val('insured_name'),
+                        address: val('address'),
+                        nature_of_business: val('nature_of_business'),
+
+                        // Section 2 — Incident
+                        incident_datetime: val('incident_datetime'),
+                        exact_location: val('exact_location'),
+                        incident_description: val('incident_description'),
+                        damage_nature: val('damage_nature'),
+
+                        // Section 3 — Property items
+                        property_items: collectPropertyRows(),
+
+                        // Section 4 — Reports & Witness
+                        injured_persons: val('injured_persons'),
+                        police_reported: checked('police_reported'),
+                        police_evidence: val('police_evidence'),
+                        additional_info: val('additional_info'),
+
+                        // Declaration
+                        declaration_date: val('declaration_date'),
+                        digital_signature: val('digital_signature'),
+                        declaration_agreement: isChecked('declaration_agreement'),
+                    }
+                };
+
+                await submitClaim('fireClaimForm', formData);
             });
         });
     </script>
-</x-layouts.staff>
+</x-layouts.app>

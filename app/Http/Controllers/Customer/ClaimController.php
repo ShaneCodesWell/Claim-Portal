@@ -17,12 +17,23 @@ class ClaimController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'policy_id'  => 'required|exists:policies,id',
+            'policy_id'  => 'required',
             'claim_type' => 'required|string',
             'form_data'  => 'required|array',
         ]);
 
-        // Resolve customer from session since customers use session-based auth
+        // Look up by external_policy_id since the URL uses Genova's ID
+        $policy = Policy::where('external_policy_id', $validated['policy_id'])
+            ->orWhere('id', $validated['policy_id'])
+            ->first();
+
+        if (! $policy) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Policy not found. Please go back and select your policy again.',
+            ], 404);
+        }
+
         $customer = Customer::where('phone', session('phone_number') ?? session('mobile_no'))
             ->orWhere('external_customer_code', session('customer_code'))
             ->first();
@@ -34,9 +45,7 @@ class ClaimController extends Controller
             ], 401);
         }
 
-        $policy = Policy::findOrFail($validated['policy_id']);
-
-        // Make sure the policy belongs to this customer
+        // Verify policy belongs to this customer
         if ($policy->customer_id !== $customer->id) {
             return response()->json([
                 'success' => false,

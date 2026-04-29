@@ -7,19 +7,15 @@ use Illuminate\View\Component;
 
 class ClaimantInfo extends Component
 {
-    // public $policy;
-    // public $customer;
+    public $policy;
+    public $customer;
     /**
      * Create a new component instance.
      */
-    // public function __construct($policy, $customer)
-    // {
-    //     $this->policy   = $policy;
-    //     $this->customer = $customer;
-    // }
-    public function __construct()
+    public function __construct($policy = null, $customer = null)
     {
-        //
+        $this->policy   = $policy;
+        $this->customer = $customer;
     }
 
     /**

@@ -1,4 +1,4 @@
-<x-layouts.staff>
+<x-layouts.app>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left sidebar (optional) – you can add claimant info or keep empty -->
         {{-- <x-claimant-info :policy="$policy" :customer="$customer" /> --}}
@@ -886,4 +886,4 @@
 
         });
     </script>
-</x-layouts.staff>
+</x-layouts.app>

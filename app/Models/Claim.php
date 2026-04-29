@@ -1,11 +1,11 @@
 <?php
 namespace App\Models;
 
+use App\Enums\ClaimStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Enums\ClaimStatus;
 
 class Claim extends Model
 {
@@ -86,11 +86,19 @@ class Claim extends Model
     }
 
     // Generate claim number
+    // public static function generateClaimNumber(): string
+    // {
+    //     $year     = now()->year;
+    //     $latest   = self::whereYear('created_at', $year)->lockForUpdate()->count();
+    //     $sequence = str_pad($latest + 1, 6, '0', STR_PAD_LEFT);
+    //     return "CLM-{$year}-{$sequence}";
+    // }
     public static function generateClaimNumber(): string
     {
         $year     = now()->year;
-        $latest   = self::whereYear('created_at', $year)->lockForUpdate()->count();
+        $latest   = self::whereYear('created_at', $year)->count();
         $sequence = str_pad($latest + 1, 6, '0', STR_PAD_LEFT);
+
         return "CLM-{$year}-{$sequence}";
     }
 }

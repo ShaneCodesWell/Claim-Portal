@@ -20,7 +20,7 @@ class MotorFormController extends Controller
         $policy   = $policyId ? Policy::find($policyId) : null;
         $customer = $policy ? $policy->customer : null;
 
-        return view('motor_form.index', compact('policy', 'policyId', 'customer'));
+        return view('forms.motor_form.index', compact('policy', 'policyId', 'customer'));
     }
 
     /**

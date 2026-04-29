@@ -59,11 +59,11 @@
     @endif
 
     {{-- Main Container --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 space-y-6">
         {{-- Header with Stats --}}
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Claim Dashboard</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Policy Dashboard</h1>
                 <p class="text-gray-500 text-sm mt-1">
                     Manage your insurance policies and submit new claim requests.
                 </p>
@@ -196,10 +196,10 @@
     <x-policy-details-modal />
 
     <script>
-        // ==================== EXISTING JAVASCRIPT LOGIC ====================
+        // ==================== POLICY DASHBOARD SCRIPT ====================        
+
         let policies = @json($policies).map(mapPolicy);
 
-        // And in updatePoliciesData
         function updatePoliciesData(newPolicies) {
             const mappedPolicies = newPolicies.map(mapPolicy);
             policies.length = 0;
@@ -208,21 +208,23 @@
             filterPolicies();
         }
 
-        console.log('Loaded policies:', policies);
-
         let currentPage = 1;
-        const itemsPerPage = 10;
-        let currentFilteredPolicies = policies;
+        const itemsPerPage = 5;
+        let currentFilteredPolicies = [...policies];
         let isSyncing = false;
         let syncInterval = null;
         let currentPolicyId = null;
 
+        // ─── Stats ────────────────────────────────────────────────────────────────────
+
         function updateStats() {
-            const activePolicies = policies.filter(p => p.status === 'active').length;
-            const expiredPolicies = policies.filter(p => p.status === 'expired').length;
-            document.getElementById('active-count').textContent = activePolicies;
-            document.getElementById('expired-count').textContent = expiredPolicies;
+            const active = policies.filter(p => p.status === 'active').length;
+            const expired = policies.filter(p => p.status === 'expired').length;
+            document.getElementById('active-count').textContent = active;
+            document.getElementById('expired-count').textContent = expired;
         }
+
+        // ─── Sync ─────────────────────────────────────────────────────────────────────
 
         async function syncPoliciesInBackground() {
             if (isSyncing) return;
@@ -255,8 +257,12 @@
             }
         }
 
+        // ─── Mapping ──────────────────────────────────────────────────────────────────
+
         function mapPolicy(policy) {
             const rawClass = (policy.business_class_name || 'Unknown').toLowerCase().trim();
+            const daysUntilExpiry = Math.ceil((new Date(policy.policy_end_date) - new Date()) / (1000 * 60 * 60 * 24));
+            const isExpired = daysUntilExpiry < 0;
 
             return {
                 id: policy.policy_id,
@@ -265,18 +271,9 @@
                 className: policy.business_class_name || 'Unknown Class',
                 productName: policy.product_name || 'Unknown Product',
                 vehicle: policy.vehicle_number || 'N/A',
-                status: (() => {
-                    const daysUntilExpiry = Math.ceil((new Date(policy.policy_end_date) - new Date()) / (1000 * 60 *
-                        60 * 24));
-                    return daysUntilExpiry < 0 ? 'expired' : 'active';
-                })(),
-                statusText: (() => {
-                    const daysUntilExpiry = Math.ceil((new Date(policy.policy_end_date) - new Date()) / (1000 * 60 *
-                        60 * 24));
-                    return daysUntilExpiry < 0 ? 'Expired' : 'Active';
-                })(),
+                status: isExpired ? 'expired' : 'active',
+                statusText: isExpired ? 'Expired' : 'Active',
                 renewalDate: policy.renewal_date,
-                premium: 'N/A',
                 policy_start_date: policy.policy_start_date,
                 policy_end_date: policy.policy_end_date,
                 product_id: policy.product_id,
@@ -284,9 +281,11 @@
                 customer_name: policy.customer_name || '',
                 customer_code: policy.customer_code || '',
                 customer_phone: policy.customer_phone || '',
-                customer_email: policy.customer_email || ''
+                customer_email: policy.customer_email || '',
             };
         }
+
+        // ─── UI Helpers ───────────────────────────────────────────────────────────────
 
         function showSyncIndicator(show) {
             let indicator = document.getElementById('sync-indicator');
@@ -296,18 +295,18 @@
                 indicator.className =
                     'fixed top-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 z-50 animate-pulse-slow';
                 indicator.innerHTML = `
-                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span class="font-medium">Syncing policies...</span>
-                `;
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="font-medium">Syncing policies...</span>`;
                 document.body.appendChild(indicator);
-            } else if (!show && indicator) indicator.remove();
+            } else if (!show && indicator) {
+                indicator.remove();
+            }
         }
 
         function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
             const colors = {
                 success: 'bg-green-600',
                 error: 'bg-red-600',
@@ -318,12 +317,12 @@
                 error: 'fa-exclamation-circle',
                 info: 'fa-info-circle'
             };
-            notification.className =
+            const el = document.createElement('div');
+            el.className =
                 `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-xl shadow-xl z-50 flex items-center gap-3 fade-in`;
-            notification.innerHTML =
-                `<i class="fas ${icons[type]} text-lg"></i><span class="font-medium">${message}</span>`;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
+            el.innerHTML = `<i class="fas ${icons[type]} text-lg"></i><span class="font-medium">${message}</span>`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
         }
 
         function getPolicyIcon(policyType) {
@@ -340,128 +339,185 @@
             return iconMap[policyType] ?? 'fa-file-contract';
         }
 
+        // ─── Rendering ────────────────────────────────────────────────────────────────
+
         function renderPolicies(filteredPolicies = policies, page = 1) {
-            const tableBody = document.getElementById("policies-table-body");
-            const emptyState = document.getElementById("empty-state");
-            const paginationContainer = document.getElementById("pagination-container");
+            // FIX 2: Guard against missing elements (new customers hit the empty-state branch,
+            // so policies-table-body, pagination-container etc. may not exist in the DOM yet.
+            // After a successful sync they'll be injected, so we rebuild the table from scratch.)
+            const tableBody = document.getElementById('policies-table-body');
+            const emptyState = document.getElementById('empty-state');
+            const paginationContainer = document.getElementById('pagination-container');
 
             currentFilteredPolicies = filteredPolicies;
             currentPage = page;
-            tableBody.innerHTML = "";
 
             if (filteredPolicies.length === 0) {
-                tableBody.classList.add("hidden");
-                if (emptyState) emptyState.classList.remove("hidden");
-                if (paginationContainer) paginationContainer.classList.add("hidden");
+                if (tableBody) {
+                    tableBody.innerHTML = '';
+                    tableBody.classList.add('hidden');
+                }
+                if (emptyState) {
+                    emptyState.classList.remove('hidden');
+                }
+                if (paginationContainer) {
+                    paginationContainer.classList.add('hidden');
+                }
                 return;
             }
-            tableBody.classList.remove("hidden");
-            if (emptyState) emptyState.classList.add("hidden");
+
+            // If table body doesn't exist yet (new customer, still on empty state), rebuild the
+            // table section entirely so pagination + rows appear after the first sync.
+            if (!tableBody) {
+                rebuildTableSection();
+                // Re-query after injection
+                renderPolicies(filteredPolicies, page);
+                return;
+            }
+
+            if (emptyState) emptyState.classList.add('hidden');
+            tableBody.classList.remove('hidden');
 
             const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
             const startIndex = (page - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const paginatedPolicies = filteredPolicies.slice(startIndex, endIndex);
+            const paginatedPolicies = filteredPolicies.slice(startIndex, startIndex + itemsPerPage);
 
-            paginatedPolicies.forEach((policy) => {
-                const row = document.createElement("tr");
-                row.className = "hover:bg-gray-50 transition";
+            tableBody.innerHTML = '';
+
+            paginatedPolicies.forEach(policy => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition';
                 const icon = getPolicyIcon(policy.type);
                 const statusBadge = policy.status === 'active' ?
                     'bg-green-100 text-green-700 border border-green-200' :
                     'bg-red-100 text-red-700 border border-red-200';
 
                 row.innerHTML = `
-                    <td class="px-6 py-3">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 h-11 w-11 bg-blue-50 rounded-xl flex items-center justify-center">
-                                <i class="fas ${icon} text-blue-600 text-lg"></i>
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-semibold text-gray-900">${policy.className}</div>
-                                <div class="text-xs text-gray-500 flex items-center gap-1">
-                                    <i class="fas fa-car text-xs"></i> ${policy.vehicle}
-                                </div>
-                            </div>
+            <td class="px-6 py-3">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-11 w-11 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <i class="fas ${icon} text-blue-600 text-lg"></i>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-semibold text-gray-900">${policy.className}</div>
+                        <div class="text-xs text-gray-500 flex items-center gap-1">
+                            <i class="fas fa-car text-xs"></i> ${policy.vehicle}
                         </div>
-                    </td>
-                    <td class="px-6 py-3"><div class="text-xs font-mono font-medium text-gray-900">${policy.number}</div></td>
-                    <td class="px-6 py-3"><div class="text-xs font-medium text-gray-900">${policy.customer_name}</div></td>
-                    <td class="px-6 py-3"><div class="text-xs font-medium text-gray-900">${policy.productName}</div></td>
-                    <td class="px-6 py-3"><span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full ${statusBadge}">${policy.statusText}</span></td>
-                    <td class="px-6 py-3"><div class="text-xs text-gray-900 font-medium">${new Date(policy.renewalDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</div></td>
-                    <td class="px-6 py-3 text-right">
-                        <div class="relative">
-                            <button onclick="toggleDropdown(event, ${policy.id})" id="dropdown-button-${policy.id}"
-                                class="text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors inline-flex items-center font-medium text-sm">
-                                Actions <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-3"><div class="text-xs font-mono font-medium text-gray-900">${policy.number}</div></td>
+            <td class="px-6 py-3"><div class="text-xs font-medium text-gray-900">${policy.customer_name}</div></td>
+            <td class="px-6 py-3"><div class="text-xs font-medium text-gray-900">${policy.productName}</div></td>
+            <td class="px-6 py-3"><span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full ${statusBadge}">${policy.statusText}</span></td>
+            <td class="px-6 py-3"><div class="text-xs text-gray-900 font-medium">${new Date(policy.renewalDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div></td>
+            <td class="px-6 py-3 text-right">
+                <div class="relative">
+                    <button onclick="toggleDropdown(event, ${policy.id})" id="dropdown-button-${policy.id}"
+                        class="text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors inline-flex items-center font-medium text-sm">
+                        Actions <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                    </button>
+                    <div id="dropdown-${policy.id}" class="hidden absolute right-0 mt-1 w-48 rounded-lg shadow-lg bg-white ring-1 ring-gray-200 z-30">
+                        <div class="py-1">
+                            <button onclick="viewDetails(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center transition">
+                                <i class="fas fa-eye mr-2"></i> View Details
                             </button>
-                            <div id="dropdown-${policy.id}" class="hidden fixed w-48 rounded-lg shadow-lg bg-white ring-1 ring-gray-200 z-50">
-                                <div class="py-1">
-                                    <button onclick="viewDetails(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center transition">
-                                        <i class="fas fa-eye mr-2"></i> View Details
-                                    </button>
-                                    <button onclick="processClaim(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 flex items-center transition">
-                                        <i class="fas fa-file-invoice mr-2"></i> Process Claim
-                                    </button>
-                                </div>
-                            </div>
+                            <button onclick="processClaim(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 flex items-center transition">
+                                <i class="fas fa-file-invoice mr-2"></i> Process Claim
+                            </button>
                         </div>
-                    </td>
-                `;
+                    </div>
+                </div>
+            </td>`;
                 tableBody.appendChild(row);
             });
+
             renderPagination(filteredPolicies.length, page);
         }
 
-        function filterPolicies() {
-            const searchTerm = document.getElementById("search-policies").value.toLowerCase();
-            const policyType = document.getElementById("policy-type").value;
-            const policyStatus = document.getElementById("policy-status").value;
+        // FIX 2: Inject table markup when a new customer's first sync returns policies
+        function rebuildTableSection() {
+            const container = document.querySelector(
+                '.bg-white.rounded-xl.shadow-sm.border.border-gray-200.overflow-hidden');
+            if (!container) return;
 
-            const filteredPolicies = policies.filter((policy) => {
-                const matchesSearch = policy.number.toLowerCase().includes(searchTerm) ||
-                    policy.className.toLowerCase().includes(searchTerm) ||
-                    policy.productName.toLowerCase().includes(searchTerm) ||
-                    policy.vehicle.toLowerCase().includes(searchTerm);
-                const matchesType = !policyType || policy.type === policyType || policy.className.toLowerCase() ===
-                    policyType;
-                const matchesStatus = !policyStatus || policy.status === policyStatus;
-                return matchesSearch && matchesType && matchesStatus;
-            });
-            renderPolicies(filteredPolicies, 1);
+            // Remove the empty-state div
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState) emptyState.remove();
+
+            // Inject table + pagination
+            const tableWrapper = document.createElement('div');
+            tableWrapper.className = 'overflow-x-auto';
+            tableWrapper.innerHTML = `
+        <table class="min-w-full divide-y divide-gray-100">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Policy Details</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Policy Number</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Insured Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Renewal Date</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100" id="policies-table-body"></tbody>
+        </table>`;
+            container.appendChild(tableWrapper);
+
+            const pagination = document.createElement('div');
+            pagination.id = 'pagination-container';
+            pagination.className = 'hidden bg-gray-50 border-t border-gray-100';
+            container.appendChild(pagination);
         }
 
+        // ─── Pagination ───────────────────────────────────────────────────────────────
+
         function renderPagination(totalItems, currentPage) {
-            const paginationContainer = document.getElementById("pagination-container");
+            const paginationContainer = document.getElementById('pagination-container');
             if (!paginationContainer) return;
+
             const totalPages = Math.ceil(totalItems / itemsPerPage);
             if (totalPages <= 1) {
-                paginationContainer.classList.add("hidden");
+                paginationContainer.classList.add('hidden');
                 return;
             }
-            paginationContainer.classList.remove("hidden");
+            paginationContainer.classList.remove('hidden');
+
             const startItem = (currentPage - 1) * itemsPerPage + 1;
             const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-            let paginationHTML =
-                '<div class="flex items-center justify-between px-6 py-4"><div class="text-sm text-gray-700 font-medium">Showing <span class="font-bold text-blue-600">' +
-                startItem + '</span> to <span class="font-bold text-blue-600">' + endItem +
-                '</span> of <span class="font-bold text-blue-600">' + totalItems +
-                '</span> policies</div><div class="flex gap-2">';
-            paginationHTML +=
-                `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"><i class="fas fa-chevron-left"></i></button>`;
+
             let startPage = Math.max(1, currentPage - 2);
             let endPage = Math.min(totalPages, startPage + 4);
             if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+            let pageButtons = '';
             for (let i = startPage; i <= endPage; i++) {
-                const isActive = i === currentPage;
-                paginationHTML +=
-                    `<button onclick="changePage(${i})" class="px-4 py-2 text-sm font-medium ${isActive ? 'text-white bg-blue-600 border-blue-600' : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'} border rounded-lg transition">${i}</button>`;
+                const active = i === currentPage;
+                pageButtons +=
+                    `<button onclick="changePage(${i})"
+            class="px-4 py-2 text-sm font-medium ${active ? 'text-white bg-blue-600 border-blue-600' : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'} border rounded-lg transition">${i}</button>`;
             }
-            paginationHTML +=
-                `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"><i class="fas fa-chevron-right"></i></button>`;
-            paginationHTML += '</div></div>';
-            paginationContainer.innerHTML = paginationHTML;
+
+            paginationContainer.innerHTML = `
+        <div class="flex items-center justify-between px-6 py-4">
+            <div class="text-sm text-gray-700 font-medium">
+                Showing <span class="font-bold text-blue-600">${startItem}</span>
+                to <span class="font-bold text-blue-600">${endItem}</span>
+                of <span class="font-bold text-blue-600">${totalItems}</span> policies
+            </div>
+            <div class="flex gap-2">
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                ${pageButtons}
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>`;
         }
 
         function changePage(page) {
@@ -474,45 +530,73 @@
             });
         }
 
+        // ─── Filtering ────────────────────────────────────────────────────────────────
+
+        function filterPolicies() {
+            const searchTerm = document.getElementById('search-policies').value.toLowerCase();
+            const policyType = document.getElementById('policy-type').value;
+            const policyStatus = document.getElementById('policy-status').value;
+
+            const filtered = policies.filter(policy => {
+                const matchesSearch = policy.number.toLowerCase().includes(searchTerm) ||
+                    policy.className.toLowerCase().includes(searchTerm) ||
+                    policy.productName.toLowerCase().includes(searchTerm) ||
+                    policy.vehicle.toLowerCase().includes(searchTerm);
+                const matchesType = !policyType || policy.type === policyType || policy.className.toLowerCase() ===
+                    policyType;
+                const matchesStatus = !policyStatus || policy.status === policyStatus;
+                return matchesSearch && matchesType && matchesStatus;
+            });
+            renderPolicies(filtered, 1);
+        }
+
+        // ─── Dropdown ─────────────────────────────────────────────────────────────────
+        // FIX 1: Dropdown was `position:fixed` and added window.scrollY to getBoundingClientRect()
+        // results — which are already viewport-relative. That double-counted the scroll offset,
+        // pushing the dropdown far below the button. Solution: switch the dropdown to
+        // `position:absolute` on the wrapping `<div class="relative">` — no JS positioning needed.
+        // The HTML in renderPolicies() above already uses absolute + right-0 + mt-1.
+        // toggleDropdown below just toggles the hidden class — no coordinate math required.
+
         function toggleDropdown(event, policyId) {
             event.stopPropagation();
-            const button = document.getElementById(`dropdown-button-${policyId}`);
-            const dropdown = document.getElementById(`dropdown-${policyId}`);
             document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
                 if (d.id !== `dropdown-${policyId}`) d.classList.add('hidden');
             });
-            if (dropdown.classList.contains('hidden')) {
-                const rect = button.getBoundingClientRect();
-                dropdown.style.top = `${rect.bottom + window.scrollY + 4}px`;
-                dropdown.style.left = `${rect.right - 192 + window.scrollX}px`;
-                dropdown.classList.remove('hidden');
-            } else {
-                dropdown.classList.add('hidden');
-            }
+            const dropdown = document.getElementById(`dropdown-${policyId}`);
+            if (dropdown) dropdown.classList.toggle('hidden');
         }
+
+        // ─── Modal ────────────────────────────────────────────────────────────────────
 
         function viewDetails(policyId) {
             const policy = policies.find(p => p.id == policyId);
             if (!policy) return;
+
             currentPolicyId = policyId;
             const modal = document.getElementById('policyModal');
             modal.setAttribute('data-policy-id', policyId);
+
             document.getElementById('modal-policy-number').textContent = policy.number;
             document.getElementById('modal-business-class').textContent = policy.className;
             document.getElementById('modal-product').textContent = policy.productName;
             document.getElementById('modal-vehicle').textContent = policy.vehicle;
+
             const statusColors = {
                 active: 'text-green-600 bg-green-50',
                 expired: 'text-red-600 bg-red-50'
             };
-            const statusElement = document.getElementById('modal-status');
-            statusElement.textContent = policy.statusText;
-            statusElement.className = `text-sm font-bold ${statusColors[policy.status]} px-3 py-1 rounded-full`;
-            const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-            }) : 'N/A';
+            const statusEl = document.getElementById('modal-status');
+            statusEl.textContent = policy.statusText;
+            statusEl.className = `text-sm font-bold ${statusColors[policy.status]} px-3 py-1 rounded-full`;
+
+            const formatDate = d => d ?
+                new Date(d).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) :
+                'N/A';
             document.getElementById('modal-start-date').textContent = formatDate(policy.policy_start_date);
             document.getElementById('modal-end-date').textContent = formatDate(policy.policy_end_date);
             document.getElementById('modal-renewal-date').textContent = formatDate(policy.renewalDate);
@@ -520,6 +604,7 @@
             document.getElementById('modal-customer-code').textContent = policy.customer_code || 'N/A';
             document.getElementById('modal-customer-phone').textContent = policy.customer_phone || 'N/A';
             document.getElementById('modal-customer-email').textContent = policy.customer_email || 'N/A';
+
             modal.classList.remove('hidden');
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -535,14 +620,14 @@
             currentPolicyId = null;
         }
 
+        // ─── Claims ───────────────────────────────────────────────────────────────────
+
         function processClaim(policyId) {
             const policy = policies.find(p => p.id == policyId);
             if (!policy) {
                 showNotification('Policy not found. Please try again.', 'error');
                 return;
             }
-
-            const policyType = policy.type.trim().toLowerCase();
 
             const routeMap = {
                 'motor': '/motor-form',
@@ -555,64 +640,61 @@
                 'aviation': '/aviation-form',
             };
 
-            const routeUrl = routeMap[policyType] ?? '/motor-form';
-
             document.getElementById(`dropdown-${policyId}`)?.classList.add('hidden');
-            window.location.href = `${routeUrl}?policyId=${policyId}`;
+            window.location.href = `${routeMap[policy.type.trim().toLowerCase()] ?? '/motor-form'}?policyId=${policyId}`;
         }
 
-        document.addEventListener('click', (event) => {
+        // ─── Bootstrap ────────────────────────────────────────────────────────────────
+
+        document.addEventListener('click', event => {
             if (!event.target.closest('[id^="dropdown-button-"]') && !event.target.closest('[id^="dropdown-"]')) {
                 document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
             }
         });
-        document.getElementById('policyModal')?.addEventListener('click', (event) => {
+
+        document.getElementById('policyModal')?.addEventListener('click', event => {
             if (event.target.id === 'policyModal') closeModal();
         });
-        document.addEventListener('keydown', (event) => {
+
+        document.addEventListener('keydown', event => {
             if (event.key === 'Escape') closeModal();
         });
 
         document.addEventListener('DOMContentLoaded', () => {
             updateStats();
             renderPolicies();
-            document.getElementById("search-policies")?.addEventListener("input", filterPolicies);
-            document.getElementById("policy-type")?.addEventListener("change", filterPolicies);
-            document.getElementById("policy-status")?.addEventListener("change", filterPolicies);
-            document.getElementById("clear-filters")?.addEventListener("click", () => {
-                document.getElementById("search-policies").value = "";
-                document.getElementById("policy-type").value = "";
-                document.getElementById("policy-status").value = "";
+
+            document.getElementById('search-policies')?.addEventListener('input', filterPolicies);
+            document.getElementById('policy-type')?.addEventListener('change', filterPolicies);
+            document.getElementById('policy-status')?.addEventListener('change', filterPolicies);
+            document.getElementById('clear-filters')?.addEventListener('click', () => {
+                document.getElementById('search-policies').value = '';
+                document.getElementById('policy-type').value = '';
+                document.getElementById('policy-status').value = '';
                 renderPolicies(policies, 1);
             });
+
             const fileClaimBtn = document.getElementById('modal-file-claim-btn');
             if (fileClaimBtn) {
-                fileClaimBtn.addEventListener('click', function() {
-                    const modal = document.getElementById('policyModal');
-                    const policyId = modal.getAttribute('data-policy-id');
+                fileClaimBtn.addEventListener('click', () => {
+                    const policyId = document.getElementById('policyModal').getAttribute('data-policy-id');
                     if (policyId) {
                         closeModal();
                         processClaim(parseInt(policyId));
                     } else showNotification('No policy selected. Please try again.', 'error');
                 });
             }
-            //Commented out for now - we can enable it later if needed. We don't want to overwhelm users with syncs right now, especially if they have a lot of policies or a slow connection. We can always add a manual "Sync" button for users who want to refresh their data on demand.
-            // setTimeout(() => {
-            //     syncPoliciesInBackground();
-            //     syncInterval = setInterval(syncPoliciesInBackground, 10 * 60 * 1000);
-            // }, 2000);
+
             setTimeout(() => {
                 const lastSync = sessionStorage.getItem('lastPolicySync');
                 const tenMinutes = 10 * 60 * 1000;
-
-                // Only auto-sync if we haven't synced in the last 10 minutes
                 if (!lastSync || (Date.now() - parseInt(lastSync)) > tenMinutes) {
                     syncPoliciesInBackground();
                 }
-
                 syncInterval = setInterval(syncPoliciesInBackground, 20 * 60 * 1000);
             }, 2000);
         });
+
         window.addEventListener('beforeunload', () => {
             if (syncInterval) clearInterval(syncInterval);
         });

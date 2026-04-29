@@ -13,10 +13,10 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                    <p class="text-xs text-gray-500 tracking-wide mb-1">
                         Name
                     </p>
-                    {{-- <p class="text-sm font-medium text-gray-900">{{ $customer->name }}</p> --}}
+                    <p class="text-sm font-medium text-gray-700">{{ $customer->name }}</p>
                 </div>
             </div>
 
@@ -30,7 +30,7 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                    <p class="text-xs text-gray-500 tracking-wide mb-1">
                         Address
                     </p>
                     <p class="text-sm text-gray-900">
@@ -64,12 +64,12 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                    <p class="text-xs text-gray-500 tracking-wide mb-1">
                         Telephone
                     </p>
-                    {{-- <p class="text-sm font-medium text-gray-900">
+                    <p class="text-sm font-medium text-gray-700">
                         {{ $customer->phone }}
-                    </p> --}}
+                    </p>
                 </div>
             </div>
 
@@ -81,11 +81,11 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                    <p class="text-xs text-gray-500 tracking-wide mb-1">
                         Policy Number
                     </p>
-                    <p class="text-sm font-medium text-gray-900">
-                        {{-- {{ $policy->policy_number }} --}}
+                    <p class="text-sm font-medium text-gray-700">
+                        {{ $policy->policy_number }}
                     </p>
                 </div>
             </div>
@@ -101,8 +101,8 @@
                     <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
                         Renewal Date
                     </p>
-                    <p class="text-sm font-medium text-gray-900">
-                        {{-- {{ \Carbon\Carbon::parse($policy->renewal_date)->format('M d, Y') }}</p> --}}
+                    <p class="text-sm font-medium text-gray-700">
+                        {{ \Carbon\Carbon::parse($policy->renewal_date)->format('M d, Y') }}</p>
                 </div>
             </div>
         </div>

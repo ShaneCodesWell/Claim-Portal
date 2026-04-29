@@ -19,7 +19,7 @@ class FireController extends Controller
         // $policy = Policy::where('external_policy_id', $policyId)->firstOrFail(); // For now, we will just use the policy ID to find the policy. In the future, we can use the external policy ID to find the policy and then pass the policy ID to the form.
         $policy   = $policyId ? Policy::find($policyId) : null;
         $customer = $policy ? $policy->customer : null;
-        return view('fire_form.index', compact('policy', 'policyId', 'customer'));
+        return view('forms.fire_form.index', compact('policy', 'policyId', 'customer'));
     }
 
     /**

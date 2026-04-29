@@ -1,8 +1,7 @@
-<x-layouts.staff>
+<x-layouts.app>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Section - Claimant Information -->
-        {{-- <x-claimant-info :policy="$policy" :customer="$customer" /> --}}
-        <x-claimant-info />
+        <x-claimant-info :policy="$policy" :customer="$customer" />
 
         <!-- Right Section - Form -->
         <div class="lg:col-span-2">
@@ -105,7 +104,7 @@
                         @csrf
                         <input type="hidden" name="policy_id" value="{{ $policyId }}" />
                         <input type="hidden" name="claim_type" value="general_accident" />
-                        
+
                         <!-- Section: THIS FORM MUST BE COMPLETED IN FULL -->
                         <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                             <h3
@@ -184,7 +183,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">If Yes, Please provide
                                     details... <span class="text-red-500">*</span></label>
                                 <x-textarea name="contacted_aafiya_details" rows="3"
-                                    placeholder="Describe the details here..." required />
+                                    placeholder="Describe the details here..." />
                             </x-conditional-section>
 
                             <x-conditional-section question="Was the accident reported to the police?"
@@ -192,7 +191,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">If Yes, Please provide
                                     details... <span class="text-red-500">*</span></label>
                                 <x-textarea name="police_report_details" rows="2"
-                                    placeholder="Describe the details here..." required />
+                                    placeholder="Describe the details here..." />
                             </x-conditional-section>
                         </section>
 
@@ -419,103 +418,175 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Generic conditional section toggle (keeps component behavior)
+        // ==================== LOCAL HELPERS ====================
+        function val(name) {
+            return document.querySelector(`[name="${name}"]`)?.value ?? '';
+        }
+
+        function checkedVal(name) {
+            return document.querySelector(`[name="${name}"]:checked`)?.value ?? '';
+        }
+
+        function isChecked(name) {
+            return document.querySelector(`[name="${name}"]`)?.checked ?? false;
+        }
+
+        // ==================== IMAGE UPLOAD ====================
+        let uploadedFiles = [];
+
+        function renderPreviews() {
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            previewContainer.innerHTML = '';
+            uploadedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg border border-gray-200 shadow-sm">
+                    <button type="button" onclick="removeImage(${index})"
+                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">✕</button>
+                `;
+                    previewContainer.appendChild(div);
+                };
+                if (file) reader.readAsDataURL(file);
+            });
+        }
+
+        window.removeImage = function(index) {
+            uploadedFiles.splice(index, 1);
+            renderPreviews();
+            const dt = new DataTransfer();
+            uploadedFiles.forEach(f => dt.items.add(f));
+            document.getElementById('imageUpload').files = dt.files;
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // ==================== CONDITIONAL RADIO TOGGLES ====================
             document.querySelectorAll('.conditional-radio').forEach(radio => {
                 radio.addEventListener('change', function() {
-                    const targetId = this.getAttribute('data-target');
-                    const targetSection = document.getElementById(targetId);
-                    if (!targetSection) return;
-
+                    const target = document.getElementById(this.getAttribute('data-target'));
+                    if (!target) return;
                     const isYes = this.value === 'yes';
-
-                    if (isYes) {
-                        targetSection.classList.remove('hidden');
-                        targetSection.querySelectorAll('input, textarea, select').forEach(input =>
-                            input.required = true);
-                    } else {
-                        targetSection.classList.add('hidden');
-                        targetSection.querySelectorAll('input, textarea, select').forEach(input => {
-                            input.required = false;
+                    target.classList.toggle('hidden', !isYes);
+                    target.querySelectorAll('input, textarea, select').forEach(input => {
+                        input.required = isYes;
+                        if (!isYes) {
                             try {
                                 input.value = '';
                             } catch (e) {}
-                        });
-                    }
+                        }
+                    });
                 });
             });
 
-            // Submit handler (demo with SweetAlert)
-            const form = document.getElementById('generalAccidentForm');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: "success",
-                        title: "Claim Submitted Successfully",
-                        text: "Your travel claim has been submitted. Our team will review it shortly.",
-                        confirmButtonText: "OK",
-                        confirmButtonColor: "#4f46e5",
-                    });
-                });
-            }
-
-            // Image upload handling
+            // ==================== IMAGE UPLOAD INIT ====================
             const dropzone = document.getElementById('dropzone');
             const fileInput = document.getElementById('imageUpload');
-            const previewContainer = document.getElementById('imagePreviewContainer');
-            let uploadedFiles = []; // store files for later submission
 
-            function renderPreviews() {
-                previewContainer.innerHTML = '';
-                uploadedFiles.forEach((file, index) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const div = document.createElement('div');
-                        div.className = 'relative group';
-                        div.innerHTML = `
-                <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg border border-gray-200 shadow-sm">
-                <button type="button" onclick="removeImage(${index})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">✕</button>
-            `;
-                        previewContainer.appendChild(div);
-                    };
-                    if (file) reader.readAsDataURL(file);
-                });
-            }
-
-            window.removeImage = (index) => {
-                uploadedFiles.splice(index, 1);
-                renderPreviews();
-                // Update file input's FileList (optional: you can recreate a new DataTransfer)
-                const dataTransfer = new DataTransfer();
-                uploadedFiles.forEach(f => dataTransfer.items.add(f));
-                fileInput.files = dataTransfer.files;
-            };
-
-            dropzone.addEventListener('click', () => fileInput.click());
-            dropzone.addEventListener('dragover', (e) => {
+            dropzone?.addEventListener('click', () => fileInput.click());
+            dropzone?.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 dropzone.classList.add('border-blue-500', 'bg-blue-50');
             });
-            dropzone.addEventListener('dragleave', () => {
+            dropzone?.addEventListener('dragleave', () => {
                 dropzone.classList.remove('border-blue-500', 'bg-blue-50');
             });
-            dropzone.addEventListener('drop', (e) => {
+            dropzone?.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropzone.classList.remove('border-blue-500', 'bg-blue-50');
-                const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                uploadedFiles.push(...files);
+                uploadedFiles.push(...Array.from(e.dataTransfer.files).filter(f => f.type.startsWith(
+                    'image/')));
                 renderPreviews();
-                // Sync file input
-                const dataTransfer = new DataTransfer();
-                uploadedFiles.forEach(f => dataTransfer.items.add(f));
-                fileInput.files = dataTransfer.files;
             });
-            fileInput.addEventListener('change', (e) => {
-                const newFiles = Array.from(e.target.files);
-                uploadedFiles.push(...newFiles);
+            fileInput?.addEventListener('change', (e) => {
+                uploadedFiles.push(...Array.from(e.target.files));
                 renderPreviews();
+            });
+
+            // ==================== PRE-FILL FROM POLICY ====================
+            @if ($policy)
+                const prefill = {
+                    'surname': '{{ $policy->insured_name ? explode(' ', $policy->insured_name)[0] : '' }}',
+                    'firstname': '{{ $policy->insured_name ? implode(' ', array_slice(explode(' ', $policy->insured_name), 1)) : '' }}',
+                };
+                Object.entries(prefill).forEach(([name, value]) => {
+                    const el = document.querySelector(`[name="${name}"]`);
+                    if (el && value) el.value = value;
+                });
+            @endif
+
+            // ==================== FORM SUBMISSION ====================
+            document.getElementById('generalAccidentForm')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                if (!isChecked('declaration_agreement')) {
+                    showClaimError('Please read and accept the declaration before submitting.');
+                    return;
+                }
+
+                if (!val('digital_signature').trim()) {
+                    showClaimError('Please provide your digital signature before submitting.');
+                    return;
+                }
+
+                const formData = {
+                    policy_id: val('policy_id') || '{{ $policyId }}',
+                    claim_type: 'general_accident',
+                    form_data: {
+                        agent_broker: val('agent_broker'),
+                        departure_date: val('departure_date'),
+                        return_date: val('return_date'),
+                        surname: val('surname'),
+                        firstname: val('firstname'),
+                        insured_age: val('insured_age'),
+                        postal_address: val('postal_address'),
+                        postal_code: val('postal_code'),
+                        physical_address: val('physical_address'),
+                        address_code: val('address_code'),
+                        business: val('business'),
+                        fax: val('fax'),
+                        res_cell: val('res_cell'),
+                        email: val('email'),
+                        contacted_aafiya: checkedVal('contacted_aafiya'),
+                        contacted_aafiya_details: val('contacted_aafiya_details'),
+                        police_report: checkedVal('police_report'),
+                        police_report_details: val('police_report_details'),
+                        illness_date: val('illness_date'),
+                        place_of_illness: val('place_of_illness'),
+                        cause_of_illness: val('cause_of_illness'),
+                        diagnosis_sec1: val('diagnosis_sec1'),
+                        doctor_fullname_sec1: val('doctor_fullname_sec1'),
+                        doctor_telephone: val('doctor_telephone'),
+                        hospital_name: val('hospital_name'),
+                        total_amount_claimed: val('total_amount_claimed'),
+                        currency: val('currency'),
+                        treatment_received: checkedVal('treatment_received'),
+                        treatment_received_details: val('treatment_received_details'),
+                        submitted_accounts_yn: checkedVal('submitted_accounts_yn'),
+                        claim_subject_name: val('claim_subject_name'),
+                        dob_claim: val('dob_claim'),
+                        illness_date_sec2: val('illness_date_sec2'),
+                        doctor_fullname_sec2: val('doctor_fullname_sec2'),
+                        diagnosis_sec2: val('diagnosis_sec2'),
+                        previous_injury: checkedVal('previous_injury'),
+                        previous_injury_details: val('previous_injury_details'),
+                        account_holder_name: val('account_holder_name'),
+                        account_number: val('account_number'),
+                        bank_name: val('bank_name'),
+                        account_type: val('account_type'),
+                        branch_name: val('branch_name'),
+                        branch_code: val('branch_code'),
+                        general_section: val('general_section'),
+                        declaration_date: val('declaration_date'),
+                        digital_signature: val('digital_signature'),
+                        declaration_agreement: isChecked('declaration_agreement'),
+                    }
+                };
+
+                await submitClaim('generalAccidentForm', formData);
             });
         });
     </script>
-</x-layouts.staff>
+</x-layouts.app>

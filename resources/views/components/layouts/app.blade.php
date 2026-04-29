@@ -10,12 +10,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="{{ asset('js/claim-submit.js') }}"></script>
 </head>
 
-<body class="bg-gray-50">
+{{-- <body class="bg-gray-50">
+    <x-customer.side-bar />
     <x-navbar :customer="$customer ?? []" />
     <div class="max-w-7xl mx-auto p-6">
         {{ $slot }}
+    </div>
+</body> --}}
+<body class="bg-linear-to-br from-slate-50 to-gray-100 font-sans antialiased">
+    <x-customer.side-bar />
+    <div class="md:ml-64 flex flex-col min-h-screen">
+        <x-customer.nav-bar />
+        <main class="grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+            {{ $slot }}
+        </main>
+        <x-customer.footer />
     </div>
 </body>
 
