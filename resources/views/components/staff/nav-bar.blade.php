@@ -38,7 +38,8 @@
                             {{ Auth::user()->email }}
                         </p>
                     </div>
-                    <a href="{{ route('my-claims') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('my-claims') }}"
+                        class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-user-circle w-4 text-gray-400"></i> My
                         Claims
                     </a>
@@ -46,13 +47,15 @@
                         <i class="fas fa-bell w-4 text-gray-400"></i> Notifications
                         <span class="ml-auto bg-red-100 text-red-600 text-xs px-1.5 rounded-full">3</span>
                     </a> --}}
-                    <a href="{{ route('settings') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('settings') }}"
+                        class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-cog w-4 text-gray-400"></i> Settings
                     </a>
                     <hr class="my-1 border-gray-200" />
-                    <form action="{{ route('logout') }}" method="POST" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                    <form action="{{ route('logout') }}" method="POST"
+                        class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                         @csrf
-                        <button type="submit" >
+                        <button type="submit">
                             <i class="fas fa-sign-out-alt w-4"></i> Sign out
                         </button>
                     </form>

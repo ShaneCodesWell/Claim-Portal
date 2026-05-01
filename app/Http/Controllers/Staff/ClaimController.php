@@ -32,7 +32,14 @@ class ClaimController extends Controller
             ->latest()
             ->paginate(15);
 
-        return view('staff.claims.my-queue', compact('claims'));
+        $stats = [
+            'total_claims' => Claim::where('assigned_to', Auth::user()->id)->count(),
+            'pending_claims'  => Claim::where('assigned_to', Auth::user()->id)->where('status', 'pending')->count(),
+            'submitted_claims'  => Claim::where('assigned_to', Auth::user()->id)->where('status', 'submitted')->count(),
+            'closed_claims'  => Claim::where('assigned_to', Auth::user()->id)->where('status', 'closed')->count(),
+        ];
+
+        return view('staff.claims.my-queue', compact('claims', 'stats'));
     }
 
     public function show(Claim $claim)

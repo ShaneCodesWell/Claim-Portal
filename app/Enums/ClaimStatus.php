@@ -1,9 +1,7 @@
 <?php
-
 namespace App\Enums;
 
-enum ClaimStatus : string
-{
+enum ClaimStatus: string {
     const SUBMITTED    = 'submitted';
     const UNDER_REVIEW = 'under_review';
     const PENDING_INFO = 'pending_info';

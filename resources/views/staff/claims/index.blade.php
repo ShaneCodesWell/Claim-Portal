@@ -178,12 +178,12 @@
             <i class="fas fa-info-circle text-blue-500 text-lg"></i>
             <span><strong>Claims team overview:</strong> Use the amount filters to triage claims by value.</span>
         </div>
-        <div class="flex gap-2">
+        {{-- <div class="flex gap-2">
             <span class="bg-white px-3 py-1 rounded-full text-xs shadow-sm"><i class="far fa-file-alt"></i> Modal
                 preview</span>
             <span class="bg-white px-3 py-1 rounded-full text-xs shadow-sm"><i class="far fa-folder-open"></i> File
                 list modal</span>
-        </div>
+        </div> --}}
     </div>
 
     <script>

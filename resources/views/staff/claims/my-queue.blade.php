@@ -27,25 +27,25 @@
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-indigo-400"></span>
             <span class="text-sm text-gray-600">Total</span>
-            <span class="text-sm font-semibold text-gray-900">5</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $stats['total_claims'] }}</span>
         </div>
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-amber-400"></span>
             <span class="text-sm text-gray-600">Pending</span>
-            <span class="text-sm font-semibold text-gray-900">2</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $stats['pending_claims'] }}</span>
         </div>
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-blue-400"></span>
-            <span class="text-sm text-gray-600">In Progress</span>
-            <span class="text-sm font-semibold text-gray-900">2</span>
+            <span class="text-sm text-gray-600">Submitted</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $stats['submitted_claims'] }}</span>
         </div>
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
             <span class="text-sm text-gray-600">Completed</span>
-            <span class="text-sm font-semibold text-gray-900">1</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $stats['closed_claims'] }}</span>
         </div>
     </div>
 
@@ -213,11 +213,11 @@
     </div>
 
     <!-- Workspace Tip -->
-    <div class="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
-        <p class="text-sm font-medium text-gray-800">
+    <div class="mt-6 bg-blue-50/40 rounded-xl border border-blue-100 shadow-xs p-4">
+        <p class="text-sm font-medium text-blue-800"><i class="fas fa-info-circle text-blue-500 text-lg"></i>
             Workspace tip
         </p>
-        <p class="text-sm text-gray-500 mt-1">
+        <p class="text-sm text-blue-800 mt-1">
             Keep pending claims at the top of your workflow. Resolve them first before moving to in-progress items.
         </p>
     </div>

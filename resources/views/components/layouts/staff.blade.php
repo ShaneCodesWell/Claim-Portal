@@ -14,9 +14,9 @@
 </head>
 
 <body class="bg-linear-to-br from-slate-50 to-gray-100 font-sans antialiased">
-    <x-staff.sidebar />
+    <x-staff.side-bar />
     <div class="md:ml-64 flex flex-col min-h-screen">
-        <x-staff.navbar />
+        <x-staff.nav-bar />
         <main class="grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
             {{ $slot }}
         </main>

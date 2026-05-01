@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Department;
 use App\Models\Policy;
+use App\Models\Claim;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,14 +23,19 @@ class StaffController extends Controller
     //     return view('staff.dashboard.index');
     // }
 
-    public function allClaims()
-    {
-        return view('staff.all-claims.index');
-    }
+    // public function allClaims()
+    // {
+    //     return view('staff.all-claims.index');
+    // }
 
     // public function processClaim()
     // {
     //     return view('staff.process-claim.index');
+    // }
+
+    // public function myClaims()
+    // {
+    //     return view('staff.my-claims.index');
     // }
 
     public function processClaimMotor()
@@ -46,11 +52,6 @@ class StaffController extends Controller
     {
         return view('staff.process-claim.general-accident');
     }
-
-    // public function myClaims()
-    // {
-    //     return view('staff.my-claims.index');
-    // }
 
     public function claimForms()
     {
@@ -74,7 +75,8 @@ class StaffController extends Controller
         $stats = [
             'total_customers' => Customer::count(),
             'active_policies' => Policy::where('status', 'active')->count(),
-            // 'pending_claims'  => Claim::where('status', 'pending')->count(),
+            'submitted_claims'  => Claim::where('status', 'submitted')->count(),
+            'closed_claims'  => Claim::where('status', 'closed')->count(),
         ];
 
         return view('staff.customers.index', compact('customers', 'stats'));

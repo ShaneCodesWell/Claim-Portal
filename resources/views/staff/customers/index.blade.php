@@ -34,14 +34,14 @@
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-amber-400"></span>
-            <span class="text-sm text-gray-600">Pending Claims</span>
-            <span class="text-sm font-semibold text-gray-900">2</span>
+            <span class="text-sm text-gray-600">Submitted Claims</span>
+            <span class="text-sm font-semibold text-gray-900">{{ number_format($stats['submitted_claims']) }}</span>
         </div>
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-blue-400"></span>
-            <span class="text-sm text-gray-600">Processed Claims</span>
-            <span class="text-sm font-semibold text-gray-900">1</span>
+            <span class="text-sm text-gray-600">Closed Claims</span>
+            <span class="text-sm font-semibold text-gray-900">{{ number_format($stats['closed_claims']) }}</span>
         </div>
     </div>
 
