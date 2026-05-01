@@ -20,10 +20,6 @@
                 class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
                 <i class="fas fa-refresh text-gray-500"></i> Reset
             </button>
-            {{-- <button
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition flex items-center gap-2">
-                <i class="fas fa-download"></i> Export
-            </button> --}}
         </div>
     </div>
 
@@ -79,22 +75,33 @@
                                 <div class="flex items-center gap-3">
                                     <div
                                         class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
-                                        JD</div>
-                                    <span class="text-sm font-medium text-gray-900">John Davis</span>
+                                        {{ strtoupper(substr($claim->customer->name, 0, 1)) }}{{ strtoupper(substr(strrchr($claim->customer->name, ' '), 1, 1)) }}
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900">{{ $claim->customer->name }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-4 font-mono text-sm text-gray-700">
                                 <div>{{ $claim->policy->policy_number }}</div>
+                                @php
+                                    $source = strtolower($claim->policy->source);
+                                @endphp
+
                                 <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-green-100 text-green-700">GLIMS</span>
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium
+                                    {{ $source === 'genova' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700' }}">
+                                    {{ strtoupper($claim->policy->source) }}
+                                </span>
                             </td>
                             <td class="px-4 py-4 text-xs text-gray-700">
-                                <div>15-01-2024</div>
-                                <span class="text-xs text-gray-400">to</span> 14-01-2025</span>
+                                <div>{{ \Carbon\Carbon::parse($claim->policy->start_date)->format('M d, Y') }}</div>
+                                <span class="text-xs text-gray-400">to</span>
+                                {{ \Carbon\Carbon::parse($claim->policy->end_date)->format('M d, Y') }}</span>
                             </td>
-                            <td class="px-4 py-4 text-xs font-medium text-gray-900">Comprehensive</td>
+                            <td class="px-4 py-4 text-xs font-medium text-gray-900">{{ $claim->policy->product_name }}
+                            </td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GHS 25,000.00</td>
-                            <td class="px-4 py-4 text-sm text-gray-700">Jessica Arthur</td>
+                            <td class="px-4 py-4 text-sm text-gray-700">{{ $claim->assignedTo->name ?? 'Unassigned' }}
+                            </td>
                             <td class="px-4 py-4">
                                 <span
                                     class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">Pending</span>
@@ -121,121 +128,46 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-4 py-6 text-center text-sm text-gray-500">
-                                <i class="fas fa-inbox text-2xl mb-2"></i>
-                                <div>No claims found.</div>
+                            <td colspan="9" class="px-6 py-10 text-center">
+                                <div class="flex flex-col items-center justify-center gap-3 text-gray-500">
+                                    <div class="h-14 w-14 flex items-center justify-center rounded-full bg-gray-100">
+                                        <i class="fas fa-file-alt text-xl text-gray-400"></i>
+                                    </div>
+
+                                    <div class="text-sm font-medium text-gray-700">
+                                        No claims available
+                                    </div>
+
+                                    <div class="text-xs text-gray-400 max-w-xs">
+                                        There are currently no claims in the system. Once claims are created, they will
+                                        appear here.
+                                    </div>
+
+                                    {{-- <a href="{{ route('create-claim') }}"
+                                        class="mt-2 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+                                        <i class="fas fa-plus text-xs"></i>
+                                        Create Claim
+                                    </a> --}}
+                                </div>
                             </td>
                         </tr>
                     @endforelse
-
-
-                    <!-- Row 2: Sarah Boateng - Medium (65,000) -->
-                    {{-- <tr class="hover:bg-gray-50 transition" data-amount="65000">
-                        <td class="px-4 py-4">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
-                                    SB</div>
-                                <span class="text-sm font-medium text-gray-900">Sarah Boateng</span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
-                            <div>P-1001-102-2026-000095</div>
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-green-100 text-green-700">GLIMS</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs text-gray-700">
-                            <div>10-09-2023</div>
-                            <span class="text-xs text-gray-400">to</span> 09-09-2024</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs font-medium text-gray-900">Happy Home</td>
-                        <td class="px-4 py-4 text-sm font-medium text-gray-900">GHS 65,000.00</td>
-                        <td class="px-4 py-4 text-sm text-gray-700">Afia Kyei</td>
-                        <td class="px-4 py-4">
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">Assigned</span>
-                        </td>
-                        <td class="px-4 py-4 text-right relative" x-data="{ open: false }" style="overflow: visible;">
-                            <button @click="open = !open"
-                                class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div x-show="open" @click.outside="open = false" x-transition
-                                class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                <a href="{{ route('process-claim-fire') }}"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
-                                </a>
-                                <div class="border-t border-gray-100 my-1"></div>
-                                <button onclick="assignClaim(1)"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-user-check text-xs text-emerald-500"></i> Assign Claim
-                                </button>
-                            </div>
-                        </td>
-                    </tr> --}}
-
-                    <!-- Row 3: Olivia Addo - High (150,000) -->
-                    {{-- <tr class="hover:bg-gray-50 transition" data-amount="150000">
-                        <td class="px-4 py-4">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
-                                    OA</div>
-                                <span class="text-sm font-medium text-gray-900">Olivia Addo</span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
-                            <div>P-1003-310-2026-000150</div>
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-blue-100 text-blue-700">Genova</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs text-gray-700">
-                            <div>01-03-20243</div>
-                            <span class="text-xs text-gray-400">to</span> 01-09-2024</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs font-medium text-gray-900">Vanguard Safe Travel</td>
-                        <td class="px-4 py-4 text-sm font-medium text-gray-900">GHS 150,000.00</td>
-                        <td class="px-4 py-4 text-sm text-gray-400">Unassigned</td>
-                        <td class="px-4 py-4">
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">New</span>
-                        </td>
-                        <td class="px-4 py-4 text-right relative" x-data="{ open: false }" style="overflow: visible;">
-                            <button @click="open = !open"
-                                class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div x-show="open" @click.outside="open = false" x-transition
-                                class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                <a href="{{ route('process-claim-general-accident') }}"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
-                                </a>
-                                <div class="border-t border-gray-100 my-1"></div>
-                                <button onclick="assignClaim(1)"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-user-check text-xs text-emerald-500"></i> Assign Claim
-                                </button>
-                            </div>
-                        </td>
-                    </tr> --}}
                 </tbody>
             </table>
         </div>
 
         <!-- Footer with pagination info -->
-        <div class="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center flex-wrap gap-3">
+        <div class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
             <div class="text-sm text-gray-500">
-                <i class="fas fa-clipboard-list mr-1"></i>
-                Showing <span id="visibleCount">3</span> of <span id="totalCount">3</span> registered claims
+                @if ($claims->firstItem())
+                    Showing {{ $claims->lastItem() }} of {{ $claims->total() }}
+                    claims
+                @else
+                    No claims found
+                @endif
             </div>
             <div class="flex gap-2">
-                <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50"><i
-                        class="fas fa-chevron-left"></i> Previous</button>
-                <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm">1</button>
-                <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">Next <i
-                        class="fas fa-chevron-right"></i></button>
+                {{ $claims->links() }}
             </div>
         </div>
     </div>

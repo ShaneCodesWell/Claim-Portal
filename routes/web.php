@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CompanyController;
@@ -62,8 +63,9 @@ Route::middleware('auth.customer')->group(function () {
 Route::middleware(['staff'])->prefix('admin')->group(function () {
 
     // Dashboard and Claims
-    Route::get('/staff/dashboard', [StaffController::class, 'dashboard'])->name('staff-dashboard');
-    Route::get('/staff/all-claims', [StaffController::class, 'allClaims'])->name('all-claims');
+    // Route::get('/staff/dashboard', [StaffController::class, 'dashboard'])->name('staff-dashboard');
+    // Route::get('/staff/all-claims', [StaffController::class, 'allClaims'])->name('all-claims');
+    Route::get('/staff/my-claims', [StaffController::class, 'myClaims'])->name('my-claims'); // Comment out after implementation
 
     // Claims
     Route::get('claims', [StaffClaimController::class, 'index'])->name('staff.claims.index');
@@ -79,7 +81,7 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('/staff/process-claim/motor', [StaffController::class, 'processClaimMotor'])->name('process-claim-motor');
     Route::get('/staff/process-claim/fire', [StaffController::class, 'processClaimFire'])->name('process-claim-fire');
     Route::get('/staff/process-claim/general-accident', [StaffController::class, 'processClaimGeneralAccident'])->name('process-claim-general-accident');
-    Route::get('/staff/my-claims', [StaffController::class, 'myClaims'])->name('my-claims');
+    
 
     // Claim Forms & Documents
     Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
@@ -89,6 +91,12 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     // Customers
     Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers');
 
+});
+
+// Agent routes — only agents can access
+Route::middleware(['agent'])->prefix('agent')->group(function () {
+    // mirrors customer claim routes but with ClaimSource::AGENT_PORTAL
+    Route::get('/agent/dashboard', [AgentController::class, 'index'])->name('agent-dashboard');
 });
 
 // Admin-only routes — only admins can access
@@ -123,11 +131,6 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/settings/edit-staff/{staff}', [StaffController::class, 'edit'])->name('staff.edit');
     Route::put('/settings/staff-update/{staff}', [StaffController::class, 'update'])->name('staff.update');
     Route::delete('/settings/staff-delete/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
-});
-
-// Agent routes — only agents can access
-Route::middleware(['agent'])->prefix('agent')->group(function () {
-    // mirrors customer claim routes but with ClaimSource::AGENT_PORTAL
 });
 
 // Offline Application

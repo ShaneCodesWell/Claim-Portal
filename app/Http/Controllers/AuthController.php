@@ -357,8 +357,8 @@ class AuthController extends Controller
 
             // Redirect based on role
             return match ($user->role) {
-                'Admin'           => redirect()->route('staff-dashboard'),
-                default           => redirect()->route('all-claims'),
+                'Admin'           => redirect()->route('staff.claims.index'),
+                default           => redirect()->route('staff.claims.index'),
             };
         }
 

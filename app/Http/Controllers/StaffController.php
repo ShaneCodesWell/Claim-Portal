@@ -16,11 +16,11 @@ class StaffController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function dashboard()
-    {
+    // public function dashboard()
+    // {
 
-        return view('staff.dashboard.index');
-    }
+    //     return view('staff.dashboard.index');
+    // }
 
     public function allClaims()
     {
@@ -47,10 +47,10 @@ class StaffController extends Controller
         return view('staff.process-claim.general-accident');
     }
 
-    public function myClaims()
-    {
-        return view('staff.my-claims.index');
-    }
+    // public function myClaims()
+    // {
+    //     return view('staff.my-claims.index');
+    // }
 
     public function claimForms()
     {

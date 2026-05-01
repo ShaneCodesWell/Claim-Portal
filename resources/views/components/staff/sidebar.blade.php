@@ -18,16 +18,16 @@
                 <i class="fas fa-tachometer-alt w-5"></i>
                 <span>Dashboard</span>
             </a> --}}
-            <a href="{{ route('all-claims') }}"
+            <a href="{{ route('staff.claims.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-clipboard-list w-5"></i>
                 <span>Customer Claims</span>
                 <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">3</span>
             </a>
-            <a href="{{ route('my-claims') }}"
+            <a href="{{ route('staff.claims.my-queue') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-user-plus w-5"></i>
-                <span>My Claims</span>
+                <span>My Queue</span>
                 <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">3</span>
             </a>
             <a href="{{ route('claim-form') }}"

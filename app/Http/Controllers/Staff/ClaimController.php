@@ -1,13 +1,13 @@
 <?php
 namespace App\Http\Controllers\Staff;
 
+use App\Enums\ClaimStatus;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Claim;
 use App\Models\User;
 use App\Services\ClaimService;
-use App\Enums\ClaimStatus;
-use App\Enums\UserRole;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ClaimController extends Controller
@@ -19,14 +19,14 @@ class ClaimController extends Controller
     {
         $claims = Claim::with(['customer', 'policy', 'assignedTo', 'branch'])
             ->latest()
-            ->paginate(15);
+            ->paginate(5);
 
         return view('staff.claims.index', compact('claims'));
     }
 
     public function myQueue()
     {
-        $claims = Claim::where('assigned_to', Auth::user()->id())
+        $claims = Claim::where('assigned_to', Auth::user()->id)
             ->whereNotIn('status', ClaimStatus::terminal())
             ->with(['customer', 'policy'])
             ->latest()
