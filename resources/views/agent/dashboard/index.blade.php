@@ -5,7 +5,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
                     <p class="text-sm text-gray-500 font-medium mb-1">
-                        Agent Dashboard – <span
+                        Agent Dashboard - <span
                             class="font-bold text-blue-500">{{ Auth::user()->name ?? 'Michael Chen' }}</span>
                     </p>
                     <h2 class="text-xl font-semibold text-gray-900">

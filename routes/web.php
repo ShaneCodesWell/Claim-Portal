@@ -56,7 +56,6 @@ Route::middleware('auth.customer')->group(function () {
     Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
     Route::get('/fire-form', [FireController::class, 'index'])->name('fire-form');
 
-    // Route::post('/submit', [FireController::class, 'create'])->name('fire-form.submit');
 });
 
 // Staff routes — accessible by ALL staff including admins
@@ -90,7 +89,8 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('/staff/claim-documents', [StaffController::class, 'claimDouments'])->name('claim-documents');
 
     // Customers
-    Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers');
+    Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers.index');
+    Route::get('/staff/customers/{customer}', [StaffController::class, 'showCustomer'])->name('customers.show');
 
 });
 

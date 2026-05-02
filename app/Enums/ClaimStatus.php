@@ -2,7 +2,7 @@
 namespace App\Enums;
 
 enum ClaimStatus: string {
-    const INCOMING     = 'incoming';
+    const SUBMITTED     = 'submitted';
     const UNDER_REVIEW = 'under_review';
     const PENDING_INFO = 'pending_info';
     const IN_PROGRESS  = 'in_progress';
@@ -13,7 +13,7 @@ enum ClaimStatus: string {
     public static function all(): array
     {
         return [
-            self::INCOMING,
+            self::SUBMITTED,
             self::UNDER_REVIEW,
             self::PENDING_INFO,
             self::IN_PROGRESS,
@@ -31,7 +31,7 @@ enum ClaimStatus: string {
     public static function labels(): array
     {
         return [
-            self::INCOMING     => 'Incoming',
+            self::SUBMITTED    => 'Submitted',
             self::UNDER_REVIEW => 'Under Review',
             self::PENDING_INFO => 'Pending Information',
             self::IN_PROGRESS  => 'In Progress',
@@ -44,7 +44,7 @@ enum ClaimStatus: string {
     public static function colors(): array
     {
         return [
-            self::INCOMING     => 'blue',
+            self::SUBMITTED    => 'blue',
             self::UNDER_REVIEW => 'indigo',
             self::PENDING_INFO => 'amber',
             self::IN_PROGRESS  => 'purple',

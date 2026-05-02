@@ -41,7 +41,7 @@
                 <i class="fas fa-folder-open w-5"></i>
                 <span>Documents</span>
             </a>
-            <a href="{{ route('customers') }}"
+            <a href="{{ route('customers.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-users w-5"></i>
                 <span>Customer List</span>

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->string('claim_type');                         // motor, fire, marine etc.
             $table->string('source')->default('customer_portal'); // customer_portal, agent_portal, staff_portal
-            $table->string('status')->default('incoming'); // incoming, under_review, approved, rejected, pending_info
+            $table->string('status')->default('submitted'); // submitted, under_review, approved, rejected, pending_info
             $table->json('form_data'); // the claim form payload
             $table->foreignId('assigned_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('assigned_at')->nullable();

@@ -133,14 +133,14 @@
                                 </button>
                                 <div x-show="open" @click.outside="open = false" x-transition
                                     class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                    <a href="#"
+                                    <a href="{{ route('customers.show', $customer) }}"
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-edit text-xs text-blue-500"></i> Edit
+                                        <i class="fas fa-edit text-xs text-blue-500"></i> Manage
                                     </a>
-                                    <a href="#"
+                                    {{-- <a href="#"
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                         <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
-                                    </a>
+                                    </a> --}}
                                 </div>
                             </td>
                         </tr>
