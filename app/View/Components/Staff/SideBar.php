@@ -19,6 +19,7 @@ class SideBar extends Component
 
         $this->stats = [
             'my_claims'     => Claim::where('assigned_to', $userId)->count(),
+            'incoming_claims' => Claim::where('status', 'incoming')->count(),
         ];
     }
 

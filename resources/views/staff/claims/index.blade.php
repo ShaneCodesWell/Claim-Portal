@@ -99,12 +99,15 @@
                             </td>
                             <td class="px-4 py-4 text-xs font-medium text-gray-900">{{ $claim->policy->product_name }}
                             </td>
-                            <td class="px-4 py-4 text-sm font-medium text-gray-900">GHS 25,000.00</td>
+                            <td class="px-4 py-4 text-sm font-medium text-gray-900">GHS 0.00</td>
                             <td class="px-4 py-4 text-sm text-gray-700">{{ $claim->assignedTo->name ?? 'Unassigned' }}
                             </td>
+                            @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
                             <td class="px-4 py-4">
                                 <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">Pending</span>
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border {{ $badge['class'] }}">
+                                    {{ $badge['label'] }}
+                                </span>
                             </td>
                             <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                 style="overflow: visible;">
