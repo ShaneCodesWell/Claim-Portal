@@ -33,10 +33,10 @@ class ClaimController extends Controller
             ->paginate(15);
 
         $stats = [
-            'total_claims' => Claim::where('assigned_to', Auth::user()->id)->count(),
-            'pending_claims'  => Claim::where('assigned_to', Auth::user()->id)->where('status', 'pending')->count(),
-            'submitted_claims'  => Claim::where('assigned_to', Auth::user()->id)->where('status', 'submitted')->count(),
-            'closed_claims'  => Claim::where('assigned_to', Auth::user()->id)->where('status', 'closed')->count(),
+            'total_claims'     => Claim::where('assigned_to', Auth::user()->id)->count(),
+            'pending_claims'   => Claim::where('assigned_to', Auth::user()->id)->where('status', 'pending')->count(),
+            'submitted_claims' => Claim::where('assigned_to', Auth::user()->id)->where('status', 'submitted')->count(),
+            'closed_claims'    => Claim::where('assigned_to', Auth::user()->id)->where('status', 'closed')->count(),
         ];
 
         return view('staff.claims.my-queue', compact('claims', 'stats'));
@@ -51,6 +51,21 @@ class ClaimController extends Controller
             ->get();
 
         return view('staff.claims.show', compact('claim', 'staffMembers'));
+    }
+
+    public function print(Claim $claim)
+    {
+        $claim->load(['customer', 'policy']);
+
+        if (request()->header('X-Requested-With') === 'XMLHttpRequest') {
+            try {
+                return view('staff.claims.print', compact('claim'))->render();
+            } catch (\Exception $e) {
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
+        }
+
+        return view('staff.claims.print', compact('claim'));
     }
 
     public function assign(Request $request, Claim $claim)
