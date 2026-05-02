@@ -170,29 +170,72 @@
                 </div>
             </div>
 
-            {{-- Documents Card --}}
+            {{-- Activity Timeline --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-paperclip text-blue-500"></i> Documents
+                        <i class="fas fa-history text-blue-500"></i> Activity Timeline
                     </h3>
-                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                        {{ $claim->documents->count() }}
-                    </span>
                 </div>
-                <div class="p-4">
-                    @forelse($claim->documents as $doc)
-                        <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-file text-gray-400 text-sm"></i>
-                                <span
-                                    class="text-xs text-gray-700 truncate max-w-[140px]">{{ $doc->original_name }}</span>
+                <div class="p-5">
+                    @forelse($claim->activities as $activity)
+                        @php
+                            $activityIcons = [
+                                'submitted' => ['icon' => 'fa-file-alt', 'color' => 'bg-blue-100 text-blue-600'],
+                                'assigned' => ['icon' => 'fa-user-check', 'color' => 'bg-indigo-100 text-indigo-600'],
+                                'reassigned' => [
+                                    'icon' => 'fa-exchange-alt',
+                                    'color' => 'bg-purple-100 text-purple-600',
+                                ],
+                                'status_changed' => ['icon' => 'fa-sync-alt', 'color' => 'bg-gray-100 text-gray-600'],
+                                'info_requested' => [
+                                    'icon' => 'fa-question-circle',
+                                    'color' => 'bg-amber-100 text-amber-600',
+                                ],
+                                'form_updated' => ['icon' => 'fa-edit', 'color' => 'bg-green-100 text-green-600'],
+                                'note_added' => [
+                                    'icon' => 'fa-sticky-note',
+                                    'color' => 'bg-yellow-100 text-yellow-600',
+                                ],
+                            ];
+                            $meta = $activityIcons[$activity->action] ?? [
+                                'icon' => 'fa-circle',
+                                'color' => 'bg-gray-100 text-gray-500',
+                            ];
+                        @endphp
+                        <div class="flex gap-3 pb-5 last:pb-0 relative">
+                            {{-- Connecting line --}}
+                            @if (!$loop->last)
+                                <div class="absolute left-4 top-8 bottom-0 w-px bg-gray-100"></div>
+                            @endif
+
+                            <div
+                                class="shrink-0 w-8 h-8 rounded-full {{ $meta['color'] }} flex items-center justify-center z-10">
+                                <i class="fas {{ $meta['icon'] }} text-xs"></i>
                             </div>
-                            <a href="{{ Storage::url($doc->file_path) }}" target="_blank"
-                                class="text-xs text-blue-600 hover:underline">View</a>
+                            <div class="flex-1 min-w-0 pt-0.5">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-sm font-medium text-gray-800">
+                                        {{ ucfirst(str_replace('_', ' ', $activity->action)) }}
+                                    </p>
+                                    <span class="text-xs text-gray-400 whitespace-nowrap">
+                                        {{ $activity->created_at->diffForHumans() }}
+                                    </span>
+                                </div>
+                                @if ($activity->note)
+                                    <p class="text-sm text-gray-600 mt-0.5">{{ $activity->note }}</p>
+                                @endif
+                                @if ($activity->user)
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        by {{ $activity->user->name }}
+                                    </p>
+                                @else
+                                    <p class="text-xs text-gray-400 mt-1">by System</p>
+                                @endif
+                            </div>
                         </div>
                     @empty
-                        <p class="text-xs text-gray-400 italic">No documents uploaded yet.</p>
+                        <p class="text-sm text-gray-400 italic">No activity recorded yet.</p>
                     @endforelse
                 </div>
             </div>
@@ -205,15 +248,23 @@
             {{-- Form Data Card --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-clipboard-list text-blue-500"></i> Claim Form Data
-                    </h3>
-                    <span
-                        class="text-xs text-gray-400 capitalize">{{ str_replace('_', ' ', $claim->claim_type) }}</span>
-                    <button onclick="openPrintModal()"
-                        class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
-                        <i class="fas fa-eye"></i> Preview Form
-                    </button>
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-clipboard-list text-blue-500"></i> Claim Form Data
+                        </h3>
+                        {{-- <span
+                            class="text-xs text-gray-400 capitalize">{{ str_replace('_', ' ', $claim->claim_type) }}</span> --}}
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openPrintModal()"
+                            class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                            <i class="fas fa-eye"></i> Preview Form
+                        </button>
+                        <a href="#"
+                            class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                            <i class="fas fa-edit"></i> Edit Form
+                        </a>
+                    </div>
                     <x-claim-form-modal :claim="$claim" />
                 </div>
                 <div class="p-5">
@@ -299,72 +350,29 @@
                 </div>
             </div>
 
-            {{-- Activity Timeline --}}
+            {{-- Documents Card --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-history text-blue-500"></i> Activity Timeline
+                        <i class="fas fa-paperclip text-blue-500"></i> Documents
                     </h3>
+                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                        {{ $claim->documents->count() }}
+                    </span>
                 </div>
-                <div class="p-5">
-                    @forelse($claim->activities as $activity)
-                        @php
-                            $activityIcons = [
-                                'submitted' => ['icon' => 'fa-file-alt', 'color' => 'bg-blue-100 text-blue-600'],
-                                'assigned' => ['icon' => 'fa-user-check', 'color' => 'bg-indigo-100 text-indigo-600'],
-                                'reassigned' => [
-                                    'icon' => 'fa-exchange-alt',
-                                    'color' => 'bg-purple-100 text-purple-600',
-                                ],
-                                'status_changed' => ['icon' => 'fa-sync-alt', 'color' => 'bg-gray-100 text-gray-600'],
-                                'info_requested' => [
-                                    'icon' => 'fa-question-circle',
-                                    'color' => 'bg-amber-100 text-amber-600',
-                                ],
-                                'form_updated' => ['icon' => 'fa-edit', 'color' => 'bg-green-100 text-green-600'],
-                                'note_added' => [
-                                    'icon' => 'fa-sticky-note',
-                                    'color' => 'bg-yellow-100 text-yellow-600',
-                                ],
-                            ];
-                            $meta = $activityIcons[$activity->action] ?? [
-                                'icon' => 'fa-circle',
-                                'color' => 'bg-gray-100 text-gray-500',
-                            ];
-                        @endphp
-                        <div class="flex gap-3 pb-5 last:pb-0 relative">
-                            {{-- Connecting line --}}
-                            @if (!$loop->last)
-                                <div class="absolute left-4 top-8 bottom-0 w-px bg-gray-100"></div>
-                            @endif
-
-                            <div
-                                class="shrink-0 w-8 h-8 rounded-full {{ $meta['color'] }} flex items-center justify-center z-10">
-                                <i class="fas {{ $meta['icon'] }} text-xs"></i>
+                <div class="p-4">
+                    @forelse($claim->documents as $doc)
+                        <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-file text-gray-400 text-sm"></i>
+                                <span
+                                    class="text-xs text-gray-700 truncate max-w-[140px]">{{ $doc->original_name }}</span>
                             </div>
-                            <div class="flex-1 min-w-0 pt-0.5">
-                                <div class="flex items-center justify-between gap-2">
-                                    <p class="text-sm font-medium text-gray-800">
-                                        {{ ucfirst(str_replace('_', ' ', $activity->action)) }}
-                                    </p>
-                                    <span class="text-xs text-gray-400 whitespace-nowrap">
-                                        {{ $activity->created_at->diffForHumans() }}
-                                    </span>
-                                </div>
-                                @if ($activity->note)
-                                    <p class="text-sm text-gray-600 mt-0.5">{{ $activity->note }}</p>
-                                @endif
-                                @if ($activity->user)
-                                    <p class="text-xs text-gray-400 mt-1">
-                                        by {{ $activity->user->name }}
-                                    </p>
-                                @else
-                                    <p class="text-xs text-gray-400 mt-1">by System</p>
-                                @endif
-                            </div>
+                            <a href="{{ Storage::url($doc->file_path) }}" target="_blank"
+                                class="text-xs text-blue-600 hover:underline">View</a>
                         </div>
                     @empty
-                        <p class="text-sm text-gray-400 italic">No activity recorded yet.</p>
+                        <p class="text-xs text-gray-400 italic">No documents uploaded yet.</p>
                     @endforelse
                 </div>
             </div>
@@ -373,20 +381,36 @@
     </div>
 
     {{-- Flash Messages --}}
-    @if (session('success'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
-            class="fixed bottom-6 right-6 bg-green-600 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 z-50">
-            <i class="fas fa-check-circle"></i>
-            <span class="text-sm font-medium">{{ session('success') }}</span>
-        </div>
-    @endif
+    @if (session('success') || session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
 
-    @if (session('error'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
-            class="fixed bottom-6 right-6 bg-red-600 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 z-50">
-            <i class="fas fa-exclamation-circle"></i>
-            <span class="text-sm font-medium">{{ session('error') }}</span>
-        </div>
+                @if (session('success'))
+                    Toast.fire({
+                        icon: 'success',
+                        title: @json(session('success'))
+                    });
+                @endif
+
+                @if (session('error'))
+                    Toast.fire({
+                        icon: 'error',
+                        title: @json(session('error'))
+                    });
+                @endif
+            });
+        </script>
     @endif
 
 </x-layouts.staff>

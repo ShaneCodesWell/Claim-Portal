@@ -33,7 +33,7 @@ enum ClaimStatus: string {
         return [
             self::SUBMITTED    => 'Submitted',
             self::UNDER_REVIEW => 'Under Review',
-            self::PENDING_INFO => 'Pending Information',
+            self::PENDING_INFO => 'Pending Info',
             self::IN_PROGRESS  => 'In Progress',
             self::APPROVED     => 'Approved',
             self::REJECTED     => 'Rejected',

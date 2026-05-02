@@ -117,15 +117,15 @@
                                 </button>
                                 <div x-show="open" @click.outside="open = false" x-transition
                                     class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                    <a href="#"
+                                    <a href="{{ route('staff.claims.show', $claim->id) }}"
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                         <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
                                     </a>
                                     <div class="border-t border-gray-100 my-1"></div>
-                                    <button onclick="assignClaim(1)"
+                                    {{-- <button onclick="assignClaim(1)"
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                         <i class="fas fa-user-check text-xs text-emerald-500"></i> Assign Claim
-                                    </button>
+                                    </button> --}}
                                 </div>
                             </td>
                         </tr>

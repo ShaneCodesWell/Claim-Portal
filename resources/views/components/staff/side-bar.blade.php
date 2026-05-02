@@ -23,7 +23,7 @@
                 <i class="fas fa-clipboard-list w-5"></i>
                 <span>Customer Claims</span>
                 <span
-                    class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['incoming_claims'] }}</span>
+                    class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['submitted_claims'] }}</span>
             </a>
             <a href="{{ route('staff.claims.my-queue') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">

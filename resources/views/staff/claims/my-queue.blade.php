@@ -32,15 +32,15 @@
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-amber-400"></span>
-            <span class="text-sm text-gray-600">Pending</span>
-            <span class="text-sm font-semibold text-gray-900">{{ $stats['pending_claims'] }}</span>
+            <span class="text-sm text-gray-600">Under Review</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $stats['under_review'] }}</span>
         </div>
 
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+        {{-- <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-blue-400"></span>
             <span class="text-sm text-gray-600">Submitted</span>
             <span class="text-sm font-semibold text-gray-900">{{ $stats['submitted_claims'] }}</span>
-        </div>
+        </div> --}}
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
@@ -131,10 +131,11 @@
                                 {{ \Carbon\Carbon::parse($claim->policy->end_date)->format('M d, Y') }}</td>
                             <td class="px-4 py-4 text-sm text-gray-600">{{ $claim->assignedBy->name ?? 'Unassigned' }}
                             </td>
+                            @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
                             <td class="px-4 py-4">
                                 <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                                    Pending
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border {{ $badge['class'] }}">
+                                    {{ $badge['label'] }}
                                 </span>
                             </td>
                             <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
@@ -145,7 +146,7 @@
                                 </button>
                                 <div x-show="open" @click.outside="open = false" x-transition
                                     class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                    <a href="{{ route('process-claim-motor') }}"
+                                    <a href="{{ route('staff.claims.show', $claim->id) }}"
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                         <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
                                     </a>

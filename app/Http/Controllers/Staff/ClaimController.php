@@ -34,8 +34,7 @@ class ClaimController extends Controller
 
         $stats = [
             'total_claims'     => Claim::where('assigned_to', Auth::user()->id)->count(),
-            'pending_claims'   => Claim::where('assigned_to', Auth::user()->id)->where('status', 'pending')->count(),
-            'submitted_claims' => Claim::where('assigned_to', Auth::user()->id)->where('status', 'submitted')->count(),
+            'under_review'   => Claim::where('assigned_to', Auth::user()->id)->where('status', 'under_review')->count(),
             'closed_claims'    => Claim::where('assigned_to', Auth::user()->id)->where('status', 'closed')->count(),
         ];
 
