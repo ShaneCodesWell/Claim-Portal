@@ -1,8 +1,9 @@
 services:
     laravel.test:
+        platform: linux/amd64
         image: sail-8.3/app
         build:
-            context: ./vendor/laravel/sail/runtimes/8.3
+            context: ./docker/8.3
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'

@@ -1,8 +1,6 @@
 <?php
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,6 +19,11 @@ class Customer extends Authenticatable
         'last_synced_at',
         'local_password',
         'local_password_set_at',
+        'sources',
+    ];
+
+    protected $casts = [
+        'sources' => 'array',
     ];
 
     public function policies()
