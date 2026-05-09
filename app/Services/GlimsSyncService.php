@@ -20,6 +20,46 @@ class GlimsSyncService
      *
      * @return array  Map of policy_number → policy data (same shape DashboardController expects)
      */
+
+    // Add this at the top of syncCustomer() or as a private method
+    private function mapGlimsStatus(string $statusCode): string
+    {
+        return match ((string) $statusCode) {
+            '0'     => 'quote',
+            '1'     => 'proposal',
+            '2'     => 'rejected',
+            '3'     => 'active', // In Force
+            '4'     => 'cancelled',
+            '5'     => 'not_taken',
+            '6'     => 'surrender',
+            '7'     => 'matured',
+            default => 'unknown',
+        };
+    }
+
+    private function mapGlimsStatusReason(string $reasonCode): string
+    {
+        return match ((string) $reasonCode) {
+            '3'     => 'New',
+            '4'     => 'Alteration',
+            '5'     => 'Renewal',
+            '6'     => 'Extension',
+            '8'     => 'Reinstatement',
+            '9'     => 'Reversal of Alteration',
+            '10'    => 'Reinstatement With Lapse',
+            '11'    => 'Paid Up',
+            '40'    => 'Suspended',
+            '41'    => 'Cancelled',
+            '42'    => 'Cancelled From Inception',
+            '43'    => 'Reversal',
+            '44'    => 'Automatic Cancellation',
+            '50'    => 'Not Taken',
+            '60'    => 'Surrender',
+            '71'    => 'Matured',
+            default => 'Unknown',
+        };
+    }
+
     public function syncCustomer(array $glimsCustomer): array
     {
         $clientCode = $glimsCustomer['CLIENT_CODE'];
@@ -57,10 +97,14 @@ class GlimsSyncService
         foreach ($rawPolicies as $raw) {
             $raw = (array) $raw;
 
-            // TODO: re-enable once we map POLICY_STATUS_REASON codes
-            // if (in_array($raw['POLICY_STATUS_REASON'] ?? '', ['CANCELLED', 'LAPSED'])) {
-            //     continue;
-            // }
+            // Skip policies that should never show on the portal
+            $skipStatuses = ['0', '2', '5'];    // Quote, Rejected Proposal, Not Taken
+            $skipReasons  = ['41', '42', '44']; // Cancelled, Cancelled From Inception, Auto Cancellation
+
+            if (in_array($raw['POLICY_STATUS'] ?? '', $skipStatuses) ||
+                in_array($raw['POLICY_STATUS_REASON'] ?? '', $skipReasons)) {
+                continue;
+            }
 
             // Pull motor risks to get the vehicle number (if motor policy)
             $motorRisks    = $this->glims->getMotorRisks($raw['POLICY_SEQUENCE']);
@@ -82,9 +126,15 @@ class GlimsSyncService
                     'start_date'          => $raw['POLICY_COMMENCEMENT_DATE'],
                     'end_date'            => $raw['POLICY_EXPIRY_DATE'],
                     'effective_date'      => $raw['POLICY_EFFECTIVE_DATE'],
-                    'renewal_date'        => null, // not in UW1_POLICY — can derive later
-                    'status'              => $raw['POLICY_STATUS_REASON'] ?? null,
-                    'raw_payload'         => $raw,
+                    'renewal_date'        => null,
+                    // Store the human-readable status derived from POLICY_STATUS
+                    'status'              => $this->mapGlimsStatus($raw['POLICY_STATUS'] ?? ''),
+                    'raw_payload'         => array_merge($raw, [
+                        'vehicle_number' => $vehicleNumber,
+                        'motor_risks'    => $motorRisks,
+                        'status_label'   => $this->mapGlimsStatus($raw['POLICY_STATUS'] ?? ''),
+                        'status_reason'  => $this->mapGlimsStatusReason($raw['POLICY_STATUS_REASON'] ?? ''),
+                    ]),
                     'last_synced_at'      => now(),
                 ]
             );
@@ -134,5 +184,14 @@ class GlimsSyncService
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    private function deriveStatus(?string $expiryDate): string
+    {
+        if (! $expiryDate) {
+            return 'unknown';
+        }
+
+        return \Carbon\Carbon::parse($expiryDate)->isFuture() ? 'active' : 'expired';
     }
 }

@@ -5,10 +5,13 @@ use App\Enums\ClaimStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
+use App\Models\ClaimDocument;
 use App\Models\User;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ClaimController extends Controller
 {
@@ -33,9 +36,9 @@ class ClaimController extends Controller
             ->paginate(15);
 
         $stats = [
-            'total_claims'     => Claim::where('assigned_to', Auth::user()->id)->count(),
-            'under_review'   => Claim::where('assigned_to', Auth::user()->id)->where('status', 'under_review')->count(),
-            'closed_claims'    => Claim::where('assigned_to', Auth::user()->id)->where('status', 'closed')->count(),
+            'total_claims'  => Claim::where('assigned_to', Auth::user()->id)->count(),
+            'under_review'  => Claim::where('assigned_to', Auth::user()->id)->where('status', 'under_review')->count(),
+            'closed_claims' => Claim::where('assigned_to', Auth::user()->id)->where('status', 'closed')->count(),
         ];
 
         return view('staff.claims.my-queue', compact('claims', 'stats'));
@@ -50,6 +53,27 @@ class ClaimController extends Controller
             ->get();
 
         return view('staff.claims.show', compact('claim', 'staffMembers'));
+    }
+
+    public function previewDocument(ClaimDocument $document, Request $request)
+    {
+        // Verify the document belongs to a claim owned by this customer
+        // (skip this check on staff routes — add middleware instead)
+        $path = Storage::disk('local')->path($document->file_path);
+
+        if (! file_exists($path)) {
+            Log::error('Document not found at path: ' . $path);
+            abort(404, 'Document not found.');
+        }
+
+        if ($request->boolean('download')) {
+            return response()->download($path, $document->original_name);
+        }
+
+        return response()->file($path, [
+            'Content-Type'        => $document->mime_type,
+            'Content-Disposition' => 'inline; filename="' . $document->original_name . '"',
+        ]);
     }
 
     public function print(Claim $claim)

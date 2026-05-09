@@ -1,16 +1,16 @@
 <?php
 namespace App\Services;
 
+use App\Enums\ClaimSource;
+use App\Enums\ClaimStatus;
+use App\Enums\UserRole;
+use App\Models\Branch;
 use App\Models\Claim;
 use App\Models\ClaimActivity;
 use App\Models\ClaimDocument;
 use App\Models\Customer;
 use App\Models\Policy;
-use App\Models\Branch;
 use App\Models\User;
-use App\Enums\ClaimStatus;
-use App\Enums\ClaimSource;
-use App\Enums\UserRole;
 use Illuminate\Support\Facades\DB;
 
 class ClaimService
@@ -173,5 +173,43 @@ class ClaimService
     private function resolveBranch(Policy $policy): int
     {
         return Branch::where('code', 'ACC-HQ')->first()?->id ?? Branch::first()->id;
+    }
+
+    /**
+     * Store uploaded files and record them in claim_documents.
+     * Works for both customer uploads (uploadedBy = null) and staff uploads.
+     */
+    public function attachDocuments(
+        Claim $claim,
+        array $files,
+        ?User $uploadedBy = null,
+        string $type = 'supporting'
+    ): void {
+        foreach ($files as $file) {
+            // Store under claims/{claim_number}/filename — private disk
+            $path = $file->storeAs(
+                "claims/{$claim->claim_number}",
+                $file->getClientOriginalName(),
+                'local' // stored in storage/app — not publicly accessible
+            );
+
+            ClaimDocument::create([
+                'claim_id'      => $claim->id,
+                'uploaded_by'   => $uploadedBy?->id,
+                'type'          => $type,
+                'original_name' => $file->getClientOriginalName(),
+                'file_path'     => $path,
+                'mime_type'     => $file->getMimeType(),
+                'file_size'     => $file->getSize(),
+            ]);
+        }
+
+        $this->logActivity(
+            $claim,
+            $uploadedBy,
+            'documents_uploaded',
+            count($files) . ' document(s) uploaded.',
+            ['count' => count($files), 'type' => $type]
+        );
     }
 }

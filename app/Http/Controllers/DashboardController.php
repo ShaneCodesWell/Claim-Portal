@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Policy;
 use App\Services\GenovaApiService;
+use App\Services\GlimsService;
+use App\Services\GlimsSyncService;
 use App\Services\PolicySyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -12,11 +14,19 @@ class DashboardController extends Controller
 {
     protected GenovaApiService $api;
     protected PolicySyncService $policySync;
+    protected GlimsService $glimsService;
+    protected GlimsSyncService $glimsSyncService;
 
-    public function __construct(GenovaApiService $api, PolicySyncService $policySync)
-    {
-        $this->api        = $api;
-        $this->policySync = $policySync;
+    public function __construct(
+        GenovaApiService $api,
+        PolicySyncService $policySync,
+        GlimsService $glimsService,
+        GlimsSyncService $glimsSyncService
+    ) {
+        $this->api              = $api;
+        $this->policySync       = $policySync;
+        $this->glimsService     = $glimsService;
+        $this->glimsSyncService = $glimsSyncService;
     }
 
     public function index()
@@ -127,7 +137,7 @@ class DashboardController extends Controller
                 return response()->json(['success' => false, 'message' => 'Session expired'], 401);
             }
 
-            // Fetch business classes
+            // ── 1. Genova sync (existing logic) ──────────────────────────────
             $businessClasses         = [];
             $businessClassesResponse = $this->api->getBusinessClasses($phoneNumber);
             if ($businessClassesResponse->successful()) {
@@ -136,7 +146,6 @@ class DashboardController extends Controller
                 );
             }
 
-            // Fetch all products across business classes
             $allProducts = [];
             foreach ($businessClasses as $classId => $className) {
                 $productsResponse = $this->api->getProductsByClass($classId);
@@ -167,6 +176,11 @@ class DashboardController extends Controller
                 $this->processPoliciesResponse($response, $phoneNumber, $customerCode, $allProducts, $syncedPoliciesMap);
             }
 
+            // ── 2. GLIMS sync ─────────────────────────────────────────────────
+            // Find the customer in our DB (just synced from Genova above)
+            // and check if they also exist in GLIMS by their external_customer_code
+            $this->syncGlimsForCurrentSession($phoneNumber, $customerCode, $syncedPoliciesMap);
+
             $syncedPolicies = array_values($syncedPoliciesMap);
 
             Log::info('Sync completed', ['unique_policies_synced' => count($syncedPolicies)]);
@@ -186,6 +200,55 @@ class DashboardController extends Controller
                 'success' => false,
                 'message' => 'An error occurred during sync',
             ], 500);
+        }
+    }
+
+    private function syncGlimsForCurrentSession(
+        ?string $phoneNumber,
+        ?string $customerCode,
+        array &$syncedPoliciesMap
+    ): void {
+        try {
+            // Find the DB customer record (created during Genova sync)
+            $dbCustomer = Customer::where('phone', $phoneNumber)
+                ->orWhere('external_customer_code', $customerCode)
+                ->first();
+
+            if (! $dbCustomer || ! $dbCustomer->external_customer_code) {
+                Log::info('GLIMS sync skipped — no customer code available');
+                return;
+            }
+
+            // Look up the customer in GLIMS using their client code
+            $glimsCustomer = $this->glimsService->customerVerification(
+                $dbCustomer->external_customer_code,
+                'client_code'
+            );
+
+            if (! $glimsCustomer) {
+                Log::info('GLIMS sync skipped — customer not found in VACLIVE', [
+                    'customer_code' => $dbCustomer->external_customer_code,
+                ]);
+                return;
+            }
+
+            // Run the sync and merge results into the shared map
+            $glimsPolicies = $this->glimsSyncService->syncCustomer($glimsCustomer);
+
+            foreach ($glimsPolicies as $policyNumber => $policyData) {
+                if (! isset($syncedPoliciesMap[$policyNumber])) {
+                    $syncedPoliciesMap[$policyNumber] = $policyData;
+                }
+            }
+
+            Log::info('GLIMS sync completed for session customer', [
+                'customer_code'   => $dbCustomer->external_customer_code,
+                'policies_synced' => count($glimsPolicies),
+            ]);
+
+        } catch (\Exception $e) {
+            // GLIMS sync failure should never break the whole dashboard
+            Log::error('GLIMS session sync error: ' . $e->getMessage());
         }
     }
 

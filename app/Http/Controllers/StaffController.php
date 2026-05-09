@@ -63,9 +63,39 @@ class StaffController extends Controller
         return view('staff.claim-forms.create');
     }
 
-    public function claimDouments()
+    public function claimDocuments()
     {
-        return view('staff.claim-documents.index');
+        // Group claim documents by policy, eager load everything needed
+        $policies = Policy::whereHas('claims.documents')
+            ->with([
+                'claims' => fn($q) => $q->whereHas('documents'),
+                'claims.documents',
+                'claims.customer',
+            ])
+            ->paginate(9);
+
+        // Flatten into a structure the view can use easily
+        $grouped = $policies->map(function ($policy) {
+            $documents = $policy->claims->flatMap->documents;
+            return [
+                'policy'      => $policy,
+                'customer'    => $policy->claims->first()?->customer,
+                'documents'   => $documents,
+                'pdf_count'   => $documents->filter(fn($d) => str_contains($d->mime_type, 'pdf'))->count(),
+                'image_count' => $documents->filter(fn($d) => str_contains($d->mime_type, 'image'))->count(),
+                'other_count' => $documents->filter(fn($d) => ! str_contains($d->mime_type, 'pdf') && ! str_contains($d->mime_type, 'image'))->count(),
+                'total_size'  => $documents->sum('file_size'),
+            ];
+        });
+
+        $totalDocs   = $grouped->sum(fn($g) => $g['documents']->count());
+        $totalPdfs   = $grouped->sum(fn($g) => $g['pdf_count']);
+        $totalImages = $grouped->sum(fn($g) => $g['image_count']);
+        $totalOther  = $grouped->sum(fn($g) => $g['other_count']);
+
+        return view('staff.claim-documents.index', compact(
+            'grouped', 'policies', 'totalDocs', 'totalPdfs', 'totalImages', 'totalOther'
+        ));
     }
 
     public function customers()
@@ -85,7 +115,7 @@ class StaffController extends Controller
     public function showCustomer(Customer $customer)
     {
         $policies = $customer->policies()->latest()->paginate(5);
-        $claims  = Claim::whereIn('policy_id', $customer->policies->pluck('id'))->latest()->paginate(5);
+        $claims   = Claim::whereIn('policy_id', $customer->policies->pluck('id'))->latest()->paginate(5);
 
         $stats = [
             'active_policies'  => Policy::where('status', 'active')->count(),

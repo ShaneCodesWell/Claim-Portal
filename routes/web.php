@@ -70,6 +70,7 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('claims', [StaffClaimController::class, 'index'])->name('staff.claims.index');
     Route::get('claims/my-queue', [StaffClaimController::class, 'myQueue'])->name('staff.claims.my-queue');
     Route::get('claims/{claim}', [StaffClaimController::class, 'show'])->name('staff.claims.show');
+    Route::get('/documents/{document}/preview', [StaffClaimController::class, 'previewDocument'])->name('documents.preview');
     Route::get('claims/{claim}/print', [StaffClaimController::class, 'print'])->name('staff.claims.print');
     Route::post('claims/{claim}/assign', [StaffClaimController::class, 'assign'])->name('staff.claims.assign');
     Route::post('claims/{claim}/status', [StaffClaimController::class, 'updateStatus'])->name('staff.claims.status');
@@ -86,7 +87,8 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     // Claim Forms & Documents
     Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
     Route::get('/staff/claim-forms/create', [StaffController::class, 'createClaimForms'])->name('create-claim-form');
-    Route::get('/staff/claim-documents', [StaffController::class, 'claimDouments'])->name('claim-documents');
+    Route::get('/staff/claim-documents', [StaffController::class, 'claimDocuments'])->name('claim-documents');
+    
 
     // Customers
     Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers.index');
@@ -102,6 +104,10 @@ Route::middleware(['agent'])->prefix('agent')->group(function () {
 
 // Admin-only routes — only admins can access
 Route::middleware(['admin'])->prefix('admin')->group(function () {
+
+    // Preview Document
+    Route::get('/documents/{document}/preview', [StaffClaimController::class, 'previewDocument'])->name('documents.preview');
+    
     // Organization
     Route::get('/organization', [CompanyController::class, 'index'])->name('organization');
 

@@ -170,6 +170,39 @@
                 </div>
             </div>
 
+            {{-- Documents Card --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-paperclip text-blue-500"></i> Uploaded Documents
+                    </h3>
+                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                        {{ $claim->documents->count() }}
+                    </span>
+                </div>
+                <div class="p-4">
+                    @forelse($claim->documents as $doc)
+                        <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                            <div class="flex items-center gap-2">
+                                @if (str_contains($doc->mime_type, 'pdf'))
+                                    <i class="fas fa-file-pdf text-red-400 text-sm"></i>
+                                @else
+                                    <i class="fas fa-image text-blue-400 text-sm"></i>
+                                @endif
+                                <span class="text-xs text-gray-700 truncate max-w-35">{{ $doc->original_name }}</span>
+                            </div>
+                            <button
+                                onclick="openDocPreview('{{ route('documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
+                                class="text-xs text-blue-600 hover:underline">
+                                View
+                            </button>
+                        </div>
+                    @empty
+                        <p class="text-xs text-gray-400 italic">No documents uploaded yet.</p>
+                    @endforelse
+                </div>
+            </div>
+
             {{-- Activity Timeline --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
@@ -351,7 +384,7 @@
             </div>
 
             {{-- Documents Card --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            {{-- <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <i class="fas fa-paperclip text-blue-500"></i> Documents
@@ -366,7 +399,7 @@
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-file text-gray-400 text-sm"></i>
                                 <span
-                                    class="text-xs text-gray-700 truncate max-w-[140px]">{{ $doc->original_name }}</span>
+                                    class="text-xs text-gray-700 truncate max-w-35">{{ $doc->original_name }}</span>
                             </div>
                             <a href="{{ Storage::url($doc->file_path) }}" target="_blank"
                                 class="text-xs text-blue-600 hover:underline">View</a>
@@ -375,10 +408,13 @@
                         <p class="text-xs text-gray-400 italic">No documents uploaded yet.</p>
                     @endforelse
                 </div>
-            </div>
+            </div> --}}
 
         </div>
     </div>
+
+    {{-- Document Preview Modal --}}
+    <x-documents-modal />
 
     {{-- Flash Messages --}}
     @if (session('success') || session('error'))
@@ -412,5 +448,64 @@
             });
         </script>
     @endif
+
+    <script>
+        function openDocPreview(url, name, mimeType) {
+            const modal = document.getElementById('docViewModal');
+            const body = document.getElementById('docViewBody');
+            const nameEl = document.getElementById('docViewName');
+            const iconEl = document.getElementById('docViewIcon');
+            const download = document.getElementById('docViewDownload');
+
+            nameEl.textContent = name;
+            download.href = url + '?download=1';
+
+            // Reset body
+            body.innerHTML = `<div class="text-center text-gray-400">
+        <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+        <p class="text-sm">Loading document...</p>
+    </div>`;
+
+            if (mimeType.includes('pdf')) {
+                iconEl.className = 'fas fa-file-pdf text-red-400';
+                body.innerHTML =
+                    `<iframe src="${url}" class="w-full rounded" style="height:65vh;" frameborder="0"></iframe>`;
+            } else if (mimeType.includes('image')) {
+                iconEl.className = 'fas fa-image text-blue-400';
+                body.innerHTML =
+                    `<img src="${url}" class="max-w-full max-h-[65vh] rounded-lg shadow object-contain" 
+                                 onerror="this.parentElement.innerHTML='<p class=text-red-500 text-sm>Failed to load image.</p>'" />`;
+            } else {
+                iconEl.className = 'fas fa-file text-gray-400';
+                body.innerHTML = `<div class="text-center text-gray-500 py-12">
+            <i class="fas fa-file-alt text-5xl mb-4 text-gray-300"></i>
+            <p class="text-sm font-medium">${name}</p>
+            <p class="text-xs text-gray-400 mt-1">Preview not available for this file type.</p>
+            <a href="${url}?download=1" class="mt-4 inline-block bg-blue-600 text-white text-sm px-4 py-2 rounded-lg">
+                Download to view
+            </a>
+        </div>`;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDocPreview() {
+            const modal = document.getElementById('docViewModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+            document.getElementById('docViewBody').innerHTML = '';
+        }
+
+        document.getElementById('docViewModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'docViewModal') closeDocPreview();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDocPreview();
+        });
+    </script>
 
 </x-layouts.staff>

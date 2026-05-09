@@ -128,7 +128,8 @@ class GlimsService
                     'POLICY_INSURED',
                     'POLICY_BRANCH',
                     'POLICY_AGENT',
-                    'POLICY_STATUS_REASON',
+                    'POLICY_STATUS',        // ← main status (3 = In Force, 4 = Cancelled etc.)
+                    'POLICY_STATUS_REASON', // ← sub-status type (5 = Renewal, 41 = Cancelled etc.)
                     'POLICY_MAIN_CLASS',
                     'POLICY_LOB',
                     'POLICY_PRODUCT',
@@ -139,7 +140,6 @@ class GlimsService
                     'POLICY_TOTAL_PREMIUM',
                     'POLICY_TOTAL_SI',
                     'POLICY_CURRENCY',
-                    'POLICY_STATUS',
                 ])
                 ->orderBy('POLICY_COMMENCEMENT_DATE', 'desc')
                 ->get();
@@ -153,6 +153,7 @@ class GlimsService
                     'POLICY_INSURED'           => $row->policy_insured,
                     'POLICY_BRANCH'            => $row->policy_branch,
                     'POLICY_AGENT'             => $row->policy_agent,
+                    'POLICY_STATUS'            => $row->policy_status,
                     'POLICY_STATUS_REASON'     => $row->policy_status_reason,
                     'POLICY_MAIN_CLASS'        => $row->policy_main_class,
                     'POLICY_LOB'               => $row->policy_lob,
@@ -164,7 +165,6 @@ class GlimsService
                     'POLICY_TOTAL_PREMIUM'     => $row->policy_total_premium,
                     'POLICY_TOTAL_SI'          => $row->policy_total_si,
                     'POLICY_CURRENCY'          => $row->policy_currency,
-                    'POLICY_STATUS'            => $row->policy_status,
                 ];
             })->toArray();
 
