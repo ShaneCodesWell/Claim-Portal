@@ -22,3 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Oracle Instant Client files
+docker/8.3/instantclient-basic-linux.x64-23.26.1.0.0.zip
+docker/8.3/instantclient-sdk-linux.x64-23.26.1.0.0.zip
