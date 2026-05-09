@@ -8,9 +8,9 @@
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 <div class="flex items-center gap-2">
-                    <div class="bg-blue-100 rounded-lg p-1.5 shadow-sm md:hidden">
+                    {{-- <div class="bg-blue-100 rounded-lg p-1.5 shadow-sm md:hidden">
                         <i class="fas fa-shield-alt text-blue-600 text-sm"></i>
-                    </div>
+                    </div> --}}
                     <h1 class="text-xl md:text-xl font-bold text-gray-800 tracking-tight">
                         E-Claim
                         <span class="font-medium text-blue-600">Dashboard</span>

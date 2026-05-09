@@ -13,11 +13,6 @@
 
         <!-- Navigation Links -->
         <nav class="flex-1 px-3 py-6 space-y-1.5">
-            {{-- <a href="#"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-indigo-50 text-indigo-700 font-medium">
-                <i class="fas fa-tachometer-alt w-5"></i>
-                <span>Dashboard</span>
-            </a> --}}
             <a href="{{ route('staff.claims.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-clipboard-list w-5"></i>
@@ -76,4 +71,4 @@
 </aside>
 <!-- OVERLAY for mobile sidebar (hidden by default) -->
 <div id="sidebarOverlay"
-    class="fixed inset-0 bg-black bg-opacity-40 z-30 hidden md:hidden transition-opacity duration-300"></div>
+    class="fixed inset-0 bg-black/40 z-30 hidden md:hidden transition-opacity duration-300 opacity-0"></div>

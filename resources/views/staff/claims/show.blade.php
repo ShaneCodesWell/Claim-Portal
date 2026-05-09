@@ -3,10 +3,6 @@
     {{-- Page Header --}}
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
-            <a href="{{ route('staff.claims.index') }}"
-                class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-gray-500">
-                <i class="fas fa-arrow-left text-sm"></i>
-            </a>
             <div>
                 <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                     {{ $claim->claim_number }}
@@ -37,6 +33,10 @@
 
         {{-- Quick Status Update --}}
         <form action="{{ route('staff.claims.status', $claim) }}" method="POST" class="flex items-center gap-2">
+            <a href="{{ route('staff.claims.index') }}"
+                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
+                <i class="fas fa-arrow-left text-sm"></i> Back
+            </a>
             @csrf
             <select name="status"
                 class="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none">

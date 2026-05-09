@@ -46,7 +46,7 @@
     <!-- Claims Table -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="overflow-x-auto custom-scroll">
-            <table class="min-w-[1200px] md:min-w-full w-full">
+            <table class="min-w-300 md:min-w-full w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -116,7 +116,8 @@
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <div x-show="open" @click.outside="open = false" x-transition
-                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                                    x-anchor.bottom-end="$el.previousElementSibling"
+                                    class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
                                     <a href="{{ route('staff.claims.show', $claim->id) }}"
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                         <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim

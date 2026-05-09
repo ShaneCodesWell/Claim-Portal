@@ -31,7 +31,7 @@
         </div>
 
         {{-- Modal Body — print content renders here --}}
-        <div class="p-8 m-8 border-1 border-gray-300">
+        <div class="p-8 m-8 border border-gray-300">
             <div id="printModalContent" class="p-6 min-h-64">
                 <div id="printModalLoading" class="flex items-center justify-center py-20">
                     <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"

@@ -1,4 +1,4 @@
-(function () {
+document.addEventListener("DOMContentLoaded", function () {
     // Sidebar elements
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("sidebarOverlay");
@@ -11,16 +11,26 @@
 
     // Toggle sidebar on mobile
     function openSidebar() {
+        // Show overlay first (remove hidden, then fade in)
+        overlay.classList.remove("hidden");
+        requestAnimationFrame(() => {
+            overlay.classList.remove("opacity-0");
+            overlay.classList.add("opacity-100");
+        });
+        // Slide sidebar in
         sidebar.classList.remove("-translate-x-full");
         sidebar.classList.add("translate-x-0");
-        overlay.classList.remove("hidden");
         document.body.classList.add("no-scroll");
     }
 
     function closeSidebar() {
+        // Fade overlay out, then hide it after transition
+        overlay.classList.remove("opacity-100");
+        overlay.classList.add("opacity-0");
+        setTimeout(() => overlay.classList.add("hidden"), 300);
+        // Slide sidebar out
         sidebar.classList.add("-translate-x-full");
         sidebar.classList.remove("translate-x-0");
-        overlay.classList.add("hidden");
         document.body.classList.remove("no-scroll");
     }
 
@@ -114,4 +124,4 @@
             closeSidebar();
         }
     });
-})();
+});
