@@ -88,7 +88,7 @@
 
         <!-- Table (Responsive) -->
         <div class="overflow-x-auto custom-scroll">
-            <table class="min-w-[900px] md:min-w-full w-full">
+            <table class="min-w-225 md:min-w-full w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">

@@ -158,4 +158,76 @@ class ClaimController extends Controller
 
         return back()->with('success', 'Claim details updated.');
     }
+
+    public function edit(Claim $claim)
+    {
+        $claim->load(['policy', 'documents']);
+
+        $viewMap = [
+            'motor'            => 'staff.claims.edit.motor',
+            'fire'             => 'staff.claims.edit.fire',
+            'general_accident' => 'staff.claims.edit.general-accident',
+        ];
+
+        $view = $viewMap[$claim->claim_type] ?? null;
+
+        if (! $view) {
+            return redirect()->route('staff.claims.show', $claim)
+                ->with('error', 'No edit form available for this claim type.');
+        }
+
+        return view($view, compact('claim'));
+    }
+
+    public function update(Request $request, Claim $claim)
+    {
+        $validated = $request->validate([
+            'claim_type'         => 'required|string',
+            'form_data'          => 'required|array',
+            'documents'          => 'nullable|array',
+            'documents.*'        => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'delete_documents'   => 'nullable|array',
+            'delete_documents.*' => 'integer|exists:claim_documents,id',
+            'note'               => 'nullable|string|max:500',
+        ]);
+
+        $claim->update(['form_data' => $validated['form_data']]);
+
+        // Delete marked documents
+        if (! empty($validated['delete_documents'])) {
+            $docsToDelete = ClaimDocument::whereIn('id', $validated['delete_documents'])
+                ->where('claim_id', $claim->id)
+                ->get();
+
+            foreach ($docsToDelete as $doc) {
+                Storage::disk('local')->delete($doc->file_path);
+                $doc->delete();
+            }
+        }
+
+        // Attach new documents — stamped with the staff user who uploaded them
+        if ($request->hasFile('documents')) {
+            $this->claimService->attachDocuments(
+                claim: $claim,
+                files: $request->file('documents'),
+                uploadedBy: Auth::user(), // ← staff user recorded here
+                type: 'staff_upload',
+            );
+        }
+
+        $this->claimService->logActivityPublic(
+            $claim,
+            Auth::user(),
+            'form_updated',
+            $validated['note'] ?? 'Form data updated by staff.',
+            ['updated_by' => Auth::user()->id, 'role' => Auth::user()->role]
+        );
+
+        return response()->json([
+            'success'      => true,
+            'message'      => 'Claim updated successfully.',
+            'claim_number' => $claim->claim_number,
+            'redirect'     => route('staff.claims.show', $claim),
+        ]);
+    }
 }

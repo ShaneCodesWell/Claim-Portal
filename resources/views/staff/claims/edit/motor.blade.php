@@ -1,4 +1,4 @@
-<x-layouts.app>
+<x-layouts.staff>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <x-claimant-info :policy="$policy" :customer="$customer" />
         <div class="lg:col-span-2">
@@ -11,4 +11,4 @@
             ])
         </div>
     </div>
-</x-layouts.app>
+</x-layouts.staff>

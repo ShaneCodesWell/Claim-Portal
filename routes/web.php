@@ -53,6 +53,9 @@ Route::middleware('auth.customer')->group(function () {
     Route::get('claims/edit/{claim}', [CustomerClaimController::class, 'edit'])->name('claims.edit');
     Route::put('claims/update/{claim}', [CustomerClaimController::class, 'update'])->name('claims.update');
 
+    // Preview Document
+    Route::get('/documents/{document}/preview', [CustomerClaimController::class, 'previewDocument'])->name('documents.preview');
+
     // Forms for now - we can remove these later when we build the dynamic form builder
     Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
     Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
@@ -62,11 +65,6 @@ Route::middleware('auth.customer')->group(function () {
 
 // Staff routes — accessible by ALL staff including admins
 Route::middleware(['staff'])->prefix('admin')->group(function () {
-
-    // Dashboard and Claims
-    // Route::get('/staff/dashboard', [StaffController::class, 'dashboard'])->name('staff-dashboard');
-    // Route::get('/staff/all-claims', [StaffController::class, 'allClaims'])->name('all-claims');
-    Route::get('/staff/my-claims', [StaffController::class, 'myClaims'])->name('my-claims'); // Comment out after implementation
 
     // Claims
     Route::get('claims', [StaffClaimController::class, 'index'])->name('staff.claims.index');
@@ -79,18 +77,17 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::post('claims/{claim}/request-info', [StaffClaimController::class, 'requestInfo'])->name('staff.claims.request-info');
     Route::post('claims/{claim}/form-data', [StaffClaimController::class, 'updateFormData'])->name('staff.claims.form-data');
 
-    //Show the Claim forms for each claim type
-    // Route::get('/staff/process-claim', [StaffController::class, 'processClaim'])->name('process-claim');
+    Route::get('claims/{claim}/edit', [StaffClaimController::class, 'edit'])->name('staff.claims.edit');
+    Route::put('claims/{claim}/edit', [StaffClaimController::class, 'update'])->name('staff.claims.update');
+
     Route::get('/staff/process-claim/motor', [StaffController::class, 'processClaimMotor'])->name('process-claim-motor');
     Route::get('/staff/process-claim/fire', [StaffController::class, 'processClaimFire'])->name('process-claim-fire');
     Route::get('/staff/process-claim/general-accident', [StaffController::class, 'processClaimGeneralAccident'])->name('process-claim-general-accident');
-    
 
     // Claim Forms & Documents
     Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
     Route::get('/staff/claim-forms/create', [StaffController::class, 'createClaimForms'])->name('create-claim-form');
     Route::get('/staff/claim-documents', [StaffController::class, 'claimDocuments'])->name('claim-documents');
-    
 
     // Customers
     Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers.index');
@@ -109,7 +106,7 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
 
     // Preview Document
     Route::get('/documents/{document}/preview', [StaffClaimController::class, 'previewDocument'])->name('documents.preview');
-    
+
     // Organization
     Route::get('/organization', [CompanyController::class, 'index'])->name('organization');
 

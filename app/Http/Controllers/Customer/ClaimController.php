@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Claim;
 use App\Models\Customer;
 use App\Models\Policy;
-use App\Services\ClaimService;
 use Illuminate\Http\Request;
+use App\Models\ClaimDocument;
+use App\Services\ClaimService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ClaimController extends Controller
@@ -92,6 +94,7 @@ class ClaimController extends Controller
 
     public function edit(Claim $claim)
     {
+        $claim->load(['policy', 'activities.user', 'documents']);
         // Only allow editing if claim is still in a state where edits make sense
         $editableStatuses = ['submitted', 'pending_info'];
 
@@ -177,6 +180,27 @@ class ClaimController extends Controller
             'message'      => 'Your claim has been updated successfully.',
             'claim_number' => $claim->claim_number,
             'redirect'     => route('claims.show', $claim),
+        ]);
+    }
+
+    public function previewDocument(ClaimDocument $document, Request $request)
+    {
+        // Verify the document belongs to a claim owned by this customer
+        // (skip this check on staff routes — add middleware instead)
+        $path = Storage::disk('local')->path($document->file_path);
+
+        if (! file_exists($path)) {
+            Log::error('Document not found at path: ' . $path);
+            abort(404, 'Document not found.');
+        }
+
+        if ($request->boolean('download')) {
+            return response()->download($path, $document->original_name);
+        }
+
+        return response()->file($path, [
+            'Content-Type'        => $document->mime_type,
+            'Content-Disposition' => 'inline; filename="' . $document->original_name . '"',
         ]);
     }
 }

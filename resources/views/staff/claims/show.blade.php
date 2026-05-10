@@ -293,7 +293,7 @@
                             class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                             <i class="fas fa-eye"></i> Preview Form
                         </button>
-                        <a href="#"
+                        <a href="{{ route('staff.claims.edit', $claim) }}"
                             class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                             <i class="fas fa-edit"></i> Edit Form
                         </a>
@@ -464,7 +464,7 @@
             body.innerHTML = `<div class="text-center text-gray-400">
         <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
         <p class="text-sm">Loading document...</p>
-    </div>`;
+        </div>`;
 
             if (mimeType.includes('pdf')) {
                 iconEl.className = 'fas fa-file-pdf text-red-400';
