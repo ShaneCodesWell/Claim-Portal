@@ -1,33 +1,69 @@
 // ==================== CLAIM SUBMISSION ====================
 
-async function submitClaim(formId, formData) {
-    const submitBtn = document.querySelector(`#${formId} [type="submit"]`);
-    const originalHTML = submitBtn?.innerHTML;
+// async function submitClaim(formId, formData) {
+//     const submitBtn = document.querySelector(`#${formId} [type="submit"]`);
+//     const originalHTML = submitBtn?.innerHTML;
+
+//     if (submitBtn) {
+//         submitBtn.disabled = true;
+//         submitBtn.innerHTML = `
+//             <svg class="animate-spin h-4 w-4 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+//                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+//             </svg>
+//             Submitting...
+//         `;
+//     }
+
+//     try {
+//         const csrfToken = document
+//             .querySelector('meta[name="csrf-token"]')
+//             ?.getAttribute("content");
+
+//         const response = await fetch("/claims", {
+//             method: "POST",
+//             headers: {
+//                 "Content-Type": "application/json",
+//                 "X-CSRF-TOKEN": csrfToken,
+//                 Accept: "application/json",
+//             },
+//             body: JSON.stringify(formData),
+//         });
+
+//         const data = await response.json();
+
+//         if (data.success) {
+//             showClaimSuccessModal(data.claim_number, data.redirect);
+//         } else {
+//             showClaimError(
+//                 data.message ?? "Submission failed. Please try again.",
+//             );
+//             restoreSubmitButton(submitBtn, originalHTML);
+//         }
+//     } catch (error) {
+//         console.error("Claim submission error:", error);
+//         showClaimError(
+//             "A network error occurred. Please check your connection and try again.",
+//         );
+//         restoreSubmitButton(submitBtn, originalHTML);
+//     }
+// }
+async function submitClaimWithFiles(formId, formData, action = '/claims') {
+    const submitBtn  = document.querySelector(`#${formId} [type="submit"]`);
+    const originalText = submitBtn?.innerHTML;
 
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `
-            <svg class="animate-spin h-4 w-4 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            Submitting...
-        `;
+        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...`;
     }
 
     try {
-        const csrfToken = document
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute("content");
-
-        const response = await fetch("/claims", {
-            method: "POST",
+        const response = await fetch(action, {
+            method: 'POST', // always POST — _method=PUT handles the override
             headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": csrfToken,
-                Accept: "application/json",
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             },
-            body: JSON.stringify(formData),
+            body: formData,
         });
 
         const data = await response.json();
@@ -35,17 +71,19 @@ async function submitClaim(formId, formData) {
         if (data.success) {
             showClaimSuccessModal(data.claim_number, data.redirect);
         } else {
-            showClaimError(
-                data.message ?? "Submission failed. Please try again.",
-            );
-            restoreSubmitButton(submitBtn, originalHTML);
+            showClaimError(data.message || 'Submission failed. Please try again.');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
     } catch (error) {
-        console.error("Claim submission error:", error);
-        showClaimError(
-            "A network error occurred. Please check your connection and try again.",
-        );
-        restoreSubmitButton(submitBtn, originalHTML);
+        console.error('Submission error:', error);
+        showClaimError('A network error occurred. Please try again.');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
     }
 }
 

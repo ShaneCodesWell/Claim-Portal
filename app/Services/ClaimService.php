@@ -169,6 +169,12 @@ class ClaimService
         ]);
     }
 
+    // In ClaimService — add this public wrapper
+    public function logActivityPublic(Claim $claim, ?User $user, string $action, ?string $note = null, array $meta = []): void
+    {
+        $this->logActivity($claim, $user, $action, $note, $meta);
+    }
+
     // Resolve branch from policy — fallback to head office
     private function resolveBranch(Policy $policy): int
     {

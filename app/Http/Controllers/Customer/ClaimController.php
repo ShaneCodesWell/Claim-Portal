@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Policy;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ClaimController extends Controller
 {
@@ -87,5 +88,95 @@ class ClaimController extends Controller
     {
         $claim->load(['policy', 'activities.user', 'documents']);
         return view('customer.claims.show', compact('claim'));
+    }
+
+    public function edit(Claim $claim)
+    {
+        // Only allow editing if claim is still in a state where edits make sense
+        $editableStatuses = ['submitted', 'pending_info'];
+
+        if (! in_array($claim->status, $editableStatuses)) {
+            return redirect()->route('claims.show', $claim)
+                ->with('error', 'This claim can no longer be edited.');
+        }
+
+        $claim->load(['policy', 'documents']);
+
+        // Map claim_type to the correct edit view — mirrors processClaim() in dashboard JS
+        $viewMap = [
+            'motor'            => 'customer.claims.edit.motor',
+            'fire'             => 'customer.claims.edit.fire',
+            'general_accident' => 'customer.claims.edit.general-accident',
+            // 'marine'           => 'customer.claims.edit.marine',
+            // 'aviation'         => 'customer.claims.edit.aviation',
+            // 'bond'             => 'customer.claims.edit.bond',
+            // 'engineering'      => 'customer.claims.edit.engineering',
+            // 'liability'        => 'customer.claims.edit.liability',
+        ];
+
+        $view = $viewMap[$claim->claim_type] ?? null;
+
+        if (! $view) {
+            return redirect()->route('claims.show', $claim)
+                ->with('error', 'No edit form available for this claim type.');
+        }
+
+        return view($view, compact('claim'));
+    }
+
+    public function update(Request $request, Claim $claim)
+    {
+        $validated = $request->validate([
+            'claim_type'         => 'required|string',
+            'form_data'          => 'required|array',
+            'documents'          => 'nullable|array',
+            'documents.*'        => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'delete_documents'   => 'nullable|array',
+            'delete_documents.*' => 'integer|exists:claim_documents,id',
+        ]);
+
+        $editableStatuses = ['submitted', 'pending_info'];
+        if (! in_array($claim->status, $editableStatuses)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This claim can no longer be edited.',
+            ], 403);
+        }
+
+        // Update form data
+        $claim->update([
+            'form_data' => $validated['form_data'],
+        ]);
+
+        // Delete marked documents
+        if (! empty($validated['delete_documents'])) {
+            $docsToDelete = \App\Models\ClaimDocument::whereIn('id', $validated['delete_documents'])
+                ->where('claim_id', $claim->id) // safety — only delete docs belonging to this claim
+                ->get();
+
+            foreach ($docsToDelete as $doc) {
+                Storage::disk('local')->delete($doc->file_path);
+                $doc->delete();
+            }
+        }
+
+        // Attach new documents
+        if ($request->hasFile('documents')) {
+            $this->claimService->attachDocuments(
+                claim: $claim,
+                files: $request->file('documents'),
+                uploadedBy: null,
+                type: 'supporting',
+            );
+        }
+
+        $this->claimService->logActivityPublic($claim, null, 'form_updated', 'Customer updated claim form data.');
+
+        return response()->json([
+            'success'      => true,
+            'message'      => 'Your claim has been updated successfully.',
+            'claim_number' => $claim->claim_number,
+            'redirect'     => route('claims.show', $claim),
+        ]);
     }
 }

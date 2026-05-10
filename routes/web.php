@@ -49,7 +49,9 @@ Route::middleware('auth.customer')->group(function () {
     // Claims
     Route::post('claims', [CustomerClaimController::class, 'store'])->name('claims.store');
     Route::get('claims', [CustomerClaimController::class, 'index'])->name('claims.index');
-    Route::get('claims/{claim}', [CustomerClaimController::class, 'show'])->name('claims.show');
+    Route::get('claims/show/{claim}', [CustomerClaimController::class, 'show'])->name('claims.show');
+    Route::get('claims/edit/{claim}', [CustomerClaimController::class, 'edit'])->name('claims.edit');
+    Route::put('claims/update/{claim}', [CustomerClaimController::class, 'update'])->name('claims.update');
 
     // Forms for now - we can remove these later when we build the dynamic form builder
     Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
