@@ -426,8 +426,13 @@ class AuthController extends Controller
                 $customer['CLIENT_FAMILY_NAME'] ?? null,
             ])));
 
-            // Find or create the local Customer record so we can check/set password
+            // Find or create the local Customer record so we can check/set password.
+            // IMPORTANT: firstOrCreate returns the *existing* record if one is found,
+            // so local_password will be populated if the customer already set one.
+            // We then refresh() to make sure we have the latest DB state in case
+            // the record was just touched by a concurrent sync.
             $dbCustomer = $this->findOrCreateCustomerFromGlims($customer, $phoneNumber, $name);
+            $dbCustomer->refresh();
 
             session([
                 'authenticated'     => true,
@@ -445,13 +450,14 @@ class AuthController extends Controller
             ]);
 
             Log::info('loginAjax: GLIMS fallback success', [
-                'client_code' => $customer['CLIENT_CODE'],
-                'name'        => $name,
+                'client_code'        => $customer['CLIENT_CODE'],
+                'name'               => $name,
+                'has_local_password' => ! empty($dbCustomer->local_password),
             ]);
 
             // GLIMS users ALWAYS need password setup if they don't have one
             // They can't rely on Genova OTP next time since Genova is unreliable
-            $needsPasswordSetup = ! ($dbCustomer->local_password ?? false);
+            $needsPasswordSetup = empty($dbCustomer->local_password);
 
             return response()->json([
                 'status'               => 'success',
@@ -665,39 +671,81 @@ class AuthController extends Controller
 
     /**
      * Find an existing Customer record or create a minimal one from GLIMS data.
-     * This ensures setupPasswordAjax() can always find the record.
+     *
+     * We search by external_customer_code first, then fall back to phone.
+     * This covers the common case where the record already exists from a
+     * Genova sync — it may not have external_customer_code set yet but
+     * will almost certainly have the phone number.
      */
     private function findOrCreateCustomerFromGlims(array $glimsCustomer, ?string $phone, string $name): Customer
     {
-        return Customer::firstOrCreate(
-            [
-                'external_customer_code' => $glimsCustomer['CLIENT_CODE'],
-            ],
-            [
-                'name'                 => $name,
-                'phone'                => $phone,
-                'email'                => $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null,
-                'external_customer_id' => $glimsCustomer['CLIENT_CODE'], // use code as id until Genova syncs
-                'source'               => 'glims',
-            ]
-        );
+        // Try to find an existing record by code or phone before creating
+        $existing = Customer::where('external_customer_code', $glimsCustomer['CLIENT_CODE'])
+            ->orWhere(function ($q) use ($phone) {
+                if ($phone) {
+                    $q->where('phone', $phone);
+                }
+
+            })
+            ->first();
+
+        if ($existing) {
+            // Update any missing fields but never overwrite an existing local_password
+            $existing->fill(array_filter([
+                'name'                   => $existing->name ?? $name,
+                'phone'                  => $existing->phone ?? $phone,
+                'email'                  => $existing->email ?? ($glimsCustomer['CLIENT_HOME_EMAIL'] ?? null),
+                'external_customer_code' => $existing->external_customer_code ?? $glimsCustomer['CLIENT_CODE'],
+                'external_customer_id'   => $existing->external_customer_id ?? $glimsCustomer['CLIENT_CODE'],
+            ]))->save();
+
+            return $existing;
+        }
+
+        return Customer::create([
+            'external_customer_code' => $glimsCustomer['CLIENT_CODE'],
+            'external_customer_id'   => $glimsCustomer['CLIENT_CODE'],
+            'name'                   => $name,
+            'phone'                  => $phone,
+            'email'                  => $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null,
+            'source'                 => 'glims',
+        ]);
     }
 
     /**
      * Check whether the customer (found via Genova) still needs to set a local password.
+     *
+     * We search by every identifier we have so a record created during a previous
+     * sync (phone, external_customer_id, or external_customer_code) is always found.
+     * If genuinely no record exists yet (very first ever login, sync not run),
+     * we return true so the setup prompt appears — but that is the correct behaviour
+     * in that case. The false-positive was caused by a narrow lookup that missed
+     * existing records, which is fixed by the broader WHERE below.
      */
     private function customerNeedsPasswordSetup(?string $phone, array $genovaData): bool
     {
-        $customer = Customer::where('phone', $phone)
-            ->orWhere('external_customer_id', $genovaData['user_id'] ?? null)
+        $userId       = $genovaData['user_id'] ?? null;
+        $customerCode = $genovaData['search_used']['client_code'] ?? $genovaData['customer_code'] ?? null;
+
+        $customer = Customer::where(function ($q) use ($phone, $userId, $customerCode) {
+            if ($phone) {
+                $q->orWhere('phone', $phone);
+            }
+
+            if ($userId) {
+                $q->orWhere('external_customer_id', $userId);
+            }
+
+            if ($customerCode) {
+                $q->orWhere('external_customer_code', $customerCode);
+            }
+
+        })
+            ->whereNotNull('local_password') // only care about rows that already have one
             ->first();
 
-        if (! $customer) {
-            // No DB record yet (sync hasn't run) — flag as needed so we create one
-            return true;
-        }
-
-        return empty($customer->local_password);
+        // If we found ANY matching record with a password set, skip the setup prompt.
+        return $customer === null;
     }
 
     // Logout

@@ -345,7 +345,7 @@
                 </div>
 
                 <h3 class="font-display text-xl text-gray-900 mb-2">Verifying your identity</h3>
-                <p id="loaderMessage" class="text-sm text-gray-500 min-h-[20px] transition-opacity duration-300">
+                <p id="loaderMessage" class="text-sm text-gray-500 min-h-5 transition-opacity duration-300">
                     Connecting to Vanguard Assurance...
                 </p>
 
@@ -380,7 +380,7 @@
                         registered contact.</p>
                     <div
                         class="flex items-center gap-2 bg-brand-50 border border-brand-100 rounded-xl p-3 text-left mb-4">
-                        <i class="fas fa-info-circle text-brand-600 text-sm flex-shrink-0"></i>
+                        <i class="fas fa-info-circle text-brand-600 text-sm shrink-0"></i>
                         <p class="text-xs text-brand-800">You'll be redirected to enter your OTP shortly.</p>
                     </div>
                     <div class="flex justify-center">
@@ -405,7 +405,7 @@
                 </div>
                 <div class="p-6">
                     <div class="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5">
-                        <i class="fas fa-exclamation-triangle text-amber-500 text-sm mt-0.5 flex-shrink-0"></i>
+                        <i class="fas fa-exclamation-triangle text-amber-500 text-sm mt-0.5 shrink-0"></i>
                         <p class="text-xs text-amber-800 leading-relaxed">
                             We found your account through our records database. To ensure you always have access to your
                             policies — even when our primary service is down — please set up a local password.
@@ -437,7 +437,7 @@
                 </div>
                 <div class="p-6">
                     <div class="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3 mb-5">
-                        <i class="fas fa-info-circle text-slate-500 text-sm mt-0.5 flex-shrink-0"></i>
+                        <i class="fas fa-info-circle text-slate-500 text-sm mt-0.5 shrink-0"></i>
                         <p class="text-xs text-slate-600 leading-relaxed">
                             Our verification service is temporarily unavailable. Since you've previously set up a local
                             password, you can still access your account.
