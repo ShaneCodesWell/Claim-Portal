@@ -208,17 +208,17 @@ class GlimsService
     {
         try {
             $risks = $this->db()->table('UW1_OBJECTH')
-                ->where('POLICY_SEQUENCE', $policySequence)
+                ->where('OBJECTH_SEQUENCE', $policySequence)
                 ->select([
-                    'OBJECT_SEQUENCE',
-                    'POLICY_SEQUENCE',
-                    'RISK_ID',
-                    'YOM',
-                    'MAKE',
-                    'MODEL',
-                    'CAR_NO',
-                    'SUM_INSURED',
-                    'PREMIUM',
+                    'OBJECTH_SEQUENCE',
+                    'OBJECTH_02_PLATE_NUMBER', // vehicle registration e.g. "AW 3888-14"
+                    'OBJECTH_02_MAKE',
+                    'OBJECTH_02_MODEL',
+                    'OBJECTH_02_YEAR',
+                    'OBJECTH_02_CHASSIS',
+                    'OBJECTH_02_COLOUR',
+                    'OBJECTH_SI',
+                    'OBJECTH_PREMIUM',
                 ])
                 ->get();
 

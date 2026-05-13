@@ -352,20 +352,6 @@
             setTimeout(() => el.remove(), 3000);
         }
 
-        function getPolicyIcon(policyType) {
-            const iconMap = {
-                'motor': 'fa-car',
-                'general accident': 'fa-shield-alt',
-                'fire': 'fa-fire',
-                'bond': 'fa-handshake',
-                'engineering': 'fa-tools',
-                'liability': 'fa-balance-scale',
-                'marine': 'fa-ship',
-                'aviation': 'fa-plane',
-            };
-            return iconMap[policyType] ?? 'fa-file-contract';
-        }
-
         // ─── Rendering ────────────────────────────────────────────────────────────────
 
         function renderPolicies(filteredPolicies = policies, page = 1) {
@@ -414,48 +400,44 @@
             paginatedPolicies.forEach(policy => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50 transition';
-                const icon = getPolicyIcon(policy.type);
                 const statusBadge = policy.status === 'active' ?
                     'bg-green-100 text-green-700 border border-green-200' :
                     'bg-red-100 text-red-700 border border-red-200';
 
                 row.innerHTML = `
-            <td class="px-6 py-3">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 h-11 w-11 bg-blue-50 rounded-xl flex items-center justify-center">
-                        <i class="fas ${icon} text-blue-600 text-lg"></i>
-                    </div>
-                    <div class="ml-4">
-                        <div class="text-sm font-semibold text-gray-900">${policy.className}</div>
-                        <div class="text-xs text-gray-500 flex items-center gap-1">
-                            <i class="fas fa-car text-xs"></i> ${policy.vehicle}
+                <td class="px-6 py-3">
+                    <div class="flex items-center">
+                        <div class="ml-4">
+                            <div class="text-sm font-semibold text-gray-900">${policy.className}</div>
+                            <div class="text-xs text-gray-500 flex items-center gap-1">
+                                ${policy.vehicle}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </td>
-            <td class="px-6 py-3"><div class="text-xs font-mono font-medium text-gray-900">${policy.number}</div></td>
-            <td class="px-6 py-3"><div class="text-xs font-medium text-gray-900">${policy.customer_name}</div></td>
-            <td class="px-6 py-3"><div class="text-xs font-medium text-gray-900">${policy.productName}</div></td>
-            <td class="px-6 py-3"><span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full ${statusBadge}">${policy.statusText}</span></td>
-            <td class="px-6 py-3"><div class="text-xs text-gray-900 font-medium">${new Date(policy.renewalDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div></td>
-            <td class="px-6 py-3 text-right">
-                <div class="relative">
-                    <button onclick="toggleDropdown(event, ${policy.id})" id="dropdown-button-${policy.id}"
-                        class="text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors inline-flex items-center font-medium text-sm">
-                        Actions <i class="fas fa-chevron-down ml-2 text-xs"></i>
-                    </button>
-                    <div id="dropdown-${policy.id}" class="hidden absolute right-0 mt-1 w-48 rounded-lg shadow-lg bg-white ring-1 ring-gray-200 z-30">
-                        <div class="py-1">
-                            <button onclick="viewDetails(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center transition">
-                                <i class="fas fa-eye mr-2"></i> View Details
-                            </button>
-                            <button onclick="processClaim(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 flex items-center transition">
-                                <i class="fas fa-file-invoice mr-2"></i> Process Claim
-                            </button>
+                </td>
+                <td class="px-6 py-3"><div class="text-xs font-mono font-medium text-gray-900">${policy.number}</div></td>
+                <td class="px-6 py-3"><div class="text-xs font-medium text-gray-900">${policy.customer_name}</div></td>
+                <td class="px-6 py-3"><div class="text-xs font-medium text-gray-900">${policy.productName}</div></td>
+                <td class="px-6 py-3"><span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full ${statusBadge}">${policy.statusText}</span></td>
+                <td class="px-6 py-3"><div class="text-xs text-gray-900 font-medium">${new Date(policy.renewalDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div></td>
+                <td class="px-6 py-3 text-right">
+                    <div class="relative">
+                        <button onclick="toggleDropdown(event, ${policy.id})" id="dropdown-button-${policy.id}"
+                            class="text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors inline-flex items-center font-medium text-sm">
+                            Actions <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                        </button>
+                        <div id="dropdown-${policy.id}" class="hidden absolute right-0 mt-1 w-48 rounded-lg shadow-lg bg-white ring-1 ring-gray-200 z-30">
+                            <div class="py-1">
+                                <button onclick="viewDetails(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center transition">
+                                    <i class="fas fa-eye mr-2"></i> View Details
+                                </button>
+                                <button onclick="processClaim(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 flex items-center transition">
+                                    <i class="fas fa-file-invoice mr-2"></i> Process Claim
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </td>`;
+                </td>`;
                 tableBody.appendChild(row);
             });
 
@@ -720,6 +702,16 @@
                 }
                 syncInterval = setInterval(syncPoliciesInBackground, 20 * 60 * 1000);
             }, 2000);
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                const lastSync = sessionStorage.getItem('lastPolicySync');
+                const fiveMinutes = 5 * 60 * 1000;
+                if (!lastSync || (Date.now() - parseInt(lastSync)) > fiveMinutes) {
+                    syncPoliciesInBackground();
+                }
+            }
         });
 
         window.addEventListener('beforeunload', () => {

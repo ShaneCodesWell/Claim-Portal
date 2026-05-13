@@ -109,7 +109,7 @@ class GlimsSyncService
             // Pull motor risks to get the vehicle number (if motor policy)
             $motorRisks    = $this->glims->getMotorRisks($raw['POLICY_SEQUENCE']);
             $vehicleNumber = ! empty($motorRisks)
-                ? ((array) $motorRisks[0])['CAR_NO'] ?? null
+                ? ((array) $motorRisks[0])['objecth_02_plate_number'] ?? null
                 : null;
 
             $policy = Policy::updateOrCreate(
