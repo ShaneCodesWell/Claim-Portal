@@ -64,25 +64,39 @@ class DashboardController extends Controller
                     ->get();
 
                 $policies = $dbPolicies->map(function ($policy) use ($dbCustomers) {
-                    $customer = $dbCustomers->firstWhere('id', $policy->customer_id);
+                    $customer   = $dbCustomers->firstWhere('id', $policy->customer_id);
+                    $rawPayload = is_array($policy->raw_payload) ? $policy->raw_payload : [];
+                    $isGlims    = $policy->source === 'glims';
+
                     return [
-                        'policy_id'           => $policy->external_policy_id,
-                        'policy_number'       => $policy->policy_number,
-                        'product_id'          => $policy->product_id,
-                        'product_name'        => $policy->product_name,
-                        'business_class_id'   => $policy->business_class_id,
-                        'business_class_name' => $policy->business_class_name,
-                        'policy_start_date'   => $policy->start_date,
-                        'policy_end_date'     => $policy->end_date,
-                        'renewal_date'        => $policy->renewal_date,
-                        'effective_date'      => $policy->effective_date,
-                        'status'              => $policy->status,
-                        'source'              => $policy->source,
-                        'vehicle_number'      => $policy->raw_payload['vehicle_number'] ?? null,
-                        'customer_name'       => $customer->name ?? null,
-                        'customer_code'       => $customer->external_customer_code ?? null,
-                        'customer_phone'      => $customer->phone ?? null,
-                        'customer_email'      => $customer->email ?? null,
+                        // ── Core fields (both sources) ──────────────────────
+                        'policy_id'            => $policy->external_policy_id,
+                        'policy_number'        => $policy->policy_number,
+                        'product_id'           => $policy->product_id,
+                        'product_name'         => $policy->product_name,
+                        'business_class_id'    => $policy->business_class_id,
+                        'business_class_name'  => $policy->business_class_name,
+                        'policy_start_date'    => $policy->start_date,
+                        'policy_end_date'      => $policy->end_date,
+                        'renewal_date'         => $policy->renewal_date,
+                        'effective_date'       => $policy->effective_date,
+                        'status'               => $policy->status,
+                        'source'               => $policy->source,
+                        'vehicle_number'       => $rawPayload['vehicle_number'] ?? null,
+                        'customer_name'        => $customer->name ?? null,
+                        'customer_code'        => $customer->external_customer_code ?? null,
+                        'customer_phone'       => $customer->phone ?? null,
+                        'customer_email'       => $customer->email ?? null,
+
+                        // ── GLIMS-only readable fields ───────────────────────
+                        // These are null for Genova policies — safe to pass
+                        // through to the view and conditionally display.
+                        'lob_name'             => $isGlims ? ($rawPayload['POLICY_LOB_NAME'] ?? null) : null,
+                        'branch_name'          => $isGlims ? ($rawPayload['POLICY_BRANCH_NAME'] ?? null) : null,
+                        'agent_name'           => $isGlims ? ($rawPayload['POLICY_AGENT_NAME'] ?? null) : null,
+                        'policy_status'        => $isGlims ? ($rawPayload['POLICY_STATUS'] ?? null) : null,
+                        'policy_currency'      => $isGlims ? ($rawPayload['POLICY_CURRENCY'] ?? null) : null,
+                        'policy_total_premium' => $isGlims ? ($rawPayload['POLICY_TOTAL_PREMIUM'] ?? null) : null,
                     ];
                 })->toArray();
 

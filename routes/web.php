@@ -25,6 +25,10 @@ Route::get('/agent-login', [AuthController::class, 'agentLogin'])->name('agent.l
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/staff-login', [AuthController::class, 'staffLogin'])->name('staff.login.submit');
 
+// AJAX password setup — called from the modal's password setup step
+Route::post('/login/ajax', [AuthController::class, 'loginAjax'])->name('login.ajax');
+Route::post('/auth/setup-password-ajax', [AuthController::class, 'setupPasswordAjax'])->name('setup.password.ajax');
+
 Route::get('/otp', [AuthController::class, 'showOtpForm'])->name('otp');
 Route::post('/otp/request', [AuthController::class, 'requestOtp'])->name('otp.send');
 Route::get('/otp/verify-form', [AuthController::class, 'verifyOtpForm'])->name('otp.verify');

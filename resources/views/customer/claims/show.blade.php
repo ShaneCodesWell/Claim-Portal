@@ -223,6 +223,9 @@
         </div>
     </div>
 
+    {{-- Document Preview Modal --}}
+    <x-documents-modal />
+
     {{-- Flash Messages --}}
     @if (session('success') || session('error'))
         <script>

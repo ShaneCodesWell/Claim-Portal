@@ -12,7 +12,7 @@
                         <i class="fas fa-shield-alt text-blue-600 text-sm"></i>
                     </div> --}}
                     <h1 class="text-xl md:text-xl font-bold text-gray-800 tracking-tight">
-                        E-Claim
+                        e-Claim
                         <span class="font-medium text-blue-600">Dashboard</span>
                     </h1>
                 </div>

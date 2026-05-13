@@ -260,28 +260,55 @@
         // ─── Mapping ──────────────────────────────────────────────────────────────────
 
         function mapPolicy(policy) {
-            const rawClass = (policy.business_class_name || 'Unknown').toLowerCase().trim();
-            const daysUntilExpiry = Math.ceil((new Date(policy.policy_end_date) - new Date()) / (1000 * 60 * 60 * 24));
+            // Support both Genova (snake_case) and GLIMS (UPPER_CASE) field names
+            const className = policy.business_class_name // Genova
+                ||
+                policy.lob_name // controller-mapped GLIMS
+                ||
+                policy.POLICY_LOB_NAME // GLIMS sync response
+                ||
+                policy.POLICY_MAIN_CLASS_NAME // GLIMS fallback
+                ||
+                'Unknown';
+
+            const productName = policy.product_name // Genova
+                ||
+                policy.POLICY_PRODUCT_NAME // GLIMS sync response
+                ||
+                'Unknown Product';
+
+            const endDate = policy.policy_end_date // Genova + controller-mapped GLIMS
+                ||
+                policy.POLICY_EXPIRY_DATE; // GLIMS sync response raw key
+
+            const startDate = policy.policy_start_date ||
+                policy.POLICY_COMMENCEMENT_DATE;
+
+            const rawClass = className.toLowerCase().trim();
+            const daysUntilExpiry = Math.ceil((new Date(endDate) - new Date()) / (1000 * 60 * 60 * 24));
             const isExpired = daysUntilExpiry < 0;
 
             return {
-                id: policy.policy_id,
-                number: policy.policy_number,
+                id: policy.policy_id || policy.POLICY_SEQUENCE,
+                number: policy.policy_number || policy.POLICY_NUMBER || 'N/A',
                 type: rawClass,
-                className: policy.business_class_name || 'Unknown Class',
-                productName: policy.product_name || 'Unknown Product',
+                className: className,
+                productName: productName,
                 vehicle: policy.vehicle_number || 'N/A',
                 status: isExpired ? 'expired' : 'active',
                 statusText: isExpired ? 'Expired' : 'Active',
-                renewalDate: policy.renewal_date,
-                policy_start_date: policy.policy_start_date,
-                policy_end_date: policy.policy_end_date,
-                product_id: policy.product_id,
-                business_class_id: policy.business_class_id,
+                renewalDate: policy.renewal_date || endDate,
+                policy_start_date: startDate,
+                policy_end_date: endDate,
+                product_id: policy.product_id || policy.POLICY_PRODUCT_ID,
+                business_class_id: policy.business_class_id || policy.POLICY_LOB_ID,
                 customer_name: policy.customer_name || '',
                 customer_code: policy.customer_code || '',
                 customer_phone: policy.customer_phone || '',
                 customer_email: policy.customer_email || '',
+                // GLIMS-only extras — available for modal use
+                branch_name: policy.branch_name || policy.POLICY_BRANCH_NAME || null,
+                agent_name: policy.agent_name || policy.POLICY_AGENT_NAME || null,
             };
         }
 
@@ -699,37 +726,4 @@
             if (syncInterval) clearInterval(syncInterval);
         });
     </script>
-    <style>
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-pulse-slow {
-            animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse-slow {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.6;
-            }
-        }
-    </style>
 </x-layouts.app>
