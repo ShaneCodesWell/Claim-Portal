@@ -127,6 +127,16 @@ class GlimsService
                 ->orderBy('p.POLICY_COMMENCEMENT_DATE', 'desc')
                 ->get();
 
+            // Per policy number: prefer the latest active, fallback to latest overall
+            $policies = $policies
+                ->groupBy('policy_number')
+                ->map(function ($group) {
+                    // Try to find an active policy (status 3 = In Force)
+                    $active = $group->first(fn($p) => $p->policy_status == 3);
+                    return $active ?? $group->first(); // fallback to most recent (already ordered by date desc)
+                })
+                ->values();
+
             // Remap lowercase Oracle keys to uppercase + convert Julian dates
             return $policies->map(function ($row) {
                 return [
@@ -295,128 +305,4 @@ class GlimsService
         }
     }
 
-    /**
-     * Convert Oracle Julian day number to a Y-m-d date string.
-     * Oracle Julian dates count days since January 1, 4713 BC.
-     */
-    // private function julianToDate($julianDay): ?string
-    // {
-    //     if (! $julianDay) {
-    //         return null;
-    //     }
-
-    //     try {
-    //         // PHP's Julian to date conversion
-    //         $julian               = (int) $julianDay;
-    //         [$month, $day, $year] = explode('/', jdtogregorian($julian));
-    //         return \Carbon\Carbon::createFromDate($year, $month, $day)->toDateString();
-    //     } catch (\Exception $e) {
-    //         return null;
-    //     }
-    // }
-
-    /**
-     * Get motor (car) risk details for a policy.
-     */
-    // public function getMotorRisks(string $policySequence): array
-    // {
-    //     try {
-    //         $risks = $this->db()->table('UW1_OBJECTH')
-    //             ->where('POLICY_SEQUENCE', $policySequence)
-    //             ->select([
-    //                 'OBJECT_SEQUENCE',
-    //                 'POLICY_SEQUENCE',
-    //                 'RISK_ID',
-    //                 'YOM',
-    //                 'MAKE',
-    //                 'MODEL',
-    //                 'CAR_NO',
-    //                 'SUM_INSURED',
-    //                 'PREMIUM',
-    //             ])
-    //             ->get();
-
-    //         return $risks->toArray();
-
-    //     } catch (\Exception $e) {
-    //         Log::error('GLIMS getMotorRisks error: ' . $e->getMessage());
-    //         return [];
-    //     }
-    // }
-
-    /**
-     * Get non-motor risk details for a policy (fire, bonds, engineering etc.)
-     */
-    // public function getNonMotorRisks(string $policySequence): array
-    // {
-    //     try {
-    //         $risks = $this->db()->table('UW1_OBJECTD1')
-    //             ->where('POLICY_SEQUENCE', $policySequence)
-    //             ->select([
-    //                 'OBJECTD1_SEQUENCE',
-    //                 'OBJECTD1_ID',
-    //                 'POLICY_SEQUENCE',
-    //                 'SUM_INSURED',
-    //                 'RATE',
-    //                 'RISK_DESCRIPTION',
-    //                 'PREMIUM',
-    //             ])
-    //             ->get();
-
-    //         return $risks->toArray();
-
-    //     } catch (\Exception $e) {
-    //         Log::error('GLIMS getNonMotorRisks error: ' . $e->getMessage());
-    //         return [];
-    //     }
-    // }
-
-    /**
-     * Get claim transactions for a policy.
-     * Mirrors the claims data you'd get from Genova.
-     */
-    // public function getClaimsByPolicySequence(string $policySequence): array
-    // {
-    //     try {
-    //         $claims = $this->db()
-    //             ->table('CL1_CLAIM_TRANSACTIONS as ct')
-    //             ->join('CL1_CLAIMH as ch', 'ch.CLAIMH_SEQUENCE', '=', 'ct.CLAIMTRANS_SEQUENCE')
-    //             ->where('ct.POLICY_SEQUENCE', $policySequence)
-    //             ->select([
-    //                 'ct.CLAIMTRANS_SEQUENCE',
-    //                 'ct.POLICY_SEQUENCE',
-    //                 'ch.RISK_ID',
-    //                 'ch.LOSS_DATE',
-    //                 'ch.REPORTED_DATE',
-    //                 'ch.ENTRY_DATE',
-    //                 'ch.CLAIMANTS_NARRATION',
-    //                 'ct.ENTRY_TYPE', // expense or settled
-    //                 'ct.AMOUNT',
-    //             ])
-    //             ->orderBy('ch.REPORTED_DATE', 'desc')
-    //             ->get();
-
-    //         return $claims->toArray();
-
-    //     } catch (\Exception $e) {
-    //         Log::error('GLIMS getClaimsByPolicySequence error: ' . $e->getMessage(), [
-    //             'policy_sequence' => $policySequence,
-    //         ]);
-    //         return [];
-    //     }
-    // }
-
-    /**
-     * Health check — confirm Oracle connection is alive.
-     */
-    // public function isConnected(): bool
-    // {
-    //     try {
-    //         $this->db()->select('SELECT 1 FROM DUAL');
-    //         return true;
-    //     } catch (\Exception $e) {
-    //         Log::error('GLIMS connection check failed: ' . $e->getMessage());
-    //         return false;
-    //     }
-    // }
 }

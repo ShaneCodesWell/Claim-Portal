@@ -128,16 +128,17 @@ class PolicySyncService
             'policy_number'        => $policy->policy_number,
             'insured_name'         => $policy->insured_name,
 
-            // ✅ IDs for internal use
+            // IDs for internal use
             'product_id'           => $glimsPolicy['POLICY_PRODUCT_ID'] ?? null,
             'business_class_id'    => $glimsPolicy['POLICY_LOB_ID'] ?? null,
 
-            // ✅ Human-readable names for display
+            // Human-readable names for display
             'product_name'         => $glimsPolicy['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
             'business_class_name'  => $glimsPolicy['POLICY_MAIN_CLASS_NAME'] ?? 'Unknown Class',
             'lob_name'             => $glimsPolicy['POLICY_LOB_NAME'] ?? 'Unknown LOB',
             'branch_name'          => $glimsPolicy['POLICY_BRANCH_NAME'] ?? 'Unknown Branch',
             'agent_name'           => $glimsPolicy['POLICY_AGENT_NAME'] ?? 'Unknown Agent',
+            
 
             'policy_start_date'    => $policy->start_date,
             'policy_end_date'      => $policy->end_date,

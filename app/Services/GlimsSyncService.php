@@ -119,10 +119,15 @@ class GlimsSyncService
                     'source'              => 'glims',
                     'policy_number'       => $raw['POLICY_NUMBER'],
                     'insured_name'        => $dbCustomer->name,
-                    'business_class_id'   => $raw['POLICY_MAIN_CLASS'] ?? null,
-                    'business_class_name' => $raw['POLICY_MAIN_CLASS'] ?? null,
-                    'product_id'          => $raw['POLICY_PRODUCT'] ?? null,
-                    'product_name'        => $raw['POLICY_PRODUCT'] ?? null,
+
+                    // Raw IDs for internal reference
+                    'business_class_id'   => $raw['POLICY_LOB_ID'] ?? null,
+                    'product_id'          => $raw['POLICY_PRODUCT_ID'] ?? null,
+
+                    // Resolved human-readable names for display
+                    'business_class_name' => $raw['POLICY_LOB_NAME'] ?? 'Unknown Class',
+                    'product_name'        => $raw['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
+
                     'start_date'          => $raw['POLICY_COMMENCEMENT_DATE'],
                     'end_date'            => $raw['POLICY_EXPIRY_DATE'],
                     'effective_date'      => $raw['POLICY_EFFECTIVE_DATE'],
@@ -139,6 +144,7 @@ class GlimsSyncService
                 ]
             );
 
+            // Response uses the same resolved names
             $syncedMap[$raw['POLICY_NUMBER']] = [
                 'policy_id'           => $policy->external_policy_id,
                 'policy_number'       => $policy->policy_number,
@@ -146,6 +152,9 @@ class GlimsSyncService
                 'product_name'        => $policy->product_name,
                 'business_class_id'   => $policy->business_class_id,
                 'business_class_name' => $policy->business_class_name,
+                'lob_name'            => $raw['POLICY_LOB_NAME'] ?? null,
+                'branch_name'         => $raw['POLICY_BRANCH_NAME'] ?? null,
+                'agent_name'          => $raw['POLICY_AGENT_NAME'] ?? null,
                 'policy_start_date'   => $policy->start_date,
                 'policy_end_date'     => $policy->end_date,
                 'renewal_date'        => $policy->renewal_date,
