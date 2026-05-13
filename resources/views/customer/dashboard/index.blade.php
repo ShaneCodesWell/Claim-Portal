@@ -431,8 +431,14 @@
                                 <button onclick="viewDetails(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center transition">
                                     <i class="fas fa-eye mr-2"></i> View Details
                                 </button>
-                                <button onclick="processClaim(${policy.id})" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 flex items-center transition">
+                                <button 
+                                    onclick="${policy.status === 'expired' ? 'showExpiredPolicyAlert()' : `processClaim(${policy.id})`}"
+                                    class="w-full text-left px-4 py-2.5 text-sm flex items-center transition
+                                        ${policy.status === 'expired' 
+                                            ? 'text-gray-400 cursor-not-allowed opacity-50' 
+                                            : 'text-gray-700 hover:bg-green-50 hover:text-green-600'}">
                                     <i class="fas fa-file-invoice mr-2"></i> Process Claim
+                                    ${policy.status === 'expired' ? '<i class="fas fa-lock ml-auto text-xs"></i>' : ''}
                                 </button>
                             </div>
                         </div>
@@ -442,6 +448,16 @@
             });
 
             renderPagination(filteredPolicies.length, page);
+        }
+
+        function showExpiredPolicyAlert() {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Policy Expired',
+                text: 'This policy has expired and is no longer eligible for new claims. Please contact us if you need assistance with an active policy.',
+                confirmButtonText: 'Got it',
+                confirmButtonColor: '#2563eb',
+            });
         }
 
         // FIX 2: Inject table markup when a new customer's first sync returns policies
@@ -613,6 +629,24 @@
             document.getElementById('modal-customer-code').textContent = policy.customer_code || 'N/A';
             document.getElementById('modal-customer-phone').textContent = policy.customer_phone || 'N/A';
             document.getElementById('modal-customer-email').textContent = policy.customer_email || 'N/A';
+
+            // Style the modal File Claim button based on policy status
+            const fileClaimBtn = document.getElementById('modal-file-claim-btn');
+            if (policy.status === 'expired') {
+                fileClaimBtn.disabled = true;
+                fileClaimBtn.className =
+                    'px-4 py-2 text-sm rounded-lg flex items-center gap-2 bg-gray-200 text-gray-400 cursor-not-allowed opacity-60';
+                fileClaimBtn.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showExpiredPolicyAlert();
+                };
+            } else {
+                fileClaimBtn.disabled = false;
+                fileClaimBtn.className =
+                    'px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm hover:shadow';
+                fileClaimBtn.onclick = null;
+            }
 
             modal.classList.remove('hidden');
             modal.style.display = 'flex';

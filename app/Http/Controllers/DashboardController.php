@@ -61,7 +61,21 @@ class DashboardController extends Controller
 
                 $dbPolicies = Policy::whereIn('customer_id', $customerIds)
                     ->orderBy('last_synced_at', 'desc')
-                    ->get();
+                    ->get()
+                    ->groupBy(function ($policy) {
+                        // Group renewal chains by their base policy identity:
+                        // P-203-1101-2025-013572 → "203-1101-013572" (product-branch-serial, drop year)
+                        // This collapses all yearly renewals of the same policy into one group
+                        if (preg_match('/^P-(\d+)-(\d+)-\d{4}-(\d+)$/', $policy->policy_number, $m)) {
+                            return $m[1] . '-' . $m[2] . '-' . $m[3]; // product-branch-serial
+                        }
+                        return $policy->policy_number; // fallback: treat as unique
+                    })
+                    ->map(function ($group) {
+                        // Prefer active, fallback to most recently synced
+                        return $group->firstWhere('status', 'active') ?? $group->first();
+                    })
+                    ->values();
 
                 $policies = $dbPolicies->map(function ($policy) use ($dbCustomers) {
                     $customer   = $dbCustomers->firstWhere('id', $policy->customer_id);
@@ -72,10 +86,10 @@ class DashboardController extends Controller
                         // ── Core fields (both sources) ──────────────────────
                         'policy_id'            => $policy->external_policy_id,
                         'policy_number'        => $policy->policy_number,
-                        'product_id'           => $policy->product_id,
-                        'product_name'         => $policy->product_name,
-                        'business_class_id'    => $policy->business_class_id,
-                        'business_class_name'  => $policy->business_class_name,
+                        'product_id'           => $policy->product_id ?? $rawPayload['POLICY_PRODUCT_ID'] ?? null,
+                        'product_name'         => $policy->product_name ?? $rawPayload['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
+                        'business_class_id'    => $policy->business_class_id ?? $rawPayload['POLICY_LOB_ID'] ?? null,
+                        'business_class_name'  => $policy->business_class_name ?? $rawPayload['POLICY_LOB_NAME'] ?? 'Unknown Class',
                         'policy_start_date'    => $policy->start_date,
                         'policy_end_date'      => $policy->end_date,
                         'renewal_date'         => $policy->renewal_date,
