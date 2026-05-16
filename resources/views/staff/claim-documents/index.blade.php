@@ -120,11 +120,11 @@
                             </div>
                             <div class="flex gap-2">
                                 <button
-                                    onclick="openDocPreview('{{ route('documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
+                                    onclick="openDocPreview('{{ route('staff.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
                                     class="text-gray-500 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition">
                                     <i class="far fa-eye text-sm"></i>
                                 </button>
-                                <a href="{{ route('documents.preview', $doc->id) }}?download=1"
+                                <a href="{{ route('staff.documents.preview', $doc->id) }}?download=1"
                                     class="text-blue-600 hover:text-blue-800 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition">
                                     <i class="fas fa-download text-sm"></i>
                                 </a>

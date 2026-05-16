@@ -19,7 +19,7 @@ class MotorFormController extends Controller
 
         $policyId = $request->query('policyId');
         $policy   = Policy::where('external_policy_id', $policyId)->firstOrFail();
-        $customer = Customer::where('id', $policy->customer_id)->first();
+        $customer = Customer::findOrFail($policy->customer_id);
 
         return view('forms.motor_form.index', compact('policy', 'policyId', 'customer'));
     }

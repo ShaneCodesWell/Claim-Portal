@@ -192,7 +192,7 @@
                                 <span class="text-xs text-gray-700 truncate max-w-35">{{ $doc->original_name }}</span>
                             </div>
                             <button
-                                onclick="openDocPreview('{{ route('documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
+                                onclick="openDocPreview('{{ route('staff.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
                                 class="text-xs text-blue-600 hover:underline">
                                 View
                             </button>
