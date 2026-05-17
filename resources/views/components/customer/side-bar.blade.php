@@ -6,8 +6,6 @@
             <div class="flex items-center justify-center">
                 <img src="/images/Vanguard.png" alt="Logo" class="w-40 h-12">
             </div>
-            {{-- <span
-                class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full ml-auto">{{ $customer->name ?? 'Unknown Customer' }}</span> --}}
         </div>
 
         <!-- Navigation Links -->
@@ -42,4 +40,4 @@
 </aside>
 <!-- OVERLAY for mobile sidebar (hidden by default) -->
 <div id="sidebarOverlay"
-    class="fixed inset-0 bg-black bg-opacity-40 z-30 hidden md:hidden transition-opacity duration-300"></div>
+    class="fixed inset-0 bg-black/40 z-30 hidden md:hidden transition-opacity duration-300 opacity-0"></div>
