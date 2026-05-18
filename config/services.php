@@ -36,17 +36,17 @@ return [
     ],
 
     // Live Genova credentials
-    // 'genova' => [
-    //     'base_url' => env('GENOVA_BASE_URL', 'https://glive.vanguardassurance.com'),
-    //     'username' => env('GENOVA_USERNAME', 'VACADMIN'),
-    //     'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
-    // ],
-
-    // Test 249 Genova credentials
     'genova' => [
-        'base_url' => env('GENOVA_BASE_URL', 'http://192.168.100.249'),
-        'username' => env('GENOVA_USERNAME', 'Moses'),
+        'base_url' => env('GENOVA_BASE_URL', 'https://glive.vanguardassurance.com'),
+        'username' => env('GENOVA_USERNAME', 'VACADMIN'),
         'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
     ],
+
+    // Test 249 Genova credentials
+    // 'genova' => [
+    //     'base_url' => env('GENOVA_BASE_URL', 'http://192.168.100.249'),
+    //     'username' => env('GENOVA_USERNAME', 'Moses'),
+    //     'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
+    // ],
 
 ];
