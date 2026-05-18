@@ -2,14 +2,16 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Enums\ClaimSource;
+use App\Enums\ClaimStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
+use App\Models\ClaimDocument;
 use App\Models\Customer;
 use App\Models\Policy;
-use Illuminate\Http\Request;
-use App\Models\ClaimDocument;
 use App\Services\ClaimService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ClaimController extends Controller
@@ -202,5 +204,29 @@ class ClaimController extends Controller
             'Content-Type'        => $document->mime_type,
             'Content-Disposition' => 'inline; filename="' . $document->original_name . '"',
         ]);
+    }
+
+    public function cancel(Request $request, Claim $claim)
+    {
+        $request->validate([
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        // Ensure the claim belongs to this customer
+        if ($claim->customer_id !== Auth::guard('customer')->user()->id) {
+            abort(403);
+        }
+
+        if (! in_array($claim->status, ClaimStatus::cancellable())) {
+            return back()->with('error', 'This claim cannot be cancelled in its current status.');
+        }
+
+        $this->claimService->cancel(
+            claim: $claim,
+            cancelledBy: Auth::guard('customer')->user(),
+            note: $request->note,
+        );
+
+        return back()->with('success', 'Your claim has been reset to Submitted.');
     }
 }

@@ -55,7 +55,7 @@ Route::middleware('auth.customer')->group(function () {
     Route::get('claims', [CustomerClaimController::class, 'index'])->name('claims.index');
     Route::get('claims/show/{claim}', [CustomerClaimController::class, 'show'])->name('claims.show');
     Route::get('claims/edit/{claim}', [CustomerClaimController::class, 'edit'])->name('claims.edit');
-    Route::put('claims/update/{claim}', [CustomerClaimController::class, 'update'])->name('claims.update');
+    Route::put('claims/update/{claim}', [CustomerClaimController::class, 'update'])->name('claims.cancel');
 
     // Preview Document
     Route::get('/documents/{document}/preview', [CustomerClaimController::class, 'previewDocument'])->name('customer.documents.preview');
@@ -83,6 +83,7 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
 
     Route::get('claims/{claim}/edit', [StaffClaimController::class, 'edit'])->name('staff.claims.edit');
     Route::put('claims/{claim}/edit', [StaffClaimController::class, 'update'])->name('staff.claims.update');
+    Route::post('claims/{claim}/cancel', [StaffClaimController::class, 'cancel'])->name('staff.claims.cancel');
 
     Route::get('/staff/process-claim/motor', [StaffController::class, 'processClaimMotor'])->name('process-claim-motor');
     Route::get('/staff/process-claim/fire', [StaffController::class, 'processClaimFire'])->name('process-claim-fire');

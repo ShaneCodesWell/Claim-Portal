@@ -3,7 +3,7 @@
         <x-claimant-info :policy="$policy" :customer="$customer" />
         <div class="lg:col-span-2">
             @include('partials.forms.motor-form', [
-                'formData' => [],
+                'formData' => $formData,
                 'action'   => route('claims.store'),
                 'method'   => 'POST',
                 'claim'    => null,

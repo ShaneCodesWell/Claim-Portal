@@ -64,8 +64,7 @@ class PolicySyncService
     public function syncFromGlims(string $clientCode, Customer $dbCustomer): array
     {
         $syncedPoliciesMap = [];
-
-        $glimsPolicies = $this->glims->getPoliciesByClientCode($clientCode);
+        $glimsPolicies     = $this->glims->getPoliciesByClientCode($clientCode);
 
         if (empty($glimsPolicies)) {
             Log::info('PolicySyncService: No GLIMS policies found', ['client_code' => $clientCode]);
@@ -74,14 +73,24 @@ class PolicySyncService
 
         foreach ($glimsPolicies as $glimsPolicy) {
             $policyNumber = $glimsPolicy['POLICY_NUMBER'] ?? null;
-
-            if (! $policyNumber) {
+            if (! $policyNumber || isset($syncedPoliciesMap[$policyNumber])) {
                 continue;
             }
 
-            if (isset($syncedPoliciesMap[$policyNumber])) {
-                continue;
-            }
+            // ✅ FIX 1: Fetch motor risks and extract vehicle number
+            $motorRisks    = $this->glims->getMotorRisks($glimsPolicy['POLICY_SEQUENCE']);
+            $vehicleNumber = ! empty($motorRisks)
+                ? ((array) $motorRisks[0])['objecth_02_plate_number'] ?? null
+                : null;
+
+            // ✅ FIX 2: Map status correctly
+            $statusCode = $glimsPolicy['POLICY_STATUS'] ?? '';
+            $status     = match ((string) $statusCode) {
+                '3'     => 'active',
+                '4'     => 'cancelled',
+                '7'     => 'matured',
+                default => 'unknown',
+            };
 
             $dbPolicy = Policy::updateOrCreate(
                 [
@@ -92,65 +101,59 @@ class PolicySyncService
                     'customer_id'         => $dbCustomer->id,
                     'insured_name'        => $dbCustomer->name,
                     'external_policy_id'  => $glimsPolicy['POLICY_SEQUENCE'] ?? null,
-
-                    // Store raw IDs for internal reference/filtering
                     'product_id'          => $glimsPolicy['POLICY_PRODUCT_ID'] ?? null,
                     'business_class_id'   => $glimsPolicy['POLICY_LOB_ID'] ?? null,
-
-                    // Store resolved human-readable names for display
                     'product_name'        => $glimsPolicy['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
                     'business_class_name' => $glimsPolicy['POLICY_MAIN_CLASS_NAME'] ?? 'Unknown Class',
-
                     'start_date'          => $glimsPolicy['POLICY_COMMENCEMENT_DATE'] ?? null,
                     'end_date'            => $glimsPolicy['POLICY_EXPIRY_DATE'] ?? null,
                     'effective_date'      => $glimsPolicy['POLICY_EFFECTIVE_DATE'] ?? null,
                     'renewal_date'        => null,
-                    'raw_payload'         => $glimsPolicy,
+                    'status'              => $status, // ✅ FIX 2
+                    // ✅ FIX 1: motor risks now included in raw_payload
+                    'raw_payload'         => array_merge($glimsPolicy, [
+                        'vehicle_number' => $vehicleNumber,
+                        'motor_risks'    => $motorRisks,
+                    ]),
                     'last_synced_at'      => now(),
                 ]
             );
 
-            Log::info('PolicySyncService: GLIMS policy synced', [
-                'policy_number' => $policyNumber,
-                'customer_id'   => $dbCustomer->id,
-            ]);
-
-            $syncedPoliciesMap[$policyNumber] = $this->formatGlimsPolicyForResponse($dbPolicy, $dbCustomer, $glimsPolicy);
+            $syncedPoliciesMap[$policyNumber] = $this->formatGlimsPolicyForResponse(
+                $dbPolicy, $dbCustomer, $glimsPolicy, $vehicleNumber
+            );
         }
 
         return $syncedPoliciesMap;
     }
 
-    private function formatGlimsPolicyForResponse(Policy $policy, Customer $customer, array $glimsPolicy): array
-    {
+// ✅ Updated signature to accept vehicleNumber
+    private function formatGlimsPolicyForResponse(
+        Policy $policy,
+        Customer $customer,
+        array $glimsPolicy,
+        ?string $vehicleNumber = null
+    ): array {
         return [
             'policy_id'            => $glimsPolicy['POLICY_SEQUENCE'] ?? null,
             'policy_number'        => $policy->policy_number,
             'insured_name'         => $policy->insured_name,
-
-            // IDs for internal use
             'product_id'           => $glimsPolicy['POLICY_PRODUCT_ID'] ?? null,
             'business_class_id'    => $glimsPolicy['POLICY_LOB_ID'] ?? null,
-
-            // Human-readable names for display
             'product_name'         => $glimsPolicy['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
             'business_class_name'  => $glimsPolicy['POLICY_MAIN_CLASS_NAME'] ?? 'Unknown Class',
             'lob_name'             => $glimsPolicy['POLICY_LOB_NAME'] ?? 'Unknown LOB',
             'branch_name'          => $glimsPolicy['POLICY_BRANCH_NAME'] ?? 'Unknown Branch',
             'agent_name'           => $glimsPolicy['POLICY_AGENT_NAME'] ?? 'Unknown Agent',
-            
-
             'policy_start_date'    => $policy->start_date,
             'policy_end_date'      => $policy->end_date,
             'renewal_date'         => null,
             'effective_date'       => $policy->effective_date,
-            'vehicle_number'       => null,
-
+            'vehicle_number'       => $vehicleNumber, // ✅ no longer hardcoded null
             'customer_name'        => $customer->name,
             'customer_code'        => $customer->external_customer_code,
             'customer_phone'       => $customer->phone,
             'customer_email'       => $customer->email,
-
             'source'               => 'glims',
             'policy_status'        => $glimsPolicy['POLICY_STATUS'] ?? null,
             'policy_currency'      => $glimsPolicy['POLICY_CURRENCY'] ?? null,

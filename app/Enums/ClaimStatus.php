@@ -2,7 +2,7 @@
 namespace App\Enums;
 
 enum ClaimStatus: string {
-    const SUBMITTED     = 'submitted';
+    const SUBMITTED    = 'submitted';
     const UNDER_REVIEW = 'under_review';
     const PENDING_INFO = 'pending_info';
     const IN_PROGRESS  = 'in_progress';
@@ -72,6 +72,15 @@ enum ClaimStatus: string {
         return [
             'label' => $labels[$status] ?? ucfirst($status),
             'class' => $colorMap[$colors[$status] ?? 'gray'],
+        ];
+    }
+
+    public static function cancellable(): array
+    {
+        return [
+            self::UNDER_REVIEW,
+            self::PENDING_INFO,
+            self::IN_PROGRESS,
         ];
     }
 }

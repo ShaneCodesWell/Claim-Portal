@@ -80,7 +80,7 @@
 
         <!-- Table -->
         <div class="overflow-x-auto custom-scroll">
-            <table class="min-w-[1050px] md:min-w-full w-full">
+            <table class="min-w-262.5 md:min-w-full w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -146,10 +146,25 @@
                                 </button>
                                 <div x-show="open" @click.outside="open = false" x-transition
                                     class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+
                                     <a href="{{ route('staff.claims.show', $claim->id) }}"
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                         <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
                                     </a>
+
+                                    {{-- Cancel — only show for cancellable statuses --}}
+                                    @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
+                                        <form method="POST" action="{{ route('staff.claims.cancel', $claim->id) }}"
+                                            onsubmit="return confirm('Reset this claim back to Submitted? It will be unassigned.')">
+                                            @csrf
+                                            <input type="hidden" name="note"
+                                                value="Cancelled by {{ Auth::user()->name }} from queue.">
+                                            <button type="submit"
+                                                class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                <i class="fas fa-undo text-xs"></i> Cancel Claim
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

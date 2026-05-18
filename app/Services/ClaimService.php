@@ -218,4 +218,35 @@ class ClaimService
             ['count' => count($files), 'type' => $type]
         );
     }
+
+    public function cancel(Claim $claim, User | Customer $cancelledBy, ?string $note = null): void
+    {
+        DB::transaction(function () use ($claim, $cancelledBy, $note) {
+            $previousAssignee = $claim->assigned_to;
+            $previousStatus   = $claim->status;
+
+            $claim->update([
+                'status'      => ClaimStatus::SUBMITTED,
+                'assigned_to' => null,
+                'assigned_by' => null,
+                'assigned_at' => null,
+            ]);
+
+            $actorName = $cancelledBy->name;
+            $actorType = $cancelledBy instanceof Customer ? 'customer' : 'staff';
+
+            $this->logActivity(
+                $claim,
+                $cancelledBy instanceof User ? $cancelledBy : null,
+                'cancelled',
+                $note ?? "Claim reset to Submitted by {$actorName}.",
+                [
+                    'cancelled_by'      => $cancelledBy->id,
+                    'actor_type'        => $actorType,
+                    'previous_status'   => $previousStatus,
+                    'previous_assignee' => $previousAssignee,
+                ]
+            );
+        });
+    }
 }

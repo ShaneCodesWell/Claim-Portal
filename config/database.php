@@ -192,22 +192,4 @@ return [
 
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Oracle Databases
-    |--------------------------------------------------------------------------
-    */
-    // 'oracle'      => [
-    //     'driver'       => 'oracle',
-    //     'tns'          => '',
-    //     'host'         => env('GLIMS_DB_HOST', '192.168.100.140'),
-    //     'port'         => env('GLIMS_DB_PORT', '1521'),
-    //     'database'     => env('GLIMS_DB_DATABASE', 'VACLIVE'),
-    //     'service_name' => env('GLIMS_DB_SERVICE', 'VACLIVE'), // try SID first
-    //     'username'     => env('GLIMS_DB_USERNAME', 'GLIMS'),
-    //     'password'     => env('GLIMS_DB_PASSWORD', ''),
-    //     'charset'      => 'AL32UTF8',
-    //     'prefix'       => '',
-    // ],
-
 ];

@@ -230,4 +230,24 @@ class ClaimController extends Controller
             'redirect'     => route('staff.claims.show', $claim),
         ]);
     }
+
+    public function cancel(Request $request, Claim $claim)
+    {
+        $request->validate([
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        // Guard: only cancellable statuses
+        if (! in_array($claim->status, ClaimStatus::cancellable())) {
+            return back()->with('error', 'This claim cannot be cancelled in its current status.');
+        }
+
+        $this->claimService->cancel(
+            claim: $claim,
+            cancelledBy: Auth::user(),
+            note: $request->note,
+        );
+
+        return back()->with('success', 'Claim has been reset to Submitted.');
+    }
 }
