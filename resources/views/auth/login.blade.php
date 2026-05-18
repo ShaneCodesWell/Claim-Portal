@@ -768,9 +768,17 @@
                 switch (data.status) {
                     case 'success':
                         if (data.source === 'glims') {
-                            // GLIMS fallback — show amber stage, then route to password setup
                             glimsName.textContent = data.name ?? '';
-                            showStage('success-glims');
+
+                            if (data.needs_password_setup) {
+                                // No password yet — show the setup prompt
+                                showStage('success-glims');
+                            } else {
+                                // Already has a password — redirect straight to dashboard
+                                setTimeout(() => {
+                                    window.location.href = data.redirect;
+                                }, 800);
+                            }
                         } else {
                             // Genova success
                             genovaName.textContent = data.name ?? '';

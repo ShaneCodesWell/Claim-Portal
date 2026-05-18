@@ -432,7 +432,7 @@ class AuthController extends Controller
             // We then refresh() to make sure we have the latest DB state in case
             // the record was just touched by a concurrent sync.
             $dbCustomer = $this->findOrCreateCustomerFromGlims($customer, $phoneNumber, $name);
-            $dbCustomer->refresh();
+            // $dbCustomer->refresh();
 
             session([
                 'authenticated'     => true,
@@ -459,16 +459,26 @@ class AuthController extends Controller
             // They can't rely on Genova OTP next time since Genova is unreliable
             $needsPasswordSetup = empty($dbCustomer->local_password);
 
+            // return response()->json([
+            //     'status'               => 'success',
+            //     'source'               => 'glims',
+            //     'message'              => 'We found your account. Please set up a local password to secure your access.',
+            //     'name'                 => $name,
+            //     'needs_password_setup' => $needsPasswordSetup,
+            //     'redirect'             => $needsPasswordSetup ? null : route('dashboard'),
+            //     // Tell the frontend why we used GLIMS — so it can show appropriate messaging
+            //     'fallback_notice'      => true,
+            // ]);
             return response()->json([
                 'status'               => 'success',
                 'source'               => 'glims',
-                'message'              => 'We found your account. Please set up a local password to secure your access.',
+                'message'              => 'Account verified.',
                 'name'                 => $name,
                 'needs_password_setup' => $needsPasswordSetup,
-                'redirect'             => $needsPasswordSetup ? null : route('dashboard'),
-                // Tell the frontend why we used GLIMS — so it can show appropriate messaging
+                'redirect'             => $needsPasswordSetup ? null : route('dashboard'), // ← add this
                 'fallback_notice'      => true,
             ]);
+
         }
 
         // ── STEP 3: Both Genova and GLIMS failed ─────────────────
@@ -679,36 +689,54 @@ class AuthController extends Controller
      */
     private function findOrCreateCustomerFromGlims(array $glimsCustomer, ?string $phone, string $name): Customer
     {
-        // Try to find an existing record by code or phone before creating
-        $existing = Customer::where('external_customer_code', $glimsCustomer['CLIENT_CODE'])
-            ->orWhere(function ($q) use ($phone) {
-                if ($phone) {
-                    $q->where('phone', $phone);
-                }
+        $clientCode = $glimsCustomer['CLIENT_CODE'];
 
-            })
-            ->first();
+        // Search by code first, then phone — separately, not in one orWhere
+        $existing = Customer::where('external_customer_code', $clientCode)->first();
+
+        if (! $existing && $phone) {
+            $existing = Customer::where('phone', $phone)->first();
+        }
 
         if ($existing) {
-            // Update any missing fields but never overwrite an existing local_password
-            $existing->fill(array_filter([
-                'name'                   => $existing->name ?? $name,
-                'phone'                  => $existing->phone ?? $phone,
-                'email'                  => $existing->email ?? ($glimsCustomer['CLIENT_HOME_EMAIL'] ?? null),
-                'external_customer_code' => $existing->external_customer_code ?? $glimsCustomer['CLIENT_CODE'],
-                'external_customer_id'   => $existing->external_customer_id ?? $glimsCustomer['CLIENT_CODE'],
-            ]))->save();
+            // Only fill fields that are genuinely missing — never touch local_password
+            $updates = [];
 
-            return $existing;
+            if (empty($existing->name)) {
+                $updates['name'] = $name;
+            }
+
+            if (empty($existing->phone)) {
+                $updates['phone'] = $phone;
+            }
+
+            if (empty($existing->external_customer_code)) {
+                $updates['external_customer_code'] = $clientCode;
+            }
+
+            if (empty($existing->external_customer_id)) {
+                $updates['external_customer_id'] = $clientCode;
+            }
+
+            if (empty($existing->email)) {
+                $updates['email'] = $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null;
+            }
+
+            if (! empty($updates)) {
+                $existing->update($updates);
+            }
+
+            // Always re-fetch fresh from DB so local_password is definitely loaded
+            return $existing->fresh();
         }
 
         return Customer::create([
-            'external_customer_code' => $glimsCustomer['CLIENT_CODE'],
-            'external_customer_id'   => $glimsCustomer['CLIENT_CODE'],
+            'external_customer_code' => $clientCode,
+            'external_customer_id'   => $clientCode,
             'name'                   => $name,
             'phone'                  => $phone,
             'email'                  => $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null,
-            'source'                 => 'glims',
+            'sources'                => ['glims'],
         ]);
     }
 
@@ -727,24 +755,27 @@ class AuthController extends Controller
         $userId       = $genovaData['user_id'] ?? null;
         $customerCode = $genovaData['search_used']['client_code'] ?? $genovaData['customer_code'] ?? null;
 
-        $customer = Customer::where(function ($q) use ($phone, $userId, $customerCode) {
-            if ($phone) {
-                $q->orWhere('phone', $phone);
-            }
+        // Search separately — not in one orWhere — to avoid query builder quirks
+        $customer = null;
 
-            if ($userId) {
-                $q->orWhere('external_customer_id', $userId);
-            }
+        if ($phone) {
+            $customer = Customer::where('phone', $phone)
+                ->whereNotNull('local_password')
+                ->first();
+        }
 
-            if ($customerCode) {
-                $q->orWhere('external_customer_code', $customerCode);
-            }
+        if (! $customer && $userId) {
+            $customer = Customer::where('external_customer_id', $userId)
+                ->whereNotNull('local_password')
+                ->first();
+        }
 
-        })
-            ->whereNotNull('local_password') // only care about rows that already have one
-            ->first();
+        if (! $customer && $customerCode) {
+            $customer = Customer::where('external_customer_code', $customerCode)
+                ->whereNotNull('local_password')
+                ->first();
+        }
 
-        // If we found ANY matching record with a password set, skip the setup prompt.
         return $customer === null;
     }
 
