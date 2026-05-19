@@ -237,9 +237,14 @@ class DashboardController extends Controller
         array &$syncedPoliciesMap
     ): void {
         try {
-            // Find the DB customer record (created during Genova sync)
+            // ── Guard: skip GLIMS sync if not reachable (off-premise) ──
+            if (! $this->glimsService->isConnected()) {
+                Log::info('GLIMS sync skipped — not reachable (off-premise)');
+                return;
+            }
+
             $dbCustomer = Customer::where('phone', $phoneNumber)
-                ->orWhere('external_customer_code', $customerCode)
+                ->when($customerCode, fn($q) => $q->orWhere('external_customer_code', $customerCode))
                 ->first();
 
             if (! $dbCustomer || ! $dbCustomer->external_customer_code) {
@@ -247,7 +252,6 @@ class DashboardController extends Controller
                 return;
             }
 
-            // Look up the customer in GLIMS using their client code
             $glimsCustomer = $this->glimsService->customerVerification(
                 $dbCustomer->external_customer_code,
                 'client_code'
@@ -260,7 +264,6 @@ class DashboardController extends Controller
                 return;
             }
 
-            // Run the sync and merge results into the shared map
             $glimsPolicies = $this->glimsSyncService->syncCustomer($glimsCustomer);
 
             foreach ($glimsPolicies as $policyNumber => $policyData) {
@@ -275,7 +278,6 @@ class DashboardController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // GLIMS sync failure should never break the whole dashboard
             Log::error('GLIMS session sync error: ' . $e->getMessage());
         }
     }

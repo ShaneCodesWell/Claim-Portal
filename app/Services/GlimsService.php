@@ -297,12 +297,80 @@ class GlimsService
     public function isConnected(): bool
     {
         try {
+            // Set a short connect timeout so off-premise checks fail fast
+            $this->db()->getPdo(); // force connection attempt
             $this->db()->select('SELECT 1 FROM DUAL');
             return true;
         } catch (\Exception $e) {
-            Log::error('GLIMS connection check failed: ' . $e->getMessage());
+            Log::info('GLIMS not reachable: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Fetch all active policies from GLIMS with client details.
+     * Chunked to avoid memory issues on large datasets.
+     */
+    public function getAllActivePolicies(callable $onChunk, int $chunkSize = 100): int
+    {
+        $total = 0;
+
+        try {
+            $this->db()
+                ->table('UW1_POLICY as p')
+                ->leftJoin('UW2_PRODUCT as prod', 'prod.PRODUCT_CODE', '=', 'p.POLICY_PRODUCT')
+                ->leftJoin('UW2_SUB_CLASS as sc', 'sc.SUB_CLASS_CODE', '=', 'p.POLICY_LOB')
+                ->leftJoin('UW2_MAIN_CLASS as mc', 'mc.MAIN_CLASS_CODE', '=', 'sc.SUB_CLASS_MAIN')
+                ->leftJoin('GN2_BRANCH as br', 'br.BRANCH_CODE', '=', 'p.POLICY_BRANCH')
+                ->leftJoin('GN2_AGENT as ag', 'ag.AGENT_CODE', '=', 'p.POLICY_AGENT')
+                ->leftJoin('GN2_CLIENT as cl', 'cl.CLIENT_CODE', '=', 'p.POLICY_OWNER')
+                ->where('p.POLICY_STATUS', 3) // 3 = In Force (Active)
+                ->select([
+                    'p.POLICY_SEQUENCE',
+                    'p.POLICY_OWNER',
+                    'p.POLICY_INSURED',
+                    'p.POLICY_STATUS',
+                    'p.POLICY_STATUS_REASON',
+                    'p.POLICY_CURRENCY',
+                    'p.POLICY_TOTAL_PREMIUM',
+                    'p.POLICY_TOTAL_SI',
+                    'p.POLICY_COMMENCEMENT_DATE',
+                    'p.POLICY_EXPIRY_DATE',
+                    'p.POLICY_EFFECTIVE_DATE',
+                    'p.POLICY_ENDORSEMENT_DATE',
+                    'p.POLICY_PRODUCT      as POLICY_PRODUCT_ID',
+                    'p.POLICY_LOB          as POLICY_LOB_ID',
+                    'p.POLICY_MAIN_CLASS   as POLICY_MAIN_CLASS_ID',
+                    'p.POLICY_BRANCH       as POLICY_BRANCH_ID',
+                    'p.POLICY_AGENT        as POLICY_AGENT_ID',
+                    'prod.PRODUCT_DESC     as POLICY_PRODUCT_NAME',
+                    'sc.SUB_CLASS_DESC     as POLICY_LOB_NAME',
+                    'mc.MAIN_CLASS_DESC    as POLICY_MAIN_CLASS_NAME',
+                    'br.BRANCH_DESC        as POLICY_BRANCH_NAME',
+                    // Customer fields
+                    'cl.CLIENT_FIRST_NAME',
+                    'cl.CLIENT_MIDDLE_NAME',
+                    'cl.CLIENT_FAMILY_NAME',
+                    'cl.CLIENT_HOME_MOBILE',
+                    'cl.CLIENT_HOME_TEL',
+                    'cl.CLIENT_HOME_EMAIL',
+                    'cl.CLIENT_TYPE',
+                ])
+                ->addSelect(
+                    DB::raw("ag.AGENT_FIRST_NAME || ' ' || ag.AGENT_FAMILY_NAME as POLICY_AGENT_NAME"),
+                    DB::raw("'P-' || LPAD(p.POLICY_PRODUCT, 3, '0') || '-' || p.POLICY_BRANCH || '-' || p.POLICY_UWY || '-' || LPAD(p.POLICY_PROPOSAL, 6, '0') as POLICY_FORMATTED_NUMBER")
+                )
+                ->orderBy('p.POLICY_OWNER')
+                ->chunk($chunkSize, function ($rows) use (&$total, $onChunk) {
+                    $onChunk($rows);
+                    $total += count($rows);
+                });
+
+        } catch (\Exception $e) {
+            Log::error('GLIMS getAllActivePolicies error: ' . $e->getMessage());
+        }
+
+        return $total;
     }
 
 }

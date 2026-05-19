@@ -239,10 +239,6 @@
                     applyTabFilter();
                 });
             });
-
-            // Make tabs clickable (change from <span> to <button> in the blade above)
-            // Initial render — open all cards so filter can work on visible rows
-            // (cards start collapsed, so we filter on the data-doc-type attributes regardless)
         });
     </script>
 </x-layouts.staff>

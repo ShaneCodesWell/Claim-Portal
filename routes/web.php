@@ -2,15 +2,16 @@
 
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FireController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\StaffController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\FireController;
+use App\Http\Controllers\Staff\GlimsSyncController;
 use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
 use App\Http\Controllers\OfflineController;
-use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
 use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
@@ -98,6 +99,11 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers.index');
     Route::get('/staff/customers/{customer}', [StaffController::class, 'showCustomer'])->name('customers.show');
 
+});
+
+Route::prefix('glims')->name('staff.glims.')->group(function () {
+    Route::post('sync/trigger', [GlimsSyncController::class, 'trigger'])->name('sync.trigger');
+    Route::get('sync/status', [GlimsSyncController::class, 'status'])->name('sync.status');
 });
 
 // Agent routes — only agents can access

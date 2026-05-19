@@ -282,10 +282,7 @@ class AuthController extends Controller
 
         $request->validate([
             'password' => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
+                'required', 'string', 'min:8', 'confirmed',
                 'regex:/^(?=.*[a-zA-Z])(?=.*[0-9])/',
             ],
         ], [
@@ -294,12 +291,21 @@ class AuthController extends Controller
 
         $phoneNumber  = session('phone_number') ?? session('mobile_no');
         $customerCode = session('customer_code');
+        $userId       = session('user_id');
 
-        // Find the customer record — same lookup logic as the dashboard
-        $customer = Customer::where('phone', $phoneNumber)
-            ->orWhere('external_customer_code', $customerCode)
-            ->orWhere('external_customer_id', session('user_id'))
-            ->first();
+        $customer = null;
+
+        if ($customerCode) {
+            $customer = Customer::where('external_customer_code', $customerCode)->first();
+        }
+
+        if (! $customer && $phoneNumber) {
+            $customer = Customer::where('phone', $phoneNumber)->first();
+        }
+
+        if (! $customer && $userId) {
+            $customer = Customer::where('external_customer_id', (string) $userId)->first();
+        }
 
         if (! $customer) {
             // Customer record doesn't exist yet (sync hasn't run)
@@ -368,9 +374,39 @@ class AuthController extends Controller
         $genovaResult = $this->attemptGenovaVerification($identifier, $loginType);
 
         if ($genovaResult['success']) {
-            // Genova succeeded — store session, return success
-            $data        = $genovaResult['data'];
-            $phoneNumber = $data['search_used']['phone_no'] ?? ($loginType === 'mobile_no' ? $identifier : null);
+            $data         = $genovaResult['data'];
+            $phoneNumber  = $data['search_used']['phone_no'] ?? null;
+            $customerCode = $data['search_used']['client_code'] ?? null;
+
+            // ── Resolve phone + customer code for non-phone logins ──
+            if (! $phoneNumber && $loginType !== 'mobile_no') {
+                try {
+                    // Use customer_id to look up by customer_id type
+                    $policyResponse = $this->api->getPolicies(
+                        $data['user_id'],
+                        'customer_id' // ← use user_id, not the policy number
+                    );
+
+                    if ($policyResponse->successful()) {
+                        $content = $policyResponse->json('data.content') ?? [];
+                        if (! empty($content)) {
+                            $first        = $content[0];
+                            $phoneNumber  = $first['phone_number'] ?? null;
+                            $customerCode = $customerCode ?? $first['code'] ?? null;
+
+                            Log::info('Resolved phone from user_id lookup', [
+                                'user_id'       => $data['user_id'],
+                                'phone'         => $phoneNumber,
+                                'customer_code' => $customerCode,
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Could not resolve phone from policy login', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             session([
                 'authenticated'     => true,
@@ -385,16 +421,19 @@ class AuthController extends Controller
                 'sent_to'           => $data['sent_to'] ?? [],
                 'customer_verified' => true,
                 'auth_source'       => 'genova',
+                'customer_code'     => $customerCode,
             ]);
 
-            Log::info('loginAjax: Genova verification success', [
-                'user_id' => $data['user_id'],
-                'phone'   => $phoneNumber,
+            Log::debug('Genova password check', [
+                'phone'                 => $phoneNumber,
+                'customer_code'         => $customerCode,
+                'user_id'               => $data['user_id'],
+                'customer_code_in_data' => $data['search_used']['client_code'] ?? 'NOT IN search_used',
             ]);
 
-            // Check if this customer already has a local password set
-            // We need this so the frontend knows whether to show the password setup step
-            $needsPasswordSetup = $this->customerNeedsPasswordSetup($phoneNumber, $data);
+            $needsPasswordSetup = $this->customerNeedsPasswordSetup($phoneNumber, array_merge($data, [
+                'customer_code' => $customerCode,
+            ]));
 
             return response()->json([
                 'status'               => 'success',
@@ -538,18 +577,29 @@ class AuthController extends Controller
 
         $phoneNumber  = session('phone_number') ?? session('mobile_no');
         $customerCode = session('customer_code');
+        $userId       = session('user_id');
 
-        $customer = Customer::where('phone', $phoneNumber)
-            ->orWhere('external_customer_code', $customerCode)
-            ->orWhere('external_customer_id', session('user_id'))
-            ->first();
+        // ── Strict sequential lookup — never use orWhere across all fields ──
+        // Priority: customer_code (most specific) → phone → user_id
+        $customer = null;
+
+        if ($customerCode) {
+            $customer = Customer::where('external_customer_code', $customerCode)->first();
+        }
+
+        if (! $customer && $phoneNumber) {
+            $customer = Customer::where('phone', $phoneNumber)->first();
+        }
+
+        if (! $customer && $userId) {
+            $customer = Customer::where('external_customer_id', (string) $userId)->first();
+        }
 
         if (! $customer) {
-            // Record might not exist yet if sync hasn't run — redirect to dashboard anyway
-            // The nudge on dashboard will catch it
-            Log::warning('setupPasswordAjax: Customer record not found yet', [
+            Log::warning('setupPasswordAjax: Customer record not found', [
                 'phone'         => $phoneNumber,
                 'customer_code' => $customerCode,
+                'user_id'       => $userId,
             ]);
 
             return response()->json([
@@ -564,7 +614,11 @@ class AuthController extends Controller
             'local_password_set_at' => now(),
         ]);
 
-        Log::info('setupPasswordAjax: Password set successfully', ['customer_id' => $customer->id]);
+        Log::info('setupPasswordAjax: Password set successfully', [
+            'customer_id'   => $customer->id,
+            'customer_code' => $customer->external_customer_code,
+            'phone'         => $customer->phone,
+        ]);
 
         return response()->json([
             'status'   => 'success',
@@ -760,21 +814,26 @@ class AuthController extends Controller
 
         if ($phone) {
             $customer = Customer::where('phone', $phone)
-                ->whereNotNull('local_password')
-                ->first();
-        }
-
-        if (! $customer && $userId) {
-            $customer = Customer::where('external_customer_id', $userId)
-                ->whereNotNull('local_password')
-                ->first();
+                ->whereNotNull('local_password')->first();
         }
 
         if (! $customer && $customerCode) {
             $customer = Customer::where('external_customer_code', $customerCode)
-                ->whereNotNull('local_password')
-                ->first();
+                ->whereNotNull('local_password')->first();
         }
+
+        if (! $customer && $userId) {
+            $customer = Customer::where('external_customer_id', $userId)
+                ->whereNotNull('local_password')->first();
+        }
+
+        Log::debug('customerNeedsPasswordSetup result', [
+            'phone'         => $phone,
+            'customer_code' => $genovaData['customer_code'] ?? null,
+            'user_id'       => $genovaData['user_id'] ?? null,
+            'found'         => $customer ? $customer->id : 'NOT FOUND',
+            'has_password'  => $customer ? ! empty($customer->local_password) : false,
+        ]);
 
         return $customer === null;
     }
