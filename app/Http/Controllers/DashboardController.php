@@ -372,6 +372,13 @@ class DashboardController extends Controller
                 ]
             );
 
+            // ── Merge 'genova' into sources without overwriting existing ones ──
+            $sources = $dbCustomer->sources ?? [];
+            if (! in_array('genova', $sources)) {
+                $sources[] = 'genova';
+                $dbCustomer->update(['sources' => $sources]);
+            }
+
             // Delegate to the service — pass the running map to prevent cross-call duplicates
             $policies = $this->policySync->syncFromGenova($customerInfo, $allProducts, $dbCustomer);
 

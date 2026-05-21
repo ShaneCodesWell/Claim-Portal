@@ -11,32 +11,13 @@ use App\Models\Department;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class StaffController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    // public function dashboard()
-    // {
-
-    //     return view('staff.dashboard.index');
-    // }
-
-    // public function allClaims()
-    // {
-    //     return view('staff.all-claims.index');
-    // }
-
-    // public function processClaim()
-    // {
-    //     return view('staff.process-claim.index');
-    // }
-
-    // public function myClaims()
-    // {
-    //     return view('staff.my-claims.index');
-    // }
 
     public function processClaimMotor()
     {
@@ -100,14 +81,30 @@ class StaffController extends Controller
 
     public function customers()
     {
-        $customers = Customer::withCount('policies')->latest()->paginate(5);
+        // Cache expensive stat counts for 5 minutes
+        $stats = Cache::remember('customer_page_stats', 300, function () {
+            return [
+                'total_customers'  => Customer::count(),
+                'active_policies'  => Policy::where('status', 'active')->count(),
+                'submitted_claims' => Claim::where('status', 'incoming')->count(),
+                'closed_claims'    => Claim::where('status', 'closed')->count(),
+            ];
+        });
 
-        $stats = [
-            'total_customers'  => Customer::count(),
-            'active_policies'  => Policy::where('status', 'active')->count(),
-            'submitted_claims' => Claim::where('status', 'incoming')->count(),
-            'closed_claims'    => Claim::where('status', 'closed')->count(),
-        ];
+        // Remove ONLY invisible/non-breaking characters, keep real spaces
+        $search = trim(preg_replace('/[\x{00A0}\x{FEFF}]+/u', '', trim(request('search') ?? '')));
+
+        $customers = Customer::select(['id', 'name', 'email', 'phone', 'external_customer_code', 'created_at'])
+            ->withCount('policies')
+            ->when($search, fn($q) => $q->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('external_customer_code', 'like', "%{$search}%")
+                    ->orWhereRaw("REPLACE(phone, ' ', '') LIKE ?", ["%{$search}%"]);
+            }))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString(); // keeps ?search= in paginator links
 
         return view('staff.customers.index', compact('customers', 'stats'));
     }

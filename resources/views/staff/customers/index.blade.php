@@ -31,18 +31,6 @@
             <span class="text-sm text-gray-600">Active Policies</span>
             <span class="text-sm font-semibold text-gray-900">{{ number_format($stats['active_policies']) }}</span>
         </div>
-
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
-            <span class="h-2 w-2 rounded-full bg-amber-400"></span>
-            <span class="text-sm text-gray-600">Submitted Claims</span>
-            <span class="text-sm font-semibold text-gray-900">{{ number_format($stats['submitted_claims']) }}</span>
-        </div>
-
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
-            <span class="h-2 w-2 rounded-full bg-blue-400"></span>
-            <span class="text-sm text-gray-600">Closed Claims</span>
-            <span class="text-sm font-semibold text-gray-900">{{ number_format($stats['closed_claims']) }}</span>
-        </div>
     </div>
 
     <!-- Policyholders Table -->
@@ -67,17 +55,17 @@
                         class="pl-8 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 w-64 bg-white" />
                 </div>
 
-                <button
+                {{-- <button
                     class="bg-white border border-gray-300 hover:bg-gray-50 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 transition flex items-center gap-2">
                     <i class="fas fa-filter text-xs"></i>
                     Filter
-                </button>
+                </button> --}}
             </div>
         </div>
 
         <!-- Table -->
         <div class="overflow-x-auto custom-scroll">
-            <table class="min-w-[900px] w-full">
+            <table class="min-w-225 w-full">
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200">
                         <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -182,87 +170,32 @@
         </div>
     </div>
 
-    <!-- Recently added / quick actions -->
-    {{-- <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-gray-800">
-                    <i class="fas fa-chart-simple text-blue-500 mr-2"></i> Policy
-                    Distribution
-                </h3>
-                <span class="text-xs text-gray-400">by product type</span>
-            </div>
-            <div class="space-y-3">
-                <div>
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>Auto Insurance</span><span>42%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-blue-500 h-2 rounded-full" style="width: 42%"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>Home Insurance</span><span>28%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-teal-500 h-2 rounded-full" style="width: 28%"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>Life Insurance</span><span>15%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-purple-500 h-2 rounded-full" style="width: 15%"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>Travel & Other</span><span>15%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-cyan-500 h-2 rounded-full" style="width: 15%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h3 class="font-semibold text-gray-800 mb-3">
-                <i class="fas fa-bell text-blue-500 mr-2"></i> Recent Activity
-            </h3>
-            <div class="space-y-3 text-sm">
-                <div class="flex items-start gap-3">
-                    <div class="w-1.5 h-1.5 mt-2 rounded-full bg-green-500"></div>
-                    <div>
-                        <span class="font-medium">John Davis</span> submitted a claim
-                        with documents
-                        <span class="text-gray-500 text-xs">2 days ago</span>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-1.5 h-1.5 mt-2 rounded-full bg-blue-500"></div>
-                    <div>
-                        <span class="font-medium">Sarah Mitchell</span> renewed home
-                        policy <span class="text-gray-500 text-xs">5 days ago</span>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-1.5 h-1.5 mt-2 rounded-full bg-amber-500"></div>
-                    <div>
-                        <span class="font-medium">Michael Chen</span> uploaded medical
-                        certificate
-                        <span class="text-gray-500 text-xs">1 week ago</span>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-1.5 h-1.5 mt-2 rounded-full bg-purple-500"></div>
-                    <div>
-                        <span class="font-medium">Olivia Rodriguez</span> travel claim
-                        reviewed <span class="text-gray-500 text-xs">3 days ago</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> --}}
+    <script>
+        const input = document.querySelector('input[placeholder="Search client or policy..."]');
+        const params = new URLSearchParams(window.location.search);
+
+        // Restore value and focus on page load
+        if (params.get('search')) {
+            input.value = params.get('search');
+            input.focus();
+            // Put cursor at end of text
+            const len = input.value.length;
+            input.setSelectionRange(len, len);
+        }
+
+        let timer;
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                const url = new URL(window.location.href);
+                if (input.value.trim()) {
+                    url.searchParams.set('search', input.value);
+                } else {
+                    url.searchParams.delete('search'); // clean URL when cleared
+                }
+                url.searchParams.delete('page');
+                window.location.href = url.toString();
+            }, 600); // bumped to 600ms so fast typers don't trigger mid-word
+        });
+    </script>
 </x-layouts.staff>

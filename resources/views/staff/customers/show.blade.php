@@ -107,7 +107,7 @@
                 <div
                     class="px-5 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white flex flex-wrap items-center justify-between gap-3">
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-file-contract text-blue-500"></i> Active Policies
+                        <i class="fas fa-file-contract text-blue-500"></i> Total Policies
                         <span
                             class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{{ $policies->total() }}</span>
                     </h3>
@@ -118,7 +118,7 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-[800px] w-full">
+                    <table class="min-w-200 w-full">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th
