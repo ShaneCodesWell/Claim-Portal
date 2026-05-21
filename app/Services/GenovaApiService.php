@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -13,7 +12,7 @@ class GenovaApiService
 
     public function __construct()
     {
-        $this->baseUrl = config('services.genova.base_url');
+        $this->baseUrl  = config('services.genova.base_url');
         $this->username = config('services.genova.username');
         $this->password = config('services.genova.password');
     }
@@ -22,7 +21,7 @@ class GenovaApiService
     {
         return Http::withBasicAuth($this->username, $this->password)
             ->withOptions([
-                'verify' => false,   // TEMPORARY – SSL chain issue on Genova side
+                'verify' => false, // TEMPORARY – SSL chain issue on Genova side
             ])
             ->timeout(30)
             ->asForm();
@@ -56,12 +55,12 @@ class GenovaApiService
     public function verifyClaimOtp($userId, $twoFaCode)
     {
         Log::info('Calling verify-claim-otp with params:', [
-            'user_id' => $userId,
-            'two_fa_code' => $twoFaCode
+            'user_id'     => $userId,
+            'two_fa_code' => $twoFaCode,
         ]);
 
         return $this->client()->post($this->baseUrl . '/cia/api/mobile/verify-claim-otp', [
-            'user_id' => $userId,
+            'user_id'     => $userId,
             'two_fa_code' => $twoFaCode,
         ]);
 
@@ -87,7 +86,14 @@ class GenovaApiService
 
     }
 
-    // Fetch Customer Policies
+    private function clientWithTimeout(int $seconds = 30)
+    {
+        return Http::withBasicAuth($this->username, $this->password)
+            ->withOptions(['verify' => false])
+            ->timeout($seconds)
+            ->asForm();
+    }
+
     public function getPolicies($identifier, $type = 'phone_number')
     {
         $params = [];
@@ -100,6 +106,12 @@ class GenovaApiService
             case 'customer_id':
                 $params['customer_id'] = $identifier;
                 break;
+            case 'policy_number': // ← ADD THIS
+                $params['policy_number'] = $identifier;
+                break;
+            case 'vehicle_number': // ← ADD THIS
+                $params['vehicle_number'] = $identifier;
+                break;
             case 'email':
                 $params['ins_email'] = $identifier;
                 break;
@@ -110,7 +122,7 @@ class GenovaApiService
         }
 
         Log::info('Calling customer-search with params:', $params);
-        return $this->client()->post($this->baseUrl . '/cia/api/mobile/customer-search', $params);
-
+        return $this->clientWithTimeout(60)
+            ->post($this->baseUrl . '/cia/api/mobile/customer-search', $params);
     }
 }

@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\Policy;
 use App\Services\GenovaApiService;
 use App\Services\GlimsService;
 use Illuminate\Http\Request;
@@ -380,32 +381,24 @@ class AuthController extends Controller
 
             // ── Resolve phone + customer code for non-phone logins ──
             if (! $phoneNumber && $loginType !== 'mobile_no') {
-                try {
-                    // Use customer_id to look up by customer_id type
-                    $policyResponse = $this->api->getPolicies(
-                        $data['user_id'],
-                        'customer_id' // ← use user_id, not the policy number
-                    );
+                // Try local DB only — fast and reliable
+                $localPolicy = Policy::where('policy_number', $identifier)
+                    ->orWhereRaw("raw_payload::text LIKE ?", ['%"' . $identifier . '"%'])
+                    ->with('customer')
+                    ->first();
 
-                    if ($policyResponse->successful()) {
-                        $content = $policyResponse->json('data.content') ?? [];
-                        if (! empty($content)) {
-                            $first        = $content[0];
-                            $phoneNumber  = $first['phone_number'] ?? null;
-                            $customerCode = $customerCode ?? $first['code'] ?? null;
+                if ($localPolicy && $localPolicy->customer) {
+                    $phoneNumber  = $localPolicy->customer->phone;
+                    $customerCode = $localPolicy->customer->external_customer_code;
 
-                            Log::info('Resolved phone from user_id lookup', [
-                                'user_id'       => $data['user_id'],
-                                'phone'         => $phoneNumber,
-                                'customer_code' => $customerCode,
-                            ]);
-                        }
-                    }
-                } catch (\Exception $e) {
-                    Log::warning('Could not resolve phone from policy login', [
-                        'error' => $e->getMessage(),
+                    Log::info('Resolved customer from local policy lookup', [
+                        'policy_number' => $identifier,
+                        'phone'         => $phoneNumber,
+                        'customer_code' => $customerCode,
                     ]);
                 }
+                // If not found locally, session stays with null phone/code.
+                // Dashboard will show empty state — customer needs to sync first.
             }
 
             session([
@@ -414,14 +407,14 @@ class AuthController extends Controller
                 'fullname'          => $data['name'],
                 'name'              => $data['name'],
                 'username'          => $identifier,
-                'phone_number'      => $phoneNumber,
+                'phone_number'      => $phoneNumber, // may be null if timeout
                 'mobile_no'         => $phoneNumber,
                 'login_type'        => $loginType,
                 'search_used'       => $data['search_used'] ?? null,
                 'sent_to'           => $data['sent_to'] ?? [],
                 'customer_verified' => true,
                 'auth_source'       => 'genova',
-                'customer_code'     => $customerCode,
+                'customer_code'     => $customerCode, // may be null if timeout
             ]);
 
             Log::debug('Genova password check', [
