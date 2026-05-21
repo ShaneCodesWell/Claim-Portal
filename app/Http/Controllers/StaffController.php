@@ -111,14 +111,16 @@ class StaffController extends Controller
 
     public function showCustomer(Customer $customer)
     {
+        $policyIds = $customer->policies()->pluck('id');
+
         $policies = $customer->policies()->latest()->paginate(5);
-        $claims   = Claim::whereIn('policy_id', $customer->policies->pluck('id'))->latest()->paginate(5);
+        $claims   = Claim::whereIn('policy_id', $policyIds)->latest()->paginate(5);
 
         $stats = [
-            'active_policies'  => Policy::where('status', 'active')->count(),
-            'submitted_claims' => Claim::where('status', 'incoming')->count(),
-            'closed_claims'    => Claim::where('status', 'closed')->count(),
-            'pending_claims'   => Claim::where('status', 'in_progress')->count(),
+            'active_policies'  => $customer->policies()->where('status', 'active')->count(),
+            'submitted_claims' => Claim::whereIn('policy_id', $policyIds)->where('status', 'incoming')->count(),
+            'closed_claims'    => Claim::whereIn('policy_id', $policyIds)->where('status', 'closed')->count(),
+            'pending_claims'   => Claim::whereIn('policy_id', $policyIds)->where('status', 'in_progress')->count(),
         ];
 
         return view('staff.customers.show', compact('customer', 'stats', 'policies', 'claims'));

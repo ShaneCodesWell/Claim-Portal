@@ -24,10 +24,11 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {{-- 4‑column grid: left takes 1/4, right takes 3/4 for more table space --}}
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-        {{-- ==================== LEFT COLUMN – Customer Info ==================== --}}
-        <div class="space-y-5">
+        {{-- ==================== LEFT COLUMN (1/4 width) – Customer Info ==================== --}}
+        <div class="lg:col-span-1 space-y-5">
 
             {{-- Quick Stats Card --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -62,9 +63,6 @@
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <i class="fas fa-user-circle text-blue-500"></i> Customer Information
                     </h3>
-                    {{-- <button class="text-xs text-blue-600 hover:underline flex items-center gap-1">
-                        <i class="fas fa-edit"></i> Edit
-                    </button> --}}
                 </div>
                 <div class="p-4">
                     <div class="flex items-center gap-4 mb-4">
@@ -86,21 +84,13 @@
                             <i class="fas fa-phone w-4 text-gray-400"></i>
                             <span class="text-gray-700">{{ $customer->phone }}</span>
                         </div>
-                        {{-- <div class="flex items-center gap-2">
-                            <i class="fas fa-map-marker-alt w-4 text-gray-400"></i>
-                            <span class="text-gray-700">{{ $customer->address }}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-id-card w-4 text-gray-400"></i>
-                            <span class="text-gray-700">National ID: {{ $customer->national_id }}</span>
-                        </div> --}}
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- ==================== RIGHT COLUMN – Policies & Claims ==================== --}}
-        <div class="lg:col-span-2 space-y-6">
+        {{-- ==================== RIGHT COLUMN (3/4 width) – Policies & Claims ==================== --}}
+        <div class="lg:col-span-3 space-y-6">
 
             {{-- Active Policies Table --}}
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
@@ -118,7 +108,7 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-200 w-full">
+                    <table class="min-w-full w-full">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th
@@ -141,7 +131,10 @@
                         <tbody class="divide-y divide-gray-100">
                             @forelse ($policies as $policy)
                                 @php
-                                    $isExpiringSoon = $policy->end_date->isBefore(now()->addDays(30));
+                                    $now = now();
+                                    $isExpired = $policy->end_date->isPast();
+                                    $isExpiringSoon =
+                                        !$isExpired && $policy->end_date->isBefore($now->copy()->addDays(30));
                                 @endphp
                                 <tr class="hover:bg-gray-50 transition group">
                                     <td class="px-5 py-3 font-mono text-xs font-medium text-gray-800">
@@ -153,16 +146,25 @@
                                     <td class="px-5 py-3 text-xs text-gray-500">
                                         {{ $policy->start_date->format('M d, Y') }} –
                                         {{ $policy->end_date->format('M d, Y') }}
-                                        @if ($isExpiringSoon)
-                                            <span class="ml-1 text-[10px] text-amber-600 font-medium">(Expires
-                                                soon)</span>
-                                        @endif
                                     </td>
                                     <td class="px-5 py-3">
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-green-100 text-green-700">
-                                            <i class="fas fa-circle text-[6px] mr-1 text-green-600"></i> Active
-                                        </span>
+                                        @if ($isExpired)
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-red-100 text-red-700">
+                                                <i class="fas fa-circle text-[6px] mr-1 text-red-500"></i> Expired
+                                            </span>
+                                        @elseif ($isExpiringSoon)
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-100 text-amber-700">
+                                                <i class="fas fa-circle text-[6px] mr-1 text-amber-500"></i> Expiring
+                                                Soon
+                                            </span>
+                                        @else
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-green-100 text-green-700">
+                                                <i class="fas fa-circle text-[6px] mr-1 text-green-600"></i> Active
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-5 py-3 text-right">
                                         @php $source = strtolower($policy->source); @endphp
@@ -215,7 +217,7 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-[800px] w-full">
+                    <table class="min-w-full w-full">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th
@@ -302,33 +304,6 @@
                     </div>
                 @endif
             </div>
-
-            {{-- Recent Activities / Notes (Optional) --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-history text-blue-500"></i> Recent Activity
-                    </h3>
-                </div>
-                <div class="p-4 space-y-3">
-                    <div class="flex gap-3 text-sm">
-                        <i class="fas fa-file-alt text-gray-400 mt-0.5"></i>
-                        <div><span class="font-medium">Claim CLM-2025-0021</span><span class="text-gray-500">
-                                submitted on Mar 15, 2025</span></div>
-                    </div>
-                    <div class="flex gap-3 text-sm">
-                        <i class="fas fa-phone-alt text-gray-400 mt-0.5"></i>
-                        <div><span class="font-medium">Customer service call</span><span class="text-gray-500"> –
-                                Policy renewal reminder (Mar 10, 2025)</span></div>
-                    </div>
-                    <div class="flex gap-3 text-sm">
-                        <i class="fas fa-check-circle text-green-500 mt-0.5"></i>
-                        <div><span class="font-medium">Payment received</span><span class="text-gray-500"> – Premium
-                                for Home Protector Plus (Mar 01, 2025)</span></div>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div>
 
