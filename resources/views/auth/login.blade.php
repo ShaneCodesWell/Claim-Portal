@@ -391,6 +391,81 @@
                 </div>
             </div>
 
+            {{-- ── STAGE: PROFILE PICKER ─────────────────────────── --}}
+            <div id="stage-profile-picker" class="modal-stage">
+                <div class="bg-brand-900 px-6 py-5 text-center">
+                    <div class="flex items-center justify-center mb-3">
+                        <div
+                            class="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
+                            <i class="fas fa-users text-white text-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-display text-xl text-white mb-1">Select your profile</h3>
+                    <p class="text-blue-200 text-xs">Multiple accounts found for this number</p>
+                </div>
+                <div class="p-6">
+                    <div id="profile-list" class="space-y-3 max-h-72 overflow-y-auto"></div>
+                </div>
+            </div>
+
+            {{-- ── STAGE: ENTER PASSWORD ───────────────────────────── --}}
+            <div id="stage-enter-password" class="modal-stage">
+                <div class="bg-brand-900 px-6 py-4 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <i class="fas fa-lock text-white"></i>
+                        <h3 class="font-display text-lg text-white">Enter your password</h3>
+                    </div>
+                    <p class="text-blue-200 text-xs mt-1">Verify it's really you</p>
+                </div>
+                <div class="p-6">
+                    <p id="enter-password-name" class="text-sm text-center text-gray-600 mb-4"></p>
+                    <form id="enterPasswordForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <div class="relative">
+                                <i
+                                    class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                                <input type="password" id="enterPasswordInput" name="password" required
+                                    placeholder="Enter your password"
+                                    class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
+                                <button type="button"
+                                    class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    data-target="enterPasswordInput">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="enterPasswordError"
+                            class="hidden text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2"></div>
+                        <button type="submit"
+                            class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Log In
+                        </button>
+                    </form>
+                    <button type="button" id="forgotPasswordBtn"
+                        class="w-full py-2 mt-2 text-xs text-gray-400 hover:text-brand-600 transition">
+                        Forgot password? Contact support
+                    </button>
+                </div>
+            </div>
+
+            {{-- ── STAGE: NO PROFILE FOUND ────────────────────────── --}}
+            <div id="stage-no-profile" class="modal-stage p-8 text-center">
+                <div class="flex items-center justify-center mb-5">
+                    <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user-slash text-amber-500 text-2xl"></i>
+                    </div>
+                </div>
+                <h3 class="font-display text-xl text-gray-900 mb-2">Account not found</h3>
+                <p class="text-sm text-gray-500 mb-6 leading-relaxed">
+                    Your phone number was verified but no account profile was found. Please contact support.
+                </p>
+                <button id="noProfileRetryBtn"
+                    class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition mb-3">
+                    <i class="fas fa-redo mr-2"></i>Try Again
+                </button>
+            </div>
+
             {{-- ── STAGE: SUCCESS (GLIMS fallback) ─────────── --}}
             <div id="stage-success-glims" class="modal-stage">
                 <div class="bg-amber-600 px-6 py-5 text-center">
@@ -592,14 +667,14 @@
 
     <script>
         (() => {
-            // ── CONFIG ──────────────────────────────────────────────
             const AJAX_URL = '{{ route('login.ajax') }}';
+            const SELECT_URL = '{{ route('login.select.profile') }}';
+            const ENTER_PW_URL = '{{ route('login.enter.password') }}';
             const LOCAL_LOGIN_URL = '{{ route('login.local.submit') }}';
             const SETUP_PW_URL = '{{ route('setup.password.ajax') }}';
             const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+            const MAX_SKIPS = 1;
 
-            // Messages cycled during the loading stage.
-            // We keep them generic and reassuring — no technical jargon.
             const LOAD_MESSAGES = [
                 'Connecting to Vanguard Assurance...',
                 'Verifying your identity...',
@@ -608,30 +683,20 @@
                 'Almost there...',
             ];
 
-            // Max times a user can defer the password setup before it becomes required.
-            const MAX_SKIPS = 1;
-
-            // ── STATE ────────────────────────────────────────────────
-            let currentStage = null;
             let messageInterval = null;
             let messageIndex = 0;
             let skipCount = 0;
+            let selectedProfile = null;
 
-            // ── DOM REFS ─────────────────────────────────────────────
             const modal = document.getElementById('authModal');
             const form = document.getElementById('verificationForm');
             const loaderMessage = document.getElementById('loaderMessage');
             const errorMessage = document.getElementById('errorMessage');
-            const genovaName = document.getElementById('genova-name');
-            const glimsName = document.getElementById('glims-name');
 
-            // ── MODAL OPEN / CLOSE ───────────────────────────────────
+            // ── Modal ─────────────────────────────────────────────────────
             function openModal() {
                 modal.style.display = 'flex';
-                // Force reflow before adding class so transition fires
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => modal.classList.add('visible'));
-                });
+                requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add('visible')));
             }
 
             function closeModal() {
@@ -642,21 +707,16 @@
                 }, 300);
             }
 
-            // ── STAGE SWITCHER ────────────────────────────────────────
             function showStage(name) {
                 document.querySelectorAll('.modal-stage').forEach(el => el.classList.remove('active'));
                 const stage = document.getElementById('stage-' + name);
                 if (stage) stage.classList.add('active');
-                currentStage = name;
             }
 
-            // ── ANIMATED MESSAGE CYCLE ───────────────────────────────
             function startMessageCycle() {
                 messageIndex = 0;
                 loaderMessage.textContent = LOAD_MESSAGES[0];
-
                 messageInterval = setInterval(() => {
-                    // Fade out
                     loaderMessage.classList.add('fading');
                     setTimeout(() => {
                         messageIndex = (messageIndex + 1) % LOAD_MESSAGES.length;
@@ -673,7 +733,12 @@
                 }
             }
 
-            // ── PASSWORD STRENGTH ─────────────────────────────────────
+            function showError(msg) {
+                errorMessage.textContent = msg;
+                showStage('error');
+            }
+
+            // ── Password strength ─────────────────────────────────────────
             const strengthBar = document.getElementById('strengthBar');
             const strengthLabel = document.getElementById('strengthLabel');
 
@@ -683,7 +748,6 @@
                 if (/[A-Z]/.test(pw)) score++;
                 if (/[0-9]/.test(pw)) score++;
                 if (/[^A-Za-z0-9]/.test(pw)) score++;
-
                 const levels = [{
                         width: '25%',
                         color: 'bg-red-400',
@@ -705,19 +769,15 @@
                         label: 'Strong'
                     },
                 ];
-
                 const level = levels[Math.max(0, score - 1)] ?? levels[0];
-
                 strengthBar.style.width = pw.length ? level.width : '0';
                 strengthBar.className = 'strength-bar-fill ' + (pw.length ? level.color : '');
                 strengthLabel.textContent = pw.length ? level.label : '';
             }
 
-            document.getElementById('newPassword')?.addEventListener('input', e => {
-                checkStrength(e.target.value);
-            });
+            document.getElementById('newPassword')?.addEventListener('input', e => checkStrength(e.target.value));
 
-            // ── TOGGLE PASSWORD VISIBILITY ────────────────────────────
+            // ── Toggle password visibility ────────────────────────────────
             document.querySelectorAll('.toggle-password').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const target = document.getElementById(btn.dataset.target);
@@ -732,15 +792,98 @@
                 });
             });
 
-            // ── FORM SUBMIT → AJAX LOGIN ──────────────────────────────
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+            // ── Profile picker helpers ────────────────────────────────────
+            function renderProfiles(profiles) {
+                const list = document.getElementById('profile-list');
+                list.innerHTML = '';
 
-                openModal();
+                profiles.forEach(profile => {
+                    const card = document.createElement('button');
+                    card.type = 'button';
+                    card.className =
+                        'w-full text-left p-4 border border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition flex items-center gap-3';
+
+                    const initials = profile.name
+                        .split(' ')
+                        .slice(0, 2)
+                        .map(w => w[0] ?? '')
+                        .join('')
+                        .toUpperCase();
+
+                    const sourceBadge = profile.source === 'glims' ?
+                        '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full ml-1">GLIMS</span>' :
+                        '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-1">Genova</span>';
+
+                    const policyText = profile.policy_count !== null ?
+                        `${profile.policy_count} polic${profile.policy_count === 1 ? 'y' : 'ies'}` :
+                        'Policies loading...';
+
+                    card.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center text-sm font-semibold shrink-0">
+                    ${initials}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center flex-wrap gap-1">
+                        <p class="text-sm font-medium text-gray-900 truncate">${profile.name}</p>
+                        ${sourceBadge}
+                        ${profile.is_match ? '<span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Suggested</span>' : ''}
+                    </div>
+                    <p class="text-xs text-gray-500">${profile.code} · ${policyText}</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 text-xs shrink-0"></i>
+            `;
+
+                    card.addEventListener('click', () => selectProfile(profile));
+                    list.appendChild(card);
+                });
+            }
+
+            async function selectProfile(profile) {
+                selectedProfile = profile;
+
                 showStage('loading');
                 startMessageCycle();
 
-                const formData = new FormData(form);
+                try {
+                    const res = await fetch(SELECT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': CSRF,
+                            'Accept': 'application/json'
+                        },
+                        body: new URLSearchParams({
+                            customer_code: profile.code
+                        }),
+                    });
+
+                    stopMessageCycle();
+                    const data = await res.json();
+
+                    if (data.status === 'needs_password_setup') {
+                        showStage('setup-password');
+
+                    } else if (data.status === 'needs_password_entry') {
+                        document.getElementById('enter-password-name').textContent =
+                            `Welcome back, ${profile.name}`;
+                        document.getElementById('enterPasswordInput').value = '';
+                        document.getElementById('enterPasswordError').classList.add('hidden');
+                        showStage('enter-password');
+
+                    } else {
+                        showError(data.message ?? 'Something went wrong.');
+                    }
+                } catch (e) {
+                    stopMessageCycle();
+                    showError('A network error occurred. Please try again.');
+                }
+            }
+
+            // ── Form submit → Step 1 ──────────────────────────────────────
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                openModal();
+                showStage('loading');
+                startMessageCycle();
 
                 try {
                     const res = await fetch(AJAX_URL, {
@@ -749,13 +892,12 @@
                             'X-CSRF-TOKEN': CSRF,
                             'Accept': 'application/json'
                         },
-                        body: formData,
+                        body: new FormData(form),
                     });
 
                     stopMessageCycle();
                     const data = await res.json();
-
-                    handleAuthResponse(data, formData.get('username'));
+                    handleAuthResponse(data);
 
                 } catch (err) {
                     stopMessageCycle();
@@ -763,41 +905,25 @@
                 }
             });
 
-            // ── HANDLE JSON RESPONSE FROM /login/ajax ─────────────────
-            function handleAuthResponse(data, identifier) {
+            // ── Handle Step 1 response ────────────────────────────────────
+            function handleAuthResponse(data) {
                 switch (data.status) {
-                    case 'success':
-                        if (data.source === 'glims') {
-                            glimsName.textContent = data.name ?? '';
 
-                            if (data.needs_password_setup) {
-                                // No password yet — show the setup prompt
-                                showStage('success-glims');
-                            } else {
-                                // Already has a password — redirect straight to dashboard
-                                setTimeout(() => {
-                                    window.location.href = data.redirect;
-                                }, 800);
-                            }
-                        } else {
-                            // Genova success
-                            genovaName.textContent = data.name ?? '';
-                            showStage('success-genova');
+                    case 'single_profile':
+                        // Auto-select — go straight to password step
+                        selectProfile(data.profile);
+                        break;
 
-                            if (data.needs_password_setup) {
-                                // After a brief celebratory moment, slide into password setup
-                                setTimeout(() => showStage('setup-password'), 2200);
-                            } else {
-                                // All done — redirect
-                                setTimeout(() => {
-                                    window.location.href = data.redirect;
-                                }, 2000);
-                            }
-                        }
+                    case 'profile_selection':
+                        renderProfiles(data.profiles);
+                        showStage('profile-picker');
+                        break;
+
+                    case 'no_profile':
+                        showStage('no-profile');
                         break;
 
                     case 'local_password_available':
-                        // Both APIs down but customer has a local password
                         showStage('local-password');
                         break;
 
@@ -808,76 +934,40 @@
                 }
             }
 
-            // ── GLIMS STAGE BUTTONS ───────────────────────────────────
-            document.getElementById('glimsSetupPasswordBtn')?.addEventListener('click', () => {
-                showStage('setup-password');
-            });
-
-            document.getElementById('glimsSkipBtn')?.addEventListener('click', () => {
-                skipCount++;
-                if (skipCount >= MAX_SKIPS) {
-                    // Used their last skip — force setup
-                    const btn = document.getElementById('glimsSkipBtn');
-                    btn.textContent = "You'll need to set a password to continue.";
-                    btn.disabled = true;
-                    setTimeout(() => showStage('setup-password'), 1200);
-                } else {
-                    // Let them in — they'll see the dashboard nudge
-                    // For GLIMS users, we need to proceed to dashboard via a silent redirect
-                    // The session is already set from loginAjax, so direct navigation works
-                    window.location.href = '{{ route('dashboard') }}';
-                }
-            });
-
-            // ── LOCAL PASSWORD FORM (APIs down) ───────────────────────
-            document.getElementById('localPasswordForm')?.addEventListener('submit', async (e) => {
+            // ── Enter password form ───────────────────────────────────────
+            document.getElementById('enterPasswordForm')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                const errorEl = document.getElementById('localPasswordError');
+                const errorEl = document.getElementById('enterPasswordError');
                 const submitBtn = e.target.querySelector('button[type="submit"]');
-                const phone = document.getElementById('username')?.value ??
-                    document.querySelector('[name="username"]')?.value;
 
                 errorEl.classList.add('hidden');
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging in...';
-
-                const formData = new FormData();
-                formData.append('phone', phone);
-                formData.append('password', document.getElementById('localPasswordInput').value);
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...';
 
                 try {
-                    const res = await fetch(LOCAL_LOGIN_URL, {
+                    const res = await fetch(ENTER_PW_URL, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': CSRF,
                             'Accept': 'application/json'
                         },
-                        body: formData,
+                        body: new URLSearchParams({
+                            password: document.getElementById('enterPasswordInput').value,
+                        }),
                     });
-
-                    if (res.redirected) {
-                        // Laravel redirected → success, follow it
-                        window.location.href = res.url;
-                        return;
-                    }
 
                     const data = await res.json();
 
-                    if (res.ok) {
-                        window.location.href = '{{ route('dashboard') }}';
+                    if (data.status === 'success') {
+                        submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Verified!';
+                        setTimeout(() => window.location.href = data.redirect, 800);
                     } else {
-                        const msg = data.errors?.phone?.[0] ??
-                            data.errors?.password?.[0] ??
-                            data.message ??
-                            'Incorrect password. Please try again.';
-
-                        errorEl.textContent = msg;
+                        errorEl.textContent = data.message ?? 'Incorrect password.';
                         errorEl.classList.remove('hidden');
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Log In';
                     }
-
                 } catch (err) {
                     errorEl.textContent = 'Network error. Please try again.';
                     errorEl.classList.remove('hidden');
@@ -886,7 +976,7 @@
                 }
             });
 
-            // ── SETUP PASSWORD FORM ───────────────────────────────────
+            // ── Setup password form ───────────────────────────────────────
             document.getElementById('setupPasswordForm')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
@@ -897,13 +987,11 @@
 
                 errorEl.classList.add('hidden');
 
-                // Client-side check before hitting the server
                 if (pw !== pwConfirm) {
                     errorEl.textContent = 'Passwords do not match.';
                     errorEl.classList.remove('hidden');
                     return;
                 }
-
                 if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw)) {
                     errorEl.textContent =
                         'Password must be at least 8 characters with a letter and a number.';
@@ -914,10 +1002,6 @@
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
 
-                const formData = new FormData();
-                formData.append('password', pw);
-                formData.append('password_confirmation', pwConfirm);
-
                 try {
                     const res = await fetch(SETUP_PW_URL, {
                         method: 'POST',
@@ -925,16 +1009,17 @@
                             'X-CSRF-TOKEN': CSRF,
                             'Accept': 'application/json'
                         },
-                        body: formData,
+                        body: new URLSearchParams({
+                            password: pw,
+                            password_confirmation: pwConfirm
+                        }),
                     });
 
                     const data = await res.json();
 
                     if (data.status === 'success') {
                         submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Saved!';
-                        setTimeout(() => {
-                            window.location.href = data.redirect;
-                        }, 800);
+                        setTimeout(() => window.location.href = data.redirect, 800);
                     } else {
                         const firstError = data.errors?.password?.[0] ?? data.message ??
                             'Could not save password.';
@@ -944,7 +1029,6 @@
                         submitBtn.innerHTML =
                             '<i class="fas fa-shield-alt mr-2"></i>Save Password & Continue';
                     }
-
                 } catch (err) {
                     errorEl.textContent = 'Network error. Please try again.';
                     errorEl.classList.remove('hidden');
@@ -953,33 +1037,61 @@
                 }
             });
 
-            // ── SKIP SETUP (Genova path — shown if MAX_SKIPS > 1) ────
-            const skipSetupBtn = document.getElementById('skipSetupBtn');
-            if (skipSetupBtn) {
-                // Only show skip for Genova users (GLIMS skip is handled separately above)
-                // Unhide it after the setup stage renders
-                skipSetupBtn.classList.remove('hidden');
+            // ── Local password form (both APIs down) ──────────────────────
+            document.getElementById('localPasswordForm')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
 
-                skipSetupBtn.addEventListener('click', () => {
-                    skipCount++;
-                    if (skipCount >= MAX_SKIPS) {
-                        skipSetupBtn.textContent = 'Password setup is required to continue.';
-                        skipSetupBtn.disabled = true;
-                    } else {
-                        // Get redirect from the last response — stored on window
-                        window.location.href = window._authRedirect ?? '{{ route('dashboard') }}';
+                const errorEl = document.getElementById('localPasswordError');
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const phone = document.querySelector('[name="username"]')?.value;
+
+                errorEl.classList.add('hidden');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging in...';
+
+                try {
+                    const res = await fetch(LOCAL_LOGIN_URL, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': CSRF,
+                            'Accept': 'application/json'
+                        },
+                        body: new URLSearchParams({
+                            phone: phone,
+                            password: document.getElementById('localPasswordInput').value,
+                        }),
+                    });
+
+                    if (res.redirected) {
+                        window.location.href = res.url;
+                        return;
                     }
-                });
-            }
 
-            // ── ERROR STAGE ───────────────────────────────────────────
-            function showError(msg) {
-                errorMessage.textContent = msg;
-                showStage('error');
-            }
+                    const data = await res.json();
 
-            document.getElementById('errorRetryBtn')?.addEventListener('click', () => {
-                closeModal();
+                    if (res.ok) {
+                        window.location.href = '{{ route('dashboard') }}';
+                    } else {
+                        const msg = data.errors?.phone?.[0] ?? data.errors?.password?.[0] ??
+                            data.message ?? 'Incorrect password.';
+                        errorEl.textContent = msg;
+                        errorEl.classList.remove('hidden');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Log In';
+                    }
+                } catch (err) {
+                    errorEl.textContent = 'Network error. Please try again.';
+                    errorEl.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Log In';
+                }
+            });
+
+            // ── Retry / close buttons ─────────────────────────────────────
+            document.getElementById('errorRetryBtn')?.addEventListener('click', closeModal);
+            document.getElementById('noProfileRetryBtn')?.addEventListener('click', closeModal);
+            document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => {
+                showError('Please contact Vanguard Assurance support to reset your password.');
             });
 
         })();

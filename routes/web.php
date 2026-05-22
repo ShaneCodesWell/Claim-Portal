@@ -2,16 +2,16 @@
 
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\FireController;
 use App\Http\Controllers\BranchController;
-use App\Http\Controllers\StaffController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\Staff\GlimsSyncController;
+use App\Http\Controllers\FireController;
 use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
 use App\Http\Controllers\OfflineController;
+use App\Http\Controllers\StaffController;
+use App\Http\Controllers\Staff\GlimsSyncController;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
 use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
@@ -26,9 +26,12 @@ Route::get('/agent-login', [AuthController::class, 'agentLogin'])->name('agent.l
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/staff-login', [AuthController::class, 'staffLogin'])->name('staff.login.submit');
 
-// AJAX password setup — called from the modal's password setup step
-Route::post('/login/ajax', [AuthController::class, 'loginAjax'])->name('login.ajax');
-Route::post('/auth/setup-password-ajax', [AuthController::class, 'setupPasswordAjax'])->name('setup.password.ajax');
+// AJAX password setup — called from the modal's password setup - multi-step login
+Route::post('login/ajax', [AuthController::class, 'loginAjax'])->name('login.ajax');
+Route::post('login/select-profile', [AuthController::class, 'selectProfile'])->name('login.select.profile');
+Route::post('login/enter-password', [AuthController::class, 'enterPassword'])->name('login.enter.password');
+Route::post('login/local', [AuthController::class, 'localLogin'])->name('login.local.submit');
+Route::post('setup-password/ajax', [AuthController::class, 'setupPasswordAjax'])->name('setup.password.ajax');
 
 Route::get('/otp', [AuthController::class, 'showOtpForm'])->name('otp');
 Route::post('/otp/request', [AuthController::class, 'requestOtp'])->name('otp.send');

@@ -2,7 +2,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
-use App\Models\Policy;
 use App\Services\GenovaApiService;
 use App\Services\GlimsService;
 use Illuminate\Http\Request;
@@ -361,6 +360,7 @@ class AuthController extends Controller
     }
 
     // New Ajax Login
+    // ── STEP 1: Verify phone exists, resolve profiles ─────────────────
     public function loginAjax(Request $request): \Illuminate\Http\JsonResponse
     {
         $request->validate([
@@ -371,170 +371,111 @@ class AuthController extends Controller
         $identifier = trim($request->username);
         $loginType  = $request->input('login_type', 'mobile_no');
 
-        // ── STEP 1: Try Genova ───────────────────────────────────
+        // ── STEP 1: Verify with Genova ────────────────────────────────
         $genovaResult = $this->attemptGenovaVerification($identifier, $loginType);
 
         if ($genovaResult['success']) {
-            $data         = $genovaResult['data'];
-            $phoneNumber  = $data['search_used']['phone_no'] ?? null;
-            $customerCode = $data['search_used']['client_code'] ?? null;
+            $data        = $genovaResult['data'];
+            $userId      = $data['user_id'];
+            $phoneNumber = $data['search_used']['phone_no'] ?? ($loginType === 'mobile_no' ? $identifier : null);
 
-            // ── Resolve phone + customer code for non-phone logins ──
-            if (! $phoneNumber && $loginType !== 'mobile_no') {
-                // Try local DB only — fast and reliable
-                $localPolicy = Policy::where('policy_number', $identifier)
-                    ->orWhereRaw("raw_payload::text LIKE ?", ['%"' . $identifier . '"%'])
-                    ->with('customer')
-                    ->first();
+            // Store partial session — NOT fully authenticated yet
+            session([
+                'pending_auth'    => true,
+                'pending_user_id' => $userId,
+                'pending_phone'   => $phoneNumber,
+                'pending_name'    => $data['name'],
+                'login_type'      => $loginType,
+                'username'        => $identifier,
+            ]);
 
-                if ($localPolicy && $localPolicy->customer) {
-                    $phoneNumber  = $localPolicy->customer->phone;
-                    $customerCode = $localPolicy->customer->external_customer_code;
+            // ── STEP 2: Resolve customer profiles ─────────────────────
+            $profiles = $this->resolveProfiles($phoneNumber, $userId);
 
-                    Log::info('Resolved customer from local policy lookup', [
-                        'policy_number' => $identifier,
-                        'phone'         => $phoneNumber,
-                        'customer_code' => $customerCode,
-                    ]);
-                }
-                // If not found locally, session stays with null phone/code.
-                // Dashboard will show empty state — customer needs to sync first.
+            if (empty($profiles)) {
+                // Phone verified but no customer record found anywhere
+                Log::error('Auth: phone verified but no profile found', [
+                    'phone'      => $phoneNumber,
+                    'user_id'    => $userId,
+                    'login_type' => $loginType,
+                ]);
+
+                return response()->json([
+                    'status'  => 'no_profile',
+                    'message' => 'Your phone number was verified but we could not find an associated account. Please contact support.',
+                ]);
             }
 
-            session([
-                'authenticated'     => true,
-                'user_id'           => $data['user_id'],
-                'fullname'          => $data['name'],
-                'name'              => $data['name'],
-                'username'          => $identifier,
-                'phone_number'      => $phoneNumber, // may be null if timeout
-                'mobile_no'         => $phoneNumber,
-                'login_type'        => $loginType,
-                'search_used'       => $data['search_used'] ?? null,
-                'sent_to'           => $data['sent_to'] ?? [],
-                'customer_verified' => true,
-                'auth_source'       => 'genova',
-                'customer_code'     => $customerCode, // may be null if timeout
-            ]);
+            if (count($profiles) === 1) {
+                // Single profile — store it pending password
+                session(['pending_customer_code' => $profiles[0]['code']]);
 
-            Log::debug('Genova password check', [
-                'phone'                 => $phoneNumber,
-                'customer_code'         => $customerCode,
-                'user_id'               => $data['user_id'],
-                'customer_code_in_data' => $data['search_used']['client_code'] ?? 'NOT IN search_used',
-            ]);
+                return response()->json([
+                    'status'  => 'single_profile',
+                    'profile' => $profiles[0],
+                    'message' => 'Profile found.',
+                ]);
+            }
 
-            $needsPasswordSetup = $this->customerNeedsPasswordSetup($phoneNumber, array_merge($data, [
-                'customer_code' => $customerCode,
-            ]));
-
+            // Multiple profiles — let user pick
             return response()->json([
-                'status'               => 'success',
-                'source'               => 'genova',
-                'message'              => $data['message'] ?? 'Verification successful.',
-                'name'                 => $data['name'],
-                'needs_password_setup' => $needsPasswordSetup,
-                'redirect'             => $needsPasswordSetup ? null : route('dashboard'),
+                'status'   => 'profile_selection',
+                'profiles' => $profiles,
+                'message'  => 'Multiple profiles found. Please select yours.',
             ]);
         }
 
-        // ── STEP 2: Genova failed — try GLIMS silently ───────────
-        Log::warning('loginAjax: Genova failed, falling back to GLIMS', [
+        // ── Genova failed — try GLIMS ──────────────────────────────────
+        Log::warning('loginAjax: Genova failed, trying GLIMS', [
             'identifier' => $identifier,
-            'login_type' => $loginType,
             'reason'     => $genovaResult['reason'],
         ]);
 
-        $glimsResult = $this->attemptGlimsVerification($identifier, $loginType);
+        if ($loginType === 'mobile_no') {
+            $glimsProfiles = $this->resolveGlimsProfiles($identifier);
 
-        if ($glimsResult['success']) {
-            $customer    = $glimsResult['customer'];
-            $phoneNumber = $customer['CLIENT_HOME_MOBILE'] ?? $customer['CLIENT_HOME_TEL'] ?? null;
+            if (! empty($glimsProfiles)) {
+                session([
+                    'pending_auth'  => true,
+                    'pending_phone' => $identifier,
+                    'pending_name'  => $glimsProfiles[0]['name'],
+                    'login_type'    => $loginType,
+                    'auth_source'   => 'glims',
+                ]);
 
-            // Build name from GLIMS parts
-            $name = trim(implode(' ', array_filter([
-                $customer['CLIENT_FIRST_NAME'] ?? null,
-                $customer['CLIENT_MIDDLE_NAME'] ?? null,
-                $customer['CLIENT_FAMILY_NAME'] ?? null,
-            ])));
+                if (count($glimsProfiles) === 1) {
+                    session(['pending_customer_code' => $glimsProfiles[0]['code']]);
 
-            // Find or create the local Customer record so we can check/set password.
-            // IMPORTANT: firstOrCreate returns the *existing* record if one is found,
-            // so local_password will be populated if the customer already set one.
-            // We then refresh() to make sure we have the latest DB state in case
-            // the record was just touched by a concurrent sync.
-            $dbCustomer = $this->findOrCreateCustomerFromGlims($customer, $phoneNumber, $name);
-            // $dbCustomer->refresh();
+                    return response()->json([
+                        'status'  => 'single_profile',
+                        'profile' => $glimsProfiles[0],
+                        'source'  => 'glims',
+                    ]);
+                }
 
-            session([
-                'authenticated'     => true,
-                'user_id'           => $customer['CLIENT_CODE'], // use CLIENT_CODE as user id for GLIMS users
-                'fullname'          => $name,
-                'name'              => $name,
-                'username'          => $identifier,
-                'phone_number'      => $phoneNumber,
-                'mobile_no'         => $phoneNumber,
-                'login_type'        => $loginType,
-                'customer_verified' => true,
-                'auth_source'       => 'glims',
-                'customer_code'     => $customer['CLIENT_CODE'],
-                'glims_client_code' => $customer['CLIENT_CODE'],
-            ]);
-
-            Log::info('loginAjax: GLIMS fallback success', [
-                'client_code'        => $customer['CLIENT_CODE'],
-                'name'               => $name,
-                'has_local_password' => ! empty($dbCustomer->local_password),
-            ]);
-
-            // GLIMS users ALWAYS need password setup if they don't have one
-            // They can't rely on Genova OTP next time since Genova is unreliable
-            $needsPasswordSetup = empty($dbCustomer->local_password);
-
-            // return response()->json([
-            //     'status'               => 'success',
-            //     'source'               => 'glims',
-            //     'message'              => 'We found your account. Please set up a local password to secure your access.',
-            //     'name'                 => $name,
-            //     'needs_password_setup' => $needsPasswordSetup,
-            //     'redirect'             => $needsPasswordSetup ? null : route('dashboard'),
-            //     // Tell the frontend why we used GLIMS — so it can show appropriate messaging
-            //     'fallback_notice'      => true,
-            // ]);
-            return response()->json([
-                'status'               => 'success',
-                'source'               => 'glims',
-                'message'              => 'Account verified.',
-                'name'                 => $name,
-                'needs_password_setup' => $needsPasswordSetup,
-                'redirect'             => $needsPasswordSetup ? null : route('dashboard'), // ← add this
-                'fallback_notice'      => true,
-            ]);
-
+                return response()->json([
+                    'status'   => 'profile_selection',
+                    'profiles' => $glimsProfiles,
+                    'source'   => 'glims',
+                ]);
+            }
         }
 
-        // ── STEP 3: Both Genova and GLIMS failed ─────────────────
-        // Check if this phone number has a local password we can use
+        // ── Both failed — check local password fallback ────────────────
         if ($loginType === 'mobile_no') {
             $localCustomer = Customer::where('phone', $identifier)
                 ->whereNotNull('local_password')
                 ->first();
 
             if ($localCustomer) {
-                Log::info('loginAjax: Both APIs failed, local password available', [
-                    'phone' => $identifier,
-                ]);
-
-                // Don't log them in — but tell the frontend to show the password field
                 return response()->json([
                     'status'  => 'local_password_available',
-                    'message' => 'Our verification service is currently unavailable. You can still log in with your local password.',
+                    'message' => 'Verification service unavailable. Please log in with your local password.',
                     'phone'   => $identifier,
                 ]);
             }
         }
 
-        // Truly failed — nothing available
         Log::error('loginAjax: All auth sources failed', [
             'identifier' => $identifier,
             'login_type' => $loginType,
@@ -542,64 +483,140 @@ class AuthController extends Controller
 
         return response()->json([
             'status'  => 'error',
-            'message' => 'We could not verify your identity at the moment. Please try again shortly or contact support.',
+            'message' => 'We could not verify your identity. Please try again or contact support.',
         ], 422);
     }
 
-    // ── 3. NEW: AJAX PASSWORD SETUP ──────────────────────────────
-    // Called from the modal's password setup step.
-    // Saves the password and returns a redirect URL on success.
+    // ── STEP 2: Profile selected → check password status ─────────────
+    public function selectProfile(Request $request): \Illuminate\Http\JsonResponse
+    {
+        if (! session('pending_auth')) {
+            return response()->json(['status' => 'error', 'message' => 'Session expired.'], 401);
+        }
 
+        $request->validate(['customer_code' => 'required|string']);
+
+        $customerCode = $request->customer_code;
+
+        // Store the confirmed profile
+        session(['pending_customer_code' => $customerCode]);
+
+        // Check password status
+        $customer = Customer::where('external_customer_code', $customerCode)->first();
+
+        if (! $customer || empty($customer->local_password)) {
+            return response()->json([
+                'status'  => 'needs_password_setup',
+                'message' => 'Please set a local password to secure your account.',
+            ]);
+        }
+
+        return response()->json([
+            'status'  => 'needs_password_entry',
+            'message' => 'Please enter your password to continue.',
+        ]);
+    }
+
+    // ── STEP 3a: Enter existing password ─────────────────────────────
+    public function enterPassword(Request $request): \Illuminate\Http\JsonResponse
+    {
+        if (! session('pending_auth')) {
+            return response()->json(['status' => 'error', 'message' => 'Session expired.'], 401);
+        }
+
+        $request->validate(['password' => 'required|string']);
+
+        $customerCode = session('pending_customer_code');
+        $phone        = session('pending_phone');
+
+        $customer = null;
+        if ($customerCode) {
+            $customer = Customer::where('external_customer_code', $customerCode)->first();
+        }
+        if (! $customer && $phone) {
+            $customer = Customer::where('phone', $phone)->first();
+        }
+
+        if (! $customer) {
+            return response()->json(['status' => 'error', 'message' => 'Account not found.'], 404);
+        }
+
+        // Rate limit
+        $throttleKey = 'enter-password:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'status'  => 'error',
+                'message' => "Too many attempts. Try again in {$seconds} seconds.",
+            ], 429);
+        }
+
+        if (! Hash::check($request->password, $customer->local_password)) {
+            RateLimiter::hit($throttleKey, 60);
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Incorrect password. Please try again.',
+            ], 422);
+        }
+
+        RateLimiter::clear($throttleKey);
+
+        // ── Password correct — complete the session ────────────────────
+        $this->completeLogin($customer);
+
+        return response()->json([
+            'status'   => 'success',
+            'redirect' => route('dashboard'),
+        ]);
+    }
+
+    // ── STEP 3b: Setup password (new users) ──────────────────────────
     public function setupPasswordAjax(Request $request): \Illuminate\Http\JsonResponse
     {
-        if (! session('authenticated')) {
-            return response()->json(['status' => 'error', 'message' => 'Session expired. Please log in again.'], 401);
+        if (! session('pending_auth') && ! session('authenticated')) {
+            return response()->json(['status' => 'error', 'message' => 'Session expired.'], 401);
         }
 
         $request->validate([
             'password' => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
+                'required', 'string', 'min:8', 'confirmed',
                 'regex:/^(?=.*[a-zA-Z])(?=.*[0-9])/',
             ],
-        ], [
-            'password.regex' => 'Password must contain at least one letter and one number.',
-        ]);
+        ], ['password.regex' => 'Password must contain at least one letter and one number.']);
 
-        $phoneNumber  = session('phone_number') ?? session('mobile_no');
-        $customerCode = session('customer_code');
-        $userId       = session('user_id');
+        $customerCode = session('pending_customer_code') ?? session('customer_code');
+        $phone        = session('pending_phone') ?? session('phone_number') ?? session('mobile_no');
 
-        // ── Strict sequential lookup — never use orWhere across all fields ──
-        // Priority: customer_code (most specific) → phone → user_id
         $customer = null;
-
         if ($customerCode) {
             $customer = Customer::where('external_customer_code', $customerCode)->first();
         }
-
-        if (! $customer && $phoneNumber) {
-            $customer = Customer::where('phone', $phoneNumber)->first();
-        }
-
-        if (! $customer && $userId) {
-            $customer = Customer::where('external_customer_id', (string) $userId)->first();
+        if (! $customer && $phone) {
+            $customer = Customer::where('phone', $phone)->first();
         }
 
         if (! $customer) {
-            Log::warning('setupPasswordAjax: Customer record not found', [
-                'phone'         => $phoneNumber,
-                'customer_code' => $customerCode,
-                'user_id'       => $userId,
-            ]);
+            // Customer not in local DB yet — create them now from pending session
+            if ($customerCode) {
+                $customer = Customer::create([
+                    'external_customer_code' => $customerCode,
+                    'name'                   => session('pending_name') ?? 'Unknown',
+                    'phone'                  => $phone,
+                    'sources'                => ['genova'],
+                ]);
 
-            return response()->json([
-                'status'   => 'success',
-                'message'  => 'Logged in. Your account is still being set up — you can set a password from your dashboard.',
-                'redirect' => route('dashboard'),
-            ]);
+                Log::info('setupPasswordAjax: created new customer record', [
+                    'customer_code' => $customerCode,
+                    'phone'         => $phone,
+                ]);
+            } else {
+                // Truly nothing to work with
+                return response()->json([
+                    'status'   => 'success',
+                    'message'  => 'Logged in. Set your password from the dashboard.',
+                    'redirect' => route('dashboard'),
+                ]);
+            }
         }
 
         $customer->update([
@@ -607,17 +624,143 @@ class AuthController extends Controller
             'local_password_set_at' => now(),
         ]);
 
-        Log::info('setupPasswordAjax: Password set successfully', [
-            'customer_id'   => $customer->id,
-            'customer_code' => $customer->external_customer_code,
-            'phone'         => $customer->phone,
-        ]);
+        Log::info('setupPasswordAjax: password set', ['customer_id' => $customer->id]);
+
+// ── Complete the login now ──
+        $this->completeLogin($customer);
 
         return response()->json([
             'status'   => 'success',
             'message'  => 'Password saved! Taking you to your dashboard.',
             'redirect' => route('dashboard'),
         ]);
+
+        Log::info('setupPasswordAjax: password set', ['customer_id' => $customer->id]);
+
+        // Complete login after setup
+        $this->completeLogin($customer);
+
+        return response()->json([
+            'status'   => 'success',
+            'message'  => 'Password saved! Taking you to your dashboard.',
+            'redirect' => route('dashboard'),
+        ]);
+    }
+
+    // ── PRIVATE: Complete login — set full session ────────────────────
+    private function completeLogin(Customer $customer): void
+    {
+        $pendingName = session('pending_name');
+
+        session()->forget(['pending_auth', 'pending_user_id', 'pending_phone',
+            'pending_name', 'pending_customer_code']);
+
+        session([
+            'authenticated'     => true,
+            'user_id'           => $customer->external_customer_id ?? $customer->external_customer_code,
+            'fullname'          => $customer->name ?? $pendingName,
+            'name'              => $customer->name ?? $pendingName,
+            'phone_number'      => $customer->phone,
+            'mobile_no'         => $customer->phone,
+            'customer_code'     => $customer->external_customer_code,
+            'customer_verified' => true,
+            'auth_source'       => $customer->sources
+                ? (in_array('genova', $customer->sources) ? 'genova' : 'glims')
+                : 'genova',
+        ]);
+
+        Log::info('completeLogin: session established', [
+            'customer_id'   => $customer->id,
+            'customer_code' => $customer->external_customer_code,
+            'phone'         => $customer->phone,
+        ]);
+    }
+
+    // ── PRIVATE: Resolve profiles from Genova + GLIMS ─────────────────
+    private function resolveProfiles(?string $phone, int $userId): array
+    {
+        $profiles = [];
+
+        if (! $phone) {
+            return $profiles;
+        }
+
+        try {
+            $response = $this->api->getPolicies($phone, 'phone_number');
+
+            if ($response->successful()) {
+                $content = $response->json('data.content') ?? [];
+
+                foreach ($content as $entry) {
+                    if (empty($entry['code'])) {
+                        continue;
+                    }
+
+                    $profiles[] = [
+                        'code'         => $entry['code'],
+                        'name'         => $entry['name'] ?? 'Unknown',
+                        'phone'        => $entry['phone_number'] ?? $phone,
+                        'email'        => $entry['email'] ?? null,
+                        'policy_count' => count($entry['policies'] ?? []),
+                        'source'       => 'genova',
+                        'is_match'     => (string) ($entry['customer_api_identity'] ?? '') === (string) $userId,
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('resolveProfiles: Genova customer-search failed', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Also check GLIMS for this phone
+        $glimsProfiles = $this->resolveGlimsProfiles($phone);
+        foreach ($glimsProfiles as $gp) {
+            // Avoid duplicates — if already in Genova profiles, skip
+            $alreadyIn = collect($profiles)->pluck('code')->contains($gp['code']);
+            if (! $alreadyIn) {
+                $profiles[] = $gp;
+            }
+        }
+
+        return $profiles;
+    }
+
+    // ── PRIVATE: Resolve profiles from GLIMS only ─────────────────────
+    private function resolveGlimsProfiles(string $phone): array
+    {
+        $profiles = [];
+
+        try {
+            // Skip GLIMS lookup if not reachable — avoids 20s timeout off-premise
+            if (! $this->glims->isConnected()) {
+                return $profiles;
+            }
+            
+            $customer = $this->glimsPhoneLookup($phone);
+
+            if ($customer) {
+                $name = trim(implode(' ', array_filter([
+                    $customer['CLIENT_FIRST_NAME'] ?? null,
+                    $customer['CLIENT_MIDDLE_NAME'] ?? null,
+                    $customer['CLIENT_FAMILY_NAME'] ?? null,
+                ])));
+
+                $profiles[] = [
+                    'code'         => $customer['CLIENT_CODE'],
+                    'name'         => $name,
+                    'phone'        => $customer['CLIENT_HOME_MOBILE'] ?? $customer['CLIENT_HOME_TEL'] ?? $phone,
+                    'email'        => $customer['CLIENT_HOME_EMAIL'] ?? null,
+                    'policy_count' => null,
+                    'source'       => 'glims',
+                    'is_match'     => true,
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::warning('resolveGlimsProfiles failed', ['error' => $e->getMessage()]);
+        }
+
+        return $profiles;
     }
 
     // ── PRIVATE HELPERS ───────────────────────────────────────────
