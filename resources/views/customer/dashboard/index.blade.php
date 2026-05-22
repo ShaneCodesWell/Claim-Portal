@@ -294,7 +294,7 @@
                 type: rawClass,
                 className: className,
                 productName: productName,
-                vehicle: policy.vehicle_number || 'N/A',
+                vehicle: policy.vehicle_number || ' ',
                 status: isExpired ? 'expired' : 'active',
                 statusText: isExpired ? 'Expired' : 'Active',
                 renewalDate: policy.renewal_date || endDate,

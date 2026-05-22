@@ -83,6 +83,8 @@ class DashboardController extends Controller
             $customerData    = null;
             $businessClasses = [];
 
+            $primaryCustomer = null; // declare outside so it's always defined
+
             if ($dbCustomers->isNotEmpty()) {
                 $customerIds = $dbCustomers->pluck('id');
 
@@ -147,8 +149,12 @@ class DashboardController extends Controller
                     ->pluck('business_class_name', 'business_class_id')
                     ->toArray();
 
-                $primaryCustomer = $dbCustomers->first();
-                $customerData    = [
+                // Pin to selected profile
+                $selectedId      = session('selected_customer_id');
+                $primaryCustomer = $dbCustomers->firstWhere('id', $selectedId) ?? $dbCustomers->firstWhere('phone', $phoneNumber) ?? $dbCustomers->first();
+
+                // ← This was missing — populate customerData from the pinned customer
+                $customerData = [
                     'name'         => $primaryCustomer->name ?? null,
                     'code'         => $primaryCustomer->external_customer_code ?? null,
                     'phone_number' => $primaryCustomer->phone ?? null,
@@ -157,12 +163,16 @@ class DashboardController extends Controller
             }
 
             return view('customer.dashboard.index', [
-                'name'            => $sessionCustomer['name'] ?? 'Guest',
+                'name'            => $primaryCustomer->name ?? $sessionCustomer['name'] ?? 'Guest',
                 'policies'        => $policies,
                 'customerData'    => $customerData,
                 'businessClasses' => $businessClasses,
                 'allProducts'     => [],
-                'customer'        => $sessionCustomer,
+                'customer'        => [
+                    'name'         => $primaryCustomer->name ?? $sessionCustomer['name'],
+                    'phone_number' => $primaryCustomer->phone ?? $sessionCustomer['phone_number'],
+                    'user_id'      => $sessionCustomer['user_id'],
+                ],
             ]);
 
         } catch (\Exception $e) {

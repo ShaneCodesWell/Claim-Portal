@@ -504,6 +504,11 @@ class AuthController extends Controller
         // Check password status
         $customer = Customer::where('external_customer_code', $customerCode)->first();
 
+        // ← Store the actual DB id so dashboard knows which profile was picked
+        if ($customer) {
+            session(['selected_customer_id' => $customer->id]);
+        }
+
         if (! $customer || empty($customer->local_password)) {
             return response()->json([
                 'status'  => 'needs_password_setup',
@@ -626,7 +631,7 @@ class AuthController extends Controller
 
         Log::info('setupPasswordAjax: password set', ['customer_id' => $customer->id]);
 
-// ── Complete the login now ──
+        // ── Complete the login now ──
         $this->completeLogin($customer);
 
         return response()->json([
@@ -656,23 +661,18 @@ class AuthController extends Controller
             'pending_name', 'pending_customer_code']);
 
         session([
-            'authenticated'     => true,
-            'user_id'           => $customer->external_customer_id ?? $customer->external_customer_code,
-            'fullname'          => $customer->name ?? $pendingName,
-            'name'              => $customer->name ?? $pendingName,
-            'phone_number'      => $customer->phone,
-            'mobile_no'         => $customer->phone,
-            'customer_code'     => $customer->external_customer_code,
-            'customer_verified' => true,
-            'auth_source'       => $customer->sources
+            'authenticated'        => true,
+            'selected_customer_id' => $customer->id, // ← pin the chosen profile
+            'user_id'              => $customer->external_customer_id ?? $customer->external_customer_code,
+            'fullname'             => $customer->name ?? $pendingName,
+            'name'                 => $customer->name ?? $pendingName,
+            'phone_number'         => $customer->phone,
+            'mobile_no'            => $customer->phone,
+            'customer_code'        => $customer->external_customer_code,
+            'customer_verified'    => true,
+            'auth_source'          => $customer->sources
                 ? (in_array('genova', $customer->sources) ? 'genova' : 'glims')
                 : 'genova',
-        ]);
-
-        Log::info('completeLogin: session established', [
-            'customer_id'   => $customer->id,
-            'customer_code' => $customer->external_customer_code,
-            'phone'         => $customer->phone,
         ]);
     }
 
@@ -736,7 +736,7 @@ class AuthController extends Controller
             if (! $this->glims->isConnected()) {
                 return $profiles;
             }
-            
+
             $customer = $this->glimsPhoneLookup($phone);
 
             if ($customer) {
