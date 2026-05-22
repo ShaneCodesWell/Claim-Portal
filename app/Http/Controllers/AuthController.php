@@ -368,7 +368,8 @@ class AuthController extends Controller
             'login_type' => 'sometimes|in:mobile_no,policy_number,vehicle_number',
         ]);
 
-        $identifier = trim($request->username);
+        // Strip invisible unicode characters that sneak in via copy-paste
+        $identifier = preg_replace('/[\x{00A0}\x{FEFF}]+/u', '', trim($request->username));
         $loginType  = $request->input('login_type', 'mobile_no');
 
         // ── STEP 1: Verify with Genova ────────────────────────────────
@@ -425,57 +426,58 @@ class AuthController extends Controller
             ]);
         }
 
-        // ── Genova failed — try GLIMS ──────────────────────────────────
+        // ── Genova failed — try GLIMS (Oracle first, then local DB) ───
         Log::warning('loginAjax: Genova failed, trying GLIMS', [
             'identifier' => $identifier,
             'reason'     => $genovaResult['reason'],
         ]);
 
         if ($loginType === 'mobile_no') {
+            // resolveGlimsProfiles handles Oracle → local DB fallback internally
             $glimsProfiles = $this->resolveGlimsProfiles($identifier);
 
             if (! empty($glimsProfiles)) {
+                $profile = $glimsProfiles[0];
+
                 session([
-                    'pending_auth'  => true,
-                    'pending_phone' => $identifier,
-                    'pending_name'  => $glimsProfiles[0]['name'],
-                    'login_type'    => $loginType,
-                    'auth_source'   => 'glims',
+                    'pending_auth'          => true,
+                    'pending_phone'         => $identifier,
+                    'pending_name'          => $profile['name'],
+                    'pending_customer_code' => $profile['code'],
+                    'selected_customer_id'  => Customer::where('external_customer_code', $profile['code'])->value('id'),
+                    'login_type'            => $loginType,
+                    'auth_source'           => 'glims',
                 ]);
 
-                if (count($glimsProfiles) === 1) {
-                    session(['pending_customer_code' => $glimsProfiles[0]['code']]);
-
+                // Multiple GLIMS profiles — let user pick
+                if (count($glimsProfiles) > 1) {
                     return response()->json([
-                        'status'  => 'single_profile',
-                        'profile' => $glimsProfiles[0],
-                        'source'  => 'glims',
+                        'status'   => 'profile_selection',
+                        'profiles' => $glimsProfiles,
+                        'source'   => 'glims',
+                    ]);
+                }
+
+                // Single profile — check password status and go straight there
+                $localCustomer = Customer::where('external_customer_code', $profile['code'])->first();
+
+                if (! $localCustomer || empty($localCustomer->local_password)) {
+                    return response()->json([
+                        'status'  => 'needs_password_setup',
+                        'profile' => $profile,
+                        'message' => 'Please set a local password to secure your account.',
                     ]);
                 }
 
                 return response()->json([
-                    'status'   => 'profile_selection',
-                    'profiles' => $glimsProfiles,
-                    'source'   => 'glims',
+                    'status'  => 'needs_password_entry',
+                    'profile' => $profile,
+                    'message' => 'Please enter your password to continue.',
                 ]);
             }
         }
 
-        // ── Both failed — check local password fallback ────────────────
-        if ($loginType === 'mobile_no') {
-            $localCustomer = Customer::where('phone', $identifier)
-                ->whereNotNull('local_password')
-                ->first();
-
-            if ($localCustomer) {
-                return response()->json([
-                    'status'  => 'local_password_available',
-                    'message' => 'Verification service unavailable. Please log in with your local password.',
-                    'phone'   => $identifier,
-                ]);
-            }
-        }
-
+        // ── Nothing found anywhere ─────────────────────────────────────
         Log::error('loginAjax: All auth sources failed', [
             'identifier' => $identifier,
             'login_type' => $loginType,
@@ -731,33 +733,52 @@ class AuthController extends Controller
     {
         $profiles = [];
 
-        try {
-            // Skip GLIMS lookup if not reachable — avoids 20s timeout off-premise
-            if (! $this->glims->isConnected()) {
-                return $profiles;
+        // Try Oracle GLIMS first
+        if ($this->glims->isConnected()) {
+            try {
+                $customer = $this->glimsPhoneLookup($phone);
+
+                if ($customer) {
+                    $name = trim(implode(' ', array_filter([
+                        $customer['CLIENT_FIRST_NAME'] ?? null,
+                        $customer['CLIENT_MIDDLE_NAME'] ?? null,
+                        $customer['CLIENT_FAMILY_NAME'] ?? null,
+                    ])));
+
+                    $profiles[] = [
+                        'code'         => $customer['CLIENT_CODE'],
+                        'name'         => $name,
+                        'phone'        => $customer['CLIENT_HOME_MOBILE'] ?? $customer['CLIENT_HOME_TEL'] ?? $phone,
+                        'email'        => $customer['CLIENT_HOME_EMAIL'] ?? null,
+                        'policy_count' => null,
+                        'source'       => 'glims',
+                        'is_match'     => true,
+                    ];
+
+                    return $profiles; // Oracle found them — no need for local lookup
+                }
+            } catch (\Exception $e) {
+                Log::warning('resolveGlimsProfiles: Oracle lookup failed', ['error' => $e->getMessage()]);
             }
+        }
 
-            $customer = $this->glimsPhoneLookup($phone);
+        // Oracle unreachable or returned nothing — fall back to local synced DB
+        Log::info('resolveGlimsProfiles: falling back to local DB', ['phone' => $phone]);
 
-            if ($customer) {
-                $name = trim(implode(' ', array_filter([
-                    $customer['CLIENT_FIRST_NAME'] ?? null,
-                    $customer['CLIENT_MIDDLE_NAME'] ?? null,
-                    $customer['CLIENT_FAMILY_NAME'] ?? null,
-                ])));
+        $localCustomer = Customer::where('phone', $phone)
+            ->whereJsonContains('sources', 'glims') // only GLIMS-sourced customers
+            ->first();
 
-                $profiles[] = [
-                    'code'         => $customer['CLIENT_CODE'],
-                    'name'         => $name,
-                    'phone'        => $customer['CLIENT_HOME_MOBILE'] ?? $customer['CLIENT_HOME_TEL'] ?? $phone,
-                    'email'        => $customer['CLIENT_HOME_EMAIL'] ?? null,
-                    'policy_count' => null,
-                    'source'       => 'glims',
-                    'is_match'     => true,
-                ];
-            }
-        } catch (\Exception $e) {
-            Log::warning('resolveGlimsProfiles failed', ['error' => $e->getMessage()]);
+        if ($localCustomer) {
+            $profiles[] = [
+                'code'         => $localCustomer->external_customer_code,
+                'name'         => $localCustomer->name,
+                'phone'        => $localCustomer->phone,
+                'email'        => $localCustomer->email,
+                'policy_count' => $localCustomer->policies()->count(),
+                'source'       => 'glims_local', // flag so we know it came from local
+                'is_match'     => true,
+            ];
         }
 
         return $profiles;

@@ -11,10 +11,10 @@
             </p>
         </div>
         <div class="flex flex-wrap gap-3">
-            <button
+            {{-- <button
                 class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow-sm flex items-center gap-2">
                 <i class="fas fa-user-plus"></i> Add Policyholder
-            </button>
+            </button> --}}
         </div>
     </div>
 
@@ -72,13 +72,13 @@
                             Customer
                         </th>
                         <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Email
-                        </th>
-                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Phone
                         </th>
                         <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Customer Code
+                        </th>
+                        <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Source
                         </th>
                         <th class="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policies
@@ -97,16 +97,31 @@
                                         class="h-9 w-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
                                         {{ strtoupper(substr($customer->name, 0, 1)) }}{{ strtoupper(substr(strrchr($customer->name, ' '), 1, 1)) }}
                                     </div>
-                                    <span class="text-sm font-medium text-gray-900">{{ $customer->name }}</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-gray-900">{{ $customer->name }}</span>
+                                        <span class="text-xs text-gray-500">{{ $customer->email }}</span>
+                                    </div>
                                 </div>
-                            </td>
-                            <td class="px-5 py-4 text-sm text-gray-600">
-                                {{ $customer->email }}
                             </td>
                             <td class="px-5 py-4 text-sm text-gray-600">
                                 {{ $customer->phone }}
                             </td>
                             <td class="px-5 py-4 font-mono text-sm">{{ $customer->external_customer_code }}</td>
+                            <td class="px-5 py-4 text-sm text-gray-600">
+                                @if ($customer->sources && count($customer->sources))
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($customer->sources as $source)
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium
+                    {{ strtolower($source) === 'genova' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700' }}">
+                                                {{ strtoupper($source) }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">N/A</span>
+                                @endif
+                            </td>
                             <td class="px-5 py-4">
                                 <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
                                     {{ $customer->policies_count }}
@@ -125,10 +140,6 @@
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                         <i class="fas fa-edit text-xs text-blue-500"></i> Manage
                                     </a>
-                                    {{-- <a href="#"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-trash-alt text-xs text-red-500"></i> Delete
-                                    </a> --}}
                                 </div>
                             </td>
                         </tr>

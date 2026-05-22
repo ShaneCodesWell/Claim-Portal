@@ -919,12 +919,24 @@
                         showStage('profile-picker');
                         break;
 
-                    case 'no_profile':
-                        showStage('no-profile');
+                    case 'needs_password_entry':
+                        // GLIMS single profile with password already set
+                        selectedProfile = data.profile;
+                        document.getElementById('enter-password-name').textContent =
+                            `Welcome back, ${data.profile.name}`;
+                        document.getElementById('enterPasswordInput').value = '';
+                        document.getElementById('enterPasswordError').classList.add('hidden');
+                        showStage('enter-password');
                         break;
 
-                    case 'local_password_available':
-                        showStage('local-password');
+                    case 'needs_password_setup':
+                        // GLIMS single profile with no password yet
+                        selectedProfile = data.profile;
+                        showStage('setup-password');
+                        break;
+
+                    case 'no_profile':
+                        showStage('no-profile');
                         break;
 
                     case 'error':

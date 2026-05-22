@@ -298,11 +298,11 @@ class GlimsService
     {
         try {
             // Set a short connect timeout so off-premise checks fail fast
-            $this->db()->getPdo(); // force connection attempt
+            // $this->db()->getPdo(); // force connection attempt
             $this->db()->select('SELECT 1 FROM DUAL');
             return true;
         } catch (\Exception $e) {
-            Log::info('GLIMS not reachable: ' . $e->getMessage());
+            Log::debug('GLIMS not reachable (expected off-premise): ' . $e->getMessage());
             return false;
         }
     }

@@ -123,6 +123,9 @@ return [
             'password'     => env('GLIMS_DB_PASSWORD', ''),
             'charset'      => 'AL32UTF8',
             'prefix'       => '',
+            'options'      => [
+                PDO::ATTR_TIMEOUT => 3, // fail fast — 3 seconds max
+            ],
         ],
 
     ],

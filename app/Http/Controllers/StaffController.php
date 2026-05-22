@@ -91,20 +91,27 @@ class StaffController extends Controller
             ];
         });
 
-        // Remove ONLY invisible/non-breaking characters, keep real spaces
+        // Remove invisible/non-breaking characters
         $search = trim(preg_replace('/[\x{00A0}\x{FEFF}]+/u', '', trim(request('search') ?? '')));
 
-        $customers = Customer::select(['id', 'name', 'email', 'phone', 'external_customer_code', 'created_at'])
+        $customers = Customer::select(['id', 'name', 'email', 'phone', 'external_customer_code', 'sources', 'created_at'])
             ->withCount('policies')
-            ->when($search, fn($q) => $q->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('external_customer_code', 'like', "%{$search}%")
-                    ->orWhereRaw("REPLACE(phone, ' ', '') LIKE ?", ["%{$search}%"]);
-            }))
+            ->when($search, function ($q) use ($search) {
+                $normalizedPhone = preg_replace('/\s+/', '', $search);
+
+                $q->where(function ($q) use ($search, $normalizedPhone) {
+                    $q->where('name', 'ILIKE', "%{$search}%")
+                        ->orWhere('email', 'ILIKE', "%{$search}%")
+                        ->orWhere('external_customer_code', 'ILIKE', "%{$search}%")
+                        ->orWhereRaw(
+                            "REPLACE(phone, ' ', '') ILIKE ?",
+                            ["%{$normalizedPhone}%"]
+                        );
+                });
+            })
             ->latest()
             ->paginate(10)
-            ->withQueryString(); // keeps ?search= in paginator links
+            ->withQueryString();
 
         return view('staff.customers.index', compact('customers', 'stats'));
     }
