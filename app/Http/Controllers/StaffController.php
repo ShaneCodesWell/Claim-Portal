@@ -49,7 +49,7 @@ class StaffController extends Controller
         // Group claim documents by policy, eager load everything needed
         $policies = Policy::whereHas('claims.documents')
             ->with([
-                'claims' => fn($q) => $q->whereHas('documents'),
+                'claims' => fn($q) => $q->whereHas('documents')->latest()->with('documents', 'customer'),
                 'claims.documents',
                 'claims.customer',
             ])
@@ -58,9 +58,18 @@ class StaffController extends Controller
         // Flatten into a structure the view can use easily
         $grouped = $policies->map(function ($policy) {
             $documents = $policy->claims->flatMap->documents;
+            $claims    = $policy->claims->map(fn($claim) => [
+                'id'        => $claim->id,
+                'number'    => $claim->claim_number,
+                'type'      => $claim->claim_type,
+                'print_url' => route('staff.claims.print', $claim),
+                'show_url'  => route('staff.claims.show', $claim),
+            ]);
+
             return [
                 'policy'      => $policy,
                 'customer'    => $policy->claims->first()?->customer,
+                'claims'      => $claims,
                 'documents'   => $documents,
                 'pdf_count'   => $documents->filter(fn($d) => str_contains($d->mime_type, 'pdf'))->count(),
                 'image_count' => $documents->filter(fn($d) => str_contains($d->mime_type, 'image'))->count(),

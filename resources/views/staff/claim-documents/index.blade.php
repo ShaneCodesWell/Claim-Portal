@@ -78,59 +78,102 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-xs bg-gray-100 px-2 py-1 rounded-full">{{ $docs->count() }}</span>
+                        @php $latestClaim = $policy->claims->first(); @endphp
+                        @if ($latestClaim)
+                            <button onclick="openClaimFormModal({{ $latestClaim->id }})"
+                                class="text-gray-400 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition"
+                                title="Preview Claim Form">
+                                <i class="fas fa-eye text-xs"></i>
+                            </button>
+                        @endif
                         <i
                             class="policy-toggle-icon fas fa-chevron-down text-gray-400 text-xs transition-transform"></i>
                     </div>
                 </div>
 
                 {{-- Documents List --}}
-                <div class="policy-docs hidden p-4 space-y-2">
-                    @foreach ($docs as $doc)
-                        @php
-                            $isPdf = str_contains($doc->mime_type, 'pdf');
-                            $isImage = str_contains($doc->mime_type, 'image');
-                            $isSpreadsheet =
-                                str_contains($doc->mime_type, 'spreadsheet') ||
-                                str_contains($doc->original_name, '.xlsx') ||
-                                str_contains($doc->original_name, '.csv');
-                            $docType = $isPdf
-                                ? 'pdf'
-                                : ($isImage
-                                    ? 'image'
-                                    : ($isSpreadsheet
-                                        ? 'spreadsheet'
-                                        : 'other'));
-                            $icon = $isPdf
-                                ? 'fas fa-file-pdf text-red-400'
-                                : ($isImage
-                                    ? 'fas fa-image text-blue-400'
-                                    : 'fas fa-file text-gray-400');
-                            $size = $doc->file_size ? number_format($doc->file_size / 1024, 1) . ' KB' : 'Unknown';
-                        @endphp
-                        <div class="doc-row flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100"
-                            data-doc-type="{{ $docType }}">
-                            <div class="flex items-center gap-3">
-                                <i class="{{ $icon }} text-lg"></i>
-                                <div>
-                                    <p class="font-medium text-gray-800 text-xs">{{ $doc->original_name }}</p>
-                                    <p class="text-xs text-gray-400">
-                                        {{ $size }} · {{ $doc->created_at->format('M d, Y') }}
-                                    </p>
+                <div class="policy-docs hidden divide-y divide-gray-100">
+
+                    {{-- ── Claim Forms section ── --}}
+                    @if ($group['claims']->isNotEmpty())
+                        <div class="p-4 space-y-2">
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Claim Forms</p>
+                            @foreach ($group['claims'] as $claimRow)
+                                <div
+                                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <div class="flex items-center gap-3">
+                                        <i class="fas fa-file-alt text-blue-400 text-lg"></i>
+                                        <div>
+                                            <p class="font-medium text-gray-800 text-xs">{{ $claimRow['number'] }}</p>
+                                            <p class="text-xs text-gray-400">
+                                                {{ ucfirst(str_replace('_', ' ', $claimRow['type'])) }} claim</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onclick="openClaimFormModal('{{ $claimRow['print_url'] }}', '{{ $claimRow['number'] }}')"
+                                        class="text-gray-400 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-100 transition"
+                                        title="Preview Claim Form">
+                                        <i class="far fa-eye text-sm"></i>
+                                    </button>
                                 </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <button
-                                    onclick="openDocPreview('{{ route('staff.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
-                                    class="text-gray-500 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition">
-                                    <i class="far fa-eye text-sm"></i>
-                                </button>
-                                <a href="{{ route('staff.documents.preview', $doc->id) }}?download=1"
-                                    class="text-blue-600 hover:text-blue-800 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition">
-                                    <i class="fas fa-download text-sm"></i>
-                                </a>
-                            </div>
+                            @endforeach
                         </div>
-                    @endforeach
+                    @endif
+
+                    {{-- ── Uploaded Documents section ── --}}
+                    @if ($docs->isNotEmpty())
+                        <div class="p-4 space-y-2">
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Attachments</p>
+                            @foreach ($docs as $doc)
+                                @php
+                                    $isPdf = str_contains($doc->mime_type, 'pdf');
+                                    $isImage = str_contains($doc->mime_type, 'image');
+                                    $isSpreadsheet =
+                                        str_contains($doc->mime_type, 'spreadsheet') ||
+                                        str_contains($doc->original_name, '.xlsx') ||
+                                        str_contains($doc->original_name, '.csv');
+                                    $docType = $isPdf
+                                        ? 'pdf'
+                                        : ($isImage
+                                            ? 'image'
+                                            : ($isSpreadsheet
+                                                ? 'spreadsheet'
+                                                : 'other'));
+                                    $icon = $isPdf
+                                        ? 'fas fa-file-pdf text-red-400'
+                                        : ($isImage
+                                            ? 'fas fa-image text-blue-400'
+                                            : 'fas fa-file text-gray-400');
+                                    $size = $doc->file_size
+                                        ? number_format($doc->file_size / 1024, 1) . ' KB'
+                                        : 'Unknown';
+                                @endphp
+                                <div class="doc-row flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100"
+                                    data-doc-type="{{ $docType }}">
+                                    <div class="flex items-center gap-3">
+                                        <i class="{{ $icon }} text-lg"></i>
+                                        <div>
+                                            <p class="font-medium text-gray-800 text-xs">{{ $doc->original_name }}</p>
+                                            <p class="text-xs text-gray-400">{{ $size }} ·
+                                                {{ $doc->created_at->format('M d, Y') }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button
+                                            onclick="openDocPreview('{{ route('staff.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
+                                            class="text-gray-500 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition">
+                                            <i class="far fa-eye text-sm"></i>
+                                        </button>
+                                        <a href="{{ route('staff.documents.preview', $doc->id) }}?download=1"
+                                            class="text-blue-600 hover:text-blue-800 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition">
+                                            <i class="fas fa-download text-sm"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
                 </div>
             </div>
         @empty
@@ -239,6 +282,121 @@
                     applyTabFilter();
                 });
             });
+
+            let loadedClaimForms = {}; // cache so we don't re-fetch
+            let currentPrintClaimId = null;
+
+            window.openClaimFormModal = function(printUrl, claimNumber) {
+                const modal = document.getElementById('claimFormModal');
+                const content = document.getElementById('claimFormModalContent');
+                const subtitle = document.getElementById('claimFormModalSubtitle');
+
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                currentPrintClaimId = printUrl; // store URL instead of ID
+
+                if (subtitle) subtitle.textContent = claimNumber;
+
+                if (loadedClaimForms[printUrl]) {
+                    content.innerHTML = loadedClaimForms[printUrl];
+                    return;
+                }
+
+                content.innerHTML = `
+        <div class="flex items-center justify-center py-20">
+            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span class="ml-3 text-sm text-gray-500">Loading preview...</span>
+        </div>`;
+
+                fetch(printUrl, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ??
+                                '',
+                            'Accept': 'text/html',
+                        }
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        return res.text();
+                    })
+                    .then(html => {
+                        const rendered = `<style>
+            #claimFormModalContent table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+            #claimFormModalContent th, #claimFormModalContent td { border:1px solid #000; padding:4px 6px; font-size:10px; vertical-align:top; }
+            #claimFormModalContent th { font-weight:bold; background:#f0f0f0; text-transform:uppercase; font-size:9px; }
+            #claimFormModalContent .field-label { font-weight:bold; text-transform:uppercase; background:#fafafa; }
+            #claimFormModalContent .field-value { min-height:18px; }
+            #claimFormModalContent * { font-family: Arial, sans-serif; font-size:11px; }
+            #claimFormModalContent .no-print { display:none !important; }
+        </style>${html}`;
+                        loadedClaimForms[printUrl] = rendered;
+                        content.innerHTML = rendered;
+                    })
+                    .catch(err => {
+                        content.innerHTML = `<p class="text-center text-red-500 py-12 text-sm">
+            Failed to load preview (${err.message}). 
+            <a href="${printUrl}" target="_blank" class="underline">Open in new tab instead.</a>
+        </p>`;
+                    });
+            };
+
+            window.closeClaimFormModal = function() {
+                document.getElementById('claimFormModal').classList.add('hidden');
+                document.body.style.overflow = '';
+                currentPrintClaimId = null;
+            };
+
+            document.getElementById('claimFormPrintBtn')?.addEventListener('click', function() {
+                if (!currentPrintClaimId) return;
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = currentPrintClaimId; // now a URL, not an ID
+                document.body.appendChild(iframe);
+                iframe.onload = () => {
+                    iframe.contentWindow.print();
+                    setTimeout(() => iframe.remove(), 2000);
+                };
+            });
+
+            // Close on backdrop click
+            document.getElementById('claimFormModal')?.addEventListener('click', function(e) {
+                if (e.target === this) closeClaimFormModal();
+            });
         });
     </script>
+
+    {{-- At the very bottom, before closing x-layouts.staff --}}
+    <div id="claimFormModal"
+        class="hidden fixed inset-0 bg-black/60 z-50 flex items-start justify-center overflow-y-auto py-8 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl relative">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-file-alt text-blue-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-800">Claim Form Preview</h3>
+                        <p id="claimFormModalSubtitle" class="text-xs text-gray-500"></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="claimFormPrintBtn"
+                        class="bg-[#1a3a5c] hover:bg-[#0f2540] text-white text-sm px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                    <button onclick="closeClaimFormModal()"
+                        class="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-8 m-8 border border-gray-300">
+                <div id="claimFormModalContent" class="p-6 min-h-64"></div>
+            </div>
+        </div>
+    </div>
 </x-layouts.staff>
