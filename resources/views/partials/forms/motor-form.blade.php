@@ -93,6 +93,7 @@
                 @method('PUT')
             @endif
             <input type="hidden" name="claim_type" value="motor" />
+            <input type="hidden" name="policy_id" value="{{ $policy->external_policy_id ?? $policy->id }}">
 
             {{-- ── SECTION 1: VEHICLE PARTICULARS ── --}}
             <section class="mb-8">
@@ -1011,6 +1012,9 @@
             formData.append('claim_type', 'motor');
             formData.append('_token', document.querySelector('meta[name="csrf-token"]')
                 .getAttribute('content'));
+
+            // Add this — read from the hidden input
+            formData.append('policy_id', document.querySelector('[name="policy_id"]')?.value ?? '');
 
             const claimFields = {
                 registration_no: val('registration_no'),

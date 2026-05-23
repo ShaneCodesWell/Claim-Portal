@@ -10,8 +10,8 @@ use App\Models\Customer;
 use App\Models\Policy;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ClaimController extends Controller
@@ -126,7 +126,10 @@ class ClaimController extends Controller
                 ->with('error', 'No edit form available for this claim type.');
         }
 
-        return view($view, compact('claim'));
+        // Add this — policy is already loaded, just make it available to the view
+        $policy = $claim->policy;
+
+        return view($view, compact('claim', 'policy'));
     }
 
     public function update(Request $request, Claim $claim)

@@ -48,6 +48,7 @@
 //         restoreSubmitButton(submitBtn, originalHTML);
 //     }
 // }
+
 async function submitClaimWithFiles(formId, formData, action = '/claims') {
     const submitBtn  = document.querySelector(`#${formId} [type="submit"]`);
     const originalText = submitBtn?.innerHTML;
@@ -62,6 +63,7 @@ async function submitClaimWithFiles(formId, formData, action = '/claims') {
             method: 'POST', // always POST — _method=PUT handles the override
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
             },
             body: formData,
         });

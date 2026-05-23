@@ -15,15 +15,8 @@ class AgentMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! Auth::check()) {
+        if (! Auth::guard('agent')->check()) {
             return redirect()->route('agent.login');
-        }
-
-        $user = Auth::user()->role('agent');
-
-        // Allow any authenticated user with a role (agent, broker etc.)
-        if (! $user->role) {
-            abort(403, 'Unauthorized');
         }
 
         return $next($request);
