@@ -216,7 +216,7 @@ class StaffController extends Controller
             return back()->with('error', 'Admin accounts cannot be deleted.');
         }
 
-        $staff->delete();
+        User::destroy($staff->id);
 
         return back()->with('success', 'Staff member removed.');
     }

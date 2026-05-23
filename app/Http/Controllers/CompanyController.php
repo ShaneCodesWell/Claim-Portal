@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCompanyRequest;
 use App\Http\Requests\UpdateCompanyRequest;
 use App\Models\Branch;
+use App\Models\Agent;
 use App\Models\Company;
 use App\Models\Department;
 use App\Models\User;
@@ -19,8 +20,9 @@ class CompanyController extends Controller
         $company      = Company::firstOrFail();
         $staffMembers = User::latest()->paginate(5);
         $departments  = Department::all();
-        // $staffMembers = User::with(['branch', 'department'])->whereIn('role', UserRole::staffRoles())->latest()->paginate(10);
-        return view('admin.organization.index', compact('company', 'staffMembers', 'departments', 'branches'));
+        $agents       = Agent::latest()->paginate(5);
+
+        return view('admin.organization.index', compact('company', 'staffMembers', 'departments', 'branches', 'agents'));
     }
 
     /**

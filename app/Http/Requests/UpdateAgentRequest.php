@@ -1,8 +1,8 @@
 <?php
-
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAgentRequest extends FormRequest
 {
@@ -11,7 +11,7 @@ class UpdateAgentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,28 @@ class UpdateAgentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name'              => 'required|string|max:255',
+            'email'             => [
+                'required',
+                'email',
+                Rule::unique('agents', 'email')
+                    ->ignore($this->route('agent')),
+            ],
+            'phone'             => 'nullable|string|max:20',
+            'gender'            => 'nullable|in:male,female,other',
+            'partner_code'      => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('agents', 'partner_code')
+                    ->ignore($this->route('agent')),
+            ],
+            'date_of_birth'     => 'nullable|date',
+            'league'            => 'nullable|string|max:100',
+            'branch_id'         => 'required|exists:branches,id',
+            'user_category'     => 'nullable|string|max:255',
+            'sub_user_category' => 'nullable|string|max:255',
+            'password'          => 'nullable|string|min:8|confirmed',
         ];
     }
 }

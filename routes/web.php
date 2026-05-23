@@ -13,8 +13,9 @@ use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\Staff\GlimsSyncController;
 use Illuminate\Support\Facades\Route;
-use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
 use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
+use \App\Http\Controllers\Agent\ClaimController as AgentClaimController;
+use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
 
 // Auth Routes
 Route::get('/', [AuthController::class, 'showUserSelectForm'])->name('user.select');
@@ -41,6 +42,16 @@ Route::get('/login/local', [AuthController::class, 'showLocalLoginForm'])->name(
 Route::post('/login/local', [AuthController::class, 'localLogin'])->name('login.local.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Forms - Publicy accessibly by everyone
+Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
+Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
+Route::get('/fire-form', [FireController::class, 'index'])->name('fire-form');
+
+Route::prefix('glims')->name('staff.glims.')->group(function () {
+    Route::post('sync/trigger', [GlimsSyncController::class, 'trigger'])->name('sync.trigger');
+    Route::get('sync/status', [GlimsSyncController::class, 'status'])->name('sync.status');
+});
+
 // Customers Routes
 Route::middleware('auth.customer')->group(function () {
     // Customer Auth
@@ -59,17 +70,12 @@ Route::middleware('auth.customer')->group(function () {
     Route::get('claims', [CustomerClaimController::class, 'index'])->name('claims.index');
     Route::get('claims/show/{claim}', [CustomerClaimController::class, 'show'])->name('claims.show');
     Route::get('claims/edit/{claim}', [CustomerClaimController::class, 'edit'])->name('claims.edit');
-    Route::put('claims/update/{claim}', [CustomerClaimController::class, 'update'])->name('claims.cancel');
+    Route::put('claims/update/{claim}', [CustomerClaimController::class, 'update'])->name('claims.update');
 
     // Preview Document
     Route::get('/documents/{document}/preview', [CustomerClaimController::class, 'previewDocument'])->name('customer.documents.preview');
 
 });
-
-// Forms - Publicy accessibly by everyone
-Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
-Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
-Route::get('/fire-form', [FireController::class, 'index'])->name('fire-form');
 
 // Staff routes — accessible by ALL staff including admins
 Route::middleware(['staff'])->prefix('admin')->group(function () {
@@ -104,15 +110,20 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
 
 });
 
-Route::prefix('glims')->name('staff.glims.')->group(function () {
-    Route::post('sync/trigger', [GlimsSyncController::class, 'trigger'])->name('sync.trigger');
-    Route::get('sync/status', [GlimsSyncController::class, 'status'])->name('sync.status');
-});
-
 // Agent routes — only agents can access
 Route::middleware(['agent'])->prefix('agent')->group(function () {
     // mirrors customer claim routes but with ClaimSource::AGENT_PORTAL
-    Route::get('/agent/dashboard', [AgentController::class, 'index'])->name('agent-dashboard');
+    Route::get('/agent/dashboard', [AgentController::class, 'index'])->name('agent.dashboard.index');
+
+    // Claims
+    Route::post('/agent/claims', [AgentClaimController::class, 'store'])->name('agent.claims.store');
+    Route::get('/agent/claims', [AgentClaimController::class, 'index'])->name('agent.claims.index');
+    Route::get('/agent/claims/show/{claim}', [AgentClaimController::class, 'show'])->name('agent.claims.show');
+    Route::get('/agent/claims/edit/{claim}', [AgentClaimController::class, 'edit'])->name('agent.claims.edit');
+    Route::put('/agent/claims/update/{claim}', [AgentClaimController::class, 'update'])->name('agent.claims.update');
+
+    // Preview Document
+    Route::get('/documents/{document}/preview', [AgentClaimController::class, 'previewDocument'])->name('agent.documents.preview');
 });
 
 // Admin-only routes — only admins can access
@@ -148,6 +159,13 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/settings/edit-staff/{staff}', [StaffController::class, 'edit'])->name('staff.edit');
     Route::put('/settings/staff-update/{staff}', [StaffController::class, 'update'])->name('staff.update');
     Route::delete('/settings/staff-delete/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
+
+    // Agent Management
+    Route::get('/settings/create-agent', [AgentController::class, 'create'])->name('agents.create');
+    Route::post('/settings/agents-store', [AgentController::class, 'store'])->name('agents.store');
+    Route::get('/settings/edit-agent/{agent}', [AgentController::class, 'edit'])->name('agents.edit');
+    Route::put('/settings/agents-update/{agent}', [AgentController::class, 'update'])->name('agents.update');
+    Route::delete('/settings/agents-delete/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
 });
 
 // Offline Application
