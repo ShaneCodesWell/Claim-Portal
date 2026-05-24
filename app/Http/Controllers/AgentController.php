@@ -7,6 +7,7 @@ use App\Http\Requests\StoreAgentRequest;
 use App\Http\Requests\UpdateAgentRequest;
 use App\Models\Agent;
 use App\Models\Branch;
+use App\Models\Claim;
 use App\Models\Department;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +18,11 @@ class AgentController extends Controller
      */
     public function index()
     {
-        return view('agent.dashboard.index');
+        $claims = Claim::with(['customer', 'policy', 'assignedTo', 'branch'])
+            ->latest()
+            ->paginate(5);
+
+        return view('agent.dashboard.index', compact('claims'));
     }
 
     /**

@@ -6,7 +6,7 @@
                 <div>
                     <p class="text-sm text-gray-500 font-medium mb-1">
                         Agent Dashboard - <span
-                            class="font-bold text-blue-500">{{ Auth::user()->name ?? 'Michael Chen' }}</span>
+                            class="font-bold text-blue-500">{{ Auth::guard('agent')->user()?->name ?? 'Unknown' }}</span>
                     </p>
                     <h2 class="text-xl font-semibold text-gray-900">
                         Policy Access Portal
@@ -82,7 +82,7 @@
 
         <!-- Table -->
         <div class="overflow-x-auto">
-            <table class="min-w-[800px] w-full">
+            <table class="min-w-200 w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -122,7 +122,7 @@
                     </tr>
                     <!-- Row 2 -->
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="px-4 py-4 font-mono text-sm text-gray-900">H-2203-892-2025-000012</td>
+                        <td class="px-4 py-4 font-mono text-sm text-gray-900">P-2203-892-2025-000012</td>
                         <td class="px-4 py-4">
                             <div class="text-sm font-medium text-gray-900">Marcus Davis</div>
                             <div class="text-xs text-gray-500">Property: 123 Maple St</div>
@@ -143,7 +143,7 @@
                     </tr>
                     <!-- Row 3 -->
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="px-4 py-4 font-mono text-sm text-gray-900">T-5510-742-2025-000089</td>
+                        <td class="px-4 py-4 font-mono text-sm text-gray-900">P-5510-742-2025-000089</td>
                         <td class="px-4 py-4">
                             <div class="text-sm font-medium text-gray-900">David Kim</div>
                             <div class="text-xs text-gray-500">Travel: Europe trip</div>

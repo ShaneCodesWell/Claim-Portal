@@ -39,9 +39,33 @@ class AuthController extends Controller
         return view('auth.staff-login');
     }
 
-    public function agentLogin()
+    public function agentLoginForm()
     {
         return view('auth.agent-login');
+    }
+
+    // Agent login method
+    public function agentLogin(Request $request)
+    {
+        $request->validate([
+            'phone'    => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        $credentials = [
+            'phone'    => $request->phone,
+            'password' => $request->password,
+        ];
+
+        if (! Auth::guard('agent')->attempt($credentials, $request->boolean('remember'))) {
+            return back()
+                ->withErrors(['phone' => 'Invalid phone number or password.'])
+                ->withInput($request->only('phone'));
+        }
+
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('agent.dashboard.index'));
     }
 
     // OLD login

@@ -22,10 +22,11 @@ Route::get('/', [AuthController::class, 'showUserSelectForm'])->name('user.selec
 
 Route::get('/login-user', [AuthController::class, 'showLoginForm'])->name('login');
 Route::get('/staff-login', [AuthController::class, 'staffLoginForm'])->name('staff.login');
-Route::get('/agent-login', [AuthController::class, 'agentLogin'])->name('agent.login');
+Route::get('/agent-login', [AuthController::class, 'agentLoginForm'])->name('agent.login');
 
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/staff-login', [AuthController::class, 'staffLogin'])->name('staff.login.submit');
+Route::post('/agent-login', [AuthController::class, 'agentLogin'])->name('agent.login.submit');
 
 // AJAX password setup — called from the modal's password setup - multi-step login
 Route::post('login/ajax', [AuthController::class, 'loginAjax'])->name('login.ajax');
