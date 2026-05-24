@@ -815,13 +815,99 @@
                     </a>
                 @endif
             </div>
+
+            @if ($isEdit && $isStaff)
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        @if (!$isAssignedToMe && !$isAssignedToOther)
+                            {{-- CASE 1: Unassigned — prompt to self-assign --}}
+                            Swal.fire({
+                                title: 'Claim is unassigned',
+                                html: `
+                                    <p class="text-sm text-gray-600 leading-relaxed">
+                                        Nobody is currently assigned to claim
+                                        <strong>{{ $claim->claim_number }}</strong>.<br><br>
+                                        Would you like to assign it to yourself before editing?
+                                    </p>`,
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonText: 'Yes, assign to me',
+                                cancelButtonText: 'No, just edit',
+                                confirmButtonColor: '#4f46e5',
+                                cancelButtonColor: '#6b7280',
+                                reverseButtons: true,
+                            }).then(result => {
+                                if (result.isConfirmed) {
+                                    fetch('{{ route('staff.claims.assign', $claim) }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                'Accept': 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                                assigned_to: {{ Auth::id() }},
+                                                note: 'Self-assigned before editing form.',
+                                            }),
+                                        })
+                                        .then(res => res.json())
+                                        .then(() => {
+                                            Swal.fire({
+                                                toast: true,
+                                                position: 'top-end',
+                                                icon: 'success',
+                                                title: 'Assigned to you',
+                                                showConfirmButton: false,
+                                                timer: 2500,
+                                                timerProgressBar: true,
+                                            });
+                                        })
+                                        .catch(() => {
+                                            Swal.fire({
+                                                toast: true,
+                                                position: 'top-end',
+                                                icon: 'warning',
+                                                title: 'Could not assign — edits will still be logged',
+                                                showConfirmButton: false,
+                                                timer: 3000,
+                                            });
+                                        });
+                                }
+                            });
+                        @elseif ($isAssignedToOther)
+                            {{-- CASE 2: Assigned to someone else — warn and give option to go back --}}
+                            Swal.fire({
+                                title: 'Claim already assigned',
+                                html: `
+                                    <p class="text-sm text-gray-600 leading-relaxed">
+                                        This claim is currently assigned to
+                                        <strong>{{ $assignee->name }}</strong>.<br><br>
+                                        You can still make edits — everything will be logged with your name
+                                        and <strong>{{ $assignee->name }}</strong> will be able to see your changes
+                                        in the activity log.
+                                    </p>`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Proceed with edits',
+                                cancelButtonText: 'Go back',
+                                confirmButtonColor: '#4f46e5',
+                                cancelButtonColor: '#6b7280',
+                                reverseButtons: true,
+                            }).then(result => {
+                                if (!result.isConfirmed) {
+                                    window.location.href = '{{ route('staff.claims.show', $claim) }}';
+                                }
+                            });
+                        @endif
+                    });
+                </script>
+            @endif
         </form>
     </div>
 </div>
 
 {{-- Shared document preview modal --}}
 <x-documents-modal />
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const isEdit = {{ $isEdit ? 'true' : 'false' }};

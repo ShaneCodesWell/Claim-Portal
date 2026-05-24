@@ -107,6 +107,13 @@ class ClaimController extends Controller
             note: $request->note,
         );
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Claim assigned to {$assignee->name}.",
+            ]);
+        }
+
         return back()->with('success', "Claim assigned to {$assignee->name}.");
     }
 
@@ -161,7 +168,8 @@ class ClaimController extends Controller
 
     public function edit(Claim $claim)
     {
-        $claim->load(['policy', 'documents']);
+        $claim->load(['policy', 'documents', 'assignedTo']);
+        $policy = $claim->policy;
 
         $viewMap = [
             'motor'            => 'staff.claims.edit.motor',
@@ -176,7 +184,15 @@ class ClaimController extends Controller
                 ->with('error', 'No edit form available for this claim type.');
         }
 
-        return view($view, compact('claim'));
+        $currentUser       = Auth::user();
+        $assignee          = $claim->assignedTo; // null if unassigned
+        $isAssignedToMe    = $assignee && $assignee->id === $currentUser->id;
+        $isAssignedToOther = $assignee && ! $isAssignedToMe;
+
+        return view($view, compact(
+            'claim', 'policy',
+            'assignee', 'isAssignedToMe', 'isAssignedToOther'
+        ));
     }
 
     public function update(Request $request, Claim $claim)
@@ -220,7 +236,14 @@ class ClaimController extends Controller
             Auth::user(),
             'form_updated',
             $validated['note'] ?? 'Form data updated by staff.',
-            ['updated_by' => Auth::user()->id, 'role' => Auth::user()->role]
+            [
+                'updated_by'       => Auth::user()->id,
+                'role'             => Auth::user()->role,
+                'assigned_to'      => $claim->assigned_to,
+                'assignment_state' => $claim->assigned_to
+                    ? ($claim->assigned_to === Auth::id() ? 'assigned_to_self' : 'assigned_to_other')
+                    : 'unassigned',
+            ]
         );
 
         return response()->json([
