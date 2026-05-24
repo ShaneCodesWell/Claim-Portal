@@ -319,14 +319,15 @@
             if (show && !indicator) {
                 indicator = document.createElement('div');
                 indicator.id = 'sync-indicator';
+                // Moved to bottom-right, smaller, no animate-pulse, no z-50 takeover
                 indicator.className =
-                    'fixed top-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 z-50 animate-pulse-slow';
+                    'fixed bottom-5 right-5 bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl shadow-md flex items-center gap-2 z-40 text-sm';
                 indicator.innerHTML = `
-            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span class="font-medium">Syncing policies...</span>`;
+            <span>Syncing policies...</span>`;
                 document.body.appendChild(indicator);
             } else if (!show && indicator) {
                 indicator.remove();
@@ -735,16 +736,17 @@
                     syncPoliciesInBackground();
                 }
                 syncInterval = setInterval(syncPoliciesInBackground, 20 * 60 * 1000);
-            }, 2000);
+            }, 8000); // Give the user 8 seconds to orient before syncing
         });
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 const lastSync = sessionStorage.getItem('lastPolicySync');
-                const fiveMinutes = 5 * 60 * 1000;
-                if (!lastSync || (Date.now() - parseInt(lastSync)) > fiveMinutes) {
+                const thirtyMinutes = 30 * 60 * 1000; // was 5 min — way too aggressive
+                if (lastSync && (Date.now() - parseInt(lastSync)) > thirtyMinutes) {
                     syncPoliciesInBackground();
                 }
+                // If no lastSync, the DOMContentLoaded timeout will handle it
             }
         });
 
