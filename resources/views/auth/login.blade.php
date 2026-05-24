@@ -315,7 +315,14 @@
         style="background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px);">
 
         <div id="authModalCard"
-            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+            class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
+
+            {{-- ── CLOSE BUTTON ─────────────────────────────────── --}}
+            <button id="modalCloseBtn"
+                class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition z-10"
+                aria-label="Close">
+                <i class="fas fa-times text-sm"></i>
+            </button>
 
             {{-- ── STAGE: LOADING ───────────────────────────── --}}
             <div id="stage-loading" class="modal-stage p-8 text-center">
@@ -1104,6 +1111,24 @@
             document.getElementById('noProfileRetryBtn')?.addEventListener('click', closeModal);
             document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => {
                 showError('Please contact Vanguard Assurance support to reset your password.');
+            });
+
+            // ── Close button & backdrop click ─────────────────────────
+            const UNCLOSABLE_STAGES = ['loading'];
+
+            function canClose() {
+                const activeStage = document.querySelector('.modal-stage.active');
+                if (!activeStage) return true;
+                return !UNCLOSABLE_STAGES.some(s => activeStage.id === 'stage-' + s);
+            }
+
+            document.getElementById('modalCloseBtn')?.addEventListener('click', () => {
+                if (canClose()) closeModal();
+            });
+
+            // Clicking the dark backdrop (not the card) also closes
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal && canClose()) closeModal();
             });
 
         })();
