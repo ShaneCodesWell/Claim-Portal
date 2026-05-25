@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\Policy;
 use App\Services\GenovaApiService;
 use App\Services\GlimsService;
 use Illuminate\Http\Request;
@@ -69,153 +70,153 @@ class AuthController extends Controller
     }
 
     // OLD login
-    public function login(Request $request)
-    {
-        $request->validate([
-            'username'   => 'required',
-            'login_type' => 'sometimes|in:mobile_no,policy_number,vehicle_number',
-        ]);
+    // public function login(Request $request)
+    // {
+    //     $request->validate([
+    //         'username'   => 'required',
+    //         'login_type' => 'sometimes|in:mobile_no,policy_number,vehicle_number',
+    //     ]);
 
-        try {
-            $loginType = $request->input('login_type', 'mobile_no');
+    //     try {
+    //         $loginType = $request->input('login_type', 'mobile_no');
 
-            $response = $this->api->customerVerification($request->username, $loginType);
+    //         $response = $this->api->customerVerification($request->username, $loginType);
 
-            if ($response->failed()) {
-                Log::error('Customer Verification Failed:', [
-                    'status'     => $response->status(),
-                    'body'       => $response->body(),
-                    'identifier' => $request->username,
-                    'type'       => $loginType,
-                ]);
+    //         if ($response->failed()) {
+    //             Log::error('Customer Verification Failed:', [
+    //                 'status'     => $response->status(),
+    //                 'body'       => $response->body(),
+    //                 'identifier' => $request->username,
+    //                 'type'       => $loginType,
+    //             ]);
 
-                // ── FALLBACK: API failed → redirect to local password login ──
-                // Carry the identifier forward so the customer doesn't retype it.
-                // Only carry the phone number since that's what local auth uses.
-                $phoneForFallback = $loginType === 'mobile_no' ? $request->username : null;
+    //             // ── FALLBACK: API failed → redirect to local password login ──
+    //             // Carry the identifier forward so the customer doesn't retype it.
+    //             // Only carry the phone number since that's what local auth uses.
+    //             $phoneForFallback = $loginType === 'mobile_no' ? $request->username : null;
 
-                return redirect()
-                    ->route('login.local')
-                    ->with('fallback_reason', 'The verification service is currently unavailable. Please log in with your local password.')
-                    ->with('prefill_phone', $phoneForFallback);
-            }
+    //             return redirect()
+    //                 ->route('login.local')
+    //                 ->with('fallback_reason', 'The verification service is currently unavailable. Please log in with your local password.')
+    //                 ->with('prefill_phone', $phoneForFallback);
+    //         }
 
-            $data = $response->json('data');
+    //         $data = $response->json('data');
 
-            // Extract phone number from response
-            $phoneNumber = null;
-            if (isset($data['search_used']['phone_no'])) {
-                $phoneNumber = $data['search_used']['phone_no'];
-            } elseif ($loginType === 'mobile_no') {
-                $phoneNumber = $request->username;
-            }
+    //         // Extract phone number from response
+    //         $phoneNumber = null;
+    //         if (isset($data['search_used']['phone_no'])) {
+    //             $phoneNumber = $data['search_used']['phone_no'];
+    //         } elseif ($loginType === 'mobile_no') {
+    //             $phoneNumber = $request->username;
+    //         }
 
-            session([
-                'user_id'           => $data['user_id'],
-                'fullname'          => $data['name'],
-                'name'              => $data['name'],
-                'username'          => $request->username,
-                'phone_number'      => $phoneNumber,
-                'mobile_no'         => $phoneNumber,
-                'login_type'        => $loginType,
-                'search_used'       => $data['search_used'] ?? null,
-                'sent_to'           => $data['sent_to'] ?? [],
-                'customer_verified' => true,
-            ]);
-            session(['authenticated' => true]);
+    //         session([
+    //             'user_id'           => $data['user_id'],
+    //             'fullname'          => $data['name'],
+    //             'name'              => $data['name'],
+    //             'username'          => $request->username,
+    //             'phone_number'      => $phoneNumber,
+    //             'mobile_no'         => $phoneNumber,
+    //             'login_type'        => $loginType,
+    //             'search_used'       => $data['search_used'] ?? null,
+    //             'sent_to'           => $data['sent_to'] ?? [],
+    //             'customer_verified' => true,
+    //         ]);
+    //         session(['authenticated' => true]);
 
-            Log::info('User verified and OTP sent', [
-                'user_id' => $data['user_id'],
-                'name'    => $data['name'],
-                'phone'   => $phoneNumber,
-            ]);
+    //         Log::info('User verified and OTP sent', [
+    //             'user_id' => $data['user_id'],
+    //             'name'    => $data['name'],
+    //             'phone'   => $phoneNumber,
+    //         ]);
 
-            $successMessage = $data['message'] ?? 'OTP sent to your registered contact.';
+    //         $successMessage = $data['message'] ?? 'OTP sent to your registered contact.';
 
-            // return redirect()->route('otp')->with('success', $successMessage); // ← Uncomment when OTP is live
-            return redirect()->route('dashboard')->with('success', $successMessage);
+    //         // return redirect()->route('otp')->with('success', $successMessage); // ← Uncomment when OTP is live
+    //         return redirect()->route('dashboard')->with('success', $successMessage);
 
-        } catch (\Exception $e) {
-            Log::error('Login Error: ' . $e->getMessage());
+    //     } catch (\Exception $e) {
+    //         Log::error('Login Error: ' . $e->getMessage());
 
-            // Network/connection exception also falls back to local login
-            return redirect()
-                ->route('login.local')
-                ->with('fallback_reason', 'Could not connect to the verification service. Please log in with your local password.')
-                ->with('prefill_phone', $request->login_type === 'mobile_no' ? $request->username : null);
-        }
-    }
+    //         // Network/connection exception also falls back to local login
+    //         return redirect()
+    //             ->route('login.local')
+    //             ->with('fallback_reason', 'Could not connect to the verification service. Please log in with your local password.')
+    //             ->with('prefill_phone', $request->login_type === 'mobile_no' ? $request->username : null);
+    //     }
+    // }
 
     // Show OTP Verification Form
-    public function showOtpForm()
-    {
-        if (! session('user_id')) {
-            return redirect()->route('login')->withErrors(['Please login first.']);
-        }
+    // public function showOtpForm()
+    // {
+    //     if (! session('user_id')) {
+    //         return redirect()->route('login')->withErrors(['Please login first.']);
+    //     }
 
-        return view('auth.otp', [
-            'name'    => session('name'),
-            'sent_to' => session('sent_to'),
-        ]);
-    }
+    //     return view('auth.otp', [
+    //         'name'    => session('name'),
+    //         'sent_to' => session('sent_to'),
+    //     ]);
+    // }
 
     // Verify OTP
-    public function verifyOtpForm()
-    {
-        return view('auth.otp');
-    }
+    // public function verifyOtpForm()
+    // {
+    //     return view('auth.otp');
+    // }
 
-    public function verifyOtp(Request $request)
-    {
-        $request->validate([
-            'otp' => 'required|digits:6',
-        ]);
+    // public function verifyOtp(Request $request)
+    // {
+    //     $request->validate([
+    //         'otp' => 'required|digits:6',
+    //     ]);
 
-        try {
-            $userId = session('user_id');
-            $otp    = $request->otp;
+    //     try {
+    //         $userId = session('user_id');
+    //         $otp    = $request->otp;
 
-            if (! $userId) {
-                return redirect()->route('login')->withErrors(['Session expired. Please login again.']);
-            }
+    //         if (! $userId) {
+    //             return redirect()->route('login')->withErrors(['Session expired. Please login again.']);
+    //         }
 
-            $response = $this->api->verifyClaimOtp($userId, $otp);
+    //         $response = $this->api->verifyClaimOtp($userId, $otp);
 
-            if ($response->failed()) {
-                Log::error('OTP Verification Failed:', [
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
-                ]);
+    //         if ($response->failed()) {
+    //             Log::error('OTP Verification Failed:', [
+    //                 'status' => $response->status(),
+    //                 'body'   => $response->body(),
+    //             ]);
 
-                return back()->withErrors(['Invalid OTP. Please try again.'])->withInput();
-            }
+    //             return back()->withErrors(['Invalid OTP. Please try again.'])->withInput();
+    //         }
 
-            $payload = $response->json();
+    //         $payload = $response->json();
 
-            if (! isset($payload['data']) || ! is_array($payload['data'])) {
-                Log::error('Unexpected Genova login payload', ['payload' => $payload]);
-                return back()->withErrors(['We could not verify your details at the moment. Please try again.'])->withInput();
-            }
+    //         if (! isset($payload['data']) || ! is_array($payload['data'])) {
+    //             Log::error('Unexpected Genova login payload', ['payload' => $payload]);
+    //             return back()->withErrors(['We could not verify your details at the moment. Please try again.'])->withInput();
+    //         }
 
-            $data = $payload['data'];
+    //         $data = $payload['data'];
 
-            session([
-                'customer_code' => $data['customer_code'] ?? null,
-                'otp_verified'  => true,
-            ]);
+    //         session([
+    //             'customer_code' => $data['customer_code'] ?? null,
+    //             'otp_verified'  => true,
+    //         ]);
 
-            Log::info('OTP verified successfully', [
-                'user_id'       => $userId,
-                'customer_code' => $data['customer_code'] ?? null,
-            ]);
+    //         Log::info('OTP verified successfully', [
+    //             'user_id'       => $userId,
+    //             'customer_code' => $data['customer_code'] ?? null,
+    //         ]);
 
-            return redirect()->route('dashboard')->with('success', 'Login successful!');
+    //         return redirect()->route('dashboard')->with('success', 'Login successful!');
 
-        } catch (\Exception $e) {
-            Log::error('OTP Verification Error: ' . $e->getMessage());
-            return back()->withErrors(['Verification failed: ' . $e->getMessage()])->withInput();
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         Log::error('OTP Verification Error: ' . $e->getMessage());
+    //         return back()->withErrors(['Verification failed: ' . $e->getMessage()])->withInput();
+    //     }
+    // }
 
     // Show the local password login form (Fallback when API is unavailable).
     public function showLocalLoginForm()
@@ -450,10 +451,55 @@ class AuthController extends Controller
             ]);
         }
 
-        // ── Genova failed — try GLIMS (Oracle first, then local DB) ───
-        Log::warning('loginAjax: Genova failed, trying GLIMS', [
+        // ── Genova failed — try local Genova DB first ─────────────────────
+        Log::warning('loginAjax: Genova API failed, trying local Genova DB', [
             'identifier' => $identifier,
             'reason'     => $genovaResult['reason'],
+        ]);
+
+        $genovaLocalProfiles = $this->resolveGenovaLocalProfiles($identifier, $loginType);
+
+        if (! empty($genovaLocalProfiles)) {
+            $profile = $genovaLocalProfiles[0];
+
+            session([
+                'pending_auth'          => true,
+                'pending_phone'         => $profile['phone'],
+                'pending_name'          => $profile['name'],
+                'pending_customer_code' => $profile['code'],
+                'selected_customer_id'  => Customer::where('external_customer_code', $profile['code'])->value('id'),
+                'login_type'            => $loginType,
+                'auth_source'           => 'genova_local',
+            ]);
+
+            if (count($genovaLocalProfiles) > 1) {
+                return response()->json([
+                    'status'   => 'profile_selection',
+                    'profiles' => $genovaLocalProfiles,
+                    'source'   => 'genova_local',
+                ]);
+            }
+
+            $localCustomer = Customer::where('external_customer_code', $profile['code'])->first();
+
+            if (! $localCustomer || empty($localCustomer->local_password)) {
+                return response()->json([
+                    'status'  => 'needs_password_setup',
+                    'profile' => $profile,
+                    'message' => 'Please set a local password to secure your account.',
+                ]);
+            }
+
+            return response()->json([
+                'status'  => 'needs_password_entry',
+                'profile' => $profile,
+                'message' => 'Please enter your password to continue.',
+            ]);
+        }
+
+        // ── Local Genova also empty — try GLIMS ───────────────────────────
+        Log::info('loginAjax: local Genova lookup empty, trying GLIMS', [
+            'identifier' => $identifier,
         ]);
 
         if ($loginType === 'mobile_no') {
@@ -839,36 +885,122 @@ class AuthController extends Controller
     }
 
     /**
-     * Attempt GLIMS verification, return a normalised result array.
-     * Maps login_type to the right GLIMS lookup.
+     * Resolve profiles from the local DB for customers synced from Genova.
+     * Called when the Genova API is unreachable or returns a failure.
+     * Mirrors resolveGlimsProfiles() but for source = 'genova'.
+     *
+     * Supports all three login types:
+     *   mobile_no      → match on customers.phone
+     *   policy_number  → join through policies table (source = 'genova')
+     *   vehicle_number → search raw_payload JSONB for the vehicle number
      */
-    private function attemptGlimsVerification(string $identifier, string $loginType): array
+    private function resolveGenovaLocalProfiles(string $identifier, string $loginType): array
     {
+        $profiles = [];
+
         try {
-            // GlimsService::customerVerification currently searches by CLIENT_CODE.
-            // For phone lookups we need a phone-based query — handle both cases.
             $customer = null;
 
-            if ($loginType === 'mobile_no') {
-                // Phone search — query directly since GlimsService defaults to CLIENT_CODE
-                $customer = $this->glimsPhoneLookup($identifier);
-            } else {
-                // Policy / vehicle number — use existing method with the identifier as client code
-                // This will expand as GLIMS lookup methods are added
-                $customer = $this->glims->customerVerification($identifier, $loginType);
+            switch ($loginType) {
+                case 'mobile_no':
+                case 'phone':
+                    $customer = Customer::whereJsonContains('sources', 'genova')
+                        ->where('phone', $identifier)
+                        ->first();
+                    break;
+
+                case 'policy_number':
+                    // Find the customer who owns this policy (synced from Genova)
+                    $policy = Policy::where('source', 'genova')
+                        ->where('policy_number', $identifier)
+                        ->with('customer')
+                        ->first();
+
+                    $customer = $policy?->customer;
+                    break;
+
+                case 'vehicle_number':
+                    // Vehicle number is stored inside raw_payload JSON array
+                    // PostgreSQL JSONB: search within the array of sub-policy objects
+                    $policy = Policy::where('source', 'genova')
+                        ->whereRaw(
+                            "EXISTS (
+                            SELECT 1 FROM jsonb_array_elements(raw_payload::jsonb) elem
+                            WHERE elem->>'vehicle_number' = ?
+                        )",
+                            [$identifier]
+                        )
+                        ->with('customer')
+                        ->first();
+
+                    $customer = $policy?->customer;
+                    break;
             }
 
             if (! $customer) {
-                return ['success' => false, 'reason' => 'not_found'];
+                Log::info('resolveGenovaLocalProfiles: no local Genova record found', [
+                    'identifier' => $identifier,
+                    'login_type' => $loginType,
+                ]);
+                return [];
             }
 
-            return ['success' => true, 'customer' => $customer];
+            Log::info('resolveGenovaLocalProfiles: found local Genova customer', [
+                'customer_id' => $customer->id,
+                'phone'       => $customer->phone,
+            ]);
+
+            $profiles[] = [
+                'code'         => $customer->external_customer_code,
+                'name'         => $customer->name,
+                'phone'        => $customer->phone,
+                'email'        => $customer->email,
+                'policy_count' => $customer->policies()->where('source', 'genova')->count(),
+                'source'       => 'genova_local', // flag: came from local DB, not live API
+                'is_match'     => true,
+            ];
 
         } catch (\Exception $e) {
-            Log::error('attemptGlimsVerification exception: ' . $e->getMessage());
-            return ['success' => false, 'reason' => 'exception'];
+            Log::error('resolveGenovaLocalProfiles error: ' . $e->getMessage(), [
+                'identifier' => $identifier,
+                'login_type' => $loginType,
+            ]);
         }
+
+        return $profiles;
     }
+
+    /**
+     * Attempt GLIMS verification, return a normalised result array.
+     * Maps login_type to the right GLIMS lookup.
+     */
+    // private function attemptGlimsVerification(string $identifier, string $loginType): array
+    // {
+    //     try {
+    //         // GlimsService::customerVerification currently searches by CLIENT_CODE.
+    //         // For phone lookups we need a phone-based query — handle both cases.
+    //         $customer = null;
+
+    //         if ($loginType === 'mobile_no') {
+    //             // Phone search — query directly since GlimsService defaults to CLIENT_CODE
+    //             $customer = $this->glimsPhoneLookup($identifier);
+    //         } else {
+    //             // Policy / vehicle number — use existing method with the identifier as client code
+    //             // This will expand as GLIMS lookup methods are added
+    //             $customer = $this->glims->customerVerification($identifier, $loginType);
+    //         }
+
+    //         if (! $customer) {
+    //             return ['success' => false, 'reason' => 'not_found'];
+    //         }
+
+    //         return ['success' => true, 'customer' => $customer];
+
+    //     } catch (\Exception $e) {
+    //         Log::error('attemptGlimsVerification exception: ' . $e->getMessage());
+    //         return ['success' => false, 'reason' => 'exception'];
+    //     }
+    // }
 
     /**
      * Phone number lookup against GLIMS GN2_CLIENT table.
@@ -922,58 +1054,58 @@ class AuthController extends Controller
      * Genova sync — it may not have external_customer_code set yet but
      * will almost certainly have the phone number.
      */
-    private function findOrCreateCustomerFromGlims(array $glimsCustomer, ?string $phone, string $name): Customer
-    {
-        $clientCode = $glimsCustomer['CLIENT_CODE'];
+    // private function findOrCreateCustomerFromGlims(array $glimsCustomer, ?string $phone, string $name): Customer
+    // {
+    //     $clientCode = $glimsCustomer['CLIENT_CODE'];
 
-        // Search by code first, then phone — separately, not in one orWhere
-        $existing = Customer::where('external_customer_code', $clientCode)->first();
+    //     // Search by code first, then phone — separately, not in one orWhere
+    //     $existing = Customer::where('external_customer_code', $clientCode)->first();
 
-        if (! $existing && $phone) {
-            $existing = Customer::where('phone', $phone)->first();
-        }
+    //     if (! $existing && $phone) {
+    //         $existing = Customer::where('phone', $phone)->first();
+    //     }
 
-        if ($existing) {
-            // Only fill fields that are genuinely missing — never touch local_password
-            $updates = [];
+    //     if ($existing) {
+    //         // Only fill fields that are genuinely missing — never touch local_password
+    //         $updates = [];
 
-            if (empty($existing->name)) {
-                $updates['name'] = $name;
-            }
+    //         if (empty($existing->name)) {
+    //             $updates['name'] = $name;
+    //         }
 
-            if (empty($existing->phone)) {
-                $updates['phone'] = $phone;
-            }
+    //         if (empty($existing->phone)) {
+    //             $updates['phone'] = $phone;
+    //         }
 
-            if (empty($existing->external_customer_code)) {
-                $updates['external_customer_code'] = $clientCode;
-            }
+    //         if (empty($existing->external_customer_code)) {
+    //             $updates['external_customer_code'] = $clientCode;
+    //         }
 
-            if (empty($existing->external_customer_id)) {
-                $updates['external_customer_id'] = $clientCode;
-            }
+    //         if (empty($existing->external_customer_id)) {
+    //             $updates['external_customer_id'] = $clientCode;
+    //         }
 
-            if (empty($existing->email)) {
-                $updates['email'] = $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null;
-            }
+    //         if (empty($existing->email)) {
+    //             $updates['email'] = $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null;
+    //         }
 
-            if (! empty($updates)) {
-                $existing->update($updates);
-            }
+    //         if (! empty($updates)) {
+    //             $existing->update($updates);
+    //         }
 
-            // Always re-fetch fresh from DB so local_password is definitely loaded
-            return $existing->fresh();
-        }
+    //         // Always re-fetch fresh from DB so local_password is definitely loaded
+    //         return $existing->fresh();
+    //     }
 
-        return Customer::create([
-            'external_customer_code' => $clientCode,
-            'external_customer_id'   => $clientCode,
-            'name'                   => $name,
-            'phone'                  => $phone,
-            'email'                  => $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null,
-            'sources'                => ['glims'],
-        ]);
-    }
+    //     return Customer::create([
+    //         'external_customer_code' => $clientCode,
+    //         'external_customer_id'   => $clientCode,
+    //         'name'                   => $name,
+    //         'phone'                  => $phone,
+    //         'email'                  => $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null,
+    //         'sources'                => ['glims'],
+    //     ]);
+    // }
 
     /**
      * Check whether the customer (found via Genova) still needs to set a local password.
@@ -985,45 +1117,45 @@ class AuthController extends Controller
      * in that case. The false-positive was caused by a narrow lookup that missed
      * existing records, which is fixed by the broader WHERE below.
      */
-    private function customerNeedsPasswordSetup(?string $phone, array $genovaData): bool
-    {
-        $userId       = $genovaData['user_id'] ?? null;
-        $customerCode = $genovaData['search_used']['client_code'] ?? $genovaData['customer_code'] ?? null;
+    // private function customerNeedsPasswordSetup(?string $phone, array $genovaData): bool
+    // {
+    //     $userId       = $genovaData['user_id'] ?? null;
+    //     $customerCode = $genovaData['search_used']['client_code'] ?? $genovaData['customer_code'] ?? null;
 
-        // Search separately — not in one orWhere — to avoid query builder quirks
-        $customer = null;
+    //     // Search separately — not in one orWhere — to avoid query builder quirks
+    //     $customer = null;
 
-        if ($phone) {
-            $customer = Customer::where('phone', $phone)
-                ->whereNotNull('local_password')->first();
-        }
+    //     if ($phone) {
+    //         $customer = Customer::where('phone', $phone)
+    //             ->whereNotNull('local_password')->first();
+    //     }
 
-        if (! $customer && $customerCode) {
-            $customer = Customer::where('external_customer_code', $customerCode)
-                ->whereNotNull('local_password')->first();
-        }
+    //     if (! $customer && $customerCode) {
+    //         $customer = Customer::where('external_customer_code', $customerCode)
+    //             ->whereNotNull('local_password')->first();
+    //     }
 
-        if (! $customer && $userId) {
-            $customer = Customer::where('external_customer_id', $userId)
-                ->whereNotNull('local_password')->first();
-        }
+    //     if (! $customer && $userId) {
+    //         $customer = Customer::where('external_customer_id', $userId)
+    //             ->whereNotNull('local_password')->first();
+    //     }
 
-        Log::debug('customerNeedsPasswordSetup result', [
-            'phone'         => $phone,
-            'customer_code' => $genovaData['customer_code'] ?? null,
-            'user_id'       => $genovaData['user_id'] ?? null,
-            'found'         => $customer ? $customer->id : 'NOT FOUND',
-            'has_password'  => $customer ? ! empty($customer->local_password) : false,
-        ]);
+    //     Log::debug('customerNeedsPasswordSetup result', [
+    //         'phone'         => $phone,
+    //         'customer_code' => $genovaData['customer_code'] ?? null,
+    //         'user_id'       => $genovaData['user_id'] ?? null,
+    //         'found'         => $customer ? $customer->id : 'NOT FOUND',
+    //         'has_password'  => $customer ? ! empty($customer->local_password) : false,
+    //     ]);
 
-        return $customer === null;
-    }
+    //     return $customer === null;
+    // }
 
     // Logout
     public function logout()
     {
         session()->flush();
-        return redirect()->route('login')->with('success', 'Logged out successfully.');
+        return redirect()->route('user.select')->with('success', 'Logged out successfully.');
     }
 
     // Dismiss the "set your local password" nudge for the current session.

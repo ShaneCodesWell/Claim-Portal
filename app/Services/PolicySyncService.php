@@ -77,13 +77,13 @@ class PolicySyncService
                 continue;
             }
 
-            // ✅ FIX 1: Fetch motor risks and extract vehicle number
+            // FIX 1: Fetch motor risks and extract vehicle number
             $motorRisks    = $this->glims->getMotorRisks($glimsPolicy['POLICY_SEQUENCE']);
             $vehicleNumber = ! empty($motorRisks)
                 ? ((array) $motorRisks[0])['objecth_02_plate_number'] ?? null
                 : null;
 
-            // ✅ FIX 2: Map status correctly
+            // FIX 2: Map status correctly
             $statusCode = $glimsPolicy['POLICY_STATUS'] ?? '';
             $status     = match ((string) $statusCode) {
                 '3'     => 'active',
@@ -109,8 +109,8 @@ class PolicySyncService
                     'end_date'            => $glimsPolicy['POLICY_EXPIRY_DATE'] ?? null,
                     'effective_date'      => $glimsPolicy['POLICY_EFFECTIVE_DATE'] ?? null,
                     'renewal_date'        => null,
-                    'status'              => $status, // ✅ FIX 2
-                    // ✅ FIX 1: motor risks now included in raw_payload
+                    'status'              => $status, // FIX 2
+                    // FIX 1: motor risks now included in raw_payload
                     'raw_payload'         => array_merge($glimsPolicy, [
                         'vehicle_number' => $vehicleNumber,
                         'motor_risks'    => $motorRisks,
@@ -127,7 +127,7 @@ class PolicySyncService
         return $syncedPoliciesMap;
     }
 
-// ✅ Updated signature to accept vehicleNumber
+    // Updated signature to accept vehicleNumber
     private function formatGlimsPolicyForResponse(
         Policy $policy,
         Customer $customer,
@@ -149,7 +149,7 @@ class PolicySyncService
             'policy_end_date'      => $policy->end_date,
             'renewal_date'         => null,
             'effective_date'       => $policy->effective_date,
-            'vehicle_number'       => $vehicleNumber, // ✅ no longer hardcoded null
+            'vehicle_number'       => $vehicleNumber, // no longer hardcoded null
             'customer_name'        => $customer->name,
             'customer_code'        => $customer->external_customer_code,
             'customer_phone'       => $customer->phone,
