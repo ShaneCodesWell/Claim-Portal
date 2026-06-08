@@ -11,7 +11,6 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap"
         rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -42,7 +41,6 @@
             background-attachment: fixed;
         }
 
-        /* ── AUTH MODAL ─────────────────────────────────────── */
         #authModal {
             display: none;
             opacity: 0;
@@ -64,7 +62,6 @@
             opacity: 1;
         }
 
-        /* ── STAGES: only one visible at a time ─────────────── */
         .modal-stage {
             display: none;
         }
@@ -73,7 +70,6 @@
             display: block;
         }
 
-        /* ── ANIMATED LOADER DOTS ───────────────────────────── */
         .loader-dot {
             width: 10px;
             height: 10px;
@@ -105,7 +101,6 @@
             }
         }
 
-        /* ── ORBITING RING ──────────────────────────────────── */
         @keyframes orbit {
             from {
                 transform: rotate(0deg);
@@ -126,7 +121,6 @@
             transform-origin: center;
         }
 
-        /* ── SUCCESS CHECKMARK ──────────────────────────────── */
         @keyframes checkDraw {
             from {
                 stroke-dashoffset: 50;
@@ -143,31 +137,6 @@
             animation: checkDraw 0.5s ease forwards 0.2s;
         }
 
-        /* ── GLIMS BADGE PULSE ──────────────────────────────── */
-        @keyframes badgePulse {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 0 8px rgba(234, 179, 8, 0);
-            }
-        }
-
-        .glims-badge {
-            animation: badgePulse 2s ease infinite;
-        }
-
-        /* ── PASSWORD STRENGTH BAR ──────────────────────────── */
-        .strength-bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.3s ease, background-color 0.3s ease;
-        }
-
-        /* ── SUBTLE SLIDE-IN FOR EACH STAGE ─────────────────── */
         @keyframes stageFadeIn {
             from {
                 opacity: 0;
@@ -184,7 +153,6 @@
             animation: stageFadeIn 0.25s ease forwards;
         }
 
-        /* ── MESSAGE CYCLE TRANSITION ───────────────────────── */
         #loaderMessage {
             transition: opacity 0.4s ease;
         }
@@ -192,13 +160,23 @@
         #loaderMessage.fading {
             opacity: 0;
         }
+
+        /* OTP digit inputs */
+        .otp-digit:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .otp-digit.filled {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
     </style>
 </head>
 
 <body class="font-sans antialiased min-h-screen flex items-center justify-center p-4 relative">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]"></div>
 
-    <!-- Top Nav -->
     <nav class="absolute top-0 left-0 w-full p-6 z-20 flex justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="bg-white/10 p-2 rounded-lg border border-white/20 backdrop-blur-sm">
@@ -231,7 +209,7 @@
 
             <div class="p-6">
                 <div class="mb-4 text-center">
-                    <p class="text-gray-600 text-sm">Enter your credentials to access your account</p>
+                    <p class="text-gray-600 text-sm">Enter your details to receive a verification code</p>
                     @if ($errors->any())
                         <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                             {{ $errors->first() }}
@@ -239,25 +217,16 @@
                     @endif
                 </div>
 
-                {{--
-                    NOTE: The form no longer has action/method for a full page POST.
-                    It is intercepted by JS and submitted via fetch() to /login/ajax.
-                    The original route('/login') fallback still works for no-JS browsers
-                    because we leave action on the form — JS prevents default when available.
-                --}}
                 <form action="{{ route('login.submit') }}" method="POST" class="space-y-5" id="verificationForm">
                     @csrf
-
                     <div>
                         <label for="login_type" class="block text-sm font-medium text-gray-700 mb-1">Login with</label>
-                        <div class="relative">
-                            <select name="login_type" id="login_type"
-                                class="w-full pl-4 pr-8 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
-                                <option value="mobile_no">Phone Number</option>
-                                <option value="policy_number">Policy Number</option>
-                                <option value="vehicle_number">Vehicle Number</option>
-                            </select>
-                        </div>
+                        <select name="login_type" id="login_type"
+                            class="w-full pl-4 pr-8 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
+                            <option value="mobile_no">Phone Number</option>
+                            <option value="policy_number">Policy Number</option>
+                            <option value="vehicle_number">Vehicle Number</option>
+                        </select>
                     </div>
 
                     <div>
@@ -272,27 +241,11 @@
                     </div>
 
                     <button type="submit" id="sendOtpBtn"
-                        class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl shadow-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500">
+                        class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl shadow-sm transition duration-200">
                         <i class="fas fa-paper-plane text-sm"></i>
-                        <span>Request Access</span>
+                        <span>Send Verification Code</span>
                     </button>
                 </form>
-
-                <div class="relative my-6">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div class="relative flex justify-center text-xs">
-                        <span class="px-2 bg-white text-gray-400">or</span>
-                    </div>
-                </div>
-
-                <div class="text-center">
-                    <a href="{{ route('login.local') }}"
-                        class="text-sm text-brand-600 hover:text-brand-700 font-medium">
-                        <i class="fas fa-lock mr-1"></i> Login with Password
-                    </a>
-                </div>
             </div>
 
             <div class="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-between text-xs text-gray-400">
@@ -305,11 +258,10 @@
         </div>
     </div>
 
-
     {{-- ═══════════════════════════════════════════════════════
-         AUTH MODAL — full-screen overlay
-         Stages: loading | success_genova | success_glims |
-                 local_password | setup_password | error
+         AUTH MODAL
+         Stages: loading | success-genova | profile-picker |
+                 otp-entry | no-profile | error
     ═══════════════════════════════════════════════════════ --}}
     <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
         style="background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px);">
@@ -317,31 +269,26 @@
         <div id="authModalCard"
             class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100">
 
-            {{-- ── CLOSE BUTTON ─────────────────────────────────── --}}
             <button id="modalCloseBtn"
-                class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition z-10"
+                class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition z-10"
                 aria-label="Close">
                 <i class="fas fa-times text-sm"></i>
             </button>
 
             {{-- ── STAGE: LOADING ───────────────────────────── --}}
             <div id="stage-loading" class="modal-stage p-8 text-center">
-                <!-- Animated orb -->
                 <div class="flex items-center justify-center mb-6">
                     <div class="relative w-20 h-20">
-                        <!-- Outer ring -->
                         <svg class="orbit-ring absolute inset-0 w-full h-full" viewBox="0 0 80 80">
                             <circle cx="40" cy="40" r="36" fill="none" stroke="#dbeafe"
                                 stroke-width="2" />
                             <circle cx="40" cy="4" r="4" fill="#2563eb" />
                         </svg>
-                        <!-- Inner ring -->
                         <svg class="orbit-ring-slow absolute inset-0 w-full h-full" viewBox="0 0 80 80">
                             <circle cx="40" cy="40" r="26" fill="none" stroke="#eff6ff"
                                 stroke-width="1.5" />
                             <circle cx="40" cy="14" r="3" fill="#93c5fd" />
                         </svg>
-                        <!-- Core icon -->
                         <div class="absolute inset-0 flex items-center justify-center">
                             <div
                                 class="w-10 h-10 bg-brand-900 rounded-full flex items-center justify-center shadow-lg">
@@ -350,26 +297,19 @@
                         </div>
                     </div>
                 </div>
-
                 <h3 class="font-display text-xl text-gray-900 mb-2">Verifying your identity</h3>
-                <p id="loaderMessage" class="text-sm text-gray-500 min-h-5 transition-opacity duration-300">
-                    Connecting to Vanguard Assurance...
-                </p>
-
-                <!-- Animated dots -->
+                <p id="loaderMessage" class="text-sm text-gray-500 min-h-5">Connecting to Vanguard Assurance...</p>
                 <div class="flex items-center justify-center gap-2 mt-5">
                     <div class="loader-dot"></div>
                     <div class="loader-dot"></div>
                     <div class="loader-dot"></div>
                 </div>
-
                 <p class="text-xs text-gray-400 mt-5">Please don't close this window</p>
             </div>
 
-            {{-- ── STAGE: SUCCESS (Genova) ──────────────────── --}}
+            {{-- ── STAGE: OTP SENT (brief interstitial) ────── --}}
             <div id="stage-success-genova" class="modal-stage">
                 <div class="bg-brand-900 px-6 py-5 text-center">
-                    <!-- Success check -->
                     <div class="flex items-center justify-center mb-3">
                         <div
                             class="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
@@ -379,18 +319,18 @@
                             </svg>
                         </div>
                     </div>
-                    <h3 class="font-display text-xl text-white mb-1">Welcome back!</h3>
+                    <h3 class="font-display text-xl text-white mb-1">Code sent!</h3>
                     <p id="genova-name" class="text-blue-200 text-sm"></p>
                 </div>
                 <div class="p-6 text-center">
-                    <p class="text-sm text-gray-600 mb-5">Your identity has been verified. We've sent an OTP to your
-                        registered contact.</p>
+                    <p class="text-sm text-gray-600 mb-5">We've sent a 6-digit verification code to your registered
+                        phone number.</p>
                     <div
                         class="flex items-center gap-2 bg-brand-50 border border-brand-100 rounded-xl p-3 text-left mb-4">
                         <i class="fas fa-info-circle text-brand-600 text-sm shrink-0"></i>
-                        <p class="text-xs text-brand-800">You'll be redirected to enter your OTP shortly.</p>
+                        <p class="text-xs text-brand-800">Taking you to the verification screen now...</p>
                     </div>
-                    <div class="flex justify-center">
+                    <div class="flex justify-center gap-2">
                         <div class="loader-dot"></div>
                         <div class="loader-dot mx-1"></div>
                         <div class="loader-dot"></div>
@@ -398,7 +338,7 @@
                 </div>
             </div>
 
-            {{-- ── STAGE: PROFILE PICKER ─────────────────────────── --}}
+            {{-- ── STAGE: PROFILE PICKER ─────────────────────── --}}
             <div id="stage-profile-picker" class="modal-stage">
                 <div class="bg-brand-900 px-6 py-5 text-center">
                     <div class="flex items-center justify-center mb-3">
@@ -415,48 +355,69 @@
                 </div>
             </div>
 
-            {{-- ── STAGE: ENTER PASSWORD ───────────────────────────── --}}
-            <div id="stage-enter-password" class="modal-stage">
-                <div class="bg-brand-900 px-6 py-4 text-center">
-                    <div class="flex items-center justify-center gap-2">
-                        <i class="fas fa-lock text-white"></i>
-                        <h3 class="font-display text-lg text-white">Enter your password</h3>
+            {{-- ── STAGE: OTP ENTRY ──────────────────────────── --}}
+            <div id="stage-otp-entry" class="modal-stage">
+                <div class="bg-brand-900 px-6 py-5 text-center">
+                    <div class="flex items-center justify-center mb-3">
+                        <div
+                            class="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
+                            <i class="fas fa-mobile-alt text-white text-xl"></i>
+                        </div>
                     </div>
-                    <p class="text-blue-200 text-xs mt-1">Verify it's really you</p>
+                    <h3 class="font-display text-xl text-white mb-1">Enter your code</h3>
+                    <p id="otp-phone-display" class="text-blue-200 text-xs">Code sent to your registered number</p>
                 </div>
                 <div class="p-6">
-                    <p id="enter-password-name" class="text-sm text-center text-gray-600 mb-4"></p>
-                    <form id="enterPasswordForm" class="space-y-4">
+                    <p id="otp-name-display" class="text-sm text-center text-gray-500 mb-5"></p>
+
+                    <form id="otpForm" class="space-y-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <div class="relative">
-                                <i
-                                    class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                                <input type="password" id="enterPasswordInput" name="password" required
-                                    placeholder="Enter your password"
-                                    class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
-                                <button type="button"
-                                    class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    data-target="enterPasswordInput">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </button>
+                            <label
+                                class="block text-xs font-medium text-gray-500 mb-3 text-center uppercase tracking-wide">6-digit
+                                verification code</label>
+                            <div class="flex justify-center gap-2">
+                                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                                    class="otp-digit w-11 h-13 py-3 text-center text-xl font-bold border-2 border-gray-200 rounded-xl transition outline-none" />
+                                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                                    class="otp-digit w-11 h-13 py-3 text-center text-xl font-bold border-2 border-gray-200 rounded-xl transition outline-none" />
+                                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                                    class="otp-digit w-11 h-13 py-3 text-center text-xl font-bold border-2 border-gray-200 rounded-xl transition outline-none" />
+                                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                                    class="otp-digit w-11 h-13 py-3 text-center text-xl font-bold border-2 border-gray-200 rounded-xl transition outline-none" />
+                                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                                    class="otp-digit w-11 h-13 py-3 text-center text-xl font-bold border-2 border-gray-200 rounded-xl transition outline-none" />
+                                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                                    class="otp-digit w-11 h-13 py-3 text-center text-xl font-bold border-2 border-gray-200 rounded-xl transition outline-none" />
                             </div>
+                            <input type="hidden" id="otpValue" name="otp">
                         </div>
-                        <div id="enterPasswordError"
-                            class="hidden text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2"></div>
-                        <button type="submit"
+
+                        <div id="otpError"
+                            class="hidden text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2 text-center">
+                        </div>
+
+                        <button type="submit" id="verifyOtpBtn"
                             class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition">
-                            <i class="fas fa-sign-in-alt mr-2"></i>Log In
+                            <i class="fas fa-check-circle mr-2"></i>Verify Code
                         </button>
                     </form>
-                    <button type="button" id="forgotPasswordBtn"
-                        class="w-full py-2 mt-2 text-xs text-gray-400 hover:text-brand-600 transition">
-                        Forgot password? Contact support
+
+                    <div class="text-center mt-4 space-y-1">
+                        <p class="text-xs text-gray-400">Didn't receive the code?</p>
+                        <button id="resendOtpBtn" disabled
+                            class="text-sm font-medium text-gray-400 transition disabled:cursor-not-allowed">
+                            Resend code (<span id="resendCountdown">60</span>s)
+                        </button>
+                    </div>
+
+                    <button type="button" id="backToLoginBtn"
+                        class="w-full mt-3 py-2 text-xs text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-arrow-left mr-1"></i>Use a different number
                     </button>
                 </div>
             </div>
 
-            {{-- ── STAGE: NO PROFILE FOUND ────────────────────────── --}}
+            {{-- ── STAGE: NO PROFILE ─────────────────────────── --}}
             <div id="stage-no-profile" class="modal-stage p-8 text-center">
                 <div class="flex items-center justify-center mb-5">
                     <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
@@ -465,191 +426,15 @@
                 </div>
                 <h3 class="font-display text-xl text-gray-900 mb-2">Account not found</h3>
                 <p class="text-sm text-gray-500 mb-6 leading-relaxed">
-                    Your phone number was verified but no account profile was found. Please contact support.
+                    Your details were verified but no account profile was found. Please contact support.
                 </p>
                 <button id="noProfileRetryBtn"
-                    class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition mb-3">
+                    class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition">
                     <i class="fas fa-redo mr-2"></i>Try Again
                 </button>
             </div>
 
-            {{-- ── STAGE: SUCCESS (GLIMS fallback) ─────────── --}}
-            <div id="stage-success-glims" class="modal-stage">
-                <div class="bg-amber-600 px-6 py-5 text-center">
-                    <div class="flex items-center justify-center mb-3">
-                        <div
-                            class="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center border border-white/20 glims-badge">
-                            <i class="fas fa-database text-white text-lg"></i>
-                        </div>
-                    </div>
-                    <h3 class="font-display text-xl text-white mb-1">Account found</h3>
-                    <p id="glims-name" class="text-amber-100 text-sm"></p>
-                </div>
-                <div class="p-6">
-                    <div class="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5">
-                        <i class="fas fa-exclamation-triangle text-amber-500 text-sm mt-0.5 shrink-0"></i>
-                        <p class="text-xs text-amber-800 leading-relaxed">
-                            We found your account through our records database. To ensure you always have access to your
-                            policies — even when our primary service is down — please set up a local password.
-                        </p>
-                    </div>
-                    <button id="glimsSetupPasswordBtn"
-                        class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition">
-                        <i class="fas fa-key mr-2"></i>Set Up My Password
-                    </button>
-                    <button id="glimsSkipBtn" data-skip-count="0"
-                        class="w-full py-2 mt-2 text-xs text-gray-400 hover:text-gray-600 transition">
-                        Remind me later
-                    </button>
-                </div>
-            </div>
-
-            {{-- ── STAGE: LOCAL PASSWORD (both APIs down) ───── --}}
-            <div id="stage-local-password" class="modal-stage">
-                <div class="bg-slate-800 px-6 py-5 text-center">
-                    <div class="flex items-center justify-center mb-3">
-                        <div
-                            class="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
-                            <i class="fas fa-wifi text-white text-lg opacity-40"></i>
-                            <i class="fas fa-slash text-white text-lg absolute"></i>
-                        </div>
-                    </div>
-                    <h3 class="font-display text-xl text-white mb-1">Service unavailable</h3>
-                    <p class="text-slate-400 text-xs">Use your local password to continue</p>
-                </div>
-                <div class="p-6">
-                    <div class="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3 mb-5">
-                        <i class="fas fa-info-circle text-slate-500 text-sm mt-0.5 shrink-0"></i>
-                        <p class="text-xs text-slate-600 leading-relaxed">
-                            Our verification service is temporarily unavailable. Since you've previously set up a local
-                            password, you can still access your account.
-                        </p>
-                    </div>
-                    <form id="localPasswordForm" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <div class="relative">
-                                <i
-                                    class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                                <input type="password" id="localPasswordInput" name="password" required
-                                    placeholder="Enter your password"
-                                    class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
-                                <button type="button"
-                                    class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    data-target="localPasswordInput">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="localPasswordError"
-                            class="hidden text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2"></div>
-                        <button type="submit"
-                            class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition">
-                            <i class="fas fa-sign-in-alt mr-2"></i>Log In
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            {{-- ── STAGE: SET UP PASSWORD ───────────────────── --}}
-            <div id="stage-setup-password" class="modal-stage">
-                <div class="bg-brand-900 px-6 py-4 text-center">
-                    <div class="flex items-center justify-center gap-2">
-                        <i class="fas fa-key text-white"></i>
-                        <h3 class="font-display text-lg text-white">Secure your account</h3>
-                    </div>
-                    <p class="text-blue-200 text-xs mt-1">One-time setup — takes 30 seconds</p>
-                </div>
-                <div class="p-6">
-                    <!-- Progress steps -->
-                    <div class="flex items-center justify-center gap-2 mb-5">
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-                                <i class="fas fa-check text-white" style="font-size:8px"></i>
-                            </div>
-                            <span class="text-xs text-gray-500">Verified</span>
-                        </div>
-                        <div class="w-8 h-px bg-gray-300"></div>
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-5 h-5 rounded-full bg-brand-600 flex items-center justify-center">
-                                <span class="text-white font-bold" style="font-size:9px">2</span>
-                            </div>
-                            <span class="text-xs text-brand-600 font-medium">Set Password</span>
-                        </div>
-                        <div class="w-8 h-px bg-gray-300"></div>
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
-                                <span class="text-gray-400 font-bold" style="font-size:9px">3</span>
-                            </div>
-                            <span class="text-xs text-gray-400">Dashboard</span>
-                        </div>
-                    </div>
-
-                    <p class="text-xs text-gray-500 text-center mb-5 leading-relaxed">
-                        Set a local password so you can always access your claims portal — even when our external
-                        services are unavailable.
-                    </p>
-
-                    <form id="setupPasswordForm" class="space-y-4">
-                        <!-- Password -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                            <div class="relative">
-                                <i
-                                    class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                                <input type="password" id="newPassword" name="password" required
-                                    placeholder="Min 8 chars, 1 letter + 1 number"
-                                    class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
-                                <button type="button"
-                                    class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    data-target="newPassword">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </button>
-                            </div>
-                            <!-- Strength bar -->
-                            <div class="mt-2">
-                                <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                    <div id="strengthBar" class="strength-bar-fill w-0 bg-red-400"></div>
-                                </div>
-                                <p id="strengthLabel" class="text-xs text-gray-400 mt-1"></p>
-                            </div>
-                        </div>
-
-                        <!-- Confirm -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                            <div class="relative">
-                                <i
-                                    class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                                <input type="password" id="confirmPassword" name="password_confirmation" required
-                                    placeholder="Repeat your password"
-                                    class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
-                                <button type="button"
-                                    class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    data-target="confirmPassword">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="setupPasswordError"
-                            class="hidden text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2"></div>
-
-                        <button type="submit" id="setupPasswordBtn"
-                            class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition">
-                            <i class="fas fa-shield-alt mr-2"></i>Save Password & Continue
-                        </button>
-
-                        <button type="button" id="skipSetupBtn"
-                            class="w-full py-2 text-xs text-gray-400 hover:text-gray-600 transition hidden"
-                            data-skip-count="0">
-                            Skip for now (not recommended)
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            {{-- ── STAGE: ERROR ─────────────────────────────── --}}
+            {{-- ── STAGE: ERROR ──────────────────────────────── --}}
             <div id="stage-error" class="modal-stage p-8 text-center">
                 <div class="flex items-center justify-center mb-5">
                     <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
@@ -662,25 +447,18 @@
                     class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition mb-3">
                     <i class="fas fa-redo mr-2"></i>Try Again
                 </button>
-                <a href="{{ route('login.local') }}"
-                    class="block text-sm text-gray-500 hover:text-brand-600 transition">
-                    <i class="fas fa-lock mr-1"></i>Use local password instead
-                </a>
             </div>
 
-        </div>{{-- /#authModalCard --}}
-    </div>{{-- /#authModal --}}
-
+        </div>
+    </div>
 
     <script>
         (() => {
             const AJAX_URL = '{{ route('login.ajax') }}';
             const SELECT_URL = '{{ route('login.select.profile') }}';
-            const ENTER_PW_URL = '{{ route('login.enter.password') }}';
-            const LOCAL_LOGIN_URL = '{{ route('login.local.submit') }}';
-            const SETUP_PW_URL = '{{ route('setup.password.ajax') }}';
+            const VERIFY_OTP_URL = '{{ route('login.verify.otp') }}';
+            const RESEND_OTP_URL = '{{ route('login.resend.otp') }}';
             const CSRF = document.querySelector('meta[name="csrf-token"]').content;
-            const MAX_SKIPS = 1;
 
             const LOAD_MESSAGES = [
                 'Connecting to Vanguard Assurance...',
@@ -692,15 +470,13 @@
 
             let messageInterval = null;
             let messageIndex = 0;
-            let skipCount = 0;
-            let selectedProfile = null;
-
+            let resendTimer = null;
             const modal = document.getElementById('authModal');
             const form = document.getElementById('verificationForm');
             const loaderMessage = document.getElementById('loaderMessage');
             const errorMessage = document.getElementById('errorMessage');
 
-            // ── Modal ─────────────────────────────────────────────────────
+            // ── Modal helpers ──────────────────────────────────────────────
             function openModal() {
                 modal.style.display = 'flex';
                 requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add('visible')));
@@ -716,8 +492,7 @@
 
             function showStage(name) {
                 document.querySelectorAll('.modal-stage').forEach(el => el.classList.remove('active'));
-                const stage = document.getElementById('stage-' + name);
-                if (stage) stage.classList.add('active');
+                document.getElementById('stage-' + name)?.classList.add('active');
             }
 
             function startMessageCycle() {
@@ -745,109 +520,136 @@
                 showStage('error');
             }
 
-            // ── Password strength ─────────────────────────────────────────
-            const strengthBar = document.getElementById('strengthBar');
-            const strengthLabel = document.getElementById('strengthLabel');
+            // ── OTP stage ─────────────────────────────────────────────────
+            function showOtpStage(name, phoneMasked) {
+                // Brief "sent" confirmation (1.5s) then slide into OTP entry
+                document.getElementById('genova-name').textContent = name;
+                showStage('success-genova');
 
-            function checkStrength(pw) {
-                let score = 0;
-                if (pw.length >= 8) score++;
-                if (/[A-Z]/.test(pw)) score++;
-                if (/[0-9]/.test(pw)) score++;
-                if (/[^A-Za-z0-9]/.test(pw)) score++;
-                const levels = [{
-                        width: '25%',
-                        color: 'bg-red-400',
-                        label: 'Weak'
-                    },
-                    {
-                        width: '50%',
-                        color: 'bg-orange-400',
-                        label: 'Fair'
-                    },
-                    {
-                        width: '75%',
-                        color: 'bg-yellow-400',
-                        label: 'Good'
-                    },
-                    {
-                        width: '100%',
-                        color: 'bg-green-500',
-                        label: 'Strong'
-                    },
-                ];
-                const level = levels[Math.max(0, score - 1)] ?? levels[0];
-                strengthBar.style.width = pw.length ? level.width : '0';
-                strengthBar.className = 'strength-bar-fill ' + (pw.length ? level.color : '');
-                strengthLabel.textContent = pw.length ? level.label : '';
+                setTimeout(() => {
+                    document.getElementById('otp-name-display').textContent = `Welcome, ${name}`;
+                    document.getElementById('otp-phone-display').textContent = `Code sent to ${phoneMasked}`;
+                    clearOtpInputs();
+                    showStage('otp-entry');
+                    startResendCountdown();
+                    otpDigits[0]?.focus();
+                }, 1500);
             }
 
-            document.getElementById('newPassword')?.addEventListener('input', e => checkStrength(e.target.value));
+            // ── OTP digit inputs ──────────────────────────────────────────
+            const otpDigits = document.querySelectorAll('.otp-digit');
 
-            // ── Toggle password visibility ────────────────────────────────
-            document.querySelectorAll('.toggle-password').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const target = document.getElementById(btn.dataset.target);
-                    const icon = btn.querySelector('i');
-                    if (target.type === 'password') {
-                        target.type = 'text';
-                        icon.classList.replace('fa-eye', 'fa-eye-slash');
-                    } else {
-                        target.type = 'password';
-                        icon.classList.replace('fa-eye-slash', 'fa-eye');
+            otpDigits.forEach((input, index) => {
+                input.addEventListener('input', e => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    e.target.value = val;
+                    e.target.classList.toggle('filled', !!val);
+                    if (val && index < otpDigits.length - 1) otpDigits[index + 1].focus();
+                    updateOtpValue();
+                });
+
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        otpDigits[index - 1].value = '';
+                        otpDigits[index - 1].classList.remove('filled');
+                        otpDigits[index - 1].focus();
+                        updateOtpValue();
                     }
+                });
+
+                input.addEventListener('paste', e => {
+                    e.preventDefault();
+                    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                    pasted.split('').forEach((char, i) => {
+                        if (otpDigits[i]) {
+                            otpDigits[i].value = char;
+                            otpDigits[i].classList.add('filled');
+                        }
+                    });
+                    updateOtpValue();
+                    otpDigits[Math.min(pasted.length, 5)]?.focus();
                 });
             });
 
-            // ── Profile picker helpers ────────────────────────────────────
+            function updateOtpValue() {
+                document.getElementById('otpValue').value =
+                    Array.from(otpDigits).map(i => i.value).join('');
+            }
+
+            function clearOtpInputs() {
+                otpDigits.forEach(i => {
+                    i.value = '';
+                    i.classList.remove('filled');
+                });
+                document.getElementById('otpValue').value = '';
+                document.getElementById('otpError').classList.add('hidden');
+            }
+
+            // ── Resend countdown ──────────────────────────────────────────
+            function startResendCountdown(seconds = 60) {
+                const btn = document.getElementById('resendOtpBtn');
+                if (resendTimer) clearInterval(resendTimer);
+
+                let remaining = seconds;
+                btn.disabled = true;
+                btn.classList.remove('text-brand-600', 'hover:text-brand-700');
+                btn.classList.add('text-gray-400');
+
+                const updateBtn = () => {
+                    btn.innerHTML = `Resend code (<span id="resendCountdown">${remaining}</span>s)`;
+                };
+                updateBtn();
+
+                resendTimer = setInterval(() => {
+                    remaining--;
+                    updateBtn();
+                    if (remaining <= 0) {
+                        clearInterval(resendTimer);
+                        btn.disabled = false;
+                        btn.innerHTML = 'Resend code';
+                        btn.classList.remove('text-gray-400');
+                        btn.classList.add('text-brand-600', 'hover:text-brand-700');
+                    }
+                }, 1000);
+            }
+
+            // ── Profile picker ────────────────────────────────────────────
             function renderProfiles(profiles) {
                 const list = document.getElementById('profile-list');
                 list.innerHTML = '';
-
                 profiles.forEach(profile => {
                     const card = document.createElement('button');
                     card.type = 'button';
                     card.className =
                         'w-full text-left p-4 border border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition flex items-center gap-3';
 
-                    const initials = profile.name
-                        .split(' ')
-                        .slice(0, 2)
-                        .map(w => w[0] ?? '')
-                        .join('')
+                    const initials = profile.name.split(' ').slice(0, 2).map(w => w[0] ?? '').join('')
                         .toUpperCase();
-
-                    const sourceBadge = profile.source === 'glims' ?
+                    const sourceBadge = profile.source === 'glims' || profile.source === 'glims_local' ?
                         '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full ml-1">GLIMS</span>' :
                         '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-1">Genova</span>';
-
                     const policyText = profile.policy_count !== null ?
                         `${profile.policy_count} polic${profile.policy_count === 1 ? 'y' : 'ies'}` :
                         'Policies loading...';
 
                     card.innerHTML = `
-                <div class="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center text-sm font-semibold shrink-0">
-                    ${initials}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center flex-wrap gap-1">
-                        <p class="text-sm font-medium text-gray-900 truncate">${profile.name}</p>
-                        ${sourceBadge}
-                        ${profile.is_match ? '<span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Suggested</span>' : ''}
+                    <div class="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center text-sm font-semibold shrink-0">${initials}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center flex-wrap gap-1">
+                            <p class="text-sm font-medium text-gray-900 truncate">${profile.name}</p>
+                            ${sourceBadge}
+                            ${profile.is_match ? '<span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Suggested</span>' : ''}
+                        </div>
+                        <p class="text-xs text-gray-500">${profile.code} · ${policyText}</p>
                     </div>
-                    <p class="text-xs text-gray-500">${profile.code} · ${policyText}</p>
-                </div>
-                <i class="fas fa-chevron-right text-gray-400 text-xs shrink-0"></i>
-            `;
-
+                    <i class="fas fa-chevron-right text-gray-400 text-xs shrink-0"></i>
+                `;
                     card.addEventListener('click', () => selectProfile(profile));
                     list.appendChild(card);
                 });
             }
 
             async function selectProfile(profile) {
-                selectedProfile = profile;
-
                 showStage('loading');
                 startMessageCycle();
 
@@ -862,31 +664,22 @@
                             customer_code: profile.code
                         }),
                     });
-
                     stopMessageCycle();
                     const data = await res.json();
 
-                    if (data.status === 'needs_password_setup') {
-                        showStage('setup-password');
-
-                    } else if (data.status === 'needs_password_entry') {
-                        document.getElementById('enter-password-name').textContent =
-                            `Welcome back, ${profile.name}`;
-                        document.getElementById('enterPasswordInput').value = '';
-                        document.getElementById('enterPasswordError').classList.add('hidden');
-                        showStage('enter-password');
-
+                    if (data.status === 'otp_sent') {
+                        showOtpStage(data.name, data.phone_masked);
                     } else {
                         showError(data.message ?? 'Something went wrong.');
                     }
-                } catch (e) {
+                } catch {
                     stopMessageCycle();
                     showError('A network error occurred. Please try again.');
                 }
             }
 
-            // ── Form submit → Step 1 ──────────────────────────────────────
-            form.addEventListener('submit', async (e) => {
+            // ── Main form submit ──────────────────────────────────────────
+            form.addEventListener('submit', async e => {
                 e.preventDefault();
                 openModal();
                 showStage('loading');
@@ -901,51 +694,26 @@
                         },
                         body: new FormData(form),
                     });
-
                     stopMessageCycle();
-                    const data = await res.json();
-                    handleAuthResponse(data);
-
-                } catch (err) {
+                    handleAuthResponse(await res.json());
+                } catch {
                     stopMessageCycle();
                     showError('A network error occurred. Please check your connection and try again.');
                 }
             });
 
-            // ── Handle Step 1 response ────────────────────────────────────
             function handleAuthResponse(data) {
                 switch (data.status) {
-
-                    case 'single_profile':
-                        // Auto-select — go straight to password step
-                        selectProfile(data.profile);
+                    case 'otp_sent':
+                        showOtpStage(data.name, data.phone_masked);
                         break;
-
                     case 'profile_selection':
                         renderProfiles(data.profiles);
                         showStage('profile-picker');
                         break;
-
-                    case 'needs_password_entry':
-                        // GLIMS single profile with password already set
-                        selectedProfile = data.profile;
-                        document.getElementById('enter-password-name').textContent =
-                            `Welcome back, ${data.profile.name}`;
-                        document.getElementById('enterPasswordInput').value = '';
-                        document.getElementById('enterPasswordError').classList.add('hidden');
-                        showStage('enter-password');
-                        break;
-
-                    case 'needs_password_setup':
-                        // GLIMS single profile with no password yet
-                        selectedProfile = data.profile;
-                        showStage('setup-password');
-                        break;
-
                     case 'no_profile':
                         showStage('no-profile');
                         break;
-
                     case 'error':
                     default:
                         showError(data.message ?? 'Something went wrong. Please try again.');
@@ -953,183 +721,103 @@
                 }
             }
 
-            // ── Enter password form ───────────────────────────────────────
-            document.getElementById('enterPasswordForm')?.addEventListener('submit', async (e) => {
+            // ── OTP form submit ───────────────────────────────────────────
+            document.getElementById('otpForm')?.addEventListener('submit', async e => {
                 e.preventDefault();
-
-                const errorEl = document.getElementById('enterPasswordError');
-                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const errorEl = document.getElementById('otpError');
+                const submitBtn = document.getElementById('verifyOtpBtn');
+                const otp = document.getElementById('otpValue').value;
 
                 errorEl.classList.add('hidden');
+
+                if (otp.length !== 6) {
+                    errorEl.textContent = 'Please enter the complete 6-digit code.';
+                    errorEl.classList.remove('hidden');
+                    return;
+                }
+
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...';
 
                 try {
-                    const res = await fetch(ENTER_PW_URL, {
+                    const res = await fetch(VERIFY_OTP_URL, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': CSRF,
                             'Accept': 'application/json'
                         },
                         body: new URLSearchParams({
-                            password: document.getElementById('enterPasswordInput').value,
+                            otp
                         }),
                     });
-
                     const data = await res.json();
 
                     if (data.status === 'success') {
                         submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Verified!';
                         setTimeout(() => window.location.href = data.redirect, 800);
                     } else {
-                        errorEl.textContent = data.message ?? 'Incorrect password.';
+                        errorEl.textContent = data.message ?? 'Invalid code. Please try again.';
                         errorEl.classList.remove('hidden');
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Log In';
+                        submitBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Verify Code';
+                        clearOtpInputs();
+                        otpDigits[0]?.focus();
                     }
-                } catch (err) {
+                } catch {
                     errorEl.textContent = 'Network error. Please try again.';
                     errorEl.classList.remove('hidden');
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Log In';
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Verify Code';
                 }
             });
 
-            // ── Setup password form ───────────────────────────────────────
-            document.getElementById('setupPasswordForm')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const errorEl = document.getElementById('setupPasswordError');
-                const submitBtn = document.getElementById('setupPasswordBtn');
-                const pw = document.getElementById('newPassword').value;
-                const pwConfirm = document.getElementById('confirmPassword').value;
-
-                errorEl.classList.add('hidden');
-
-                if (pw !== pwConfirm) {
-                    errorEl.textContent = 'Passwords do not match.';
-                    errorEl.classList.remove('hidden');
-                    return;
-                }
-                if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw)) {
-                    errorEl.textContent =
-                        'Password must be at least 8 characters with a letter and a number.';
-                    errorEl.classList.remove('hidden');
-                    return;
-                }
-
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+            // ── Resend button ─────────────────────────────────────────────
+            document.getElementById('resendOtpBtn')?.addEventListener('click', async () => {
+                const btn = document.getElementById('resendOtpBtn');
+                const errorEl = document.getElementById('otpError');
+                btn.disabled = true;
 
                 try {
-                    const res = await fetch(SETUP_PW_URL, {
+                    const res = await fetch(RESEND_OTP_URL, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': CSRF,
                             'Accept': 'application/json'
                         },
-                        body: new URLSearchParams({
-                            password: pw,
-                            password_confirmation: pwConfirm
-                        }),
                     });
-
                     const data = await res.json();
 
                     if (data.status === 'success') {
-                        submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Saved!';
-                        setTimeout(() => window.location.href = data.redirect, 800);
+                        clearOtpInputs();
+                        otpDigits[0]?.focus();
+                        startResendCountdown();
                     } else {
-                        const firstError = data.errors?.password?.[0] ?? data.message ??
-                            'Could not save password.';
-                        errorEl.textContent = firstError;
+                        errorEl.textContent = data.message ?? 'Could not resend code.';
                         errorEl.classList.remove('hidden');
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML =
-                            '<i class="fas fa-shield-alt mr-2"></i>Save Password & Continue';
+                        btn.disabled = false;
                     }
-                } catch (err) {
-                    errorEl.textContent = 'Network error. Please try again.';
-                    errorEl.classList.remove('hidden');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-shield-alt mr-2"></i>Save Password & Continue';
+                } catch {
+                    btn.disabled = false;
                 }
             });
 
-            // ── Local password form (both APIs down) ──────────────────────
-            document.getElementById('localPasswordForm')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const errorEl = document.getElementById('localPasswordError');
-                const submitBtn = e.target.querySelector('button[type="submit"]');
-                const phone = document.querySelector('[name="username"]')?.value;
-
-                errorEl.classList.add('hidden');
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging in...';
-
-                try {
-                    const res = await fetch(LOCAL_LOGIN_URL, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': CSRF,
-                            'Accept': 'application/json'
-                        },
-                        body: new URLSearchParams({
-                            phone: phone,
-                            password: document.getElementById('localPasswordInput').value,
-                        }),
-                    });
-
-                    if (res.redirected) {
-                        window.location.href = res.url;
-                        return;
-                    }
-
-                    const data = await res.json();
-
-                    if (res.ok) {
-                        window.location.href = '{{ route('dashboard') }}';
-                    } else {
-                        const msg = data.errors?.phone?.[0] ?? data.errors?.password?.[0] ??
-                            data.message ?? 'Incorrect password.';
-                        errorEl.textContent = msg;
-                        errorEl.classList.remove('hidden');
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Log In';
-                    }
-                } catch (err) {
-                    errorEl.textContent = 'Network error. Please try again.';
-                    errorEl.classList.remove('hidden');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Log In';
-                }
-            });
-
-            // ── Retry / close buttons ─────────────────────────────────────
-            document.getElementById('errorRetryBtn')?.addEventListener('click', closeModal);
-            document.getElementById('noProfileRetryBtn')?.addEventListener('click', closeModal);
-            document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => {
-                showError('Please contact Vanguard Assurance support to reset your password.');
-            });
-
-            // ── Close button & backdrop click ─────────────────────────
-            const UNCLOSABLE_STAGES = ['loading'];
+            // ── Utility buttons ───────────────────────────────────────────
+            const UNCLOSABLE = ['loading', 'success-genova'];
 
             function canClose() {
-                const activeStage = document.querySelector('.modal-stage.active');
-                if (!activeStage) return true;
-                return !UNCLOSABLE_STAGES.some(s => activeStage.id === 'stage-' + s);
+                const active = document.querySelector('.modal-stage.active');
+                return !active || !UNCLOSABLE.some(s => active.id === 'stage-' + s);
             }
 
             document.getElementById('modalCloseBtn')?.addEventListener('click', () => {
                 if (canClose()) closeModal();
             });
-
-            // Clicking the dark backdrop (not the card) also closes
-            modal.addEventListener('click', (e) => {
+            modal.addEventListener('click', e => {
                 if (e.target === modal && canClose()) closeModal();
             });
+            document.getElementById('errorRetryBtn')?.addEventListener('click', closeModal);
+            document.getElementById('noProfileRetryBtn')?.addEventListener('click', closeModal);
+            document.getElementById('backToLoginBtn')?.addEventListener('click', closeModal);
 
         })();
     </script>

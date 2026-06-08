@@ -18,35 +18,41 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
-    'resend' => [
+    'resend'   => [
         'key' => env('RESEND_API_KEY'),
     ],
 
-    'ses' => [
-        'key' => env('AWS_ACCESS_KEY_ID'),
+    'ses'      => [
+        'key'    => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'slack' => [
+    'slack'    => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+            'channel'              => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
 
-    // Live Genova credentials
-    'genova' => [
-        'base_url' => env('GENOVA_BASE_URL', 'https://glive.vanguardassurance.com'),
-        'username' => env('GENOVA_USERNAME', 'VACADMIN'),
-        'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
+    // Arkesel SMS credentials
+    'arkesel'  => [
+        'api_key'   => env('ARKESEL_API_KEY'),
+        'sender_id' => env('ARKESEL_SENDER_ID'),
     ],
 
-    // Test 249 Genova credentials
-    // 'genova' => [
-    //     'base_url' => env('GENOVA_BASE_URL', 'http://192.168.100.249'),
-    //     'username' => env('GENOVA_USERNAME', 'Moses'),
+    // Live Genova credentials
+    // 'genova'   => [
+    //     'base_url' => env('GENOVA_BASE_URL', 'https://glive.vanguardassurance.com'),
+    //     'username' => env('GENOVA_USERNAME', 'VACADMIN'),
     //     'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
     // ],
+
+    // Test 249 Genova credentials
+    'genova' => [
+        'base_url' => env('GENOVA_BASE_URL', 'http://192.168.100.249'),
+        'username' => env('GENOVA_USERNAME', 'Moses'),
+        'password' => env('GENOVA_PASSWORD', 't7^CehivFZuS'),
+    ],
 
 ];

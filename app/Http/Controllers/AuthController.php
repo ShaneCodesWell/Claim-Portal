@@ -5,23 +5,24 @@ use App\Models\Customer;
 use App\Models\Policy;
 use App\Services\GenovaApiService;
 use App\Services\GlimsService;
+use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
-use \Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
     protected $api;
     protected $glims;
+    protected OtpService $otp;
 
-    public function __construct(GenovaApiService $api, GlimsService $glims)
+    public function __construct(GenovaApiService $api, GlimsService $glims, OtpService $otp)
     {
         $this->api   = $api;
         $this->glims = $glims;
+        $this->otp   = $otp;
     }
 
     // STEP 1 → Login Screen
@@ -69,287 +70,6 @@ class AuthController extends Controller
         return redirect()->intended(route('agent.dashboard.index'));
     }
 
-    // OLD login
-    // public function login(Request $request)
-    // {
-    //     $request->validate([
-    //         'username'   => 'required',
-    //         'login_type' => 'sometimes|in:mobile_no,policy_number,vehicle_number',
-    //     ]);
-
-    //     try {
-    //         $loginType = $request->input('login_type', 'mobile_no');
-
-    //         $response = $this->api->customerVerification($request->username, $loginType);
-
-    //         if ($response->failed()) {
-    //             Log::error('Customer Verification Failed:', [
-    //                 'status'     => $response->status(),
-    //                 'body'       => $response->body(),
-    //                 'identifier' => $request->username,
-    //                 'type'       => $loginType,
-    //             ]);
-
-    //             // ── FALLBACK: API failed → redirect to local password login ──
-    //             // Carry the identifier forward so the customer doesn't retype it.
-    //             // Only carry the phone number since that's what local auth uses.
-    //             $phoneForFallback = $loginType === 'mobile_no' ? $request->username : null;
-
-    //             return redirect()
-    //                 ->route('login.local')
-    //                 ->with('fallback_reason', 'The verification service is currently unavailable. Please log in with your local password.')
-    //                 ->with('prefill_phone', $phoneForFallback);
-    //         }
-
-    //         $data = $response->json('data');
-
-    //         // Extract phone number from response
-    //         $phoneNumber = null;
-    //         if (isset($data['search_used']['phone_no'])) {
-    //             $phoneNumber = $data['search_used']['phone_no'];
-    //         } elseif ($loginType === 'mobile_no') {
-    //             $phoneNumber = $request->username;
-    //         }
-
-    //         session([
-    //             'user_id'           => $data['user_id'],
-    //             'fullname'          => $data['name'],
-    //             'name'              => $data['name'],
-    //             'username'          => $request->username,
-    //             'phone_number'      => $phoneNumber,
-    //             'mobile_no'         => $phoneNumber,
-    //             'login_type'        => $loginType,
-    //             'search_used'       => $data['search_used'] ?? null,
-    //             'sent_to'           => $data['sent_to'] ?? [],
-    //             'customer_verified' => true,
-    //         ]);
-    //         session(['authenticated' => true]);
-
-    //         Log::info('User verified and OTP sent', [
-    //             'user_id' => $data['user_id'],
-    //             'name'    => $data['name'],
-    //             'phone'   => $phoneNumber,
-    //         ]);
-
-    //         $successMessage = $data['message'] ?? 'OTP sent to your registered contact.';
-
-    //         // return redirect()->route('otp')->with('success', $successMessage); // ← Uncomment when OTP is live
-    //         return redirect()->route('dashboard')->with('success', $successMessage);
-
-    //     } catch (\Exception $e) {
-    //         Log::error('Login Error: ' . $e->getMessage());
-
-    //         // Network/connection exception also falls back to local login
-    //         return redirect()
-    //             ->route('login.local')
-    //             ->with('fallback_reason', 'Could not connect to the verification service. Please log in with your local password.')
-    //             ->with('prefill_phone', $request->login_type === 'mobile_no' ? $request->username : null);
-    //     }
-    // }
-
-    // Show OTP Verification Form
-    // public function showOtpForm()
-    // {
-    //     if (! session('user_id')) {
-    //         return redirect()->route('login')->withErrors(['Please login first.']);
-    //     }
-
-    //     return view('auth.otp', [
-    //         'name'    => session('name'),
-    //         'sent_to' => session('sent_to'),
-    //     ]);
-    // }
-
-    // Verify OTP
-    // public function verifyOtpForm()
-    // {
-    //     return view('auth.otp');
-    // }
-
-    // public function verifyOtp(Request $request)
-    // {
-    //     $request->validate([
-    //         'otp' => 'required|digits:6',
-    //     ]);
-
-    //     try {
-    //         $userId = session('user_id');
-    //         $otp    = $request->otp;
-
-    //         if (! $userId) {
-    //             return redirect()->route('login')->withErrors(['Session expired. Please login again.']);
-    //         }
-
-    //         $response = $this->api->verifyClaimOtp($userId, $otp);
-
-    //         if ($response->failed()) {
-    //             Log::error('OTP Verification Failed:', [
-    //                 'status' => $response->status(),
-    //                 'body'   => $response->body(),
-    //             ]);
-
-    //             return back()->withErrors(['Invalid OTP. Please try again.'])->withInput();
-    //         }
-
-    //         $payload = $response->json();
-
-    //         if (! isset($payload['data']) || ! is_array($payload['data'])) {
-    //             Log::error('Unexpected Genova login payload', ['payload' => $payload]);
-    //             return back()->withErrors(['We could not verify your details at the moment. Please try again.'])->withInput();
-    //         }
-
-    //         $data = $payload['data'];
-
-    //         session([
-    //             'customer_code' => $data['customer_code'] ?? null,
-    //             'otp_verified'  => true,
-    //         ]);
-
-    //         Log::info('OTP verified successfully', [
-    //             'user_id'       => $userId,
-    //             'customer_code' => $data['customer_code'] ?? null,
-    //         ]);
-
-    //         return redirect()->route('dashboard')->with('success', 'Login successful!');
-
-    //     } catch (\Exception $e) {
-    //         Log::error('OTP Verification Error: ' . $e->getMessage());
-    //         return back()->withErrors(['Verification failed: ' . $e->getMessage()])->withInput();
-    //     }
-    // }
-
-    // Show the local password login form (Fallback when API is unavailable).
-    public function showLocalLoginForm()
-    {
-        return view('auth.local-login', [
-            'fallbackReason' => session('fallback_reason'),
-            'prefillPhone'   => session('prefill_phone'),
-        ]);
-    }
-
-    // Handle local password login.
-    public function localLogin(Request $request)
-    {
-        $request->validate([
-            'phone'    => 'required|string',
-            'password' => 'required|string',
-        ]);
-
-        // Rate limit: 5 attempts per minute per IP
-        $throttleKey = 'local-login:' . $request->ip();
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
-            throw ValidationException::withMessages([
-                'phone' => "Too many attempts. Please try again in {$seconds} seconds.",
-            ]);
-        }
-
-        $customer = Customer::where('phone', $request->phone)->first();
-
-        // Check customer exists and has a local password set
-        if (! $customer || ! $customer->local_password) {
-            RateLimiter::hit($throttleKey, 60);
-
-            return back()->withErrors([
-                'phone' => 'No local password found for this phone number. Please use the standard login or set up a password first.',
-            ])->withInput();
-        }
-
-        // Verify the password
-        if (! Hash::check($request->password, $customer->local_password)) {
-            RateLimiter::hit($throttleKey, 60);
-
-            return back()->withErrors([
-                'password' => 'Incorrect password. Please try again.',
-            ])->withInput();
-        }
-
-        RateLimiter::clear($throttleKey);
-
-        // Set the same session keys the normal API flow sets
-        // so the rest of the app (dashboard, middleware) works identically
-        session([
-            'authenticated'     => true,
-            'user_id'           => $customer->external_customer_id,
-            'fullname'          => $customer->name,
-            'name'              => $customer->name,
-            'phone_number'      => $customer->phone,
-            'mobile_no'         => $customer->phone,
-            'customer_code'     => $customer->external_customer_code,
-            'customer_verified' => true,
-            'auth_method'       => 'local', // so we know how they logged in
-        ]);
-
-        Log::info('Local password login successful', [
-            'customer_id' => $customer->id,
-            'phone'       => $customer->phone,
-        ]);
-
-        return redirect()->route('dashboard')->with('success', 'Logged in successfully.');
-    }
-
-    // Show the password setup page.
-    public function showSetupPasswordForm()
-    {
-        if (! session('authenticated')) {
-            return redirect()->route('login');
-        }
-
-        return view('auth.setup-password');
-    }
-
-    // Save the customer's local password.
-    public function setupPassword(Request $request)
-    {
-        if (! session('authenticated')) {
-            return redirect()->route('login');
-        }
-
-        $request->validate([
-            'password' => [
-                'required', 'string', 'min:8', 'confirmed',
-                'regex:/^(?=.*[a-zA-Z])(?=.*[0-9])/',
-            ],
-        ], [
-            'password.regex' => 'Password must contain at least one letter and one number.',
-        ]);
-
-        $phoneNumber  = session('phone_number') ?? session('mobile_no');
-        $customerCode = session('customer_code');
-        $userId       = session('user_id');
-
-        $customer = null;
-
-        if ($customerCode) {
-            $customer = Customer::where('external_customer_code', $customerCode)->first();
-        }
-
-        if (! $customer && $phoneNumber) {
-            $customer = Customer::where('phone', $phoneNumber)->first();
-        }
-
-        if (! $customer && $userId) {
-            $customer = Customer::where('external_customer_id', (string) $userId)->first();
-        }
-
-        if (! $customer) {
-            // Customer record doesn't exist yet (sync hasn't run)
-            // Redirect to dashboard and let sync create the record first
-            return redirect()->route('dashboard')
-                ->with('error', 'Please wait for your account to finish loading, then try again.');
-        }
-
-        $customer->update([
-            'local_password'        => Hash::make($request->password),
-            'local_password_set_at' => now(),
-        ]);
-
-        Log::info('Local password set', ['customer_id' => $customer->id]);
-
-        return redirect()->route('dashboard')
-            ->with('success', 'Password set successfully. You can now log in even when the system is offline.');
-    }
-
     public function staffLogin(Request $request)
     {
         $credentials = $request->validate([
@@ -393,9 +113,13 @@ class AuthController extends Controller
             'login_type' => 'sometimes|in:mobile_no,policy_number,vehicle_number',
         ]);
 
-        // Strip invisible unicode characters that sneak in via copy-paste
         $identifier = preg_replace('/[\x{00A0}\x{FEFF}]+/u', '', trim($request->username));
-        $loginType  = $request->input('login_type', 'mobile_no');
+
+        if ($request->input('login_type', 'mobile_no') === 'mobile_no') {
+            $identifier = $this->normalizeGhanaPhone($identifier);
+        }
+
+        $loginType = $request->input('login_type', 'mobile_no');
 
         // ── STEP 1: Verify with Genova ────────────────────────────────
         $genovaResult = $this->attemptGenovaVerification($identifier, $loginType);
@@ -405,7 +129,6 @@ class AuthController extends Controller
             $userId      = $data['user_id'];
             $phoneNumber = $data['search_used']['phone_no'] ?? ($loginType === 'mobile_no' ? $identifier : null);
 
-            // Store partial session — NOT fully authenticated yet
             session([
                 'pending_auth'    => true,
                 'pending_user_id' => $userId,
@@ -415,17 +138,9 @@ class AuthController extends Controller
                 'username'        => $identifier,
             ]);
 
-            // ── STEP 2: Resolve customer profiles ─────────────────────
             $profiles = $this->resolveProfiles($phoneNumber, $userId);
 
             if (empty($profiles)) {
-                // Phone verified but no customer record found anywhere
-                Log::error('Auth: phone verified but no profile found', [
-                    'phone'      => $phoneNumber,
-                    'user_id'    => $userId,
-                    'login_type' => $loginType,
-                ]);
-
                 return response()->json([
                     'status'  => 'no_profile',
                     'message' => 'Your phone number was verified but we could not find an associated account. Please contact support.',
@@ -433,17 +148,10 @@ class AuthController extends Controller
             }
 
             if (count($profiles) === 1) {
-                // Single profile — store it pending password
                 session(['pending_customer_code' => $profiles[0]['code']]);
-
-                return response()->json([
-                    'status'  => 'single_profile',
-                    'profile' => $profiles[0],
-                    'message' => 'Profile found.',
-                ]);
+                return $this->sendOtpAndRespond($phoneNumber, $data['name']);
             }
 
-            // Multiple profiles — let user pick
             return response()->json([
                 'status'   => 'profile_selection',
                 'profiles' => $profiles,
@@ -451,7 +159,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // ── Genova failed — try local Genova DB first ─────────────────────
+        // ── Genova failed — try local Genova DB ───────────────────────
         Log::warning('loginAjax: Genova API failed, trying local Genova DB', [
             'identifier' => $identifier,
             'reason'     => $genovaResult['reason'],
@@ -480,38 +188,22 @@ class AuthController extends Controller
                 ]);
             }
 
-            $localCustomer = Customer::where('external_customer_code', $profile['code'])->first();
-
-            if (! $localCustomer || empty($localCustomer->local_password)) {
-                return response()->json([
-                    'status'  => 'needs_password_setup',
-                    'profile' => $profile,
-                    'message' => 'Please set a local password to secure your account.',
-                ]);
-            }
-
-            return response()->json([
-                'status'  => 'needs_password_entry',
-                'profile' => $profile,
-                'message' => 'Please enter your password to continue.',
-            ]);
+            return $this->sendOtpAndRespond($profile['phone'], $profile['name']);
         }
 
-        // ── Local Genova also empty — try GLIMS ───────────────────────────
-        Log::info('loginAjax: local Genova lookup empty, trying GLIMS', [
-            'identifier' => $identifier,
-        ]);
+        // ── Local Genova empty — try GLIMS ────────────────────────────
+        Log::info('loginAjax: local Genova lookup empty, trying GLIMS', ['identifier' => $identifier]);
 
         if ($loginType === 'mobile_no') {
-            // resolveGlimsProfiles handles Oracle → local DB fallback internally
             $glimsProfiles = $this->resolveGlimsProfiles($identifier);
 
             if (! empty($glimsProfiles)) {
                 $profile = $glimsProfiles[0];
+                $phone   = $profile['phone'] ?? $identifier;
 
                 session([
                     'pending_auth'          => true,
-                    'pending_phone'         => $identifier,
+                    'pending_phone'         => $phone,
                     'pending_name'          => $profile['name'],
                     'pending_customer_code' => $profile['code'],
                     'selected_customer_id'  => Customer::where('external_customer_code', $profile['code'])->value('id'),
@@ -519,7 +211,6 @@ class AuthController extends Controller
                     'auth_source'           => 'glims',
                 ]);
 
-                // Multiple GLIMS profiles — let user pick
                 if (count($glimsProfiles) > 1) {
                     return response()->json([
                         'status'   => 'profile_selection',
@@ -528,26 +219,11 @@ class AuthController extends Controller
                     ]);
                 }
 
-                // Single profile — check password status and go straight there
-                $localCustomer = Customer::where('external_customer_code', $profile['code'])->first();
-
-                if (! $localCustomer || empty($localCustomer->local_password)) {
-                    return response()->json([
-                        'status'  => 'needs_password_setup',
-                        'profile' => $profile,
-                        'message' => 'Please set a local password to secure your account.',
-                    ]);
-                }
-
-                return response()->json([
-                    'status'  => 'needs_password_entry',
-                    'profile' => $profile,
-                    'message' => 'Please enter your password to continue.',
-                ]);
+                return $this->sendOtpAndRespond($phone, $profile['name']);
             }
         }
 
-        // ── Nothing found anywhere ─────────────────────────────────────
+        // ── Nothing found anywhere ────────────────────────────────────
         Log::error('loginAjax: All auth sources failed', [
             'identifier' => $identifier,
             'login_type' => $loginType,
@@ -569,76 +245,73 @@ class AuthController extends Controller
         $request->validate(['customer_code' => 'required|string']);
 
         $customerCode = $request->customer_code;
-
-        // Store the confirmed profile
         session(['pending_customer_code' => $customerCode]);
 
-        // Check password status
+        // Pin the local DB record if it exists
         $customer = Customer::where('external_customer_code', $customerCode)->first();
-
-        // ← Store the actual DB id so dashboard knows which profile was picked
         if ($customer) {
             session(['selected_customer_id' => $customer->id]);
+
+            // If phone is missing from session but exists on local record, use it
+            if (! session('pending_phone') && $customer->phone) {
+                session(['pending_phone' => $customer->phone]);
+            }
         }
 
-        if (! $customer || empty($customer->local_password)) {
+        $phone = session('pending_phone');
+
+        if (! $phone) {
             return response()->json([
-                'status'  => 'needs_password_setup',
-                'message' => 'Please set a local password to secure your account.',
-            ]);
+                'status'  => 'error',
+                'message' => 'No phone number found for this profile. Please contact support.',
+            ], 422);
         }
 
-        return response()->json([
-            'status'  => 'needs_password_entry',
-            'message' => 'Please enter your password to continue.',
-        ]);
+        return $this->sendOtpAndRespond($phone, session('pending_name', 'there'));
     }
 
-    // ── STEP 3a: Enter existing password ─────────────────────────────
-    public function enterPassword(Request $request): \Illuminate\Http\JsonResponse
+    public function verifyOtpAjax(Request $request): \Illuminate\Http\JsonResponse
     {
         if (! session('pending_auth')) {
-            return response()->json(['status' => 'error', 'message' => 'Session expired.'], 401);
+            return response()->json(['status' => 'error', 'message' => 'Session expired. Please log in again.'], 401);
         }
 
-        $request->validate(['password' => 'required|string']);
+        $request->validate(['otp' => 'required|digits:6']);
 
-        $customerCode = session('pending_customer_code');
-        $phone        = session('pending_phone');
-
-        $customer = null;
-        if ($customerCode) {
-            $customer = Customer::where('external_customer_code', $customerCode)->first();
-        }
-        if (! $customer && $phone) {
-            $customer = Customer::where('phone', $phone)->first();
+        $phone = session('pending_phone');
+        if (! $phone) {
+            return response()->json(['status' => 'error', 'message' => 'Session expired. Please log in again.'], 401);
         }
 
-        if (! $customer) {
-            return response()->json(['status' => 'error', 'message' => 'Account not found.'], 404);
-        }
-
-        // Rate limit
-        $throttleKey = 'enter-password:' . $request->ip();
+        // Rate limit: 5 attempts per IP per minute
+        $throttleKey = 'otp-verify:' . $request->ip();
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             return response()->json([
                 'status'  => 'error',
-                'message' => "Too many attempts. Try again in {$seconds} seconds.",
+                'message' => "Too many attempts. Please try again in {$seconds} seconds.",
             ], 429);
         }
 
-        if (! Hash::check($request->password, $customer->local_password)) {
+        if (! $this->otp->verify($phone, $request->otp)) {
             RateLimiter::hit($throttleKey, 60);
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Incorrect password. Please try again.',
+                'message' => 'Invalid or expired code. Please try again.',
             ], 422);
         }
 
         RateLimiter::clear($throttleKey);
 
-        // ── Password correct — complete the session ────────────────────
+        $customer = $this->resolveCustomerFromSession($phone);
+
+        if (! $customer) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'We could not locate your account. Please contact support.',
+            ], 404);
+        }
+
         $this->completeLogin($customer);
 
         return response()->json([
@@ -647,80 +320,39 @@ class AuthController extends Controller
         ]);
     }
 
-    // ── STEP 3b: Setup password (new users) ──────────────────────────
-    public function setupPasswordAjax(Request $request): \Illuminate\Http\JsonResponse
+    public function resendOtp(Request $request): \Illuminate\Http\JsonResponse
     {
-        if (! session('pending_auth') && ! session('authenticated')) {
+        if (! session('pending_auth')) {
             return response()->json(['status' => 'error', 'message' => 'Session expired.'], 401);
         }
 
-        $request->validate([
-            'password' => [
-                'required', 'string', 'min:8', 'confirmed',
-                'regex:/^(?=.*[a-zA-Z])(?=.*[0-9])/',
-            ],
-        ], ['password.regex' => 'Password must contain at least one letter and one number.']);
-
-        $customerCode = session('pending_customer_code') ?? session('customer_code');
-        $phone        = session('pending_phone') ?? session('phone_number') ?? session('mobile_no');
-
-        $customer = null;
-        if ($customerCode) {
-            $customer = Customer::where('external_customer_code', $customerCode)->first();
-        }
-        if (! $customer && $phone) {
-            $customer = Customer::where('phone', $phone)->first();
+        $phone = session('pending_phone');
+        if (! $phone) {
+            return response()->json(['status' => 'error', 'message' => 'No phone number in session.'], 422);
         }
 
-        if (! $customer) {
-            // Customer not in local DB yet — create them now from pending session
-            if ($customerCode) {
-                $customer = Customer::create([
-                    'external_customer_code' => $customerCode,
-                    'name'                   => session('pending_name') ?? 'Unknown',
-                    'phone'                  => $phone,
-                    'sources'                => ['genova'],
-                ]);
-
-                Log::info('setupPasswordAjax: created new customer record', [
-                    'customer_code' => $customerCode,
-                    'phone'         => $phone,
-                ]);
-            } else {
-                // Truly nothing to work with
-                return response()->json([
-                    'status'   => 'success',
-                    'message'  => 'Logged in. Set your password from the dashboard.',
-                    'redirect' => route('dashboard'),
-                ]);
-            }
+        // Max 3 resends per phone per 10 minutes
+        $throttleKey = 'otp-resend:' . $phone;
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'status'  => 'error',
+                'message' => "Too many resend attempts. Try again in {$seconds} seconds.",
+            ], 429);
         }
 
-        $customer->update([
-            'local_password'        => Hash::make($request->password),
-            'local_password_set_at' => now(),
-        ]);
+        RateLimiter::hit($throttleKey, 600);
 
-        Log::info('setupPasswordAjax: password set', ['customer_id' => $customer->id]);
-
-        // ── Complete the login now ──
-        $this->completeLogin($customer);
+        if (! $this->otp->send($phone)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Failed to resend code. Please try again.',
+            ], 500);
+        }
 
         return response()->json([
-            'status'   => 'success',
-            'message'  => 'Password saved! Taking you to your dashboard.',
-            'redirect' => route('dashboard'),
-        ]);
-
-        Log::info('setupPasswordAjax: password set', ['customer_id' => $customer->id]);
-
-        // Complete login after setup
-        $this->completeLogin($customer);
-
-        return response()->json([
-            'status'   => 'success',
-            'message'  => 'Password saved! Taking you to your dashboard.',
-            'redirect' => route('dashboard'),
+            'status'  => 'success',
+            'message' => 'A new code has been sent to your phone.',
         ]);
     }
 
@@ -971,38 +603,6 @@ class AuthController extends Controller
     }
 
     /**
-     * Attempt GLIMS verification, return a normalised result array.
-     * Maps login_type to the right GLIMS lookup.
-     */
-    // private function attemptGlimsVerification(string $identifier, string $loginType): array
-    // {
-    //     try {
-    //         // GlimsService::customerVerification currently searches by CLIENT_CODE.
-    //         // For phone lookups we need a phone-based query — handle both cases.
-    //         $customer = null;
-
-    //         if ($loginType === 'mobile_no') {
-    //             // Phone search — query directly since GlimsService defaults to CLIENT_CODE
-    //             $customer = $this->glimsPhoneLookup($identifier);
-    //         } else {
-    //             // Policy / vehicle number — use existing method with the identifier as client code
-    //             // This will expand as GLIMS lookup methods are added
-    //             $customer = $this->glims->customerVerification($identifier, $loginType);
-    //         }
-
-    //         if (! $customer) {
-    //             return ['success' => false, 'reason' => 'not_found'];
-    //         }
-
-    //         return ['success' => true, 'customer' => $customer];
-
-    //     } catch (\Exception $e) {
-    //         Log::error('attemptGlimsVerification exception: ' . $e->getMessage());
-    //         return ['success' => false, 'reason' => 'exception'];
-    //     }
-    // }
-
-    /**
      * Phone number lookup against GLIMS GN2_CLIENT table.
      * Returns the same array shape as GlimsService::customerVerification().
      */
@@ -1046,123 +646,122 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Find an existing Customer record or create a minimal one from GLIMS data.
-     *
-     * We search by external_customer_code first, then fall back to phone.
-     * This covers the common case where the record already exists from a
-     * Genova sync — it may not have external_customer_code set yet but
-     * will almost certainly have the phone number.
-     */
-    // private function findOrCreateCustomerFromGlims(array $glimsCustomer, ?string $phone, string $name): Customer
-    // {
-    //     $clientCode = $glimsCustomer['CLIENT_CODE'];
+    private function sendOtpAndRespond(string $phone, string $name): \Illuminate\Http\JsonResponse
+    {
+        if (! $this->otp->send($phone)) {
+            Log::error('sendOtpAndRespond: Failed to send OTP', ['phone' => $phone]);
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'We found your account but could not send the verification code. Please try again.',
+            ], 500);
+        }
 
-    //     // Search by code first, then phone — separately, not in one orWhere
-    //     $existing = Customer::where('external_customer_code', $clientCode)->first();
+        return response()->json([
+            'status'       => 'otp_sent',
+            'name'         => $name,
+            'phone_masked' => $this->maskPhone($phone),
+        ]);
+    }
 
-    //     if (! $existing && $phone) {
-    //         $existing = Customer::where('phone', $phone)->first();
-    //     }
+    private function resolveCustomerFromSession(string $phone): ?Customer
+    {
+        $customerCode = session('pending_customer_code');
+        $pendingName  = session('pending_name');
+        $authSource   = session('auth_source', 'genova');
 
-    //     if ($existing) {
-    //         // Only fill fields that are genuinely missing — never touch local_password
-    //         $updates = [];
+        $customer = null;
 
-    //         if (empty($existing->name)) {
-    //             $updates['name'] = $name;
-    //         }
+        // 1. By customer code (most reliable)
+        if ($customerCode) {
+            $customer = Customer::where('external_customer_code', $customerCode)->first();
+        }
 
-    //         if (empty($existing->phone)) {
-    //             $updates['phone'] = $phone;
-    //         }
+        // 2. By phone — catches GLIMS records that have phone stored
+        if (! $customer) {
+            $customer = Customer::where('phone', $phone)->first();
+        }
 
-    //         if (empty($existing->external_customer_code)) {
-    //             $updates['external_customer_code'] = $clientCode;
-    //         }
+        if ($customer) {
+            $updates = [];
 
-    //         if (empty($existing->external_customer_id)) {
-    //             $updates['external_customer_id'] = $clientCode;
-    //         }
+            // Backfill phone if it was null (common in GLIMS-synced records)
+            if (empty($customer->phone)) {
+                $updates['phone'] = $phone;
+            }
 
-    //         if (empty($existing->email)) {
-    //             $updates['email'] = $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null;
-    //         }
+            // Backfill customer code if it was missing
+            if (empty($customer->external_customer_code) && $customerCode) {
+                $updates['external_customer_code'] = $customerCode;
+            }
 
-    //         if (! empty($updates)) {
-    //             $existing->update($updates);
-    //         }
+            if (! empty($updates)) {
+                $customer->update($updates);
+            }
 
-    //         // Always re-fetch fresh from DB so local_password is definitely loaded
-    //         return $existing->fresh();
-    //     }
+            return $customer->fresh();
+        }
 
-    //     return Customer::create([
-    //         'external_customer_code' => $clientCode,
-    //         'external_customer_id'   => $clientCode,
-    //         'name'                   => $name,
-    //         'phone'                  => $phone,
-    //         'email'                  => $glimsCustomer['CLIENT_HOME_EMAIL'] ?? null,
-    //         'sources'                => ['glims'],
-    //     ]);
-    // }
+        // 3. Create if truly not found — match existing GLIMS record format
+        if (! $customerCode) {
+            Log::error('resolveCustomerFromSession: no customer code, cannot create', ['phone' => $phone]);
+            return null;
+        }
 
-    /**
-     * Check whether the customer (found via Genova) still needs to set a local password.
-     *
-     * We search by every identifier we have so a record created during a previous
-     * sync (phone, external_customer_id, or external_customer_code) is always found.
-     * If genuinely no record exists yet (very first ever login, sync not run),
-     * we return true so the setup prompt appears — but that is the correct behaviour
-     * in that case. The false-positive was caused by a narrow lookup that missed
-     * existing records, which is fixed by the broader WHERE below.
-     */
-    // private function customerNeedsPasswordSetup(?string $phone, array $genovaData): bool
-    // {
-    //     $userId       = $genovaData['user_id'] ?? null;
-    //     $customerCode = $genovaData['search_used']['client_code'] ?? $genovaData['customer_code'] ?? null;
+        $sources = str_contains($authSource, 'glims') ? ['glims'] : ['genova'];
 
-    //     // Search separately — not in one orWhere — to avoid query builder quirks
-    //     $customer = null;
+        Log::info('resolveCustomerFromSession: creating new customer record', [
+            'customer_code' => $customerCode,
+            'phone'         => $phone,
+            'source'        => $authSource,
+        ]);
 
-    //     if ($phone) {
-    //         $customer = Customer::where('phone', $phone)
-    //             ->whereNotNull('local_password')->first();
-    //     }
+        return Customer::create([
+            'external_customer_id'   => null,
+            'external_customer_code' => $customerCode,
+            'name'                   => $pendingName ?? 'Unknown',
+            'phone'                  => $phone,
+            'email'                  => null,
+            'sources'                => $sources,
+        ]);
+    }
 
-    //     if (! $customer && $customerCode) {
-    //         $customer = Customer::where('external_customer_code', $customerCode)
-    //             ->whereNotNull('local_password')->first();
-    //     }
+    private function maskPhone(string $phone): string
+    {
+        if (strlen($phone) >= 7) {
+            return substr($phone, 0, 3) . '***' . substr($phone, -4);
+        }
+        return '***';
+    }
 
-    //     if (! $customer && $userId) {
-    //         $customer = Customer::where('external_customer_id', $userId)
-    //             ->whereNotNull('local_password')->first();
-    //     }
+    private function normalizeGhanaPhone(string $phone): string
+    {
+        // Strip everything that isn't a digit
+        $digits = preg_replace('/\D/', '', $phone);
 
-    //     Log::debug('customerNeedsPasswordSetup result', [
-    //         'phone'         => $phone,
-    //         'customer_code' => $genovaData['customer_code'] ?? null,
-    //         'user_id'       => $genovaData['user_id'] ?? null,
-    //         'found'         => $customer ? $customer->id : 'NOT FOUND',
-    //         'has_password'  => $customer ? ! empty($customer->local_password) : false,
-    //     ]);
+        // Already international: 233XXXXXXXXX (12 digits)
+        if (str_starts_with($digits, '233') && strlen($digits) === 12) {
+            return '0' . substr($digits, 3); // → 0XXXXXXXXX
+        }
 
-    //     return $customer === null;
-    // }
+        // Local format already correct: 0XXXXXXXXX (10 digits)
+        if (str_starts_with($digits, '0') && strlen($digits) === 10) {
+            return $digits;
+        }
+
+        // Bare 9-digit number (e.g. 503845696) — just prepend 0
+        if (strlen($digits) === 9) {
+            return '0' . $digits;
+        }
+
+        // Can't confidently normalize — return cleaned digits and let it fail gracefully
+        return $digits;
+    }
 
     // Logout
     public function logout()
     {
         session()->flush();
         return redirect()->route('user.select')->with('success', 'Logged out successfully.');
-    }
-
-    // Dismiss the "set your local password" nudge for the current session.
-    public function dismissNudge()
-    {
-        session(['nudge_dismissed' => true]);
-        return response()->json(['ok' => true]);
     }
 
 }

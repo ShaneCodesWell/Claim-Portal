@@ -1,47 +1,4 @@
 <x-layouts.app>
-    @php
-        $phoneNumber = session('phone_number') ?? session('mobile_no');
-        $customerCode = session('customer_code');
-
-        $nudgeCustomer = \App\Models\Customer::where('phone', $phoneNumber)
-            ->orWhere('external_customer_code', $customerCode)
-            ->orWhere('external_customer_id', session('user_id'))
-            ->first();
-
-        $showNudge = $nudgeCustomer && is_null($nudgeCustomer->local_password) && !session('nudge_dismissed');
-    @endphp
-
-    {{-- Nudge Banner (preserved) --}}
-    @if ($showNudge)
-        <div id="passwordNudge"
-            class="mx-4 mt-4 mb-4 sm:mx-6 flex items-start justify-between gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl shadow-sm">
-            <div class="flex items-start gap-2">
-                <i class="fas fa-exclamation-triangle text-amber-500 text-sm mt-0.5"></i>
-                <p class="text-xs text-amber-800">
-                    <span class="font-semibold">Set up a local password</span> to access the portal even when the
-                    verification service is down.
-                    <a href="{{ route('password.setup') }}" class="underline font-semibold hover:text-amber-900 ml-1">Set
-                        it up now →</a>
-                </p>
-            </div>
-            <button onclick="dismissNudge()" class="text-amber-400 hover:text-amber-600 shrink-0 mt-0.5 transition-colors"
-                aria-label="Dismiss">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <script>
-            function dismissNudge() {
-                document.getElementById('passwordNudge').style.display = 'none';
-                fetch('{{ route('nudge.dismiss') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                });
-            }
-        </script>
-    @endif
 
     {{-- Flash Messages --}}
     @if (session('success'))
@@ -134,10 +91,10 @@
                     </div>
 
                     <div>
-                        <button onclick="syncPoliciesInBackground()"
+                        {{-- <button onclick="syncPoliciesInBackground()"
                             class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition flex items-center gap-2">
                             <i class="fas fa-sync-alt"></i> Sync Policies
-                        </button>
+                        </button> --}}
                     </div>
                 </div>
             </div>
