@@ -45,56 +45,11 @@
             </div>
         </div>
 
-        {{-- Search and Filter Section --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-            <form method="GET" action="{{ route('dashboard') }}" id="filter-form">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-
-                    {{-- Search --}}
-                    <div class="flex-1 max-w-md">
-                        <div class="relative">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input type="text" name="search" id="search-input" value="{{ request('search') }}"
-                                placeholder="Search by policy number, product, or class..."
-                                class="pl-9 pr-4 py-2.5 border border-gray-300 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white" />
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        {{-- Type --}}
-                        <select name="type" id="type-select"
-                            class="px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 text-sm">
-                            <option value="">All Types</option>
-                            @foreach ($businessClasses as $class)
-                                <option value="{{ $class }}" @selected(request('type') === $class)>
-                                    {{ $class }}
-                                </option>
-                            @endforeach
-                        </select>
-                        {{-- Status --}}
-                        <select name="status" id="status-select"
-                            class="px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 text-sm">
-                            <option value="">All Statuses</option>
-                            <option value="active" @selected(request('status') === 'active')>Active</option>
-                            <option value="expired" @selected(request('status') === 'expired')>Expired</option>
-                            <option value="pending_renewal" @selected(request('status') === 'pending_renewal')>Pending Renewal</option>
-                        </select>
-                        {{-- Clear (only shown when a filter is active) --}}
-                        @if (request()->hasAny(['search', 'type', 'status']))
-                            <a href="{{ route('dashboard') }}"
-                                class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition flex items-center gap-2 text-sm font-medium whitespace-nowrap">
-                                <i class="fas fa-times-circle"></i> Clear
-                            </a>
-                        @endif
-                    </div>
-                </div>
-            </form>
-        </div>
-
         {{-- Policies Table Section --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                <div class="flex items-center justify-between">
+            <div class="px-6 py-3 border-b border-gray-200 bg-gray-50/50 rounded-t-xl">
+                <div class="flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center md:justify-between">
+                    <!-- Header text -->
                     <div>
                         <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                             <i class="fas fa-file-contract text-blue-500"></i>
@@ -102,15 +57,49 @@
                         </h2>
                         <p class="text-xs text-gray-500 mt-0.5">Click on any policy to view details or file a claim</p>
                     </div>
-                    <div class="ml-auto text-right">
-                        <p class="text-sm text-gray-500 font-medium mb-1">
-                            <span class="font-bold text-blue-500">
-                                {{ ucwords(strtolower($customer->name)) }}
-                            </span>
-                        </p>
-                        <p class="text-xs text-gray-400">
-                            {{ $customer->external_customer_code }}
-                        </p>
+
+                    <!-- Filters -->
+                    <div class="w-full md:w-auto">
+                        <form method="GET" action="{{ route('dashboard') }}" id="filter-form">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <!-- Search - grows, becomes longer -->
+                                <div class="relative flex-1 min-w-50 md:flex-2">
+                                    <i
+                                        class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                                    <input type="text" name="search" id="search-input"
+                                        value="{{ request('search') }}"
+                                        placeholder="Search..."
+                                        class="pl-9 pr-4 py-2 border border-gray-300 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white" />
+                                </div>
+
+                                <!-- Type - shorter width, less vertical padding -->
+                                <select name="type" id="type-select"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 text-sm w-auto md:w-32">
+                                    <option value="">All Types</option>
+                                    @foreach ($businessClasses as $class)
+                                        <option value="{{ $class }}" @selected(request('type') === $class)>
+                                            {{ $class }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                <!-- Status - shorter width, less vertical padding -->
+                                <select name="status" id="status-select"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 text-sm w-auto md:w-32">
+                                    <option value="">All Statuses</option>
+                                    <option value="active" @selected(request('status') === 'active')>Active</option>
+                                    <option value="expired" @selected(request('status') === 'expired')>Expired</option>
+                                </select>
+
+                                <!-- Clear button - matches new height -->
+                                @if (request()->hasAny(['search', 'type', 'status']))
+                                    <a href="{{ route('dashboard') }}"
+                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+                                        <i class="fas fa-times-circle"></i> Clear
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -167,7 +156,7 @@
                                             </div>
 
                                             <div class="text-xs text-gray-500">
-                                                {{ $policy['vehicle_number'] ?? 'N/A' }}
+                                                {{ $policy['vehicle_number'] ?? ' ' }}
                                             </div>
                                         </div>
                                     </td>

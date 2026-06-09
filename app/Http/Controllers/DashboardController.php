@@ -9,6 +9,7 @@ use App\Services\GlimsService;
 use App\Services\GlimsSyncService;
 use App\Services\PolicySyncService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
@@ -32,44 +33,31 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $phone        = session('phone_number') ?? session('mobile_no');
-        $customerCode = session('customer_code');
+        $customer = Auth::guard('customer')->user();
 
-        $customers = Customer::where(function ($q) use ($phone, $customerCode) {
-            if ($phone) {
-                $q->orWhere('phone', $phone);
-            }
-            if ($customerCode) {
-                $q->orWhere('external_customer_code', $customerCode);
-            }
-        })->get();
-
-        if ($customers->isEmpty()) {
-            return redirect()->route('login')
-                ->with('error', 'Session expired. Please login again.');
+        if (! $customer) {
+            return redirect()->route('login')->with('error', 'Session expired. Please login again.');
         }
 
-        $policies = Policy::forCustomers($customers->pluck('id'))
+        $policies = Policy::where('customer_id', $customer->id)
             ->with('customer')
             ->search($request->input('search'))
             ->ofType($request->input('type'))
             ->ofStatus($request->input('status'))
             ->orderBy('last_synced_at', 'desc')
-            ->paginate(5)
-            ->withQueryString(); // preserves search/filter params across pages
+            ->paginate(6)
+            ->withQueryString();
 
         $policies->setCollection(
             $policies->getCollection()->map(fn($p) => (new PolicyResource($p))->toArray(request()))
         );
 
-        $customer = $customers->first();
-
-        $businessClasses = Policy::forCustomers($customers->pluck('id'))
+        $businessClasses = Policy::where('customer_id', $customer->id)
             ->whereNotNull('business_class_name')
             ->distinct()
             ->pluck('business_class_name');
 
-        $statusCounts = Policy::forCustomers($customers->pluck('id'))
+        $statusCounts = Policy::where('customer_id', $customer->id)
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');

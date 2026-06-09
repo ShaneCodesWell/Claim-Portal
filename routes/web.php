@@ -32,11 +32,6 @@ Route::post('/agent-login', [AuthController::class, 'agentLogin'])->name('agent.
 Route::post('login/ajax', [AuthController::class, 'loginAjax'])->name('login.ajax');
 Route::post('login/select-profile', [AuthController::class, 'selectProfile'])->name('login.select.profile');
 
-// Route::get('/otp', [AuthController::class, 'showOtpForm'])->name('otp');
-// Route::post('/otp/request', [AuthController::class, 'requestOtp'])->name('otp.send');
-// Route::get('/otp/verify-form', [AuthController::class, 'verifyOtpForm'])->name('otp.verify');
-// Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.verify.submit');
-
 Route::post('/login/verify-otp', [AuthController::class, 'verifyOtpAjax'])->name('login.verify.otp');
 Route::post('/login/resend-otp',  [AuthController::class, 'resendOtp'])->name('login.resend.otp');
 
@@ -54,9 +49,6 @@ Route::prefix('glims')->name('staff.glims.')->group(function () {
 
 // Customers Routes
 Route::middleware('auth.customer')->group(function () {
-    // Customer Auth
-    // Route::get('/setup-password', [AuthController::class, 'showSetupPasswordForm'])->name('password.setup');
-    // Route::post('/setup-password', [AuthController::class, 'setupPassword'])->name('password.setup.submit');
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

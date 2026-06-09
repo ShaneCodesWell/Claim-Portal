@@ -359,24 +359,19 @@ class AuthController extends Controller
     // ── PRIVATE: Complete login — set full session ────────────────────
     private function completeLogin(Customer $customer): void
     {
-        $pendingName = session('pending_name');
+        Auth::guard('customer')->login($customer);
 
-        session()->forget(['pending_auth', 'pending_user_id', 'pending_phone',
-            'pending_name', 'pending_customer_code']);
-
-        session([
-            'authenticated'        => true,
-            'selected_customer_id' => $customer->id, // ← pin the chosen profile
-            'user_id'              => $customer->external_customer_id ?? $customer->external_customer_code,
-            'fullname'             => $customer->name ?? $pendingName,
-            'name'                 => $customer->name ?? $pendingName,
-            'phone_number'         => $customer->phone,
-            'mobile_no'            => $customer->phone,
-            'customer_code'        => $customer->external_customer_code,
-            'customer_verified'    => true,
-            'auth_source'          => $customer->sources
-                ? (in_array('genova', $customer->sources) ? 'genova' : 'glims')
-                : 'genova',
+        // Clean up all pending pre-auth session data
+        session()->forget([
+            'pending_auth',
+            'pending_user_id',
+            'pending_phone',
+            'pending_name',
+            'pending_customer_code',
+            'selected_customer_id',
+            'auth_source',
+            'login_type',
+            'username',
         ]);
     }
 
