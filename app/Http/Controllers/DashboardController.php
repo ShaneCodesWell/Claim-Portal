@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PolicyResource;
 use App\Models\Customer;
 use App\Models\Policy;
 use App\Services\GenovaApiService;
@@ -29,168 +30,220 @@ class DashboardController extends Controller
         $this->glimsSyncService = $glimsSyncService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        try {
-            $phoneNumber  = session('phone_number') ?? session('mobile_no');
-            $customerCode = session('customer_code');
-            $userId       = session('user_id');
+        $phone        = session('phone_number') ?? session('mobile_no');
+        $customerCode = session('customer_code');
 
-            $sessionCustomer = [
-                'name'         => session('fullname') ?? session('name'),
-                'phone_number' => $phoneNumber,
-                'user_id'      => $userId,
-            ];
-
-            Log::debug('Dashboard session state', [
-                'phone_number'  => session('phone_number'),
-                'mobile_no'     => session('mobile_no'),
-                'customer_code' => session('customer_code'),
-                'user_id'       => session('user_id'),
-                'auth_source'   => session('auth_source'),
-            ]);
-
-            if (! $userId && ! $phoneNumber && ! $customerCode) {
-                return redirect()->route('login')
-                    ->with('error', 'Session expired. Please login again.');
+        $customers = Customer::where(function ($q) use ($phone, $customerCode) {
+            if ($phone) {
+                $q->orWhere('phone', $phone);
             }
-
-            $dbCustomers = Customer::where(function ($q) use ($phoneNumber, $customerCode, $userId) {
-                $matched = false;
-
-                if ($phoneNumber) {
-                    $q->orWhere('phone', $phoneNumber);
-                    $matched = true;
-                }
-
-                if ($customerCode) {
-                    $q->orWhere('external_customer_code', $customerCode);
-                    $matched = true;
-                }
-
-                if ($userId) {
-                    $q->orWhere('external_customer_id', (string) $userId);
-                    $matched = true;
-                }
-
-                // If nothing to match on, force no results
-                if (! $matched) {
-                    $q->whereRaw('1 = 0');
-                }
-            })->get();
-
-            $policies        = [];
-            $customerData    = null;
-            $businessClasses = [];
-
-            $primaryCustomer = null; // declare outside so it's always defined
-
-            if ($dbCustomers->isNotEmpty()) {
-                $customerIds = $dbCustomers->pluck('id');
-
-                $dbPolicies = Policy::whereIn('customer_id', $customerIds)
-                    ->orderBy('last_synced_at', 'desc')
-                    ->get()
-                    ->groupBy(function ($policy) {
-                        // Group renewal chains by their base policy identity:
-                        // P-203-1101-2025-013572 → "203-1101-013572" (product-branch-serial, drop year)
-                        // This collapses all yearly renewals of the same policy into one group
-                        if (preg_match('/^P-(\d+)-(\d+)-\d{4}-(\d+)$/', $policy->policy_number, $m)) {
-                            return $m[1] . '-' . $m[2] . '-' . $m[3]; // product-branch-serial
-                        }
-                        return $policy->policy_number; // fallback: treat as unique
-                    })
-                    ->map(function ($group) {
-                        // Prefer active, fallback to most recently synced
-                        return $group->firstWhere('status', 'active') ?? $group->first();
-                    })
-                    ->values();
-
-                $policies = $dbPolicies->map(function ($policy) use ($dbCustomers) {
-                    $customer   = $dbCustomers->firstWhere('id', $policy->customer_id);
-                    $rawPayload = is_array($policy->raw_payload) ? $policy->raw_payload : [];
-                    $isGlims    = $policy->source === 'glims';
-
-                    return [
-                        // ── Core fields (both sources) ──────────────────────
-                        'policy_id'            => $policy->external_policy_id,
-                        'policy_number'        => $policy->policy_number,
-                        'product_id'           => $policy->product_id ?? $rawPayload['POLICY_PRODUCT_ID'] ?? null,
-                        'product_name'         => $policy->product_name ?? $rawPayload['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
-                        'business_class_id'    => $policy->business_class_id ?? $rawPayload['POLICY_LOB_ID'] ?? null,
-                        'business_class_name'  => $policy->business_class_name ?? $rawPayload['POLICY_LOB_NAME'] ?? 'Unknown Class',
-                        'policy_start_date'    => $policy->start_date,
-                        'policy_end_date'      => $policy->end_date,
-                        'renewal_date'         => $policy->renewal_date,
-                        'effective_date'       => $policy->effective_date,
-                        'status'               => $policy->status,
-                        'source'               => $policy->source,
-                        'vehicle_number'       => $rawPayload['vehicle_number'] ?? null,
-                        'customer_name'        => $customer->name ?? null,
-                        'customer_code'        => $customer->external_customer_code ?? null,
-                        'customer_phone'       => $customer->phone ?? null,
-                        'customer_email'       => $customer->email ?? null,
-
-                        // ── GLIMS-only readable fields ───────────────────────
-                        // These are null for Genova policies — safe to pass
-                        // through to the view and conditionally display.
-                        'lob_name'             => $isGlims ? ($rawPayload['POLICY_LOB_NAME'] ?? null) : null,
-                        'branch_name'          => $isGlims ? ($rawPayload['POLICY_BRANCH_NAME'] ?? null) : null,
-                        'agent_name'           => $isGlims ? ($rawPayload['POLICY_AGENT_NAME'] ?? null) : null,
-                        'policy_status'        => $isGlims ? ($rawPayload['POLICY_STATUS'] ?? null) : null,
-                        'policy_currency'      => $isGlims ? ($rawPayload['POLICY_CURRENCY'] ?? null) : null,
-                        'policy_total_premium' => $isGlims ? ($rawPayload['POLICY_TOTAL_PREMIUM'] ?? null) : null,
-                    ];
-                })->toArray();
-
-                $businessClasses = $dbPolicies
-                    ->whereNotNull('business_class_id')
-                    ->unique('business_class_id')
-                    ->pluck('business_class_name', 'business_class_id')
-                    ->toArray();
-
-                // Pin to selected profile
-                $selectedId      = session('selected_customer_id');
-                $primaryCustomer = $dbCustomers->firstWhere('id', $selectedId) ?? $dbCustomers->firstWhere('phone', $phoneNumber) ?? $dbCustomers->first();
-
-                // ← This was missing — populate customerData from the pinned customer
-                $customerData = [
-                    'name'         => $primaryCustomer->name ?? null,
-                    'code'         => $primaryCustomer->external_customer_code ?? null,
-                    'phone_number' => $primaryCustomer->phone ?? null,
-                    'email'        => $primaryCustomer->email ?? null,
-                ];
+            if ($customerCode) {
+                $q->orWhere('external_customer_code', $customerCode);
             }
+        })->get();
 
-            return view('customer.dashboard.index', [
-                'name'            => $primaryCustomer->name ?? $sessionCustomer['name'] ?? 'Guest',
-                'policies'        => $policies,
-                'customerData'    => $customerData,
-                'businessClasses' => $businessClasses,
-                'allProducts'     => [],
-                'customer'        => [
-                    'name'         => $primaryCustomer->name ?? $sessionCustomer['name'],
-                    'phone_number' => $primaryCustomer->phone ?? $sessionCustomer['phone_number'],
-                    'user_id'      => $sessionCustomer['user_id'],
-                ],
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Dashboard error: ' . $e->getMessage());
-            return view('customer.dashboard.index', [
-                'name'            => session('fullname') ?? session('name') ?? 'Guest',
-                'policies'        => [],
-                'customerData'    => null,
-                'businessClasses' => [],
-                'allProducts'     => [],
-                'customer'        => [
-                    'name'         => session('fullname') ?? session('name'),
-                    'phone_number' => session('phone_number') ?? session('mobile_no'),
-                ],
-                'error'           => 'Unable to load dashboard data. Please try again.',
-            ]);
+        if ($customers->isEmpty()) {
+            return redirect()->route('login')
+                ->with('error', 'Session expired. Please login again.');
         }
+
+        $policies = Policy::forCustomers($customers->pluck('id'))
+            ->with('customer')
+            ->search($request->input('search'))
+            ->ofType($request->input('type'))
+            ->ofStatus($request->input('status'))
+            ->orderBy('last_synced_at', 'desc')
+            ->paginate(5)
+            ->withQueryString(); // preserves search/filter params across pages
+
+        $policies->setCollection(
+            $policies->getCollection()->map(fn($p) => (new PolicyResource($p))->toArray(request()))
+        );
+
+        $customer = $customers->first();
+
+        $businessClasses = Policy::forCustomers($customers->pluck('id'))
+            ->whereNotNull('business_class_name')
+            ->distinct()
+            ->pluck('business_class_name');
+
+        $statusCounts = Policy::forCustomers($customers->pluck('id'))
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        return view('customer.dashboard.index', [
+            'customer'        => $customer,
+            'policies'        => $policies,
+            'businessClasses' => $businessClasses,
+            'statusCounts'    => $statusCounts,
+        ]);
     }
+
+    // public function index()
+    // {
+    //     try {
+    //         $phoneNumber  = session('phone_number') ?? session('mobile_no');
+    //         $customerCode = session('customer_code');
+    //         $userId       = session('user_id');
+
+    //         $sessionCustomer = [
+    //             'name'         => session('fullname') ?? session('name'),
+    //             'phone_number' => $phoneNumber,
+    //             'user_id'      => $userId,
+    //         ];
+
+    //         Log::debug('Dashboard session state', [
+    //             'phone_number'  => session('phone_number'),
+    //             'mobile_no'     => session('mobile_no'),
+    //             'customer_code' => session('customer_code'),
+    //             'user_id'       => session('user_id'),
+    //             'auth_source'   => session('auth_source'),
+    //         ]);
+
+    //         if (! $userId && ! $phoneNumber && ! $customerCode) {
+    //             return redirect()->route('login')
+    //                 ->with('error', 'Session expired. Please login again.');
+    //         }
+
+    //         $dbCustomers = Customer::where(function ($q) use ($phoneNumber, $customerCode, $userId) {
+    //             $matched = false;
+
+    //             if ($phoneNumber) {
+    //                 $q->orWhere('phone', $phoneNumber);
+    //                 $matched = true;
+    //             }
+
+    //             if ($customerCode) {
+    //                 $q->orWhere('external_customer_code', $customerCode);
+    //                 $matched = true;
+    //             }
+
+    //             if ($userId) {
+    //                 $q->orWhere('external_customer_id', (string) $userId);
+    //                 $matched = true;
+    //             }
+
+    //             // If nothing to match on, force no results
+    //             if (! $matched) {
+    //                 $q->whereRaw('1 = 0');
+    //             }
+    //         })->get();
+
+    //         $policies        = [];
+    //         $customerData    = null;
+    //         $businessClasses = [];
+
+    //         $primaryCustomer = null; // declare outside so it's always defined
+
+    //         if ($dbCustomers->isNotEmpty()) {
+    //             $customerIds = $dbCustomers->pluck('id');
+
+    //             $dbPolicies = Policy::whereIn('customer_id', $customerIds)
+    //                 ->orderBy('last_synced_at', 'desc')
+    //                 ->get()
+    //                 ->groupBy(function ($policy) {
+    //                     // Group renewal chains by their base policy identity:
+    //                     // P-203-1101-2025-013572 → "203-1101-013572" (product-branch-serial, drop year)
+    //                     // This collapses all yearly renewals of the same policy into one group
+    //                     if (preg_match('/^P-(\d+)-(\d+)-\d{4}-(\d+)$/', $policy->policy_number, $m)) {
+    //                         return $m[1] . '-' . $m[2] . '-' . $m[3]; // product-branch-serial
+    //                     }
+    //                     return $policy->policy_number; // fallback: treat as unique
+    //                 })
+    //                 ->map(function ($group) {
+    //                     // Prefer active, fallback to most recently synced
+    //                     return $group->firstWhere('status', 'active') ?? $group->first();
+    //                 })
+    //                 ->values();
+
+    //             $policies = $dbPolicies->map(function ($policy) use ($dbCustomers) {
+    //                 $customer   = $dbCustomers->firstWhere('id', $policy->customer_id);
+    //                 $rawPayload = is_array($policy->raw_payload) ? $policy->raw_payload : [];
+    //                 $isGlims    = $policy->source === 'glims';
+
+    //                 return [
+    //                     // ── Core fields (both sources) ──────────────────────
+    //                     'policy_id'            => $policy->external_policy_id,
+    //                     'policy_number'        => $policy->policy_number,
+    //                     'product_id'           => $policy->product_id ?? $rawPayload['POLICY_PRODUCT_ID'] ?? null,
+    //                     'product_name'         => $policy->product_name ?? $rawPayload['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
+    //                     'business_class_id'    => $policy->business_class_id ?? $rawPayload['POLICY_LOB_ID'] ?? null,
+    //                     'business_class_name'  => $policy->business_class_name ?? $rawPayload['POLICY_LOB_NAME'] ?? 'Unknown Class',
+    //                     'policy_start_date'    => $policy->start_date,
+    //                     'policy_end_date'      => $policy->end_date,
+    //                     'renewal_date'         => $policy->renewal_date,
+    //                     'effective_date'       => $policy->effective_date,
+    //                     'status'               => $policy->status,
+    //                     'source'               => $policy->source,
+    //                     'vehicle_number'       => $rawPayload['vehicle_number'] ?? null,
+    //                     'customer_name'        => $customer->name ?? null,
+    //                     'customer_code'        => $customer->external_customer_code ?? null,
+    //                     'customer_phone'       => $customer->phone ?? null,
+    //                     'customer_email'       => $customer->email ?? null,
+
+    //                     // ── GLIMS-only readable fields ───────────────────────
+    //                     // These are null for Genova policies — safe to pass
+    //                     // through to the view and conditionally display.
+    //                     'lob_name'             => $isGlims ? ($rawPayload['POLICY_LOB_NAME'] ?? null) : null,
+    //                     'branch_name'          => $isGlims ? ($rawPayload['POLICY_BRANCH_NAME'] ?? null) : null,
+    //                     'agent_name'           => $isGlims ? ($rawPayload['POLICY_AGENT_NAME'] ?? null) : null,
+    //                     'policy_status'        => $isGlims ? ($rawPayload['POLICY_STATUS'] ?? null) : null,
+    //                     'policy_currency'      => $isGlims ? ($rawPayload['POLICY_CURRENCY'] ?? null) : null,
+    //                     'policy_total_premium' => $isGlims ? ($rawPayload['POLICY_TOTAL_PREMIUM'] ?? null) : null,
+    //                 ];
+    //             })->toArray();
+
+    //             $businessClasses = $dbPolicies
+    //                 ->whereNotNull('business_class_id')
+    //                 ->unique('business_class_id')
+    //                 ->pluck('business_class_name', 'business_class_id')
+    //                 ->toArray();
+
+    //             // Pin to selected profile
+    //             $selectedId      = session('selected_customer_id');
+    //             $primaryCustomer = $dbCustomers->firstWhere('id', $selectedId) ?? $dbCustomers->firstWhere('phone', $phoneNumber) ?? $dbCustomers->first();
+
+    //             // ← This was missing — populate customerData from the pinned customer
+    //             $customerData = [
+    //                 'name'         => $primaryCustomer->name ?? null,
+    //                 'code'         => $primaryCustomer->external_customer_code ?? null,
+    //                 'phone_number' => $primaryCustomer->phone ?? null,
+    //                 'email'        => $primaryCustomer->email ?? null,
+    //             ];
+    //         }
+
+    //         return view('customer.dashboard.index', [
+    //             'name'            => $primaryCustomer->name ?? $sessionCustomer['name'] ?? 'Guest',
+    //             'policies'        => $policies,
+    //             'customerData'    => $customerData,
+    //             'businessClasses' => $businessClasses,
+    //             'allProducts'     => [],
+    //             'customer'        => [
+    //                 'name'         => $primaryCustomer->name ?? $sessionCustomer['name'],
+    //                 'phone_number' => $primaryCustomer->phone ?? $sessionCustomer['phone_number'],
+    //                 'user_id'      => $sessionCustomer['user_id'],
+    //             ],
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         Log::error('Dashboard error: ' . $e->getMessage());
+    //         return view('customer.dashboard.index', [
+    //             'name'            => session('fullname') ?? session('name') ?? 'Guest',
+    //             'policies'        => [],
+    //             'customerData'    => null,
+    //             'businessClasses' => [],
+    //             'allProducts'     => [],
+    //             'customer'        => [
+    //                 'name'         => session('fullname') ?? session('name'),
+    //                 'phone_number' => session('phone_number') ?? session('mobile_no'),
+    //             ],
+    //             'error'           => 'Unable to load dashboard data. Please try again.',
+    //         ]);
+    //     }
+    // }
 
     public function syncPolicies(Request $request)
     {

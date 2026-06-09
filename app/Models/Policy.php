@@ -3,6 +3,7 @@ namespace App\Models;
 
 use App\Models\Claim;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -107,5 +108,43 @@ class Policy extends Model
         }
 
         return 'active';
+    }
+
+    // ── Query Scopes ──────────────────────────────────────────────────────────────
+
+    public function scopeForCustomers(Builder $query, \Illuminate\Support\Collection $customerIds): Builder
+    {
+        return $query->whereIn('customer_id', $customerIds);
+    }
+
+    public function scopeSearch(Builder $query, ?string $search): Builder
+    {
+        if (blank($search)) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($search) {
+            $q->where('policy_number', 'like', "%{$search}%")
+                ->orWhere('product_name', 'like', "%{$search}%")
+                ->orWhere('business_class_name', 'like', "%{$search}%");
+        });
+    }
+
+    public function scopeOfType(Builder $query, ?string $type): Builder
+    {
+        if (blank($type)) {
+            return $query;
+        }
+
+        return $query->where('business_class_name', $type);
+    }
+
+    public function scopeOfStatus(Builder $query, ?string $status): Builder
+    {
+        if (blank($status)) {
+            return $query;
+        }
+
+        return $query->where('status', $status);
     }
 }

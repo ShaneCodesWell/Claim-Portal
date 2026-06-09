@@ -26,7 +26,7 @@
                 <button id="userMenuBtn"
                     class="flex items-center gap-2 bg-white border border-gray-200 rounded-full pl-3 pr-2 py-1 shadow-sm hover:shadow-md transition focus:outline-none">
                     <i class="fas fa-user-circle text-gray-500 text-xl"></i>
-                    <span class="text-sm font-medium text-gray-700 hidden sm:inline">{{ $customerName }}</span>
+                    <span class="text-sm font-medium text-gray-700 hidden sm:inline">{{ ucwords(strtolower($customerName)) }}</span>
                     <i id="dropdownIcon"
                         class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200"></i>
                 </button>
@@ -35,7 +35,7 @@
                     class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 hidden transition-all duration-150 origin-top-right">
                     <div class="px-4 py-3 border-b border-gray-100">
                         <p class="text-sm font-semibold text-gray-800">
-                            {{ $customerName }}
+                            {{ ucwords(strtolower($customerName)) }}
                         </p>
                         <p class="text-xs text-gray-500 truncate">
                             {{ $customerPhone }}
