@@ -39,6 +39,21 @@ class StaffController extends Controller
         return view('staff.claim-forms.index');
     }
 
+    public function claimFormsMotor()
+    {
+        return view('staff.claim-forms.view.motor');
+    }
+
+    public function claimFormsFire()
+    {
+        return view('staff.claim-forms.view.fire');
+    }
+
+    public function claimFormsTravel()
+    {
+        return view('staff.claim-forms.view.general_accident');
+    }
+
     public function createClaimForms()
     {
         return view('staff.claim-forms.create');

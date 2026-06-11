@@ -89,6 +89,12 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
 
     // Claim Forms & Documents
     Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
+
+    // Static Views
+    Route::get('/staff/claim-forms/view/motor', [StaffController::class, 'claimFormsMotor'])->name('claim-form-motor');
+    Route::get('/staff/claim-forms/view/fire', [StaffController::class, 'claimFormsFire'])->name('claim-form-fire');
+    Route::get('/staff/claim-forms/view/travel', [StaffController::class, 'claimFormsTravel'])->name('claim-form-travel');
+
     Route::get('/staff/claim-forms/create', [StaffController::class, 'createClaimForms'])->name('create-claim-form');
     Route::get('/staff/claim-documents', [StaffController::class, 'claimDocuments'])->name('claim-documents');
 

@@ -45,10 +45,9 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-5 py-3 border-t border-gray-300 flex justify-between gap-2">
+                <a href="{{ route('claim-form-motor') }}" class="text-gray-500 text-sm hover:text-gray-700"><i class="fas fa-eye mr-1"></i>View</a>
                 <button class="text-blue-600 text-sm font-medium hover:underline"><i class="fas fa-edit mr-1"></i>Edit
                     Fields</button>
-                <button class="text-gray-500 text-sm hover:text-gray-700"><i
-                        class="fas fa-copy mr-1"></i>Duplicate</button>
                 <button class="text-red-500 text-sm hover:text-red-700"><i
                         class="fas fa-trash-alt mr-1"></i>Delete</button>
             </div>
@@ -77,10 +76,11 @@
                         class="text-xs bg-gray-100 px-2 py-1 rounded">amount</span></div>
             </div>
             <div class="bg-gray-50 px-5 py-3 border-t border-gray-300 flex justify-between gap-2">
-                <button class="text-blue-600 text-sm font-medium"><i class="fas fa-edit mr-1"></i>Edit
+                <a href="{{ route('claim-form-fire') }}" class="text-gray-500 text-sm hover:text-gray-700"><i class="fas fa-eye mr-1"></i>View</a>
+                <button class="text-blue-600 text-sm font-medium hover:underline"><i class="fas fa-edit mr-1"></i>Edit
                     Fields</button>
-                <button class="text-gray-500 text-sm"><i class="fas fa-copy mr-1"></i>Duplicate</button>
-                <button class="text-red-500 text-sm"><i class="fas fa-trash-alt mr-1"></i>Delete</button>
+                <button class="text-red-500 text-sm hover:text-red-700"><i
+                        class="fas fa-trash-alt mr-1"></i>Delete</button>
             </div>
         </div>
 
@@ -108,10 +108,11 @@
                         class="text-xs text-gray-400">+6 more</span></div>
             </div>
             <div class="bg-gray-50 px-5 py-3 border-t border-gray-300 flex justify-between gap-2">
-                <button class="text-blue-600 text-sm font-medium"><i class="fas fa-edit mr-1"></i>Edit
+                <a href="{{ route('claim-form-travel') }}" class="text-gray-500 text-sm hover:text-gray-700"><i class="fas fa-eye mr-1"></i>View</a>
+                <button class="text-blue-600 text-sm font-medium hover:underline"><i class="fas fa-edit mr-1"></i>Edit
                     Fields</button>
-                <button class="text-gray-500 text-sm"><i class="fas fa-copy mr-1"></i>Duplicate</button>
-                <button class="text-red-500 text-sm"><i class="fas fa-trash-alt mr-1"></i>Delete</button>
+                <button class="text-red-500 text-sm hover:text-red-700"><i
+                        class="fas fa-trash-alt mr-1"></i>Delete</button>
             </div>
         </div>
 
