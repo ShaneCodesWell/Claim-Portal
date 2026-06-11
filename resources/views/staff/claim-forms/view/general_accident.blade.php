@@ -1,4 +1,11 @@
 <x-layouts.staff>
+    <div>
+        <a href="{{ route('claim-form') }}"
+            class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+            <i class="fas fa-arrow-left text-xs"></i>
+            Back
+        </a>
+    </div>
     <div class="flex justify-center">
         <div class="w-full max-w-4xl">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

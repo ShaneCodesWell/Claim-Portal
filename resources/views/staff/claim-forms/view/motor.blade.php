@@ -1,4 +1,11 @@
 <x-layouts.staff>
+    <div>
+        <a href="{{ route('claim-form') }}"
+            class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+            <i class="fas fa-arrow-left text-xs"></i>
+            Back
+        </a>
+    </div>
     <div class="flex justify-center">
         <div class="w-full max-w-4xl">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -142,8 +149,7 @@
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name <span
-                                            class="text-red-500">*</span></label><input type="text"
-                                        name="fullname"
+                                            class="text-red-500">*</span></label><input type="text" name="fullname"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                                 </div>
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Address <span
