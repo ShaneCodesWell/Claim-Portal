@@ -27,35 +27,22 @@ class ClaimController extends Controller
             'form_data'  => 'required|array',
         ]);
 
-        // Look up by external_policy_id since the URL uses Genova's ID
+        $customer = Auth::guard('customer')->user();
+
+        if (! $customer) {
+            return response()->json(['success' => false, 'message' => 'Session expired. Please log in again.'], 401);
+        }
+
         $policy = Policy::where('external_policy_id', $validated['policy_id'])
             ->orWhere('id', $validated['policy_id'])
             ->first();
 
         if (! $policy) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Policy not found. Please go back and select your policy again.',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Policy not found. Please go back and select your policy again.'], 404);
         }
 
-        $customer = Customer::where('phone', session('phone_number') ?? session('mobile_no'))
-            ->orWhere('external_customer_code', session('customer_code'))
-            ->first();
-
-        if (! $customer) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Session expired. Please log in again.',
-            ], 401);
-        }
-
-        // Verify policy belongs to this customer
         if ($policy->customer_id !== $customer->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This policy does not belong to your account.',
-            ], 403);
+            return response()->json(['success' => false, 'message' => 'This policy does not belong to your account.'], 403);
         }
 
         $claim = $this->claimService->register(
@@ -76,11 +63,9 @@ class ClaimController extends Controller
 
     public function index()
     {
-        $customer = Customer::where('phone', session('phone_number') ?? session('mobile_no'))
-            ->orWhere('external_customer_code', session('customer_code'))
-            ->first();
+        $customer = Auth::guard('customer')->user();
 
-        $claims = Claim::where('customer_id', $customer?->id)
+        $claims = Claim::where('customer_id', $customer->id)
             ->with(['policy'])
             ->latest()
             ->paginate(5);
@@ -107,7 +92,7 @@ class ClaimController extends Controller
 
         $claim->load(['policy', 'documents']);
 
-        // Map claim_type to the correct edit view — mirrors processClaim() in dashboard JS
+        // Map claim_type to the correct edit view — mirrors processClaim() in dashboard JS. Routes commented out becasue they aren't available yet.
         $viewMap = [
             'motor'            => 'customer.claims.edit.motor',
             'fire'             => 'customer.claims.edit.fire',

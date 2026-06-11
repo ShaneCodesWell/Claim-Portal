@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Models\Customer;
 use App\Models\Policy;
 use Illuminate\Support\Facades\Log;
+use \Carbon\Carbon;
 
 class PolicySyncService
 {
@@ -61,6 +62,77 @@ class PolicySyncService
         return $syncedPoliciesMap;
     }
 
+    /**
+     * Sync a single policy from the rich policy-search response.
+     * Stores the full risks/vehicle data in raw_payload.
+     */
+    public function syncFromGenovaRich(array $richData, array $allProducts, Customer $customer): void
+    {
+        $policyData = $richData['policy'] ?? [];
+        $risks      = $richData['risks'] ?? [];
+        $policyId   = $richData['id'] ?? null;
+
+        if (! $policyId || empty($policyData)) {
+            return;
+        }
+
+        $policyNo    = $policyData['policy_no'] ?? null;
+        $productId   = $policyData['esu_product_id'] ?? null;
+        $mainClassId = $policyData['esu_main_product_id'] ?? null;
+        $endDate     = $policyData['policy_end'] ?? null;
+
+        if (! $policyNo) {
+            return;
+        }
+
+        // Resolve product/class names from catalogue, fall back to existing DB record
+        $productInfo = $productId ? ($allProducts[$productId] ?? []) : [];
+
+        if (empty($productInfo)) {
+            $existing    = Policy::where('external_policy_id', (string) $policyId)->first();
+            $productInfo = [
+                'name'                => $existing?->product_name,
+                'business_class_name' => $existing?->business_class_name,
+            ];
+        }
+
+        // Extract the first risk's vehicle number (plate) as the primary vehicle_number
+        $firstRisk     = collect($risks)->first() ?? [];
+        $vehicleNumber = $firstRisk['risk_ref_no'] ?? null;
+
+        $status = ($endDate && Carbon::parse($endDate)->isPast()) ? 'expired' : 'active';
+
+        Policy::updateOrCreate(
+            ['external_policy_id' => (string) $policyId],
+            [
+                'customer_id'         => $customer->id,
+                'policy_number'       => $policyNo,
+                'product_id'          => $productId,
+                'product_name'        => $productInfo['name'] ?? null,
+                'business_class_id'   => $mainClassId,
+                'business_class_name' => $productInfo['business_class_name'] ?? null,
+                'start_date'          => $policyData['policy_start'] ?? null,
+                'end_date'            => $endDate,
+                'renewal_date'        => $policyData['renewal_date'] ?? null,
+                'effective_date'      => $policyData['effective_start_date'] ?? null,
+                'status'              => $status,
+                'source'              => 'genova',
+                'raw_payload'         => [
+                    'policy_number'     => $policyNo,
+                    'policy_id'         => $policyId,
+                    'product_id'        => $productId,
+                    'vehicle_number'    => $vehicleNumber,
+                    'risks'             => $risks, // ← full vehicle detail lives here
+                    'policy_start_date' => $policyData['policy_start'] ?? null,
+                    'policy_end_date'   => $endDate,
+                    'effective_date'    => $policyData['effective_start_date'] ?? null,
+                    'renewal_date'      => $policyData['renewal_date'] ?? null,
+                ],
+                'last_synced_at'      => now(),
+            ]
+        );
+    }
+
     public function syncFromGlims(string $clientCode, Customer $dbCustomer): array
     {
         $syncedPoliciesMap = [];
@@ -110,7 +182,7 @@ class PolicySyncService
                     'effective_date'      => $glimsPolicy['POLICY_EFFECTIVE_DATE'] ?? null,
                     'renewal_date'        => null,
                     'status'              => $status, // FIX 2
-                    // FIX 1: motor risks now included in raw_payload
+                                                      // FIX 1: motor risks now included in raw_payload
                     'raw_payload'         => array_merge($glimsPolicy, [
                         'vehicle_number' => $vehicleNumber,
                         'motor_risks'    => $motorRisks,

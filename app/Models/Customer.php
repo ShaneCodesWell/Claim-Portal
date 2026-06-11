@@ -24,6 +24,7 @@ class Customer extends Authenticatable
 
     protected $casts = [
         'sources' => 'array',
+        'last_synced_at' => 'datetime',
     ];
 
     public function policies()

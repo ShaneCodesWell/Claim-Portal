@@ -1,7 +1,25 @@
 <x-layouts.app>
-
     @php
         $policiesMapData = collect($policies->items())->keyBy('policy_id');
+        $claimFormRoutes = [
+            'motor' => '/motor-form',
+            'general accident' => '/general-accident-form',
+            'fire' => '/fire-form',
+            'bond' => '/bond-form',
+            'engineering' => '/engineering-form',
+            'liability' => '/liability-form',
+            'marine' => '/marine-form',
+            'aviation' => '/aviation-form',
+        ];
+
+        $policiesMapData = collect($policies->items())
+            ->keyBy('policy_id')
+            ->map(function ($policy) use ($claimFormRoutes) {
+                $key = strtolower($policy['business_class_name'] ?? '');
+                return array_merge($policy, [
+                    'claim_form_url' => ($claimFormRoutes[$key] ?? '/motor-form') . '?policyId=' . $policy['policy_id'],
+                ]);
+            });
     @endphp
 
     {{-- Flash Messages --}}
@@ -67,8 +85,7 @@
                                     <i
                                         class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                                     <input type="text" name="search" id="search-input"
-                                        value="{{ request('search') }}"
-                                        placeholder="Search..."
+                                        value="{{ request('search') }}" placeholder="Search..."
                                         class="pl-9 pr-4 py-2 border border-gray-300 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white" />
                                 </div>
 
@@ -169,6 +186,9 @@
                                         <div class="text-xs font-medium text-gray-900">
                                             {{ ucwords(strtolower($customer->name)) }}
                                         </div>
+                                        <p class="text-xs text-gray-400 mt-0.5">
+                                            {{ $customer->external_customer_code }}
+                                        </p>
                                     </td>
                                     <td class="px-6 py-3">
                                         <div class="text-xs font-medium text-gray-900">
@@ -190,11 +210,18 @@
 
                                     <td class="px-6 py-3">
                                         <div class="text-xs text-gray-900 font-medium">
-                                            {{ $policy['renewal_date'] ? \Carbon\Carbon::parse($policy['renewal_date'])->format('M d, Y') : '-' }}
+                                            {{ $policy['renewal_date'] ?? '-' }}
                                         </div>
                                     </td>
 
                                     <td class="px-6 py-3 text-right">
+                                        @php
+                                            $key = strtolower($policy['business_class_name'] ?? '');
+                                            $claimFormUrl =
+                                                ($claimFormRoutes[$key] ?? '/motor-form') .
+                                                '?policyId=' .
+                                                $policy['policy_id'];
+                                        @endphp
                                         <div class="relative inline-block">
                                             <button onclick="toggleDropdown(event, {{ $policy['policy_id'] }})"
                                                 id="dropdown-button-{{ $policy['policy_id'] }}"
@@ -216,11 +243,10 @@
                                                             <i class="fas fa-lock ml-auto text-xs"></i>
                                                         </button>
                                                     @else
-                                                        <button
-                                                            onclick="processClaim('{{ $policy['policy_id'] }}', '{{ strtolower($policy['business_class_name']) }}')"
+                                                        <a href="{{ $claimFormUrl }}"
                                                             class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 flex items-center transition">
                                                             <i class="fas fa-file-invoice mr-2"></i> Process Claim
-                                                        </button>
+                                                        </a>
                                                     @endif
                                                 </div>
                                             </div>
@@ -254,7 +280,6 @@
     <x-policy-details-modal />
 
     <script>
-        // Policy map for modal population — only current page, all we need
         const policiesMap = @json($policiesMapData);
 
         // ── Dropdown ──────────────────────────────────────────────────────────────
@@ -270,6 +295,88 @@
             document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
         });
 
+        // ── Risk accordion (used by modal HTML) ───────────────────────────────────
+        function toggleRisk(btn) {
+            const body = btn.closest('.risk-card').querySelector('.risk-body');
+            const chevron = btn.querySelector('.risk-chevron');
+            const isOpen = !body.classList.contains('hidden');
+            body.classList.toggle('hidden', isOpen);
+            chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+        }
+
+        function filterRisks(query) {
+            const term = query.toLowerCase().trim();
+            const cards = document.querySelectorAll('#modal-risks-list .risk-card');
+            let visible = 0;
+
+            cards.forEach(card => {
+                const matches = !term || (card.dataset.riskSearch || '').includes(term);
+                card.style.display = matches ? '' : 'none';
+                if (matches) visible++;
+            });
+
+            document.getElementById('modal-risk-empty').classList.toggle('hidden', visible > 0);
+            document.getElementById('modal-risk-count').textContent = visible;
+        }
+
+        // ── Build a risk card from raw API data ───────────────────────────────────
+        function buildRiskCard(risk) {
+            const regNo = risk.risk_ref_no || '-';
+            const make = risk.vehicle_make || '';
+            const model = risk.vehicle_model || '';
+            const year = risk.vehicle_yr_manufacture || '';
+            const chassis = risk.vehicle_chassis_no || '-';
+            const colour = risk.vehicle_colour || '-';
+            const sumInsured = risk.sum_insured ?
+                `GHS ${parseFloat(risk.sum_insured).toLocaleString()}` :
+                '-';
+            const premium = risk.total_premium ?
+                `GHS ${parseFloat(risk.total_premium).toLocaleString()}` :
+                '-';
+
+            const covers = Object.values(risk.covers ?? {});
+            const coverTags = covers.map(c =>
+                `<span class="text-xs px-2 py-1 bg-white border border-gray-200 rounded-md text-gray-600">${c.covername}</span>`
+            ).join('');
+
+            const isMotor = !!make;
+            const iconHtml = isMotor ?
+                `<div class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center"><i class="fas fa-car text-blue-600 text-sm"></i></div>` :
+                `<div class="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center"><i class="fas fa-box text-purple-600 text-sm"></i></div>`;
+
+            const title = make && model ? `${make} ${model}` : regNo;
+            const subtitle = make ? `${regNo} · ${year}` : regNo;
+            const searchData = [make, model, regNo, year, chassis].join(' ').toLowerCase();
+
+            return `
+        <div class="risk-card border border-gray-200 rounded-xl overflow-hidden" data-risk-search="${searchData}">
+            <button type="button" onclick="toggleRisk(this)"
+                class="w-full flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left">
+                ${iconHtml}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">${title}</p>
+                    <p class="text-xs text-gray-500">${subtitle}</p>
+                </div>
+                <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200 risk-chevron"></i>
+            </button>
+            <div class="risk-body hidden border-t border-gray-100 bg-gray-50 px-4 py-4">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    ${make   ? `<div><p class="text-xs text-gray-500 mb-0.5">Make &amp; Model</p><p class="text-sm font-semibold text-gray-900">${make} ${model}</p></div>` : ''}
+                    ${year   ? `<div><p class="text-xs text-gray-500 mb-0.5">Year</p><p class="text-sm font-semibold text-gray-900">${year}</p></div>` : ''}
+                    <div><p class="text-xs text-gray-500 mb-0.5">Chassis No.</p><p class="text-sm font-semibold text-gray-900">${chassis}</p></div>
+                    <div><p class="text-xs text-gray-500 mb-0.5">Colour</p><p class="text-sm font-semibold text-gray-900">${colour}</p></div>
+                    <div><p class="text-xs text-gray-500 mb-0.5">Sum Insured</p><p class="text-sm font-semibold text-gray-900">${sumInsured}</p></div>
+                    <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
+                </div>
+                ${covers.length > 0 ? `
+                    <div class="border-t border-gray-200 pt-3">
+                        <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                        <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                    </div>` : ''}
+            </div>
+        </div>`;
+        }
+
         // ── Modal ─────────────────────────────────────────────────────────────────
         function viewDetails(policyId) {
             const policy = policiesMap[policyId];
@@ -278,31 +385,34 @@
             const modal = document.getElementById('policyModal');
             modal.setAttribute('data-policy-id', policyId);
 
-            // Populate fields
             document.getElementById('modal-policy-number').textContent = policy.policy_number;
             document.getElementById('modal-business-class').textContent = policy.business_class_name;
             document.getElementById('modal-product').textContent = policy.product_name;
-            document.getElementById('modal-vehicle').textContent = policy.vehicle_number ?? '-';
             document.getElementById('modal-start-date').textContent = policy.start_date ?? 'N/A';
             document.getElementById('modal-end-date').textContent = policy.end_date ?? 'N/A';
             document.getElementById('modal-renewal-date').textContent = policy.renewal_date ?? 'N/A';
-            document.getElementById('modal-customer-name').textContent = policy.customer_name ?? 'N/A';
-            document.getElementById('modal-customer-code').textContent = policy.customer_code ?? 'N/A';
-            document.getElementById('modal-customer-phone').textContent = policy.customer_phone ?? 'N/A';
-            document.getElementById('modal-customer-email').textContent = policy.customer_email ?? 'N/A';
 
             // Status badge
-            const statusEl = document.getElementById('modal-status');
             const statusStyles = {
                 active: 'text-green-600 bg-green-50',
                 expired: 'text-red-600 bg-red-50',
                 pending_renewal: 'text-amber-600 bg-amber-50',
             };
-            statusEl.textContent = policy.status.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+            const statusEl = document.getElementById('modal-status');
+            statusEl.textContent = policy.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             statusEl.className =
-                `text-sm font-bold px-3 py-1 rounded-full ${statusStyles[policy.status] ?? 'text-gray-600 bg-gray-50'}`;
+                `text-xs font-semibold px-2.5 py-1 rounded-full ${statusStyles[policy.status] ?? 'text-gray-600 bg-gray-50'}`;
 
-            // File Claim button state
+            // Populate risks accordion
+            const riskEntries = Object.values(policy.risks ?? {});
+            document.getElementById('modal-risk-count').textContent = riskEntries.length;
+
+            const risksList = document.getElementById('modal-risks-list');
+            risksList.innerHTML = riskEntries.length ?
+                riskEntries.map(buildRiskCard).join('') :
+                '<p class="text-sm text-gray-400 text-center py-6">No risk details available yet.</p>';
+
+            // File Claim button
             const fileClaimBtn = document.getElementById('modal-file-claim-btn');
             if (policy.status === 'expired') {
                 fileClaimBtn.disabled = true;
@@ -318,7 +428,7 @@
                     'px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm hover:shadow';
                 fileClaimBtn.onclick = () => {
                     closeModal();
-                    processClaim(policyId, policy.business_class_name);
+                    window.location.href = policy.claim_form_url;
                 };
             }
 
@@ -332,32 +442,20 @@
             modal.style.display = 'none';
             modal.setAttribute('data-policy-id', '');
             document.body.style.overflow = '';
+            // Reset risk search
+            const searchInput = document.getElementById('modal-risk-search');
+            if (searchInput) {
+                searchInput.value = '';
+                filterRisks('');
+            }
         }
 
         document.getElementById('policyModal')?.addEventListener('click', e => {
             if (e.target.id === 'policyModal') closeModal();
         });
-
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') closeModal();
         });
-
-        // ── Claims routing ────────────────────────────────────────────────────────
-        const claimRoutes = {
-            'motor': '/motor-form',
-            'general accident': '/general-accident-form',
-            'fire': '/fire-form',
-            'bond': '/bond-form',
-            'engineering': '/engineering-form',
-            'liability': '/liability-form',
-            'marine': '/marine-form',
-            'aviation': '/aviation-form',
-        };
-
-        function processClaim(policyId, businessClassName) {
-            const route = claimRoutes[businessClassName.trim().toLowerCase()] ?? '/motor-form';
-            window.location.href = `${route}?policyId=${policyId}`;
-        }
 
         // ── Expired alert ─────────────────────────────────────────────────────────
         function showExpiredPolicyAlert() {
@@ -381,7 +479,6 @@
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => form.submit(), 400);
         });
-
         typeSelect.addEventListener('change', () => form.submit());
         statusSelect.addEventListener('change', () => form.submit());
     </script>

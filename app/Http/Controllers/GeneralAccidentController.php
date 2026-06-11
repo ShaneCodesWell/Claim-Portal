@@ -16,8 +16,8 @@ class GeneralAccidentController extends Controller
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
-        $policy   = Policy::where('external_policy_id', $policyId)->firstOrFail();
-        $customer = Customer::where('id', $policy->customer_id)->first();
+        $policy   = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
+        $customer = Customer::findOrFail($policy->customer_id);
 
         return view('forms.general_accident_form.index', compact('policy', 'customer', 'policyId'));
     }

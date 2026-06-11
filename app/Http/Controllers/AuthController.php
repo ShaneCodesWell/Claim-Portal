@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use \App\Jobs\SyncCustomerPoliciesJob;
 
 class AuthController extends Controller
 {
@@ -25,15 +26,14 @@ class AuthController extends Controller
         $this->otp   = $otp;
     }
 
-    // STEP 1 → Login Screen
-    public function showLoginForm()
-    {
-        return view('auth.login');
-    }
-
     public function showUserSelectForm()
     {
         return view('auth.user-select');
+    }
+
+    public function showLoginForm()
+    {
+        return view('auth.login');
     }
 
     public function staffLoginForm()
@@ -270,6 +270,7 @@ class AuthController extends Controller
         return $this->sendOtpAndRespond($phone, session('pending_name', 'there'));
     }
 
+    // New OTP without relying on Genova or Glims
     public function verifyOtpAjax(Request $request): \Illuminate\Http\JsonResponse
     {
         if (! session('pending_auth')) {
@@ -320,6 +321,7 @@ class AuthController extends Controller
         ]);
     }
 
+    // Resend that OTP
     public function resendOtp(Request $request): \Illuminate\Http\JsonResponse
     {
         if (! session('pending_auth')) {
@@ -356,23 +358,26 @@ class AuthController extends Controller
         ]);
     }
 
-    // ── PRIVATE: Complete login — set full session ────────────────────
+    // ── PRIVATE: Complete login ────────────────────
     private function completeLogin(Customer $customer): void
     {
         Auth::guard('customer')->login($customer);
 
-        // Clean up all pending pre-auth session data
         session()->forget([
-            'pending_auth',
-            'pending_user_id',
-            'pending_phone',
-            'pending_name',
-            'pending_customer_code',
-            'selected_customer_id',
-            'auth_source',
-            'login_type',
-            'username',
+            'pending_auth', 'pending_user_id', 'pending_phone',
+            'pending_name', 'pending_customer_code',
+            'selected_customer_id', 'auth_source', 'login_type', 'username',
         ]);
+
+        try {
+            SyncCustomerPoliciesJob::dispatch($customer);
+        } catch (\Exception $e) {
+            // Never let a sync failure block the login
+            Log::error('completeLogin: sync job dispatch failed', [
+                'customer_id' => $customer->id,
+                'error'       => $e->getMessage(),
+            ]);
+        }
     }
 
     // ── PRIVATE: Resolve profiles from Genova + GLIMS ─────────────────
@@ -491,22 +496,28 @@ class AuthController extends Controller
             $response = $this->api->customerVerification($identifier, $loginType);
 
             if ($response->failed()) {
-                return [
-                    'success' => false,
-                    'reason'  => 'http_' . $response->status(),
-                ];
+                return ['success' => false, 'reason' => 'http_' . $response->status()];
             }
 
-            $data = $response->json('data');
+            $content = $response->json('data.content') ?? [];
 
-            if (empty($data) || ! isset($data['user_id'])) {
+            if (empty($content)) {
                 return ['success' => false, 'reason' => 'empty_response'];
             }
 
-            return ['success' => true, 'data' => $data];
+            $first = $content[0];
+
+            return [
+                'success' => true,
+                'data'    => [
+                    'user_id'     => $first['customer_api_identity'] ?? null,
+                    'name'        => $first['name'] ?? 'Unknown',
+                    'search_used' => ['phone_no' => $first['phone_number'] ?? null],
+                ],
+            ];
 
         } catch (\Exception $e) {
-            Log::error('attemptGenovaVerification exception: ' . $e->getMessage());
+            Log::error('attemptGenovaVerification: ' . $e->getMessage());
             return ['success' => false, 'reason' => 'exception'];
         }
     }

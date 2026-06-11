@@ -16,23 +16,22 @@ class MotorFormController extends Controller
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
-        $policy   = Policy::where('external_policy_id', $policyId)->firstOrFail();
+        $policy = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
         $customer = Customer::findOrFail($policy->customer_id);
 
-        // Pull motor risk details from raw_payload
-        $raw        = $policy->raw_payload ?? [];
-        $motorRisks = $raw['motor_risks'] ?? [];
-        $firstRisk  = ! empty($motorRisks) ? (array) $motorRisks[0] : [];
+        // Risks are keyed by risk ID — grab the first one
+        $risks     = $policy->raw_payload['risks'] ?? [];
+        $firstRisk = collect($risks)->first() ?? [];
 
-        // Pre-populate form fields from GLIMS data
         $formData = [
-            // Section 1 — Vehicle Particulars
-            'registration_no' => $firstRisk['objecth_02_plate_number'] ?? '',
-            'make'            => $firstRisk['objecth_02_make'] ?? '',
-            'model'           => $firstRisk['objecth_02_model'] ?? '',
-            'year_of_make'    => $firstRisk['objecth_02_year'] ?? '',
-
-            // Section 2 — Driver Particulars (pre-fill with policy holder)
+            'registration_no' => $firstRisk['risk_ref_no'] ?? '',
+            'make'            => $firstRisk['vehicle_make'] ?? '',
+            'model'           => $firstRisk['vehicle_model'] ?? '',
+            'year_of_make'    => $firstRisk['vehicle_yr_manufacture'] ?? '',
+            'chassis_no'      => $firstRisk['vehicle_chassis_no'] ?? '',
+            'colour'          => $firstRisk['vehicle_colour'] ?? '',
+            'body_type'       => $firstRisk['vehicle_body_type'] ?? '',
+            'seating'         => $firstRisk['vehicle_seating'] ?? '',
             'fullname'        => $customer->name ?? '',
             'phone'           => $customer->phone ?? '',
         ];

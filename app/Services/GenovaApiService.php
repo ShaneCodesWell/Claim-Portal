@@ -3,6 +3,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use \Illuminate\Http\Client\Response;
 
 class GenovaApiService
 {
@@ -27,43 +28,27 @@ class GenovaApiService
             ->asForm();
     }
 
-    // Step 1: Customer Verification - sends OTP immediately
-    public function customerVerification($identifier, $type = 'mobile_no')
+    /**
+     * Verify a customer exists by reusing customer-search.
+     * Replaces the old request-claim-otp call — no OTP sent.
+     */
+    public function customerVerification(string $identifier, string $loginType): Response
     {
-        $params = [];
-
-        switch ($type) {
-            case 'mobile_no':
-            case 'phone':
-                $params['mobile_no'] = $identifier;
-                break;
-            case 'policy_number':
-                $params['policy_number'] = $identifier;
-                break;
-            case 'vehicle_number':
-                $params['vehicle_number'] = $identifier;
-                break;
-            default:
-                $params['mobile_no'] = $identifier;
-        }
-
-        Log::info('Calling request-claim-otp with params:', $params);
-        return $this->client()->post($this->baseUrl . '/cia/api/mobile/request-claim-otp', $params);
+        return $this->getPolicies($identifier, $loginType);
     }
 
-    // Step 2: Verify Claim OTP (THIS IS THE CORRECT ENDPOINT)
-    public function verifyClaimOtp($userId, $twoFaCode)
+    /**
+     * Fetch full policy details including risks/vehicle data.
+     * Use policy_id from customer-search results.
+     */
+    public function policySearch(string $policyId): Response
     {
-        Log::info('Calling verify-claim-otp with params:', [
-            'user_id'     => $userId,
-            'two_fa_code' => $twoFaCode,
-        ]);
+        Log::info('Calling policy-search', ['policy_id' => $policyId]);
 
-        return $this->client()->post($this->baseUrl . '/cia/api/mobile/verify-claim-otp', [
-            'user_id'     => $userId,
-            'two_fa_code' => $twoFaCode,
-        ]);
-
+        return $this->clientWithTimeout(60)
+            ->post($this->baseUrl . '/cia/api/mobile/policy-search', [
+                'policy_id' => $policyId,
+            ]);
     }
 
     // Fetch Business Classes
@@ -94,6 +79,7 @@ class GenovaApiService
             ->asForm();
     }
 
+    // rename this
     public function getPolicies($identifier, $type = 'phone_number')
     {
         $params = [];

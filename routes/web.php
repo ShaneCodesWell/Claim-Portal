@@ -52,7 +52,6 @@ Route::middleware('auth.customer')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/dashboard/sync-policies', [DashboardController::class, 'syncPolicies'])->name('dashboard.sync');
 
     // Claims
     Route::post('claims', [CustomerClaimController::class, 'store'])->name('claims.store');
