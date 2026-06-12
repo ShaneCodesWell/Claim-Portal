@@ -320,7 +320,7 @@
         }
 
         // ── Build a risk card from raw API data ───────────────────────────────────
-        function buildRiskCard(risk) {
+        function buildRiskCard(risk, policy = null, isFleet = false) {
             const regNo = risk.risk_ref_no || '-';
             const make = risk.vehicle_make || '';
             const model = risk.vehicle_model || '';
@@ -348,33 +348,51 @@
             const subtitle = make ? `${regNo} · ${year}` : regNo;
             const searchData = [make, model, regNo, year, chassis].join(' ').toLowerCase();
 
+            // Per-risk claim button — only for fleet, only if active
+            const riskClaimUrl = policy ? `${policy.claim_form_url}&riskId=${risk.id}` : '#';
+            const isExpired = policy?.status === 'expired';
+
+            const claimButton = isFleet ?
+                `<div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
+               ${isExpired
+                   ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
+                              <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                          </button>`
+                   : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
+                              <i class="fas fa-file-invoice"></i> Process Claim
+                          </a>`
+               }
+           </div>` :
+                '';
+
             return `
-        <div class="risk-card border border-gray-200 rounded-xl overflow-hidden" data-risk-search="${searchData}">
-            <button type="button" onclick="toggleRisk(this)"
-                class="w-full flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left">
-                ${iconHtml}
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900 truncate">${title}</p>
-                    <p class="text-xs text-gray-500">${subtitle}</p>
-                </div>
-                <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200 risk-chevron"></i>
-            </button>
-            <div class="risk-body hidden border-t border-gray-100 bg-gray-50 px-4 py-4">
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    ${make   ? `<div><p class="text-xs text-gray-500 mb-0.5">Make &amp; Model</p><p class="text-sm font-semibold text-gray-900">${make} ${model}</p></div>` : ''}
-                    ${year   ? `<div><p class="text-xs text-gray-500 mb-0.5">Year</p><p class="text-sm font-semibold text-gray-900">${year}</p></div>` : ''}
-                    <div><p class="text-xs text-gray-500 mb-0.5">Chassis No.</p><p class="text-sm font-semibold text-gray-900">${chassis}</p></div>
-                    <div><p class="text-xs text-gray-500 mb-0.5">Colour</p><p class="text-sm font-semibold text-gray-900">${colour}</p></div>
-                    <div><p class="text-xs text-gray-500 mb-0.5">Sum Insured</p><p class="text-sm font-semibold text-gray-900">${sumInsured}</p></div>
-                    <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
-                </div>
-                ${covers.length > 0 ? `
-                    <div class="border-t border-gray-200 pt-3">
-                        <p class="text-xs text-gray-500 mb-2">Covers Included</p>
-                        <div class="flex flex-wrap gap-1.5">${coverTags}</div>
-                    </div>` : ''}
-            </div>
-        </div>`;
+                <div class="risk-card border border-gray-200 rounded-xl overflow-hidden" data-risk-search="${searchData}">
+                    <button type="button" onclick="toggleRisk(this)"
+                        class="w-full flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left">
+                        ${iconHtml}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 truncate">${title}</p>
+                            <p class="text-xs text-gray-500">${subtitle}</p>
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200 risk-chevron"></i>
+                    </button>
+                    <div class="risk-body hidden border-t border-gray-100 bg-gray-50 px-4 py-4">
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            ${make   ? `<div><p class="text-xs text-gray-500 mb-0.5">Make &amp; Model</p><p class="text-sm font-semibold text-gray-900">${make} ${model}</p></div>` : ''}
+                            ${year   ? `<div><p class="text-xs text-gray-500 mb-0.5">Year</p><p class="text-sm font-semibold text-gray-900">${year}</p></div>` : ''}
+                            <div><p class="text-xs text-gray-500 mb-0.5">Chassis No.</p><p class="text-sm font-semibold text-gray-900">${chassis}</p></div>
+                            <div><p class="text-xs text-gray-500 mb-0.5">Colour</p><p class="text-sm font-semibold text-gray-900">${colour}</p></div>
+                            <div><p class="text-xs text-gray-500 mb-0.5">Sum Insured</p><p class="text-sm font-semibold text-gray-900">${sumInsured}</p></div>
+                            <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
+                        </div>
+                        ${covers.length > 0 ? `
+                            <div class="border-t border-gray-200 pt-3">
+                                <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                                <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                            </div>` : ''}
+                        ${claimButton}
+                    </div>
+                </div>`;
         }
 
         // ── Modal ─────────────────────────────────────────────────────────────────
@@ -405,32 +423,41 @@
 
             // Populate risks accordion
             const riskEntries = Object.values(policy.risks ?? {});
+            const isFleet = riskEntries.length > 1;
+
             document.getElementById('modal-risk-count').textContent = riskEntries.length;
 
             const risksList = document.getElementById('modal-risks-list');
             risksList.innerHTML = riskEntries.length ?
-                riskEntries.map(buildRiskCard).join('') :
+                riskEntries.map(risk => buildRiskCard(risk, policy, isFleet)).join('') :
                 '<p class="text-sm text-gray-400 text-center py-6">No risk details available yet.</p>';
 
-            // File Claim button
+            // Footer File Claim button — hide for fleet, show for single risk
             const fileClaimBtn = document.getElementById('modal-file-claim-btn');
-            if (policy.status === 'expired') {
-                fileClaimBtn.disabled = true;
-                fileClaimBtn.className =
-                    'px-4 py-2 text-sm rounded-lg flex items-center gap-2 bg-gray-200 text-gray-400 cursor-not-allowed opacity-60';
-                fileClaimBtn.onclick = e => {
-                    e.preventDefault();
-                    showExpiredPolicyAlert();
-                };
+            if (isFleet) {
+                fileClaimBtn.style.display = 'none';
             } else {
-                fileClaimBtn.disabled = false;
-                fileClaimBtn.className =
-                    'px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm hover:shadow';
-                fileClaimBtn.onclick = () => {
-                    closeModal();
-                    window.location.href = policy.claim_form_url;
-                };
+                fileClaimBtn.style.display = '';
+                if (policy.status === 'expired') {
+                    fileClaimBtn.disabled = true;
+                    fileClaimBtn.className =
+                        'px-4 py-2 text-sm rounded-lg flex items-center gap-2 bg-gray-200 text-gray-400 cursor-not-allowed opacity-60';
+                    fileClaimBtn.onclick = e => {
+                        e.preventDefault();
+                        showExpiredPolicyAlert();
+                    };
+                } else {
+                    fileClaimBtn.disabled = false;
+                    fileClaimBtn.className =
+                        'px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm hover:shadow';
+                    fileClaimBtn.onclick = () => {
+                        closeModal();
+                        window.location.href = policy.claim_form_url;
+                    };
+                }
             }
+
+            
 
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';

@@ -40,6 +40,7 @@ class PolicyResource extends JsonResource
         if (! empty($raw['risks'])) {
             return collect($raw['risks'])
                 ->map(fn($risk) => [
+                    'id'                     => $risk['id'] ?? null, // ← add this
                     'risk_ref_no'            => $risk['risk_ref_no'] ?? null,
                     'vehicle_make'           => $risk['vehicle_make'] ?? null,
                     'vehicle_model'          => $risk['vehicle_model'] ?? null,
@@ -49,7 +50,6 @@ class PolicyResource extends JsonResource
                     'vehicle_body_type'      => $risk['vehicle_body_type'] ?? null,
                     'sum_insured'            => $risk['sum_insured'] ?? null,
                     'total_premium'          => $risk['total_premium'] ?? null,
-                    // Cover names only — charges, deductibles skipped
                     'covers'                 => collect($risk['covers'] ?? [])
                         ->map(fn($cover) => ['covername' => $cover['covername'] ?? ''])
                         ->values()

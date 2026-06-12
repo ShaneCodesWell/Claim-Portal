@@ -42,6 +42,7 @@ class DashboardController extends Controller
             ->search($request->input('search'))
             ->ofType($request->input('type'))
             ->ofStatus($request->input('status'))
+            ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
             ->orderBy('last_synced_at', 'desc')
             ->paginate(6)
             ->withQueryString();

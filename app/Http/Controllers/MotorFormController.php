@@ -16,22 +16,28 @@ class MotorFormController extends Controller
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
-        $policy = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
+        $riskId   = $request->query('riskId');
+
+        $policy   = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
         $customer = Customer::findOrFail($policy->customer_id);
 
         // Risks are keyed by risk ID — grab the first one
-        $risks     = $policy->raw_payload['risks'] ?? [];
+        $risks = $policy->raw_payload['risks'] ?? [];
         $firstRisk = collect($risks)->first() ?? [];
 
+        // If riskId is present (fleet), find that specific risk — else use the first
+        $risk = ($riskId && isset($risks[$riskId]))
+            ? $risks[$riskId]
+            : (collect($risks)->first() ?? []);
+
         $formData = [
-            'registration_no' => $firstRisk['risk_ref_no'] ?? '',
-            'make'            => $firstRisk['vehicle_make'] ?? '',
-            'model'           => $firstRisk['vehicle_model'] ?? '',
-            'year_of_make'    => $firstRisk['vehicle_yr_manufacture'] ?? '',
-            'chassis_no'      => $firstRisk['vehicle_chassis_no'] ?? '',
-            'colour'          => $firstRisk['vehicle_colour'] ?? '',
-            'body_type'       => $firstRisk['vehicle_body_type'] ?? '',
-            'seating'         => $firstRisk['vehicle_seating'] ?? '',
+            'registration_no' => $risk['risk_ref_no'] ?? '',
+            'make'            => $risk['vehicle_make'] ?? '',
+            'model'           => $risk['vehicle_model'] ?? '',
+            'year_of_make'    => $risk['vehicle_yr_manufacture'] ?? '',
+            'chassis_no'      => $risk['vehicle_chassis_no'] ?? '',
+            'colour'          => $risk['vehicle_colour'] ?? '',
+            'body_type'       => $risk['vehicle_body_type'] ?? '',
             'fullname'        => $customer->name ?? '',
             'phone'           => $customer->phone ?? '',
         ];
