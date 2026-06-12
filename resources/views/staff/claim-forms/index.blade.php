@@ -117,7 +117,7 @@
         </div>
 
         <!-- Life Claim Form (inactive/archived example) -->
-        <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden opacity-75">
+        {{-- <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden opacity-75">
             <div class="p-5 border-b border-gray-100 bg-gray-50">
                 <div class="flex items-center gap-3">
                     <div class="h-10 w-10 bg-gray-200 rounded-xl flex items-center justify-center"><i
@@ -136,7 +136,7 @@
                 <button class="text-blue-400 text-sm"><i class="fas fa-archive mr-1"></i>Restore</button>
                 <button class="text-red-400 text-sm"><i class="fas fa-trash-alt"></i></button>
             </div>
-        </div>
+        </div> --}}
 
         <!-- "Create new" placeholder card -->
         <a href="{{ route('create-claim-form') }}">

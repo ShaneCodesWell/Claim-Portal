@@ -9,6 +9,7 @@ use App\Models\Agent;
 use App\Models\Branch;
 use App\Models\Claim;
 use App\Models\Department;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class AgentController extends Controller

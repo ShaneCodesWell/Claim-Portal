@@ -6,12 +6,13 @@ use App\Models\Policy;
 use App\Services\GenovaApiService;
 use App\Services\GlimsService;
 use App\Services\OtpService;
+use \App\Jobs\SyncCustomerPoliciesJob;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\RateLimiter;
-use \App\Jobs\SyncCustomerPoliciesJob;
 
 class AuthController extends Controller
 {
@@ -106,7 +107,7 @@ class AuthController extends Controller
 
     // New Ajax Login
     // ── STEP 1: Verify phone exists, resolve profiles ─────────────────
-    public function loginAjax(Request $request): \Illuminate\Http\JsonResponse
+    public function loginAjax(Request $request): JsonResponse
     {
         $request->validate([
             'username'   => 'required|string',
@@ -236,7 +237,7 @@ class AuthController extends Controller
     }
 
     // ── STEP 2: Profile selected → check password status ─────────────
-    public function selectProfile(Request $request): \Illuminate\Http\JsonResponse
+    public function selectProfile(Request $request): JsonResponse
     {
         if (! session('pending_auth')) {
             return response()->json(['status' => 'error', 'message' => 'Session expired.'], 401);
@@ -271,7 +272,7 @@ class AuthController extends Controller
     }
 
     // New OTP without relying on Genova or Glims
-    public function verifyOtpAjax(Request $request): \Illuminate\Http\JsonResponse
+    public function verifyOtpAjax(Request $request): JsonResponse
     {
         if (! session('pending_auth')) {
             return response()->json(['status' => 'error', 'message' => 'Session expired. Please log in again.'], 401);
@@ -322,7 +323,7 @@ class AuthController extends Controller
     }
 
     // Resend that OTP
-    public function resendOtp(Request $request): \Illuminate\Http\JsonResponse
+    public function resendOtp(Request $request): JsonResponse
     {
         if (! session('pending_auth')) {
             return response()->json(['status' => 'error', 'message' => 'Session expired.'], 401);
@@ -652,7 +653,7 @@ class AuthController extends Controller
         }
     }
 
-    private function sendOtpAndRespond(string $phone, string $name): \Illuminate\Http\JsonResponse
+    private function sendOtpAndRespond(string $phone, string $name): JsonResponse
     {
         if (! $this->otp->send($phone)) {
             Log::error('sendOtpAndRespond: Failed to send OTP', ['phone' => $phone]);

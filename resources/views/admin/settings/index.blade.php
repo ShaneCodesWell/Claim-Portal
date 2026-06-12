@@ -320,7 +320,7 @@
     </div>
 
     <!-- Danger zone (visible on all tabs) -->
-    <div class="mt-8 border border-red-200 rounded-xl bg-red-50/30 p-5">
+    {{-- <div class="mt-8 border border-red-200 rounded-xl bg-red-50/30 p-5">
         <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
                 <h4 class="font-semibold text-red-700 flex items-center gap-2">
@@ -335,7 +335,7 @@
                 Delete Account
             </button>
         </div>
-    </div>
+    </div> --}}
     <script>
         const GLIMS_TRIGGER_URL = '{{ route('staff.glims.sync.trigger') }}';
         const GLIMS_STATUS_URL = '{{ route('staff.glims.sync.status') }}';

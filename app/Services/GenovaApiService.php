@@ -34,7 +34,12 @@ class GenovaApiService
      */
     public function customerVerification(string $identifier, string $loginType): Response
     {
-        return $this->getPolicies($identifier, $loginType);
+        $params = $this->buildSearchParams($identifier, $loginType);
+
+        Log::info('Calling customer-search (verification) with params:', $params);
+
+        return $this->client() // 8 second timeout — fail fast, let local fallback take over
+            ->post($this->baseUrl . '/cia/api/mobile/customer-search', $params);
     }
 
     /**
@@ -79,36 +84,25 @@ class GenovaApiService
             ->asForm();
     }
 
-    // rename this
+    private function buildSearchParams(string $identifier, string $loginType): array
+    {
+        return match ($loginType) {
+            'customer_code', 'client_code' => ['client_code' => $identifier],
+            'customer_id'    => ['customer_id' => $identifier],
+            'policy_number'  => ['policy_number' => $identifier],
+            'vehicle_number' => ['vehicle_number' => $identifier],
+            'email'          => ['ins_email' => $identifier],
+            default          => ['phone_number' => $identifier],
+        };
+    }
+
     public function getPolicies($identifier, $type = 'phone_number')
     {
-        $params = [];
-
-        switch ($type) {
-            case 'customer_code':
-            case 'client_code':
-                $params['client_code'] = $identifier;
-                break;
-            case 'customer_id':
-                $params['customer_id'] = $identifier;
-                break;
-            case 'policy_number': // ← ADD THIS
-                $params['policy_number'] = $identifier;
-                break;
-            case 'vehicle_number': // ← ADD THIS
-                $params['vehicle_number'] = $identifier;
-                break;
-            case 'email':
-                $params['ins_email'] = $identifier;
-                break;
-            case 'phone_number':
-            default:
-                $params['phone_number'] = $identifier;
-                break;
-        }
+        $params = $this->buildSearchParams($identifier, $type);
 
         Log::info('Calling customer-search with params:', $params);
-        return $this->clientWithTimeout(60)
+
+        return $this->clientWithTimeout(60) // long timeout fine here — runs in background job
             ->post($this->baseUrl . '/cia/api/mobile/customer-search', $params);
     }
 }
