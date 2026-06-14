@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Http\Requests\StoreStaffRequest;
 use App\Http\Requests\UpdateStaffRequest;
+use App\Http\Resources\PolicyResource;
 use App\Models\Branch;
 use App\Models\Claim;
 use App\Models\Customer;
@@ -144,8 +145,26 @@ class StaffController extends Controller
     {
         $policyIds = $customer->policies()->pluck('id');
 
-        $policies = $customer->policies()->latest()->paginate(5);
-        $claims   = Claim::whereIn('policy_id', $policyIds)->latest()->paginate(5);
+        $policies = $customer->policies()->latest()->paginate(5, ['*'], 'policies_page'); // ← named
+
+        $policies->setCollection(
+            $policies->getCollection()->map(function ($p) use ($customer) {
+                return array_merge(
+                    (new PolicyResource($p))->toArray(request()),
+                    [
+                        'source'           => $p->source,
+                        'claim_create_url' => route('customers.claims.create', [
+                            'customer'  => $customer->id,
+                            'policy_id' => $p->id,
+                        ]),
+                    ]
+                );
+            })
+        );
+
+        $policiesMapData = collect($policies->items())->keyBy('policy_id');
+
+        $claims = Claim::whereIn('policy_id', $policyIds)->latest()->paginate(5, ['*'], 'claims_page'); // ← named
 
         $stats = [
             'active_policies'  => $customer->policies()->where('status', 'active')->count(),
@@ -154,7 +173,7 @@ class StaffController extends Controller
             'pending_claims'   => Claim::whereIn('policy_id', $policyIds)->where('status', 'in_progress')->count(),
         ];
 
-        return view('staff.customers.show', compact('customer', 'stats', 'policies', 'claims'));
+        return view('staff.customers.show', compact('customer', 'stats', 'policies', 'claims', 'policiesMapData'));
     }
 
     /**

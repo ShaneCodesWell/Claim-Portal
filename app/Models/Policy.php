@@ -2,8 +2,8 @@
 namespace App\Models;
 
 use App\Models\Claim;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -146,5 +146,20 @@ class Policy extends Model
         }
 
         return $query->where('status', $status);
+    }
+
+    public function getVehicleNumberAttribute(): string
+    {
+        $raw = $this->raw_payload ?? [];
+
+        if (! empty($raw['risks'])) {
+            return count($raw['risks']) > 1
+                ? 'FLEET'
+                : ($raw['risks'][0]['risk_ref_no'] ?? '');
+        }
+
+        $entry = is_array($raw[0] ?? null) ? $raw[0] : $raw;
+
+        return $entry['vehicle_number'] ?? '';
     }
 }

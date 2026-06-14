@@ -13,9 +13,9 @@ use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\Staff\GlimsSyncController;
 use Illuminate\Support\Facades\Route;
-use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
 use \App\Http\Controllers\Agent\ClaimController as AgentClaimController;
 use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
+use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
 
 // Auth Routes
 Route::get('/', [AuthController::class, 'showUserSelectForm'])->name('user.select');
@@ -33,7 +33,7 @@ Route::post('login/ajax', [AuthController::class, 'loginAjax'])->name('login.aja
 Route::post('login/select-profile', [AuthController::class, 'selectProfile'])->name('login.select.profile');
 
 Route::post('/login/verify-otp', [AuthController::class, 'verifyOtpAjax'])->name('login.verify.otp');
-Route::post('/login/resend-otp',  [AuthController::class, 'resendOtp'])->name('login.resend.otp');
+Route::post('/login/resend-otp', [AuthController::class, 'resendOtp'])->name('login.resend.otp');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -101,6 +101,9 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     // Customers
     Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers.index');
     Route::get('/staff/customers/{customer}', [StaffController::class, 'showCustomer'])->name('customers.show');
+    
+    Route::get('/customers/{customer}/claims/create', [StaffClaimController::class, 'create'])->name('customers.claims.create');
+    Route::post('/customers/{customer}/claims', [StaffClaimController::class, 'store'])->name('customers.claims.store');
 
 });
 

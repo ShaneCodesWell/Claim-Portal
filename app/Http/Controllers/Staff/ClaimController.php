@@ -2,13 +2,16 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Enums\ClaimStatus;
+use App\Enums\ClaimSource;
 use App\Enums\UserRole;
-use App\Http\Controllers\Controller;
 use App\Models\Claim;
-use App\Models\ClaimDocument;
 use App\Models\User;
+use App\Models\Policy;
+use App\Models\Customer;
+use App\Models\ClaimDocument;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -53,6 +56,124 @@ class ClaimController extends Controller
             ->get();
 
         return view('staff.claims.show', compact('claim', 'staffMembers'));
+    }
+
+    public function create(Request $request, Customer $customer)
+    {
+        $policyId = $request->query('policy_id');
+
+        $policy = Policy::where(function ($q) use ($policyId) {
+            $q->where('external_policy_id', $policyId)
+                ->orWhere('id', $policyId);
+        })
+            ->where('customer_id', $customer->id)
+            ->firstOrFail();
+
+        // Normalize to the same keys your form views expect
+        $claimType = $this->normalizeClaimType($policy->business_class_name ?? '');
+
+        $viewMap = [
+            'motor'            => ['partial' => 'partials.forms.motor-form', 'label' => 'Motor'],
+            'fire'             => ['partial' => 'partials.forms.fire-form', 'label' => 'Fire'],
+            'general_accident' => ['partial' => 'partials.forms.general-accident-form', 'label' => 'General Accident'],
+            // Uncomment as you add more partials:
+            // 'marine'        => ['partial' => 'partials.forms.marine-form',          'label' => 'Marine'],
+            // 'engineering'   => ['partial' => 'partials.forms.engineering-form',     'label' => 'Engineering'],
+        ];
+
+        if (! isset($viewMap[$claimType])) {
+            return redirect()
+                ->route('customers.show', $customer)
+                ->with('error', "No claim form available for policy type: {$policy->business_class}.");
+        }
+
+        return view('staff.claims.create', [
+            'customer' => $customer,
+            'policy'   => $policy,
+            'formView' => $viewMap[$claimType]['partial'],
+            'formData' => [],
+            'action'   => route('customers.claims.store', $customer),
+            'method'   => 'POST',
+            'claim'    => null,
+            'context'  => 'staff',
+        ]);
+    }
+
+    public function store(Request $request, Customer $customer)
+    {
+        $validated = $request->validate([
+            'policy_id'   => 'required',
+            'claim_type'  => 'required|string',
+            'form_data'   => 'required|array',
+            'documents'   => 'nullable|array',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'note'        => 'nullable|string|max:1000',
+        ]);
+
+        $staff = Auth::user();
+
+        $policy = Policy::where(function ($q) use ($validated) {
+            $q->where('external_policy_id', $validated['policy_id'])
+                ->orWhere('id', $validated['policy_id']);
+        })
+            ->first();
+
+        if (! $policy) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Policy not found.',
+            ], 404);
+        }
+
+        if ($policy->customer_id !== $customer->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This policy does not belong to this customer.',
+            ], 403);
+        }
+
+        $claim = $this->claimService->register(
+            customer: $customer,
+            policy: $policy,
+            claimType: $validated['claim_type'],
+            formData: $validated['form_data'],
+            source: ClaimSource::STAFF_PORTAL,
+        );
+
+        // Attribute the action clearly to the staff member
+        $note = trim($validated['note'] ?? '');
+        $this->claimService->logActivityPublic(
+            claim: $claim,
+            user: $staff,
+            action: 'staff_initiated',
+            note: "Claim initiated by {$staff->name} on behalf of {$customer->name}."
+            . ($note ? " Staff note: {$note}" : ''),
+            meta: [
+                'on_behalf_of_customer_id' => $customer->id,
+                'initiated_by_staff_id'    => $staff->id,
+            ]
+        );
+
+        if ($request->hasFile('documents')) {
+            $this->claimService->attachDocuments(
+                claim: $claim,
+                files: $request->file('documents'),
+                uploadedBy: $staff,
+                type: 'supporting',
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Claim {$claim->claim_number} submitted on behalf of {$customer->name}.",
+            'claim_number' => $claim->claim_number,
+            'redirect' => route('customers.show', $customer),
+        ]);
+    }
+
+    private function normalizeClaimType(string $businessClass): string
+    {
+        return str_replace(' ', '_', strtolower(trim($businessClass)));
     }
 
     public function previewDocument(ClaimDocument $document, Request $request)

@@ -278,7 +278,6 @@
         </div>
     </div>
 
-    {{-- Policy Details Modal (styled with new theme) --}}
     <x-policy-details-modal />
 
     <script>
@@ -358,11 +357,11 @@
                 `<div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
                ${isExpired
                    ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
-                                      <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
-                                  </button>`
+                                          <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                                      </button>`
                    : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
-                                      <i class="fas fa-file-invoice"></i> Process Claim
-                                  </a>`
+                                          <i class="fas fa-file-invoice"></i> Process Claim
+                                      </a>`
                }
            </div>` :
                 '';
@@ -388,10 +387,10 @@
                             <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
                         </div>
                         ${covers.length > 0 ? `
-                                    <div class="border-t border-gray-200 pt-3">
-                                        <p class="text-xs text-gray-500 mb-2">Covers Included</p>
-                                        <div class="flex flex-wrap gap-1.5">${coverTags}</div>
-                                    </div>` : ''}
+                                        <div class="border-t border-gray-200 pt-3">
+                                            <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                                            <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                                        </div>` : ''}
                         ${claimButton}
                     </div>
                 </div>`;

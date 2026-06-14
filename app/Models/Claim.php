@@ -93,7 +93,7 @@ class Claim extends Model
     //     $sequence = str_pad($latest + 1, 6, '0', STR_PAD_LEFT);
     //     return "CLM-{$year}-{$sequence}";
     // }
-    
+
     public static function generateClaimNumber(): string
     {
         $year     = now()->year;
@@ -101,5 +101,10 @@ class Claim extends Model
         $sequence = str_pad($latest + 1, 6, '0', STR_PAD_LEFT);
 
         return "CLM-{$year}-{$sequence}";
+    }
+
+    public function getRegistrationNumberAttribute(): ?string
+    {
+        return $this->form_data['registration_no'] ?? null;
     }
 }
