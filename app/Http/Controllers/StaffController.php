@@ -110,7 +110,7 @@ class StaffController extends Controller
             return [
                 'total_customers'  => Customer::count(),
                 'active_policies'  => Policy::where('status', 'active')->count(),
-                'submitted_claims' => Claim::where('status', 'incoming')->count(),
+                'submitted_claims' => Claim::where('status', 'submitted')->count(),
                 'closed_claims'    => Claim::where('status', 'closed')->count(),
             ];
         });
@@ -149,7 +149,7 @@ class StaffController extends Controller
 
         $stats = [
             'active_policies'  => $customer->policies()->where('status', 'active')->count(),
-            'submitted_claims' => Claim::whereIn('policy_id', $policyIds)->where('status', 'incoming')->count(),
+            'submitted_claims' => Claim::whereIn('policy_id', $policyIds)->where('status', 'submitted')->count(),
             'closed_claims'    => Claim::whereIn('policy_id', $policyIds)->where('status', 'closed')->count(),
             'pending_claims'   => Claim::whereIn('policy_id', $policyIds)->where('status', 'in_progress')->count(),
         ];

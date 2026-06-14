@@ -122,7 +122,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Year of Make <span
                                 class="text-red-500">*</span></label>
-                        <input type="date" name="year_of_make" value="{{ $f['year_of_make'] ?? '' }}"
+                        <input type="text" name="year_of_make" value="{{ $f['year_of_make'] ?? '' }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                     </div>
                 </div>
@@ -363,7 +363,7 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">In your opinion, was the accident
-                        caused by you or your driver? If not, by whom? <span class="text-red-500">*</span></label>
+                        caused by you or the other driver? If not, by whom? <span class="text-red-500">*</span></label>
                     <input type="text" name="fault_person" value="{{ $f['fault_person'] ?? '' }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                 </div>
@@ -381,7 +381,7 @@
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Repairer Information</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Workshop Information</label>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name <span
                                     class="text-red-500">*</span></label>
@@ -389,7 +389,7 @@
                                 value="{{ $f['repairer_fullname'] ?? '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                         </div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Address <span
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Contact <span
                                     class="text-red-500">*</span></label>
                             <input type="text" name="repairer_address" value="{{ $f['repairer_address'] ?? '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
@@ -477,7 +477,7 @@
                 </div>
 
                 {{-- Injured in other vehicle --}}
-                <div class="mb-8">
+                {{-- <div class="mb-8">
                     <div class="flex items-center justify-between mb-4">
                         <h4 class="text-md font-semibold text-gray-700">Injured Persons in Other Vehicle</h4>
                         <button type="button" onclick="addInjuredPerson('otherVehicle')"
@@ -548,26 +548,67 @@
                             </div>
                         @endforelse
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Details of vehicle involved</label>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div><label class="block text-xs font-medium text-gray-600">Registration Number</label>
-                            <input type="text" name="involved_vehicle_reg"
-                                value="{{ $f['involved_vehicle_reg'] ?? '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div><label class="block text-xs font-medium text-gray-600">Make</label>
-                            <input type="text" name="involved_vehicle_make"
-                                value="{{ $f['involved_vehicle_make'] ?? '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>
-                        <div><label class="block text-xs font-medium text-gray-600">Model</label>
-                            <input type="text" name="involved_vehicle_model"
-                                value="{{ $f['involved_vehicle_model'] ?? '' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Details of vehicles involved</label>
+                        <button type="button" onclick="addVehicle()"
+                            class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-plus mr-1"></i> Add Vehicle
+                        </button>
+                    </div>
+                    <div id="vehiclesContainer" class="space-y-4">
+                        @php
+                            $vehicles = json_decode($f['involved_vehicles'] ?? '[]', true) ?? [];
+                        @endphp
+
+                        @forelse($vehicles as $i => $vehicle)
+                            <div class="vehicle-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div><label class="block text-xs font-medium text-gray-600">Registration
+                                            Number</label>
+                                        <input type="text" name="involved_vehicles[{{ $i }}][reg]"
+                                            value="{{ $vehicle['reg'] ?? '' }}"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div><label class="block text-xs font-medium text-gray-600">Make</label>
+                                        <input type="text" name="involved_vehicles[{{ $i }}][make]"
+                                            value="{{ $vehicle['make'] ?? '' }}"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div><label class="block text-xs font-medium text-gray-600">Model</label>
+                                        <input type="text" name="involved_vehicles[{{ $i }}][model]"
+                                            value="{{ $vehicle['model'] ?? '' }}"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                </div>
+                                <div class="mt-2 flex justify-end">
+                                    <button type="button" onclick="removeVehicle(this)"
+                                        class="text-red-600 hover:text-red-800 text-sm">
+                                        <i class="fas fa-trash mr-1"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="vehicle-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div><label class="block text-xs font-medium text-gray-600">Registration
+                                            Number</label>
+                                        <input type="text" name="involved_vehicles[0][reg]"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div><label class="block text-xs font-medium text-gray-600">Make</label>
+                                        <input type="text" name="involved_vehicles[0][make]"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div><label class="block text-xs font-medium text-gray-600">Model</label>
+                                        <input type="text" name="involved_vehicles[0][model]"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                </div>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
 
@@ -575,23 +616,19 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Owner of Accident Vehicle
                         Information</label>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name <span
-                                    class="text-red-500">*</span></label>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name </label>
                             <input type="text" name="owner_fullname" value="{{ $f['owner_fullname'] ?? '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         </div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Address <span
-                                    class="text-red-500">*</span></label>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Address </label>
                             <input type="text" name="owner_address" value="{{ $f['owner_address'] ?? '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         </div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Telephone <span
-                                    class="text-red-500">*</span></label>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Telephone </label>
                             <input type="tel" name="owner_telephone" value="{{ $f['owner_telephone'] ?? '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         </div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Policy No. <span
-                                    class="text-red-500">*</span></label>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Policy No. </label>
                             <input type="text" name="owner_policy" value="{{ $f['owner_policy'] ?? '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         </div>
@@ -605,7 +642,7 @@
                 </div>
 
                 {{-- Claim made --}}
-                <div class="mb-6">
+                {{-- <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Has any claim been made upon you? <span
                             class="text-red-500">*</span></label>
                     <div class="flex gap-4">
@@ -622,7 +659,7 @@
                                 class="text-red-500">*</span></label>
                         <textarea name="claim_made_details" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['claim_made_details'] ?? '' }}</textarea>
                     </div>
-                </div>
+                </div> --}}
 
                 {{-- Police report --}}
                 <div class="mb-6">
@@ -644,15 +681,15 @@
                     </div>
                 </div>
 
-                <div class="mb-6">
+                {{-- <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Name Police Officer who took
                         particulars <span class="text-red-500">*</span></label>
                     <input type="text" name="officer_details" value="{{ $f['officer_details'] ?? '' }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                </div>
+                </div> --}}
 
                 {{-- Indemnifying policy --}}
-                <div class="mb-6">
+                {{-- <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Do you hold more than one policy
                         indemnifying you in respect of this accident? <span class="text-red-500">*</span></label>
                     <div class="flex gap-4">
@@ -669,7 +706,7 @@
                             policy.</label>
                         <textarea name="indem_policy_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['indem_policy_details'] ?? '' }}</textarea>
                     </div>
-                </div>
+                </div> --}}
             </section>
 
             {{-- ── SECTION 5: DOCUMENTS ── --}}
@@ -999,6 +1036,57 @@
             }
         };
 
+        function collectVehicles(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            const rows = container.querySelectorAll('.vehicle-row');
+            return Array.from(rows).map(row => {
+                const reg = row.querySelector('[name$="[reg]"]')?.value || '';
+                const make = row.querySelector('[name$="[make]"]')?.value || '';
+                const model = row.querySelector('[name$="[model]"]')?.value || '';
+                return {
+                    reg,
+                    make,
+                    model
+                };
+            }).filter(v => v.reg || v.make || v.model); // keep only non-empty
+        }
+
+        // ── Vehicles involved ────────────────────────────────────────────────────
+        let vehicleCounter = {{ count($vehicles) }};
+
+        window.addVehicle = function() {
+            const container = document.getElementById('vehiclesContainer');
+            const counter = vehicleCounter++;
+            const row = document.createElement('div');
+            row.className = 'vehicle-row border border-gray-200 rounded-lg p-4 bg-gray-50';
+            row.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><label class="block text-xs font-medium text-gray-600">Registration Number</label>
+                    <input type="text" name="involved_vehicles[${counter}][reg]" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div>
+                <div><label class="block text-xs font-medium text-gray-600">Make</label>
+                    <input type="text" name="involved_vehicles[${counter}][make]" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div>
+                <div><label class="block text-xs font-medium text-gray-600">Model</label>
+                    <input type="text" name="involved_vehicles[${counter}][model]" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div>
+            </div>
+            <div class="mt-2 flex justify-end">
+                <button type="button" onclick="removeVehicle(this)" class="text-red-600 hover:text-red-800 text-sm">
+                    <i class="fas fa-trash mr-1"></i> Remove
+                </button>
+            </div>`;
+            container.appendChild(row);
+        };
+
+        window.removeVehicle = function(btn) {
+            const row = btn.closest('.vehicle-row');
+            const container = row.parentElement;
+            if (container.querySelectorAll('.vehicle-row').length > 1) {
+                row.remove();
+            } else {
+                row.querySelectorAll('input').forEach(f => f.value = '');
+            }
+        };
+
         // ── Document deletion marking ──────────────────────────────────────────
         window.markDocumentForDeletion = function(docId, btn) {
             const input = document.getElementById(`delete-doc-${docId}`);
@@ -1140,9 +1228,7 @@
                 repairer_address: val('repairer_address'),
                 your_vehicle_injured: collectInjuredPersons('yourVehicleInjuredPersons'),
                 other_vehicle_injured: collectInjuredPersons('otherVehicleInjuredPersons'),
-                involved_vehicle_reg: val('involved_vehicle_reg'),
-                involved_vehicle_make: val('involved_vehicle_make'),
-                involved_vehicle_model: val('involved_vehicle_model'),
+                involved_vehicles: collectVehicles('vehiclesContainer'),
                 owner_fullname: val('owner_fullname'),
                 owner_address: val('owner_address'),
                 owner_telephone: val('owner_telephone'),
