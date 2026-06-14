@@ -113,7 +113,7 @@
                                 PARTICULARS OF PERSON DRIVING AT THE TIME OF ACCIDENT:
                             </h3>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            {{-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Full Name
                                         <span class="text-red-500">*</span></label>
@@ -156,7 +156,7 @@
                                     <input type="date" required
                                         class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" />
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
 
                         <!-- Who was driving? -->

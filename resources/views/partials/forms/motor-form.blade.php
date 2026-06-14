@@ -182,50 +182,6 @@
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
                     PARTICULARS OF PERSON DRIVING AT THE TIME OF ACCIDENT
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="fullname" value="{{ $f['fullname'] ?? '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Address <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="address" value="{{ $f['address'] ?? '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Age <span
-                                class="text-red-500">*</span></label>
-                        <input type="number" name="age" value="{{ $f['age'] ?? '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Occupation <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="occupation" value="{{ $f['occupation'] ?? '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Telephone <span
-                                class="text-red-500">*</span></label>
-                        <input type="tel" name="phone" value="{{ $f['phone'] ?? '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Driving License No. <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="drivers_license" value="{{ $f['drivers_license'] ?? '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date of Issue <span
-                                class="text-red-500">*</span></label>
-                        <input type="date" name="license_issue_date" value="{{ $f['license_issue_date'] ?? '' }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
-                </div>
 
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Who was driving at the time of
@@ -248,15 +204,15 @@
                     <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div><label class="block text-xs font-medium text-gray-600">Full Name</label>
-                                <input type="text" readonly value="John Doe"
+                                <input type="text" readonly value="{{ $customer->name }}"
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                             <div><label class="block text-xs font-medium text-gray-600">Address</label>
-                                <input type="text" readonly value="Old Ashongman, Accra"
+                                <input type="text"  value="{{ $customer->email ?? ' ' }}"
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                             <div><label class="block text-xs font-medium text-gray-600">Telephone</label>
-                                <input type="text" readonly value="+233 50 354 5965"
+                                <input type="text" readonly value="{{ $customer->phone }}"
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                         </div>
