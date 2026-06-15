@@ -33,24 +33,35 @@ class ClaimController extends Controller
             return response()->json(['success' => false, 'message' => 'Session expired. Please log in again.'], 401);
         }
 
-        $policy = Policy::where('external_policy_id', $validated['policy_id'])
-            ->orWhere('id', $validated['policy_id'])
+        $policy = Policy::where('customer_id', $customer->id)
+            ->where(function ($q) use ($validated) {
+                $q->where('external_policy_id', $validated['policy_id'])
+                    ->orWhere('id', $validated['policy_id']);
+            })
             ->first();
 
         if (! $policy) {
             return response()->json(['success' => false, 'message' => 'Policy not found. Please go back and select your policy again.'], 404);
         }
 
-        if ($policy->customer_id !== $customer->id) {
-            return response()->json(['success' => false, 'message' => 'This policy does not belong to your account.'], 403);
+        // if ($policy->customer_id !== $customer->id) {
+        //     return response()->json(['success' => false, 'message' => 'This policy does not belong to your account.'], 403);
+        // }
+
+        $riskId   = $request->input('risk_id') ? (int) $request->input('risk_id') : null;
+        $formData = $validated['form_data'];
+
+        if ($riskId) {
+            $formData['_risk_id'] = $riskId;
         }
 
         $claim = $this->claimService->register(
             customer: $customer,
             policy: $policy,
             claimType: $validated['claim_type'],
-            formData: $validated['form_data'],
+            formData: $formData,
             source: ClaimSource::CUSTOMER_PORTAL,
+            riskId: $riskId,
         );
 
         return response()->json([

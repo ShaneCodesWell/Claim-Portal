@@ -21,9 +21,10 @@ class ClaimService
         Policy $policy,
         string $claimType,
         array $formData,
-        string $source = ClaimSource::CUSTOMER_PORTAL
+        string $source = ClaimSource::CUSTOMER_PORTAL,
+        ?int $riskId = null,
     ): Claim {
-        return DB::transaction(function () use ($customer, $policy, $claimType, $formData, $source) {
+        return DB::transaction(function () use ($customer, $policy, $claimType, $formData, $source, $riskId) {
 
             $claim = Claim::create([
                 'claim_number' => Claim::generateClaimNumber(),
@@ -33,6 +34,7 @@ class ClaimService
                 'claim_type'   => $claimType,
                 'source'       => $source,
                 'status'       => ClaimStatus::SUBMITTED,
+                'amount'       => $this->extractSumInsured($policy, $riskId),
                 'form_data'    => $formData,
                 'submitted_at' => now(),
             ]);
@@ -45,6 +47,32 @@ class ClaimService
 
             return $claim;
         });
+    }
+
+    // ── Private helper ────────────────────────────────────────────────────────────
+    private function extractSumInsured(Policy $policy, ?int $riskId = null): float
+    {
+        $raw   = $policy->raw_payload ?? [];
+        $risks = $raw['risks'] ?? [];
+
+        // Old payload format — flat structure with no risks key
+        if (empty($risks)) {
+            $entry = is_array($raw[0] ?? null) ? $raw[0] : $raw;
+            return (float) ($entry['sum_insured'] ?? 0);
+        }
+
+        // Fleet claim for a specific risk — use that risk's sum insured
+        if ($riskId && isset($risks[$riskId])) {
+            return (float) ($risks[$riskId]['sum_insured'] ?? 0);
+        }
+
+        // Single risk policy — use the only one
+        if (count($risks) === 1) {
+            return (float) (reset($risks)['sum_insured'] ?? 0);
+        }
+
+        // Fleet with no specific risk targeted — sum all risks
+        return (float) collect($risks)->sum(fn($r) => (float) ($r['sum_insured'] ?? 0));
     }
 
     // Auto-assign to staff member with lowest open claim count in the branch

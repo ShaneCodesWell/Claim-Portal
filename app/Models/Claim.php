@@ -23,6 +23,7 @@ class Claim extends Model
         'claim_type',
         'source',
         'status',
+        'amount',
         'form_data',
         'submitted_at',
     ];
@@ -84,15 +85,6 @@ class Claim extends Model
     {
         return ! is_null($this->assigned_to);
     }
-
-    // Generate claim number
-    // public static function generateClaimNumber(): string
-    // {
-    //     $year     = now()->year;
-    //     $latest   = self::whereYear('created_at', $year)->lockForUpdate()->count();
-    //     $sequence = str_pad($latest + 1, 6, '0', STR_PAD_LEFT);
-    //     return "CLM-{$year}-{$sequence}";
-    // }
 
     public static function generateClaimNumber(): string
     {

@@ -94,6 +94,7 @@
             @endif
             <input type="hidden" name="claim_type" value="motor" />
             <input type="hidden" name="policy_id" value="{{ $policy->external_policy_id ?? $policy->id }}">
+            <input type="hidden" name="risk_id" value="{{ $riskId ?? '' }}">
 
             {{-- ── SECTION 1: VEHICLE PARTICULARS ── --}}
             <section class="mb-8">
@@ -204,15 +205,15 @@
                     <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div><label class="block text-xs font-medium text-gray-600">Full Name</label>
-                                <input type="text" readonly value="{{ $customer->name }}"
+                                <input type="text" readonly value="{{ $customer->name ?? $claim->customer?->name ?? '' }}"
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                             <div><label class="block text-xs font-medium text-gray-600">Address</label>
-                                <input type="text"  value="{{ $customer->email ?? ' ' }}"
+                                <input type="text" value="{{ $customer->email ?? $claim->customer?->email ?? '' }}"
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                             <div><label class="block text-xs font-medium text-gray-600">Telephone</label>
-                                <input type="text" readonly value="{{ $customer->phone }}"
+                                <input type="text" readonly value="{{ $customer->phone ?? $claim->customer?->phone ?? '' }}"
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                         </div>
@@ -1145,6 +1146,7 @@
 
             // Add this — read from the hidden input
             formData.append('policy_id', document.querySelector('[name="policy_id"]')?.value ?? '');
+            formData.append('risk_id', document.querySelector('[name="risk_id"]')?.value ?? '');
 
             const claimFields = {
                 registration_no: val('registration_no'),

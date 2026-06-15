@@ -1,17 +1,17 @@
 <?php
 namespace App\Http\Controllers\Staff;
 
-use App\Enums\ClaimStatus;
 use App\Enums\ClaimSource;
+use App\Enums\ClaimStatus;
 use App\Enums\UserRole;
+use App\Http\Controllers\Controller;
 use App\Models\Claim;
-use App\Models\User;
-use App\Models\Policy;
-use App\Models\Customer;
 use App\Models\ClaimDocument;
+use App\Models\Customer;
+use App\Models\Policy;
+use App\Models\User;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -61,6 +61,7 @@ class ClaimController extends Controller
     public function create(Request $request, Customer $customer)
     {
         $policyId = $request->query('policy_id');
+        $riskId   = $request->query('risk_id');
 
         $policy = Policy::where(function ($q) use ($policyId) {
             $q->where('external_policy_id', $policyId)
@@ -90,6 +91,7 @@ class ClaimController extends Controller
         return view('staff.claims.create', [
             'customer' => $customer,
             'policy'   => $policy,
+            'riskId'   => $riskId,
             'formView' => $viewMap[$claimType]['partial'],
             'formData' => [],
             'action'   => route('customers.claims.store', $customer),
@@ -112,32 +114,37 @@ class ClaimController extends Controller
 
         $staff = Auth::user();
 
-        $policy = Policy::where(function ($q) use ($validated) {
-            $q->where('external_policy_id', $validated['policy_id'])
-                ->orWhere('id', $validated['policy_id']);
-        })
-            ->first();
+        $policy = Policy::where('customer_id', $customer->id)
+            ->where(function ($q) use ($validated) {
+                $q->where('external_policy_id', $validated['policy_id'])
+                    ->orWhere('id', $validated['policy_id']);
+            })->first();
 
         if (! $policy) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Policy not found.',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Policy not found.'], 404);
         }
 
-        if ($policy->customer_id !== $customer->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This policy does not belong to this customer.',
-            ], 403);
+        // if ($policy->customer_id !== $customer->id) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'This policy does not belong to this customer.',
+        //     ], 403);
+        // }
+
+        $riskId   = $request->input('risk_id') ? (int) $request->input('risk_id') : null;
+        $formData = $validated['form_data'];
+
+        if ($riskId) {
+            $formData['_risk_id'] = $riskId;
         }
 
         $claim = $this->claimService->register(
             customer: $customer,
             policy: $policy,
             claimType: $validated['claim_type'],
-            formData: $validated['form_data'],
+            formData: $formData,
             source: ClaimSource::STAFF_PORTAL,
+            riskId: $riskId,
         );
 
         // Attribute the action clearly to the staff member
@@ -289,7 +296,7 @@ class ClaimController extends Controller
 
     public function edit(Claim $claim)
     {
-        $claim->load(['policy', 'documents', 'assignedTo']);
+        $claim->load(['policy', 'documents', 'assignedTo', 'customer']);
         $policy = $claim->policy;
 
         $viewMap = [
