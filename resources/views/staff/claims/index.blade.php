@@ -11,36 +11,40 @@
             </p>
         </div>
         <div class="flex items-center gap-3">
-            <div class="relative">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                <input type="text" id="searchInput" placeholder="Search client, policy..."
-                    class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-300 w-64 bg-white" />
-            </div>
-            <button id="filterResetBtn"
+            {{-- Replace the search input --}}
+            <form method="GET" action="{{ route('staff.claims.index') }}" id="filterForm">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" name="search" id="searchInput" value="{{ request('search') }}"
+                        placeholder="Search client, policy..."
+                        class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-300 w-64 bg-white" />
+                    {{-- keep current filter when searching --}}
+                    <input type="hidden" name="filter" value="{{ request('filter', 'all') }}">
+                </div>
+            </form>
+            <a href="{{ route('staff.claims.index') }}"
                 class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
                 <i class="fas fa-refresh text-gray-500"></i> Reset
-            </button>
+            </a>
         </div>
     </div>
 
     <!-- Claim Amount Filter Tabs -->
     <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-2">
-        <button data-filter="all"
-            class="amount-filter-tab px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
-            All Claims
-        </button>
-        <button data-filter="low"
-            class="amount-filter-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
-            Same Day (≤ 30k)
-        </button>
-        <button data-filter="medium"
-            class="amount-filter-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
-            Medium (30k - 100k)
-        </button>
-        <button data-filter="high"
-            class="amount-filter-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
-            High (> 100k)
-        </button>
+        @foreach ([
+        'all' => 'All Claims',
+        'low' => 'Same Day (≤ 30k)',
+        'medium' => 'Medium (30k – 100k)',
+        'high' => 'High (> 100k)',
+    ] as $value => $label)
+            <a href="{{ route('staff.claims.index', array_merge(request()->only('search'), ['filter' => $value])) }}"
+                class="amount-filter-tab px-4 py-2 text-sm font-medium
+                {{ request('filter', 'all') === $value
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-500 hover:text-gray-700' }}">
+                {{ $label }}
+            </a>
+        @endforeach
     </div>
 
     <!-- Claims Table -->
@@ -70,7 +74,7 @@
                 <tbody id="claimsTableBody" class="divide-y divide-gray-200">
                     @forelse ($claims as $claim)
                         <!-- Row 1: John Davis - Low (25,000) -->
-                        <tr class="hover:bg-gray-50 transition" data-amount="25000">
+                        <tr class="hover:bg-gray-50 transition" data-amount="{{ $claim->amount }}">
                             <td class="px-4 py-4">
                                 <div class="flex items-center gap-3">
                                     <div
@@ -99,7 +103,8 @@
                             </td>
                             <td class="px-4 py-4 text-xs font-medium text-gray-900">{{ $claim->policy->product_name }}
                             </td>
-                            <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵ {{ number_format($claim->amount) }}</td>
+                            <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
+                                {{ number_format($claim->amount) }}</td>
                             <td class="px-4 py-4 text-sm text-gray-700">{{ $claim->assignedTo->name ?? 'Unassigned' }}
                             </td>
                             @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
@@ -191,83 +196,12 @@
     </div>
 
     <script>
-        // Amount filter logic
-        const filterTabs = document.querySelectorAll('.amount-filter-tab');
-        const tableRows = document.querySelectorAll('#claimsTableBody tr');
-        const totalCountSpan = document.getElementById('totalCount');
-        const visibleCountSpan = document.getElementById('visibleCount');
-        const searchInput = document.getElementById('searchInput');
-        const resetBtn = document.getElementById('filterResetBtn');
-
-        let currentAmountFilter = 'all';
-        let currentSearchTerm = '';
-
-        function filterTable() {
-            let visible = 0;
-            tableRows.forEach(row => {
-                const amount = parseInt(row.getAttribute('data-amount'));
-                let matchesAmount = true;
-                if (currentAmountFilter === 'low') matchesAmount = amount <= 30000;
-                else if (currentAmountFilter === 'medium') matchesAmount = amount > 30000 && amount <= 100000;
-                else if (currentAmountFilter === 'high') matchesAmount = amount > 100000;
-
-                // Search filter (client name or policy number)
-                const clientName = row.querySelector('td:first-child .text-sm.font-medium')?.innerText
-                    .toLowerCase() || '';
-                const policyNumber = row.querySelector('td:nth-child(2)')?.innerText.toLowerCase() || '';
-                const matchesSearch = currentSearchTerm === '' || clientName.includes(currentSearchTerm) ||
-                    policyNumber.includes(currentSearchTerm);
-
-                if (matchesAmount && matchesSearch) {
-                    row.style.display = '';
-                    visible++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            visibleCountSpan.innerText = visible;
-        }
-
-        // Tab click handlers
-        filterTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                currentAmountFilter = tab.getAttribute('data-filter');
-                filterTabs.forEach(t => {
-                    t.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                    t.classList.add('text-gray-500');
-                });
-                tab.classList.remove('text-gray-500');
-                tab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-                filterTable();
-            });
-        });
-
-        // Search input
-        searchInput.addEventListener('input', (e) => {
-            currentSearchTerm = e.target.value.toLowerCase().trim();
-            filterTable();
-        });
-
-        // Reset button: clear search and set filter to All
-        resetBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            currentSearchTerm = '';
-            // Reset amount filter to All
-            currentAmountFilter = 'all';
-            filterTabs.forEach(t => {
-                t.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                t.classList.add('text-gray-500');
-            });
-            const allTab = document.querySelector('.amount-filter-tab[data-filter="all"]');
-            if (allTab) {
-                allTab.classList.remove('text-gray-500');
-                allTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+        // Submit search form on Enter key
+        document.getElementById('searchInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('filterForm').submit();
             }
-            filterTable();
         });
-
-        // Initialize counts
-        totalCountSpan.innerText = tableRows.length;
-        filterTable();
     </script>
 </x-layouts.staff>

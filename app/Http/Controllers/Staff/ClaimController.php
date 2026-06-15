@@ -21,11 +21,26 @@ class ClaimController extends Controller
     public function __construct(protected ClaimService $claimService)
     {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $claims = Claim::with(['customer', 'policy', 'assignedTo', 'branch'])
-            ->latest()
-            ->paginate(5);
+        $query = Claim::with(['customer', 'policy', 'assignedTo', 'branch'])->latest();
+
+        match ($request->filter) {
+            'low'    => $query->where('amount', '<=', 30000),
+            'medium' => $query->whereBetween('amount', [30001, 100000]),
+            'high'   => $query->where('amount', '>', 100000),
+            default  => null,
+        };
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('policy', fn($q) => $q->where('policy_number', 'like', "%{$search}%"));
+            });
+        }
+
+        $claims = $query->paginate(5)->withQueryString();
 
         return view('staff.claims.index', compact('claims'));
     }
