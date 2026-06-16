@@ -10,7 +10,7 @@
         </div>
         <div class="lg:col-span-2">
             @include('partials.forms.motor-form', [
-                'formData' => $claim->form_data,
+                'formData' => $formData,
                 'action' => route('claims.update', $claim),
                 'method' => 'PUT',
                 'claim' => $claim,

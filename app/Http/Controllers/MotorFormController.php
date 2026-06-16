@@ -39,6 +39,7 @@ class MotorFormController extends Controller
             'colour'          => $risk['vehicle_colour'] ?? '',
             'body_type'       => $risk['vehicle_body_type'] ?? '',
             'fullname'        => $customer->name ?? '',
+            'email'           => $customer->email ?? '',
             'phone'           => $customer->phone ?? '',
         ];
 

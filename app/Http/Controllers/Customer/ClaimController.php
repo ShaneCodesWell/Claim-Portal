@@ -92,7 +92,11 @@ class ClaimController extends Controller
 
     public function edit(Claim $claim)
     {
-        $claim->load(['policy', 'activities.user', 'documents']);
+        $claim->load(['policy', 'activities.user', 'documents', 'customer']);
+
+        // Load the customer Data for display
+        $customer = Customer::find($claim->policy->customer_id);
+
         // Only allow editing if claim is still in a state where edits make sense
         $editableStatuses = ['submitted', 'pending_info'];
 
@@ -125,7 +129,18 @@ class ClaimController extends Controller
         // Add this — policy is already loaded, just make it available to the view
         $policy = $claim->policy;
 
-        return view($view, compact('claim', 'policy'));
+        // Build hte form Data
+        $formData = array_merge(
+            $claim->form_data ?? [],
+            [
+                'fullname' => $customer->name ?? '',
+                'email'    => $customer->email ?? '',
+                'phone'    => $customer->phone ?? '',
+                // 'occupation'    => $customer->occupation ?? '',
+            ]
+        );
+
+        return view($view, compact('claim', 'policy', 'formData'));
     }
 
     public function update(Request $request, Claim $claim)

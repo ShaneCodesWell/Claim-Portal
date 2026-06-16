@@ -70,6 +70,54 @@
 
                     <form id="motorForm">
 
+                        {{-- SECTION: CLAIMANT / POLICYHOLDER INFORMATION --}}
+                        <section class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
+                                CLAIMANT / POLICYHOLDER INFORMATION
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{-- Full Name --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Full Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="claimant_name"
+                                        value="{{ $f['claimant_name'] ?? ($user->name ?? '') }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                                </div>
+
+                                {{-- Email --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Email Address <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="email" name="claimant_email"
+                                        value="{{ $f['claimant_email'] ?? ($user->email ?? '') }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                                </div>
+
+                                {{-- Phone --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Phone Number <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="tel" name="claimant_phone"
+                                        value="{{ $f['claimant_phone'] ?? ($user->phone ?? '') }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                                </div>
+
+                                {{-- Occupation --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Occupation <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="claimant_occupation"
+                                        value="{{ $f['claimant_occupation'] ?? ($user->occupation ?? '') }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                                </div>
+                            </div>
+                        </section>
+                        
                         {{-- SECTION 1: VEHICLE PARTICULARS --}}
                         <section class="mb-8">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">

@@ -96,6 +96,54 @@
             <input type="hidden" name="policy_id" value="{{ $policy->external_policy_id ?? $policy->id }}">
             <input type="hidden" name="risk_id" value="{{ $riskId ?? '' }}">
 
+            {{-- SECTION: CLAIMANT / POLICYHOLDER INFORMATION --}}
+            <section class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
+                    CLAIMANT / POLICYHOLDER INFORMATION
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Full Name --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="claimant_name"
+                            value="{{ $f['fullname'] ?? '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    </div>
+
+                    {{-- Email --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Email Address <span class="text-red-500">*</span>
+                        </label>
+                        <input type="email" name="claimant_email"
+                            value="{{ $f['email'] ?? '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    </div>
+
+                    {{-- Phone --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Phone Number <span class="text-red-500">*</span>
+                        </label>
+                        <input type="tel" name="claimant_phone"
+                            value="{{ $f['phone'] ?? '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    </div>
+
+                    {{-- Occupation --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Occupation
+                        </label>
+                        <input type="text" name="claimant_occupation"
+                            value="{{ $f['occupation'] ?? '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    </div>
+                </div>
+            </section>
+
             {{-- ── SECTION 1: VEHICLE PARTICULARS ── --}}
             <section class="mb-8">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
@@ -205,15 +253,18 @@
                     <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div><label class="block text-xs font-medium text-gray-600">Full Name</label>
-                                <input type="text" readonly value="{{ $customer->name ?? $claim->customer?->name ?? '' }}"
+                                <input type="text" readonly
+                                    value="{{ $customer->name ?? ($claim->customer?->name ?? '') }}"
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                             <div><label class="block text-xs font-medium text-gray-600">Address</label>
-                                <input type="text" value="{{ $customer->email ?? $claim->customer?->email ?? '' }}"
+                                <input type="text"
+                                    value="{{ $customer->email ?? ($claim->customer?->email ?? '') }}"
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                             <div><label class="block text-xs font-medium text-gray-600">Telephone</label>
-                                <input type="text" readonly value="{{ $customer->phone ?? $claim->customer?->phone ?? '' }}"
+                                <input type="text" readonly
+                                    value="{{ $customer->phone ?? ($claim->customer?->phone ?? '') }}"
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                         </div>

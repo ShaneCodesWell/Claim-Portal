@@ -1,5 +1,18 @@
 <x-layouts.app>
 
+    @php
+        $f = $formData ?? [];
+        $isStaff = ($context ?? 'customer') === 'staff';
+        $isEdit = !is_null($claim ?? null);
+
+        // Array Data
+        $yourVehicleInjured = json_decode($f['your_vehicle_injured'] ?? '[]', true);
+        $otherVehicleInjured = json_decode($f['other_vehicle_injured'] ?? '[]', true);
+
+        $yourVehicleInjured = is_array($yourVehicleInjured) ? $yourVehicleInjured : [];
+        $otherVehicleInjured = is_array($otherVehicleInjured) ? $otherVehicleInjured : [];
+    @endphp
+
     {{-- Page Header --}}
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
