@@ -41,11 +41,18 @@ return [
         'sender_id' => env('ARKESEL_SENDER_ID'),
     ],
 
-    // Live Genova credentials
-    'genova' => [
+    // Genova credentials
+    'genova'   => [
         'base_url' => env('GENOVA_BASE_URL'),
         'username' => env('GENOVA_USERNAME'),
         'password' => env('GENOVA_PASSWORD'),
+    ],
+
+    // Glims credentials
+    'glims'    => [
+        'url'    => env('GLIMS_API_URL'),
+        'key'    => env('GLIMS_API_KEY'),
+        'secret' => env('GLIMS_API_SECRET'),
     ],
 
 ];

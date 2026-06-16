@@ -146,9 +146,9 @@
                                 <th
                                     class="px-6 py-3 w-60 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Policy Number</th>
-                                <th
+                                {{-- <th
                                     class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Insured Name</th>
+                                    Insured Name</th> --}}
                                 <th
                                     class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Product</th>
@@ -182,14 +182,14 @@
                                             {{ $policy['policy_number'] }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-3">
+                                    {{-- <td class="px-6 py-3">
                                         <div class="text-xs font-medium text-gray-900">
                                             {{ ucwords(strtolower($customer->name)) }}
                                         </div>
                                         <p class="text-xs text-gray-400 mt-0.5">
                                             {{ $customer->external_customer_code }}
                                         </p>
-                                    </td>
+                                    </td> --}}
                                     <td class="px-6 py-3">
                                         <div class="text-xs font-medium text-gray-900">
                                             {{ $policy['product_name'] }}

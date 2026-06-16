@@ -6,6 +6,7 @@ enum UserRole: string {
     case BROKER     = 'broker';
     case CLAIM_HEAD = 'claim_head';
     case CLAIMS_ADJUSTER = 'claims_adjuster';
+    case SURVEYOR = 'surveyor';
     case REVIEWER   = 'reviewer';
     case STAFF      = 'staff';
 
@@ -21,6 +22,7 @@ enum UserRole: string {
             self::BROKER->value,
             self::CLAIM_HEAD->value,
             self::CLAIMS_ADJUSTER->value,
+            self::SURVEYOR->value,
             self::REVIEWER->value,
             self::STAFF->value,
         ];
@@ -33,6 +35,7 @@ enum UserRole: string {
             self::BROKER->value     => 'Broker',
             self::CLAIM_HEAD->value => 'Claim Head',
             self::CLAIMS_ADJUSTER->value => 'Claims Adjuster',
+            self::SURVEYOR->value   => 'Surveyor',
             self::REVIEWER->value   => 'Reviewer',
             self::STAFF->value      => 'Staff',
         ];
