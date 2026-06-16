@@ -1,18 +1,5 @@
 <x-layouts.app>
 
-    @php
-        $f = $formData ?? [];
-        $isStaff = ($context ?? 'customer') === 'staff';
-        $isEdit = !is_null($claim ?? null);
-
-        // Array Data
-        $yourVehicleInjured = json_decode($f['your_vehicle_injured'] ?? '[]', true);
-        $otherVehicleInjured = json_decode($f['other_vehicle_injured'] ?? '[]', true);
-
-        $yourVehicleInjured = is_array($yourVehicleInjured) ? $yourVehicleInjured : [];
-        $otherVehicleInjured = is_array($otherVehicleInjured) ? $otherVehicleInjured : [];
-    @endphp
-
     {{-- Page Header --}}
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
@@ -58,41 +45,6 @@
         {{-- ==================== LEFT COLUMN ==================== --}}
         <div class="space-y-5">
 
-            {{-- Policy Card --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-file-contract text-blue-500"></i> Policy
-                    </h3>
-                </div>
-                <div class="p-4 space-y-2 text-xs">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Policy No.</span>
-                        <span
-                            class="font-mono font-medium text-gray-800">{{ $claim->policy->policy_number ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Product</span>
-                        <span
-                            class="text-gray-700 text-right max-w-[60%]">{{ $claim->policy->product_name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Class</span>
-                        <span class="text-gray-700">{{ $claim->policy->business_class_name ?? 'N/A' }}</span>
-                    </div>
-                    {{-- <div class="flex justify-between">
-                        <span class="text-gray-500">Source</span>
-                        <span class="text-gray-700 capitalize">{{ $claim->policy->source ?? 'N/A' }}</span>
-                    </div> --}}
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Expires</span>
-                        <span class="{{ $claim->policy?->end_date?->isPast() ? 'text-red-600' : 'text-gray-700' }}">
-                            {{ $claim->policy?->end_date?->format('d M Y') ?? 'N/A' }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
             {{-- Documents Card --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
@@ -130,86 +82,236 @@
         {{-- ==================== RIGHT COLUMN ==================== --}}
         <div class="lg:col-span-2 space-y-5">
 
-            {{-- Form Data Card --}}
+            {{-- Claim Summary Card (merged policy + form data) --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                {{-- Header with action button --}}
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                            <i class="fas fa-clipboard-list text-blue-500"></i> Claim Form Data
-                        </h3>
-                    </div>
-                    <div class="flex gap-2">
-                        @if (in_array($claim->status, ['submitted', 'pending_info']))
-                            <a href="{{ route('claims.edit', $claim) }}"
-                                class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
-                                <i class="fas fa-edit"></i> Edit Form
-                            </a>
-                        @else
-                            <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
-                                <i class="fas fa-lock"></i> Editing locked — claim is
-                                {{ str_replace('_', ' ', $claim->status) }}
-                            </span>
-                        @endif
-                    </div>
+                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-file-alt text-blue-500"></i> Claim Summary
+                    </h3>
+                    @if (in_array($claim->status, ['submitted', 'pending_info']))
+                        <a href="{{ route('claims.edit', $claim) }}"
+                            class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                            <i class="fas fa-edit"></i> Edit Form
+                        </a>
+                    @else
+                        <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
+                            <i class="fas fa-lock"></i> Editing locked
+                        </span>
+                    @endif
                 </div>
-                <div class="p-5">
-                    @if ($claim->form_data && count($claim->form_data))
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                            @foreach ($claim->form_data as $key => $value)
-                                @if (!is_array($value) && $value !== null && $value !== '')
-                                    <div class="flex flex-col">
-                                        <span class="text-xs text-gray-400 capitalize mb-0.5">
-                                            {{ str_replace('_', ' ', $key) }}
-                                        </span>
-                                        <span class="text-sm text-gray-800 font-medium">
-                                            @if (is_bool($value))
-                                                {{ $value ? 'Yes' : 'No' }}
-                                            @else
-                                                {{ $value }}
-                                            @endif
-                                        </span>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </div>
 
-                        {{-- Array fields (injured persons, property items etc.) --}}
-                        @foreach ($claim->form_data as $key => $value)
-                            @if (is_array($value) && count($value))
-                                <div class="mt-5 pt-4 border-t border-gray-100">
-                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                                        {{ str_replace('_', ' ', $key) }}
+                <div class="p-5 space-y-5">
+
+                    {{-- Section: Policy Information --}}
+                    @php $policy = $claim->policy; @endphp
+                    @if ($policy)
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-file-contract text-blue-400"></i> Policy
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                <div>
+                                    <span class="text-gray-500 block">Policy No.</span>
+                                    <span
+                                        class="font-mono font-medium text-gray-800">{{ $policy->policy_number ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block">Product</span>
+                                    <span class="text-gray-700">{{ $policy->product_name ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block">Class</span>
+                                    <span class="text-gray-700">{{ $policy->business_class_name ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block">Expiry</span>
+                                    <span
+                                        class="{{ $policy->end_date?->isPast() ? 'text-red-600' : 'text-gray-700' }}">
+                                        {{ $policy->end_date?->format('d M Y') ?? 'N/A' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="border-gray-100">
+                    @endif
+
+                    {{-- Section: Claimant / Policyholder --}}
+                    @php
+                        $claimant = [
+                            'name' => $claim->form_data['claimant_name'] ?? ($claim->policy?->customer?->name ?? ''),
+                            'email' => $claim->form_data['claimant_email'] ?? ($claim->policy?->customer?->email ?? ''),
+                            'phone' => $claim->form_data['claimant_phone'] ?? ($claim->policy?->customer?->phone ?? ''),
+                            'occupation' => $claim->form_data['claimant_occupation'] ?? '',
+                        ];
+                    @endphp
+                    <div>
+                        <h4
+                            class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <i class="fas fa-user-circle text-blue-400"></i> Claimant / Policyholder
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                            <div>
+                                <span class="text-gray-500 block">Full Name</span>
+                                <span class="text-gray-800 font-medium">{{ $claimant['name'] ?: '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Email</span>
+                                <span class="text-gray-700">{{ $claimant['email'] ?: '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Phone</span>
+                                <span class="text-gray-700">{{ $claimant['phone'] ?: '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Occupation</span>
+                                <span class="text-gray-700">{{ $claimant['occupation'] ?: '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Section: Vehicle Particulars --}}
+                    @php
+                        $vehicleFields = ['registration_no', 'make', 'model', 'year_of_make'];
+                        $hasVehicle = collect($vehicleFields)->some(fn($k) => !empty($claim->form_data[$k]));
+                    @endphp
+                    @if ($hasVehicle)
+                        <hr class="border-gray-100">
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-car text-blue-400"></i> Vehicle Particulars
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                @foreach ($vehicleFields as $key)
+                                    @php
+                                        $label = str_replace('_', ' ', $key);
+                                        $value = $claim->form_data[$key] ?? '';
+                                    @endphp
+                                    @if ($value)
+                                        <div>
+                                            <span class="text-gray-500 block">{{ ucfirst($label) }}</span>
+                                            <span class="text-gray-800 font-medium">{{ $value }}</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Section: Accident Circumstances --}}
+                    @php
+                        $accidentKeys = [
+                            'accident_date',
+                            'accident_time',
+                            'exact_location',
+                            'accident_description',
+                            'people_in_vehicle',
+                            'vehicle_damage',
+                            'damaged_vehicle_location',
+                        ];
+                        $hasAccident = collect($accidentKeys)->some(fn($k) => !empty($claim->form_data[$k]));
+                    @endphp
+                    @if ($hasAccident)
+                        <hr class="border-gray-100">
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle text-amber-400"></i> Accident Details
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                                @foreach (['accident_date', 'accident_time', 'exact_location', 'people_in_vehicle', 'vehicle_damage', 'damaged_vehicle_location'] as $key)
+                                    @php
+                                        $label = str_replace('_', ' ', $key);
+                                        $value = $claim->form_data[$key] ?? '';
+                                    @endphp
+                                    @if ($value)
+                                        <div>
+                                            <span class="text-gray-500 block">{{ ucfirst($label) }}</span>
+                                            <span class="text-gray-800">{{ $value }}</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                            @if (!empty($claim->form_data['accident_description']))
+                                <div class="mt-3">
+                                    <span class="text-gray-500 text-xs block">Description</span>
+                                    <p
+                                        class="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 mt-1 border border-gray-100">
+                                        {{ $claim->form_data['accident_description'] }}
                                     </p>
-                                    <div class="overflow-x-auto rounded-lg border border-gray-100">
-                                        <table class="w-full text-xs">
-                                            <thead class="bg-gray-50 border-b border-gray-100">
-                                                <tr>
-                                                    @foreach (array_keys((array) $value[0]) as $col)
-                                                        <th
-                                                            class="px-3 py-2 text-left font-medium text-gray-500 capitalize">
-                                                            {{ str_replace('_', ' ', $col) }}
-                                                        </th>
-                                                    @endforeach
-                                                </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-gray-50">
-                                                @foreach ($value as $row)
-                                                    <tr class="hover:bg-gray-50">
-                                                        @foreach ((array) $row as $cell)
-                                                            <td class="px-3 py-2 text-gray-700">{{ $cell ?: '—' }}
-                                                            </td>
-                                                        @endforeach
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
                                 </div>
                             @endif
-                        @endforeach
-                    @else
+                        </div>
+                    @endif
+
+                    {{-- Section: Driver Details (if applicable) --}}
+                    @php
+                        $driverKeys = ['driver_fullname', 'driver_address', 'driver_phone', 'driver_license'];
+                        $hasDriver = collect($driverKeys)->some(fn($k) => !empty($claim->form_data[$k]));
+                    @endphp
+                    @if ($hasDriver)
+                        <hr class="border-gray-100">
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-user-tie text-blue-400"></i> Driver at Time of Accident
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                @foreach ($driverKeys as $key)
+                                    @php
+                                        $label = str_replace('_', ' ', $key);
+                                        $value = $claim->form_data[$key] ?? '';
+                                    @endphp
+                                    @if ($value)
+                                        <div>
+                                            <span class="text-gray-500 block">{{ ucfirst($label) }}</span>
+                                            <span class="text-gray-800">{{ $value }}</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Section: Other Key Fields (consent, hire purchase, etc.) --}}
+                    @php
+                        $otherKeys = ['vehicle_consent', 'hire_purchase', 'police_report'];
+                        $hasOther = collect($otherKeys)->some(fn($k) => !empty($claim->form_data[$k]));
+                    @endphp
+                    @if ($hasOther)
+                        <hr class="border-gray-100">
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-flag text-blue-400"></i> Additional Details
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                                @foreach ($otherKeys as $key)
+                                    @php
+                                        $label = str_replace('_', ' ', $key);
+                                        $value = $claim->form_data[$key] ?? '';
+                                        if ($value === 'yes' || $value === 'no') {
+                                            $value = ucfirst($value);
+                                        }
+                                    @endphp
+                                    @if ($value)
+                                        <div>
+                                            <span class="text-gray-500 block">{{ ucfirst($label) }}</span>
+                                            <span class="text-gray-800">{{ $value }}</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- If no data at all --}}
+                    @if (!$hasVehicle && !$hasAccident && !$hasDriver && !$hasOther && empty($claimant['name']))
                         <p class="text-sm text-gray-400 italic">No form data available.</p>
                     @endif
+
                 </div>
             </div>
 

@@ -10,15 +10,12 @@ class PolicySyncService
 {
     private GlimsApiService $glims;
 
-    // ── Constructor ───────────────────────────────────────────────────────────
-    // NOTE: Inject GlimsApiService (HTTP) instead of the old GlimsService (Oracle).
-    // Update your AppServiceProvider / container binding if you had one registered.
-
     public function __construct(GlimsApiService $glims)
     {
         $this->glims = $glims;
     }
 
+    // Genova sync 
     public function syncFromGenova(array $customerInfo, array $allProducts, Customer $dbCustomer): array
     {
         $syncedPoliciesMap = [];
@@ -39,10 +36,7 @@ class PolicySyncService
             $productId   = $firstPolicy['product_id'] ?? null;
 
             $dbPolicy = Policy::updateOrCreate(
-                [
-                    'source'        => 'genova',
-                    'policy_number' => $policyNumber,
-                ],
+                ['source' => 'genova', 'policy_number' => $policyNumber],
                 [
                     'customer_id'         => $dbCustomer->id,
                     'insured_name'        => $customerInfo['name'],
@@ -89,7 +83,6 @@ class PolicySyncService
             return;
         }
 
-        // Resolve product/class names from catalogue, fall back to existing DB record
         $productInfo = $productId ? ($allProducts[$productId] ?? []) : [];
 
         if (empty($productInfo)) {
@@ -100,11 +93,9 @@ class PolicySyncService
             ];
         }
 
-        // Extract the first risk's vehicle number (plate) as the primary vehicle_number
         $firstRisk     = collect($risks)->first() ?? [];
         $vehicleNumber = $firstRisk['risk_ref_no'] ?? null;
-
-        $status = ($endDate && Carbon::parse($endDate)->isPast()) ? 'expired' : 'active';
+        $status        = ($endDate && Carbon::parse($endDate)->isPast()) ? 'expired' : 'active';
 
         Policy::updateOrCreate(
             ['external_policy_id' => (string) $policyId],
@@ -126,7 +117,7 @@ class PolicySyncService
                     'policy_id'         => $policyId,
                     'product_id'        => $productId,
                     'vehicle_number'    => $vehicleNumber,
-                    'risks'             => $risks, // ← full vehicle detail lives here
+                    'risks'             => $risks,
                     'policy_start_date' => $policyData['policy_start'] ?? null,
                     'policy_end_date'   => $endDate,
                     'effective_date'    => $policyData['effective_start_date'] ?? null,
@@ -137,65 +128,76 @@ class PolicySyncService
         );
     }
 
-    // ── GLIMS sync (rewritten for middleware API payload) ─────────────────────
-
     /**
-     * Sync all policies for a GLIMS customer from the middleware API.
-     *
-     * The middleware returns flat rows — one per policy (or one per vehicle for fleet).
-     * GlimsApiService::getPoliciesByClientCode() groups these into one array entry
-     * per policy_number, with a 'risks' key holding all vehicles.
-     *
-     * Raw payload shape stored in DB:
-     * {
-     *   "POLICY_NUMBER": "P-1015-512-2021-000119",
-     *   "POLICY_LOB_NAME": "MOTOR",
-     *   "POLICY_PRODUCT_NAME": "MOTOR COMPREHENSIVE",
-     *   "POLICY_START_DATE": "2024-02-13",
-     *   "POLICY_EXPIRY_DATE": "2025-02-12",
-     *   "POLICY_TOTAL_PREMIUM": 482,
-     *   "POLICY_TOTAL_SI": 0,
-     *   "POLICY_CURRENCY": "GHC",
-     *   "is_fleet": false,
-     *   "risks": [
-     *     { "risk_ref_no": "GR 8080 U", "sum_insured": 0, "total_premium": 482, ... }
-     *   ]
-     * }
+     * Refresh a Customer record from a Genova customer-search API response.
+     * Stores data under raw_payload['genova'] — never overwrites raw_payload['glims'].
      */
-    public function syncFromGlims(string $clientCode, Customer $dbCustomer): array
+    public function refreshCustomerFromGenova(Customer $customer, array $genovaContent): void
+    {
+        try {
+            $payloadToStore = array_merge(
+                array_diff_key($genovaContent, ['policies' => null]),
+                ['_synced_from' => 'genova', '_synced_at' => now()->toDateTimeString()]
+            );
+
+            $existing = $customer->raw_payload ?? [];
+            $merged   = array_merge($existing, ['genova' => $payloadToStore]);
+
+            $updates = ['raw_payload' => $merged];
+
+            if (! empty($genovaContent['name'])) {
+                $updates['name'] = $genovaContent['name'];
+            }
+            if (! empty($genovaContent['email'])) {
+                $updates['email'] = $genovaContent['email'];
+            }
+            if (! empty($genovaContent['phone_number'])) {
+                $updates['phone'] = $genovaContent['phone_number'];
+            }
+
+            $sources = $customer->sources ?? [];
+            if (! in_array('genova', $sources)) {
+                $sources[]          = 'genova';
+                $updates['sources'] = $sources;
+            }
+
+            $customer->update($updates);
+
+        } catch (\Exception $e) {
+            Log::warning('PolicySyncService: refreshCustomerFromGenova failed', [
+                'customer_id' => $customer->id,
+                'error'       => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // GLIMS sync
+    /**
+     * Sync GLIMS policies that already have rich risk detail merged in.
+     * Called by SyncCustomerPoliciesJob after it has fetched policy details
+     * and merged them into each policy's 'risks' key.
+     *
+     * This replaces the old syncFromGlims() which had no rich detail.
+     */
+    public function syncFromGlimsRich(array $policies, Customer $dbCustomer): array
     {
         $syncedPoliciesMap = [];
 
-        $glimsPolicies = $this->glims->getPoliciesByClientCode($clientCode);
-
-        if (empty($glimsPolicies)) {
-            Log::info('PolicySyncService: No GLIMS policies found via API', [
-                'client_code' => $clientCode,
-            ]);
-            return $syncedPoliciesMap;
-        }
-
-        foreach ($glimsPolicies as $policy) {
+        foreach ($policies as $policy) {
             $policyNumber = $policy['POLICY_NUMBER'] ?? null;
 
             if (! $policyNumber || isset($syncedPoliciesMap[$policyNumber])) {
                 continue;
             }
 
-            $status = $this->resolveStatus($policy);
-
-            // Build the raw_payload — everything the frontend and PolicyResource need
+            $status     = $this->resolveStatus($policy);
             $rawPayload = array_merge($policy, [
-                // Explicit top-level keys for fast access without digging into nested arrays
                 'source'       => 'glims',
                 'status_label' => $status,
             ]);
 
             $dbPolicy = Policy::updateOrCreate(
-                [
-                    'source'        => 'glims',
-                    'policy_number' => $policyNumber,
-                ],
+                ['source' => 'glims', 'policy_number' => $policyNumber],
                 [
                     'customer_id'         => $dbCustomer->id,
                     'insured_name'        => $dbCustomer->name,
@@ -207,7 +209,7 @@ class PolicySyncService
                     'start_date'          => $policy['POLICY_START_DATE'] ?? null,
                     'end_date'            => $policy['POLICY_EXPIRY_DATE'] ?? null,
                     'effective_date'      => $policy['POLICY_ISSUE_DATE'] ?? null,
-                    'renewal_date'        => null, // not in middleware response
+                    'renewal_date'        => $policy['POLICY_EXPIRY_DATE'] ? Carbon::parse($policy['POLICY_EXPIRY_DATE'])->addDay()->toDateString() : null,
                     'status'              => $status,
                     'raw_payload'         => $rawPayload,
                     'last_synced_at'      => now(),
@@ -224,13 +226,62 @@ class PolicySyncService
         return $syncedPoliciesMap;
     }
 
-    // ── Private: Status resolution ────────────────────────────────────────────
-
     /**
-     * Derive a status string from the grouped policy data.
-     * The middleware only returns active policies (filtered server-side),
-     * but we cross-check expiry date to catch anything that slipped through.
+     * Refresh a Customer record from a raw GLIMS customer search result row.
+     * Stored under raw_payload['glims'] — never overwrites raw_payload['genova'].
      */
+    public function refreshCustomerFromGlimsRow(Customer $customer, array $glimsRow): void
+    {
+        try {
+            $firstName  = $glimsRow['first_name'] ?? null;
+            $otherNames = $glimsRow['other_names'] ?? null;
+            $familyName = $glimsRow['family_name'] ?? null;
+
+            $fullName = trim(implode(' ', array_filter([
+                $firstName,
+                $otherNames,
+                $familyName,
+            ])));
+
+            $payloadToStore = array_merge($glimsRow, [
+                '_synced_from' => 'glims',
+                '_synced_at'   => now()->toDateTimeString(),
+            ]);
+
+            $existing = $customer->raw_payload ?? [];
+            $merged   = array_merge($existing, ['glims' => $payloadToStore]);
+
+            $updates = ['raw_payload' => $merged];
+
+            // Update core fields — prefer non-empty API value over existing blank
+            if (! empty($fullName) && empty($customer->name)) {
+                $updates['name'] = $fullName;
+            }
+            if (! empty($glimsRow['mobile_number']) && empty($customer->phone)) {
+                $updates['phone'] = $glimsRow['mobile_number'];
+            }
+            if (! empty($glimsRow['email']) && empty($customer->email)) {
+                $updates['email'] = $glimsRow['email'];
+            }
+
+            // Ensure 'glims' is in sources
+            $sources = $customer->sources ?? [];
+            if (! in_array('glims', $sources)) {
+                $sources[]          = 'glims';
+                $updates['sources'] = $sources;
+            }
+
+            $customer->update($updates);
+
+        } catch (\Exception $e) {
+            Log::warning('PolicySyncService: refreshCustomerFromGlimsRow failed', [
+                'customer_id' => $customer->id,
+                'error'       => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // Private helpers
     private function resolveStatus(array $policy): string
     {
         $expiry = $policy['POLICY_EXPIRY_DATE'] ?? null;
@@ -246,8 +297,7 @@ class PolicySyncService
         return 'active';
     }
 
-    // ── Private: Response formatters ─────────────────────────────────────────
-
+    // Private: Response formatters
     private function formatGlimsPolicyForResponse(
         Policy $policy,
         Customer $customer,

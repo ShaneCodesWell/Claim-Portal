@@ -4,15 +4,14 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Policy;
 use App\Services\GenovaApiService;
-use App\Services\GlimsService;
+use App\Services\GlimsApiService;
 use App\Services\OtpService;
-use \App\Jobs\SyncCustomerPoliciesJob;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use \App\Jobs\SyncCustomerPoliciesJob;
 
 class AuthController extends Controller
 {
@@ -20,7 +19,7 @@ class AuthController extends Controller
     protected $glims;
     protected OtpService $otp;
 
-    public function __construct(GenovaApiService $api, GlimsService $glims, OtpService $otp)
+    public function __construct(GenovaApiService $api, GlimsApiService $glims, OtpService $otp)
     {
         $this->api   = $api;
         $this->glims = $glims;
@@ -436,40 +435,28 @@ class AuthController extends Controller
     {
         $profiles = [];
 
-        // Try Oracle GLIMS first
-        if ($this->glims->isConnected()) {
-            try {
-                $customer = $this->glimsPhoneLookup($phone);
+        // ── Try middleware API first ──────────────────────────────────────────────
+        try {
+            $profiles = $this->glims->resolveProfilesByPhone($phone);
 
-                if ($customer) {
-                    $name = trim(implode(' ', array_filter([
-                        $customer['CLIENT_FIRST_NAME'] ?? null,
-                        $customer['CLIENT_MIDDLE_NAME'] ?? null,
-                        $customer['CLIENT_FAMILY_NAME'] ?? null,
-                    ])));
-
-                    $profiles[] = [
-                        'code'         => $customer['CLIENT_CODE'],
-                        'name'         => $name,
-                        'phone'        => $customer['CLIENT_HOME_MOBILE'] ?? $customer['CLIENT_HOME_TEL'] ?? $phone,
-                        'email'        => $customer['CLIENT_HOME_EMAIL'] ?? null,
-                        'policy_count' => null,
-                        'source'       => 'glims',
-                        'is_match'     => true,
-                    ];
-
-                    return $profiles; // Oracle found them — no need for local lookup
-                }
-            } catch (\Exception $e) {
-                Log::warning('resolveGlimsProfiles: Oracle lookup failed', ['error' => $e->getMessage()]);
+            if (! empty($profiles)) {
+                Log::info('resolveGlimsProfiles: found via API', [
+                    'phone' => $phone,
+                    'count' => count($profiles),
+                ]);
+                return $profiles;
             }
+        } catch (\Exception $e) {
+            Log::warning('resolveGlimsProfiles: API lookup failed', [
+                'error' => $e->getMessage(),
+            ]);
         }
 
-        // Oracle unreachable or returned nothing — fall back to local synced DB
-        Log::info('resolveGlimsProfiles: falling back to local DB', ['phone' => $phone]);
+        // ── API returned nothing — fall back to local synced DB ──────────────────
+        Log::info('resolveGlimsProfiles: API empty, falling back to local DB', ['phone' => $phone]);
 
         $localCustomer = Customer::where('phone', $phone)
-            ->whereJsonContains('sources', 'glims') // only GLIMS-sourced customers
+            ->whereJsonContains('sources', 'glims')
             ->first();
 
         if ($localCustomer) {
@@ -479,7 +466,7 @@ class AuthController extends Controller
                 'phone'        => $localCustomer->phone,
                 'email'        => $localCustomer->email,
                 'policy_count' => $localCustomer->policies()->count(),
-                'source'       => 'glims_local', // flag so we know it came from local
+                'source'       => 'glims_local',
                 'is_match'     => true,
             ];
         }
@@ -607,50 +594,6 @@ class AuthController extends Controller
         }
 
         return $profiles;
-    }
-
-    /**
-     * Phone number lookup against GLIMS GN2_CLIENT table.
-     * Returns the same array shape as GlimsService::customerVerification().
-     */
-    private function glimsPhoneLookup(string $phone): ?array
-    {
-        try {
-            $customer = DB::connection('oracle')
-                ->table('GN2_CLIENT')
-                ->where('CLIENT_HOME_MOBILE', $phone)
-                ->orWhere('CLIENT_HOME_TEL', $phone)
-                ->select([
-                    'CLIENT_CODE',
-                    'CLIENT_FIRST_NAME',
-                    'CLIENT_MIDDLE_NAME',
-                    'CLIENT_FAMILY_NAME',
-                    'CLIENT_HOME_MOBILE',
-                    'CLIENT_HOME_TEL',
-                    'CLIENT_HOME_EMAIL',
-                    'CLIENT_TYPE',
-                ])
-                ->first();
-
-            if (! $customer) {
-                return null;
-            }
-
-            return [
-                'CLIENT_CODE'        => $customer->client_code,
-                'CLIENT_FIRST_NAME'  => $customer->client_first_name,
-                'CLIENT_MIDDLE_NAME' => $customer->client_middle_name,
-                'CLIENT_FAMILY_NAME' => $customer->client_family_name,
-                'CLIENT_HOME_MOBILE' => $customer->client_home_mobile,
-                'CLIENT_HOME_TEL'    => $customer->client_home_tel,
-                'CLIENT_HOME_EMAIL'  => $customer->client_home_email,
-                'CLIENT_TYPE'        => $customer->client_type,
-            ];
-
-        } catch (\Exception $e) {
-            Log::error('glimsPhoneLookup error: ' . $e->getMessage());
-            return null;
-        }
     }
 
     private function sendOtpAndRespond(string $phone, string $name): JsonResponse

@@ -20,11 +20,14 @@ class Customer extends Authenticatable
         'local_password',
         'local_password_set_at',
         'sources',
+        'raw_payload',
     ];
 
     protected $casts = [
-        'sources' => 'array',
-        'last_synced_at' => 'datetime',
+        'sources'               => 'array',
+        'raw_payload'           => 'array',
+        'last_synced_at'        => 'datetime',
+        'local_password_set_at' => 'datetime',
     ];
 
     public function policies()

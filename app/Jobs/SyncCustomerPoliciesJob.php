@@ -5,8 +5,8 @@ use App\Models\Customer;
 use App\Services\GenovaApiService;
 use App\Services\GlimsApiService;
 use App\Services\PolicySyncService;
-use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -41,9 +41,8 @@ class SyncCustomerPoliciesJob implements ShouldQueue
         $sources      = $this->customer->sources ?? [];
 
         // GLIMS sync
-        // Run this first — it's a single API call (no product catalogue needed).
-        // Genova sync below will run regardless; both sources are additive.
-
+        // Single API call for policy list + one detail call per policy.
+        // Runs first; failure never blocks Genova.
         if ($customerCode && in_array('glims', $sources)) {
             $this->syncGlims($glims, $policySync, $customerCode);
         }
@@ -72,7 +71,56 @@ class SyncCustomerPoliciesJob implements ShouldQueue
         ]);
 
         try {
-            $synced = $policySync->syncFromGlims($customerCode, $this->customer);
+            // Step 1: Refresh customer record from dedicated customer endpoint
+            // This gives us phone, email, DOB, gender — not available on policy rows.
+            $this->refreshGlimsCustomer($glims, $policySync, $customerCode);
+
+            // Step 2: Get flat policy list grouped by policy_number
+            $policies = $glims->getPoliciesByClientCode($customerCode);
+
+            if (empty($policies)) {
+                Log::info('SyncCustomerPoliciesJob: no GLIMS policies found', [
+                    'customer_id' => $this->customer->id,
+                ]);
+                return;
+            }
+
+            $policyNumbers = collect($policies)->pluck('POLICY_NUMBER')->filter()->unique()->values();
+
+            Log::info('SyncCustomerPoliciesJob: syncing GLIMS policies', [
+                'customer_id'  => $this->customer->id,
+                'policy_count' => $policyNumbers->count(),
+            ]);
+
+            // Step 3: Fetch rich details per policy and merge into the record
+            // Mirrors what Genova does with policySearch() — we get vehicle detail
+            // (make, model, chassis, year) that isn't on the policy search rows.
+            foreach ($policies as &$policy) {
+                $policyNumber = $policy['POLICY_NUMBER'] ?? null;
+                if (! $policyNumber) {
+                    continue;
+                }
+
+                try {
+                    $richRisks = $glims->getRisksForPolicy($policyNumber);
+
+                    if (! empty($richRisks)) {
+                        // Replace placeholder risks (plate only) with full detail
+                        $policy['risks']    = $richRisks;
+                        $policy['is_fleet'] = count($richRisks) > 1;
+                    }
+                } catch (\Exception $e) {
+                    // Don't let one failed detail call kill the rest
+                    Log::warning('SyncCustomerPoliciesJob: GLIMS policy details failed', [
+                        'policy_number' => $policyNumber,
+                        'error'         => $e->getMessage(),
+                    ]);
+                }
+            }
+            unset($policy); // clean up reference
+
+            // Step 4: Sync all policies into the DB
+            $synced = $policySync->syncFromGlimsRich($policies, $this->customer);
 
             Log::info('SyncCustomerPoliciesJob: GLIMS sync complete', [
                 'customer_id'     => $this->customer->id,
@@ -88,13 +136,36 @@ class SyncCustomerPoliciesJob implements ShouldQueue
         }
     }
 
-    // Genova sync path (unchanged logic, extracted into its own method)
+    /**
+     * Fetch the customer record from the dedicated customer endpoint and
+     * refresh the local Customer model with phone, email, and raw_payload.
+     */
+    private function refreshGlimsCustomer(
+        GlimsApiService $glims,
+        PolicySyncService $policySync,
+        string $customerCode
+    ): void {
+        try {
+            $results = $glims->searchCustomerByCode($customerCode);
+
+            if (! empty($results)) {
+                $policySync->refreshCustomerFromGlimsRow($this->customer, $results[0]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('SyncCustomerPoliciesJob: GLIMS customer refresh failed', [
+                'customer_id' => $this->customer->id,
+                'error'       => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // Genova sync path (unchanged)
     private function syncGenova(GenovaApiService $api, PolicySyncService $policySync): void
     {
         $phone        = $this->customer->phone;
         $customerCode = $this->customer->external_customer_code;
 
-        // Step 1: Build product catalogue (needed to resolve names for new policies)
+        // Step 1: Build product catalogue
         $allProducts = $this->fetchProductCatalogue($api, $phone);
 
         // Step 2: Get flat policy list via customer-search
@@ -103,7 +174,14 @@ class SyncCustomerPoliciesJob implements ShouldQueue
         if ($customerCode) {
             $response = $api->getPolicies($customerCode, 'client_code');
             if ($response->successful()) {
-                $content  = $response->json('data.content') ?? [];
+                $content = $response->json('data.content') ?? [];
+
+                // Refresh customer record from Genova while we have the data ─
+                if (! empty($content[0])) {
+                    $policySync->refreshCustomerFromGenova($this->customer, $content[0]);
+                    $this->customer->refresh(); // pick up any phone/email updates
+                }
+
                 $policies = $content[0]['policies'] ?? [];
             }
         }
@@ -117,20 +195,22 @@ class SyncCustomerPoliciesJob implements ShouldQueue
         }
 
         if (empty($policies)) {
-            Log::info('SyncCustomerPoliciesJob: no Genova policies found', ['customer_id' => $this->customer->id,]);
+            Log::info('SyncCustomerPoliciesJob: no Genova policies found', [
+                'customer_id' => $this->customer->id,
+            ]);
             return;
         }
 
-        // Step 3: Deduplicate policy IDs (fleet policies repeat per vehicle)
+        // Step 3: Deduplicate policy IDs
         $uniquePolicyIds = collect($policies)
             ->pluck('policy_id')
             ->unique()
             ->values();
 
-        Log::info('SyncCustomerPoliciesJob: syncing policies', [
+        Log::info('SyncCustomerPoliciesJob: syncing Genova policies', [
             'customer_id'       => $this->customer->id,
             'unique_policy_ids' => $uniquePolicyIds->count(),
-            'total_rows'        => count($policies), // includes fleet duplicates
+            'total_rows'        => count($policies),
         ]);
 
         // Step 4: Fetch rich data per policy and sync
@@ -139,7 +219,7 @@ class SyncCustomerPoliciesJob implements ShouldQueue
                 $richResponse = $api->policySearch((string) $policyId);
 
                 if (! $richResponse->successful()) {
-                    Log::warning('SyncCustomerPoliciesJob: policy-search failed', [
+                    Log::warning('SyncCustomerPoliciesJob: Genova policy-search failed', [
                         'policy_id' => $policyId,
                         'status'    => $richResponse->status(),
                     ]);
@@ -149,7 +229,7 @@ class SyncCustomerPoliciesJob implements ShouldQueue
                 $richData = $richResponse->json('data.policies.0');
 
                 if (! $richData) {
-                    Log::warning('SyncCustomerPoliciesJob: empty policy-search response', [
+                    Log::warning('SyncCustomerPoliciesJob: empty Genova policy-search response', [
                         'policy_id' => $policyId,
                     ]);
                     continue;
@@ -158,19 +238,12 @@ class SyncCustomerPoliciesJob implements ShouldQueue
                 $policySync->syncFromGenovaRich($richData, $allProducts, $this->customer);
 
             } catch (\Exception $e) {
-                // Don't let one failed policy kill the whole job
-                Log::error('SyncCustomerPoliciesJob: error on policy', [
+                Log::error('SyncCustomerPoliciesJob: Genova error on policy', [
                     'policy_id' => $policyId,
                     'error'     => $e->getMessage(),
                 ]);
             }
         }
-
-        $this->customer->update(['last_synced_at' => now()]);
-
-        Log::info('SyncCustomerPoliciesJob: completed', [
-            'customer_id' => $this->customer->id,
-        ]);
     }
 
     private function fetchProductCatalogue(GenovaApiService $api, ?string $phone): array
