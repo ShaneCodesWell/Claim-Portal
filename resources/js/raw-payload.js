@@ -143,6 +143,7 @@
         status_reason: "Renewal",
     },
 
+    // Genova Fleet data
     {
         policy_number: "P-1003-101-2026-000022",
         policy_id: 102409,
@@ -2458,6 +2459,7 @@
         declaration_agreement: "true",
     },
 
+    // Moses Car Data
     {
         POLICY_NUMBER: "P-1002-201-2026-012563",
         POLICY_ID: 615572877154,

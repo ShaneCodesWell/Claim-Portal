@@ -43,7 +43,8 @@ class SyncCustomerPoliciesJob implements ShouldQueue
         // GLIMS sync
         // Single API call for policy list + one detail call per policy.
         // Runs first; failure never blocks Genova.
-        if ($customerCode && in_array('glims', $sources)) {
+        // if ($customerCode && in_array('glims', $sources)) {
+        if ($customerCode) {
             $this->syncGlims($glims, $policySync, $customerCode);
         }
 
