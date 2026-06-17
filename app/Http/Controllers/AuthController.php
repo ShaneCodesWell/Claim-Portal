@@ -121,7 +121,7 @@ class AuthController extends Controller
 
         $loginType = $request->input('login_type', 'mobile_no');
 
-        // ── STEP 1: Verify with Genova ────────────────────────────────
+        // STEP 1: Verify with Genova
         $genovaResult = $this->attemptGenovaVerification($identifier, $loginType);
 
         if ($genovaResult['success']) {
@@ -159,7 +159,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // ── Genova failed — try local Genova DB ───────────────────────
+        // Genova failed — try local Genova DB
         Log::warning('loginAjax: Genova API failed, trying local Genova DB', [
             'identifier' => $identifier,
             'reason'     => $genovaResult['reason'],
@@ -168,19 +168,17 @@ class AuthController extends Controller
         $genovaLocalProfiles = $this->resolveGenovaLocalProfiles($identifier, $loginType);
 
         if (! empty($genovaLocalProfiles)) {
-            $profile = $genovaLocalProfiles[0];
 
+            // Only store what is common — not profile-specific data yet
             session([
-                'pending_auth'          => true,
-                'pending_phone'         => $profile['phone'],
-                'pending_name'          => $profile['name'],
-                'pending_customer_code' => $profile['code'],
-                'selected_customer_id'  => Customer::where('external_customer_code', $profile['code'])->value('id'),
-                'login_type'            => $loginType,
-                'auth_source'           => 'genova_local',
+                'pending_auth'  => true,
+                'pending_phone' => $genovaLocalProfiles[0]['phone'],
+                'login_type'    => $loginType,
+                'auth_source'   => 'genova_local',
             ]);
 
             if (count($genovaLocalProfiles) > 1) {
+                // Multiple profiles — let the user pick; selectProfile() will set the rest
                 return response()->json([
                     'status'   => 'profile_selection',
                     'profiles' => $genovaLocalProfiles,
@@ -188,30 +186,36 @@ class AuthController extends Controller
                 ]);
             }
 
+            // Single profile — safe to commit everything now
+            $profile = $genovaLocalProfiles[0];
+            session([
+                'pending_name'          => $profile['name'],
+                'pending_customer_code' => $profile['code'],
+                'selected_customer_id'  => Customer::where('external_customer_code', $profile['code'])->value('id'),
+            ]);
+
             return $this->sendOtpAndRespond($profile['phone'], $profile['name']);
         }
 
-        // ── Local Genova empty — try GLIMS ────────────────────────────
+        // Local Genova empty — try GLIMS
         Log::info('loginAjax: local Genova lookup empty, trying GLIMS', ['identifier' => $identifier]);
 
         if ($loginType === 'mobile_no') {
             $glimsProfiles = $this->resolveGlimsProfiles($identifier);
 
             if (! empty($glimsProfiles)) {
-                $profile = $glimsProfiles[0];
-                $phone   = $profile['phone'] ?? $identifier;
+                $phone = $glimsProfiles[0]['phone'] ?? $identifier;
 
+                // Only store what is common — not profile-specific data yet
                 session([
-                    'pending_auth'          => true,
-                    'pending_phone'         => $phone,
-                    'pending_name'          => $profile['name'],
-                    'pending_customer_code' => $profile['code'],
-                    'selected_customer_id'  => Customer::where('external_customer_code', $profile['code'])->value('id'),
-                    'login_type'            => $loginType,
-                    'auth_source'           => 'glims',
+                    'pending_auth'  => true,
+                    'pending_phone' => $phone,
+                    'login_type'    => $loginType,
+                    'auth_source'   => 'glims',
                 ]);
 
                 if (count($glimsProfiles) > 1) {
+                    // Multiple profiles — let the user pick; selectProfile() will set the rest
                     return response()->json([
                         'status'   => 'profile_selection',
                         'profiles' => $glimsProfiles,
@@ -219,11 +223,19 @@ class AuthController extends Controller
                     ]);
                 }
 
+                // Single profile — safe to commit everything now
+                $profile = $glimsProfiles[0];
+                session([
+                    'pending_name'          => $profile['name'],
+                    'pending_customer_code' => $profile['code'],
+                    'selected_customer_id'  => Customer::where('external_customer_code', $profile['code'])->value('id'),
+                ]);
+
                 return $this->sendOtpAndRespond($phone, $profile['name']);
             }
         }
 
-        // ── Nothing found anywhere ────────────────────────────────────
+        // Nothing found anywhere 
         Log::error('loginAjax: All auth sources failed', [
             'identifier' => $identifier,
             'login_type' => $loginType,
@@ -235,7 +247,7 @@ class AuthController extends Controller
         ], 422);
     }
 
-    // ── STEP 2: Profile selected → check password status ─────────────
+    // STEP 2: Profile selected
     public function selectProfile(Request $request): JsonResponse
     {
         if (! session('pending_auth')) {
@@ -247,12 +259,15 @@ class AuthController extends Controller
         $customerCode = $request->customer_code;
         session(['pending_customer_code' => $customerCode]);
 
-        // Pin the local DB record if it exists
+        // Pin the local DB record if it exists and pull the correct name + phone from it
         $customer = Customer::where('external_customer_code', $customerCode)->first();
         if ($customer) {
-            session(['selected_customer_id' => $customer->id]);
+            session([
+                'selected_customer_id' => $customer->id,
+                'pending_name'         => $customer->name, // always use the selected customer's name
+            ]);
 
-            // If phone is missing from session but exists on local record, use it
+            // Backfill phone into session if it wasn't set (e.g. GLIMS multi-profile flow)
             if (! session('pending_phone') && $customer->phone) {
                 session(['pending_phone' => $customer->phone]);
             }
@@ -267,6 +282,7 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // pending_name is now correctly set from the selected customer record
         return $this->sendOtpAndRespond($phone, session('pending_name', 'there'));
     }
 
@@ -389,6 +405,31 @@ class AuthController extends Controller
             return $profiles;
         }
 
+        // Genova profiles
+        foreach ($this->resolveGenovaProfiles($phone, $userId) as $profile) {
+            $profiles[] = $profile;
+        }
+
+        // GLIMS profiles — skip any customer code already found in Genova
+        $existingCodes = collect($profiles)->pluck('code');
+        foreach ($this->resolveGlimsProfiles($phone) as $gp) {
+            if (! $existingCodes->contains($gp['code'])) {
+                $profiles[] = $gp;
+            }
+        }
+
+        return $profiles;
+    }
+
+    // ── PRIVATE: Resolve profiles from Genova only ────────────────────
+    private function resolveGenovaProfiles(?string $phone, int $userId): array
+    {
+        $profiles = [];
+
+        if (! $phone) {
+            return $profiles;
+        }
+
         try {
             $response = $this->api->getPolicies($phone, 'phone_number');
 
@@ -412,19 +453,9 @@ class AuthController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            Log::warning('resolveProfiles: Genova customer-search failed', [
+            Log::warning('resolveGenovaProfiles: Genova customer-search failed', [
                 'error' => $e->getMessage(),
             ]);
-        }
-
-        // Also check GLIMS for this phone
-        $glimsProfiles = $this->resolveGlimsProfiles($phone);
-        foreach ($glimsProfiles as $gp) {
-            // Avoid duplicates — if already in Genova profiles, skip
-            $alreadyIn = collect($profiles)->pluck('code')->contains($gp['code']);
-            if (! $alreadyIn) {
-                $profiles[] = $gp;
-            }
         }
 
         return $profiles;

@@ -256,13 +256,26 @@ class GlimsApiService
 
     // Private: HTTP layer
 
+    // private function http()
+    // {
+    //     return Http::withHeaders([
+    //         'x-api-key'    => $this->apiKey,
+    //         'x-api-secret' => $this->apiSecret,
+    //         'Accept'       => 'application/json',
+    //     ])->timeout(15);
+    // }
+
     private function http()
     {
         return Http::withHeaders([
             'x-api-key'    => $this->apiKey,
             'x-api-secret' => $this->apiSecret,
             'Accept'       => 'application/json',
-        ])->timeout(15);
+        ])
+            ->timeout(15)
+            ->when(app()->environment('local'), function ($http) {
+                return $http->withoutVerifying();
+            });
     }
 
     private function customerSearch(string $searchType, string $searchValue): array
