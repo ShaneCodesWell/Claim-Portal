@@ -22,13 +22,14 @@ class StoreStaffRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email|unique:users,email',
-            'password'      => 'required|string|min:8|confirmed',
-            'role'          => 'required|in:' . implode(',', UserRole::staffRoles()),
-            'branch_id'     => 'required|exists:branches,id',
-            'department_id' => 'required|exists:departments,id',
-            'phone'         => 'nullable|string|max:20',
+            'name'                => 'required|string|max:255',
+            'email'               => 'required|email|unique:users,email',
+            'password'            => 'required|string|min:8|confirmed',
+            'role'                => 'required|in:' . implode(',', UserRole::staffRoles()),
+            'branch_id'           => 'required|exists:branches,id',
+            'department_id'       => 'required|exists:departments,id',
+            'phone'               => 'nullable|string|max:20',
+            'is_committee_member' => 'boolean',
         ];
     }
 }

@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Middleware\CustomerAuth;
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\StaffMiddleware;
+use App\Http\Middleware\AgentMiddleware;
+use App\Http\Middleware\EnsureSurveyor;
+use App\Http\Middleware\EnsureCommitteeMember;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,9 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'staff' => \App\Http\Middleware\StaffMiddleware::class,
-            'agent' => \App\Http\Middleware\AgentMiddleware::class,
+            'admin'     => AdminMiddleware::class,
+            'staff'     => StaffMiddleware::class,
+            'agent'     => AgentMiddleware::class,
+            'surveyor'  => EnsureSurveyor::class,
+            'committee' => EnsureCommitteeMember::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

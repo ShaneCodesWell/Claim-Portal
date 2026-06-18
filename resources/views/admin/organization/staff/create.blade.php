@@ -34,7 +34,8 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                        <input type="text" name="phone" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                        <input type="text" name="phone"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -45,7 +46,7 @@
                                 </option>
                             @endforeach
                         </select>
-                    </div> 
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
                         <select name="department_id" class="w-full border border-gray-300 rounded-lg px-3 py-2">
@@ -84,30 +85,49 @@
                     </div>
                 </div>
                 <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Administrator Access
-                        </label>
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="is_admin" value="1" class="sr-only peer">
-                            <div
-                                class="relative w-11 h-6 bg-gray-200 rounded-full
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Administrator Access
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_admin" value="1" class="sr-only peer">
+                        <div
+                            class="relative w-11 h-6 bg-gray-200 rounded-full
                                     peer peer-checked:after:translate-x-full
                                     after:content-[''] after:absolute after:top-0.5
                                     after:left-0.5 after:bg-white after:rounded-full
                                     after:h-5 after:w-5 after:transition-all
                                     peer-checked:bg-blue-600">
-                            </div>
-                            <span class="ml-3 text-sm text-gray-700">
-                                Grant admin privileges
-                            </span>
-                        </label>
-                    </div>
+                        </div>
+                        <span class="ml-3 text-sm text-gray-700">
+                            Grant admin privileges
+                        </span>
+                    </label>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Claim Committee Member
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_committee_member" value="1" class="sr-only peer">
+                        <div
+                            class="relative w-11 h-6 bg-gray-200 rounded-full
+                                    peer peer-checked:after:translate-x-full
+                                    after:content-[''] after:absolute after:top-0.5
+                                    after:left-0.5 after:bg-white after:rounded-full
+                                    after:h-5 after:w-5 after:transition-all
+                                    peer-checked:bg-blue-600">
+                        </div>
+                        <span class="ml-3 text-sm text-gray-700">
+                            Grant claim committee privileges
+                        </span>
+                    </label>
+                </div>
                 <div class="flex justify-end pt-2 gap-3">
                     <a href="{{ route('organization') }}?tab=tab-team"
-                            class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition">
-                            <i class="fas fa-arrow-left text-xs"></i>
-                            Back
-                        </a>
+                        class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition">
+                        <i class="fas fa-arrow-left text-xs"></i>
+                        Back
+                    </a>
                     <button type="submit"
                         class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
                         <i class="fas fa-save mr-2"></i>Add Staff

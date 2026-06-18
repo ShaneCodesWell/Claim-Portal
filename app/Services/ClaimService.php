@@ -277,4 +277,80 @@ class ClaimService
             );
         });
     }
+
+    // Staff sends a claim to survey
+    public function sendToSurvey(Claim $claim, User $sentBy, ?string $note = null): void
+    {
+        $claim->update([
+            'status'      => ClaimStatus::UNDER_SURVEY,
+            'surveyed_at' => now(),
+        ]);
+
+        $this->logActivity(
+            $claim,
+            $sentBy,
+            'sent_to_survey',
+            $note ?? "Claim sent to survey by {$sentBy->name}.",
+            ['sent_by' => $sentBy->id]
+        );
+    }
+
+    // Surveyor submits their findings
+    public function completeSurvey(Claim $claim, User $surveyor, string $notes): void
+    {
+        $claim->update([
+            'status'              => ClaimStatus::SURVEY_COMPLETED,
+            'surveyed_by'         => $surveyor->id,
+            'survey_notes'        => $notes,
+            'survey_completed_at' => now(),
+        ]);
+
+        $this->logActivity(
+            $claim,
+            $surveyor,
+            'survey_completed',
+            "Survey completed by {$surveyor->name}.",
+            ['surveyor_id' => $surveyor->id]
+        );
+    }
+
+    // Staff escalates a claim to the committee
+    public function sendToCommittee(Claim $claim, User $sentBy, ?string $note = null): void
+    {
+        $claim->update([
+            'status'              => ClaimStatus::COMMITTEE_REVIEW,
+            'committee_review_at' => now(),
+        ]);
+
+        $this->logActivity(
+            $claim,
+            $sentBy,
+            'sent_to_committee',
+            $note ?? "Claim escalated to Claims Committee by {$sentBy->name}.",
+            ['sent_by' => $sentBy->id]
+        );
+    }
+
+    // Committee makes the final call
+    public function makeCommitteeDecision(Claim $claim, string $decision, User $decidedBy, ?string $notes = null): void
+    {
+        if (! in_array($decision, [ClaimStatus::APPROVED, ClaimStatus::REJECTED])) {
+            throw new \InvalidArgumentException("Invalid committee decision: {$decision}");
+        }
+
+        $claim->update([
+            'status'               => $decision,
+            'committee_notes'      => $notes,
+            'committee_decided_by' => $decidedBy->id,
+            'committee_decided_at' => now(),
+        ]);
+
+        $this->logActivity(
+            $claim,
+            $decidedBy,
+            'committee_decision',
+            $notes ?? "Committee decision: " . ClaimStatus::labels()[$decision] . " by {$decidedBy->name}.",
+            ['decision' => $decision, 'decided_by' => $decidedBy->id]
+        );
+    }
 }

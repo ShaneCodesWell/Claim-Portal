@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use App\Enums\UserRole;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'is_admin',
+        'is_committee_member',
         'role',
         'branch_id',
         'department_id',
@@ -48,8 +50,10 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'email_verified_at'   => 'datetime',
+            'password'            => 'hashed',
+            'is_admin'            => 'boolean',
+            'is_committee_member' => 'boolean',
         ];
     }
 
@@ -87,5 +91,31 @@ class User extends Authenticatable
     public function assignedClaims(): HasMany
     {
         return $this->hasMany(Claim::class, 'assigned_to');
+    }
+
+    public function isSurveyor(): bool
+    {
+        return $this->role === UserRole::SURVEYOR->value;
+    }
+
+    public function isCommitteeMember(): bool
+    {
+        return (bool) $this->is_committee_member;
+    }
+
+    public function isClaimsAdjuster(): bool
+    {
+        return $this->role === UserRole::CLAIMS_ADJUSTER->value;
+    }
+
+    // New relationships
+    public function surveyedClaims(): HasMany
+    {
+        return $this->hasMany(Claim::class, 'surveyed_by');
+    }
+
+    public function committeeDecisions(): HasMany
+    {
+        return $this->hasMany(Claim::class, 'committee_decided_by');
     }
 }

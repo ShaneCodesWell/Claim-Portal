@@ -2,8 +2,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\UserRole;
-use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateStaffRequest extends FormRequest
 {
@@ -23,16 +23,17 @@ class UpdateStaffRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'          => 'required|string|max:255',
-            'email'         => ['required', 'email',
+            'name'                => 'required|string|max:255',
+            'email'               => ['required', 'email',
                 Rule::unique('users', 'email')
                     ->ignore($this->route('staff'))],
-            'password'      => 'nullable|string|min:8|confirmed',
-            'role'          => 'required|in:' . implode(',', UserRole::staffRoles()),
-            'branch_id'     => 'required|exists:branches,id',
-            'department_id' => 'required|exists:departments,id',
-            'phone'         => 'nullable|string|max:20',
-            'is_active'     => 'boolean',
+            'password'            => 'nullable|string|min:8|confirmed',
+            'role'                => 'required|in:' . implode(',', UserRole::staffRoles()),
+            'branch_id'           => 'required|exists:branches,id',
+            'department_id'       => 'required|exists:departments,id',
+            'phone'               => 'nullable|string|max:20',
+            'is_active'           => 'boolean',
+            'is_committee_member' => 'boolean',
         ];
     }
 }

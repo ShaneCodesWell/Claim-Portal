@@ -416,4 +416,30 @@ class ClaimController extends Controller
 
         return back()->with('success', 'Claim has been reset to Submitted.');
     }
+
+    public function sendToSurvey(Request $request, Claim $claim)
+    {
+        $request->validate(['note' => 'nullable|string|max:500']);
+
+        if (in_array($claim->status, ClaimStatus::terminal())) {
+            return back()->with('error', 'This claim is already closed and cannot be sent to survey.');
+        }
+
+        $this->claimService->sendToSurvey($claim, Auth::user(), $request->note);
+
+        return back()->with('success', 'Claim sent to survey.');
+    }
+
+    public function sendToCommittee(Request $request, Claim $claim)
+    {
+        $request->validate(['note' => 'nullable|string|max:500']);
+
+        if (in_array($claim->status, ClaimStatus::terminal())) {
+            return back()->with('error', 'This claim is already closed and cannot be escalated.');
+        }
+
+        $this->claimService->sendToCommittee($claim, Auth::user(), $request->note);
+
+        return back()->with('success', 'Claim escalated to the Claims Committee.');
+    }
 }

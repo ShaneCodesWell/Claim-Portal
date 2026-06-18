@@ -24,8 +24,18 @@
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-user-plus w-5"></i>
                 <span>My Queue</span>
-                <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['my_claims'] }}</span>
+                <span
+                    class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['my_claims'] }}</span>
             </a>
+            @if (auth()->user()->isCommitteeMember())
+                <a href="{{ route('committee.claims.index') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+                    <i class="fas fa-users-gear w-5"></i>
+                    <span>Claims Committee</span>
+                    <span
+                        class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['claim_committee_claims'] }}</span>
+                </a>
+            @endif
             <a href="{{ route('claim-form') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-file-alt w-5"></i>

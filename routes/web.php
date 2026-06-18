@@ -13,6 +13,8 @@ use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\Staff\GlimsSyncController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Staff\CommitteeClaimController;
+use App\Http\Controllers\Surveyor\ClaimController as SurveyorClaimController;
 use \App\Http\Controllers\Agent\ClaimController as AgentClaimController;
 use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
 use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
@@ -101,10 +103,27 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     // Customers
     Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers.index');
     Route::get('/staff/customers/{customer}', [StaffController::class, 'showCustomer'])->name('customers.show');
-    
+
     Route::get('/customers/{customer}/claims/create', [StaffClaimController::class, 'create'])->name('customers.claims.create');
     Route::post('/customers/{customer}/claims', [StaffClaimController::class, 'store'])->name('customers.claims.store');
 
+    // Staff sends a claim to survey or committee
+    Route::post('claims/{claim}/send-to-survey', [StaffClaimController::class, 'sendToSurvey'])->name('staff.claims.send-to-survey');
+    Route::post('claims/{claim}/send-to-committee', [StaffClaimController::class, 'sendToCommittee'])->name('staff.claims.send-to-committee');
+});
+
+// Surveyor portal
+Route::middleware(['auth', 'surveyor'])->prefix('surveyor')->name('surveyor.')->group(function () {
+    Route::get('claims', [SurveyorClaimController::class, 'index'])->name('claims.index');
+    Route::get('claims/{claim}', [SurveyorClaimController::class, 'show'])->name('claims.show');
+    Route::post('claims/{claim}/complete', [SurveyorClaimController::class, 'complete'])->name('claims.complete');
+});
+
+// Claims Committee (staff layout, gated by 'committee' middleware)
+Route::middleware(['staff', 'committee'])->prefix('admin/committee')->name('committee.')->group(function () {
+    Route::get('claims', [CommitteeClaimController::class, 'index'])->name('claims.index');
+    Route::get('claims/{claim}', [CommitteeClaimController::class, 'show'])->name('claims.show');
+    Route::post('claims/{claim}/decide', [CommitteeClaimController::class, 'decide'])->name('claims.decide');
 });
 
 // Agent routes — only agents can access

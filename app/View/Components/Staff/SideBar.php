@@ -3,6 +3,7 @@ namespace App\View\Components\Staff;
 
 use Closure;
 use App\Models\Claim;
+use App\Enums\ClaimStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,7 @@ class SideBar extends Component
         $this->stats = [
             'my_claims'     => Claim::where('assigned_to', $userId)->count(),
             'submitted_claims' => Claim::where('status', 'submitted')->count(),
+            'claim_committee_claims' => Claim::where('status', ClaimStatus::COMMITTEE_REVIEW)->count()
         ];
     }
 

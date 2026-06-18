@@ -26,12 +26,24 @@ class Claim extends Model
         'amount',
         'form_data',
         'submitted_at',
+        'surveyed_by',
+        'surveyed_at',
+        'survey_completed_at',
+        'survey_notes',
+        'committee_review_at',
+        'committee_notes',
+        'committee_decided_by',
+        'committee_decided_at',
     ];
 
     protected $casts = [
-        'form_data'    => 'array',
-        'assigned_at'  => 'datetime',
-        'submitted_at' => 'datetime',
+        'form_data'            => 'array',
+        'assigned_at'          => 'datetime',
+        'submitted_at'         => 'datetime',
+        'surveyed_at'          => 'datetime',
+        'survey_completed_at'  => 'datetime',
+        'committee_review_at'  => 'datetime',
+        'committee_decided_at' => 'datetime',
     ];
 
     // Relationships
@@ -70,6 +82,16 @@ class Claim extends Model
         return $this->hasMany(ClaimDocument::class);
     }
 
+    public function surveyor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'surveyed_by');
+    }
+
+    public function committeeDecidedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'committee_decided_by');
+    }
+
     // Status helpers
     public function isTerminal(): bool
     {
@@ -86,6 +108,22 @@ class Claim extends Model
         return ! is_null($this->assigned_to);
     }
 
+    public function isUnderSurvey(): bool
+    {
+        return $this->status === ClaimStatus::UNDER_SURVEY;
+    }
+
+    public function isSurveyCompleted(): bool
+    {
+        return $this->status === ClaimStatus::SURVEY_COMPLETED;
+    }
+
+    public function isCommitteeReview(): bool
+    {
+        return $this->status === ClaimStatus::COMMITTEE_REVIEW;
+    }
+
+    // Other helpers
     public static function generateClaimNumber(): string
     {
         $year     = now()->year;

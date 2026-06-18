@@ -198,6 +198,8 @@ class StaffController extends Controller
         $validated             = $request->validated();
         $validated['password'] = bcrypt($validated['password']);
 
+        $validated['is_committee_member'] = $request->boolean('is_committee_member');
+
         // If role is admin, set is_admin to true
         $isAdmin               = $request->boolean('is_admin') || $validated['role'] === 'admin';
         $validated['is_admin'] = $isAdmin;
@@ -240,6 +242,12 @@ class StaffController extends Controller
         } else {
             $validated['password'] = bcrypt($validated['password']);
         }
+
+        $validated['is_committee_member'] = $request->boolean('is_committee_member');
+
+        // If role is admin, set is_admin to true
+        $isAdmin               = $request->boolean('is_admin') || $validated['role'] === 'admin';
+        $validated['is_admin'] = $isAdmin;
 
         $staff->update($validated);
 
