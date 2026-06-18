@@ -49,6 +49,75 @@
                 Update Status
             </button>
         </form>
+
+        {{-- Send to Survey --}}
+        @if (
+            !in_array(
+                $claim->status,
+                array_merge(\App\Enums\ClaimStatus::terminal(), [
+                    \App\Enums\ClaimStatus::UNDER_SURVEY,
+                    \App\Enums\ClaimStatus::COMMITTEE_REVIEW,
+                ])))
+            <div x-data="{ open: false }">
+                <button @click="open = true"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-cyan-700 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition">
+                    <i class="fas fa-search-location text-xs"></i> Send to Survey
+                </button>
+
+                <div x-show="open" x-cloak class="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+                    @click.self="open = false">
+                    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Send Claim to Survey</h3>
+                        <p class="text-sm text-gray-500 mb-4">This will route the claim to the survey team for
+                            assessment.</p>
+                        <form action="{{ route('staff.claims.send-to-survey', $claim->id) }}" method="POST">
+                            @csrf
+                            <textarea name="note" rows="3" maxlength="500" placeholder="Optional note for the surveyor..."
+                                class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-300"></textarea>
+                            <div class="flex justify-end gap-2 mt-4">
+                                <button type="button" @click="open = false"
+                                    class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                <button type="submit"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg">Confirm</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- Send to Committee --}}
+        @if (
+            !in_array(
+                $claim->status,
+                array_merge(\App\Enums\ClaimStatus::terminal(), [\App\Enums\ClaimStatus::COMMITTEE_REVIEW])))
+            <div x-data="{ open: false }">
+                <button @click="open = true"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100 transition">
+                    <i class="fas fa-gavel text-xs"></i> Send to Committee
+                </button>
+
+                <div x-show="open" x-cloak class="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+                    @click.self="open = false">
+                    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Escalate to Claims Committee</h3>
+                        <p class="text-sm text-gray-500 mb-4">This will route the claim to the committee for a final
+                            decision.</p>
+                        <form action="{{ route('staff.claims.send-to-committee', $claim->id) }}" method="POST">
+                            @csrf
+                            <textarea name="note" rows="3" maxlength="500" placeholder="Optional note for the committee..."
+                                class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-orange-300"></textarea>
+                            <div class="flex justify-end gap-2 mt-4">
+                                <button type="button" @click="open = false"
+                                    class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                <button type="submit"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg">Confirm</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

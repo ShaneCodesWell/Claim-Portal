@@ -7,8 +7,9 @@
                 <img src="/images/Vanguard.png" alt="Logo" class="w-40 h-12">
             </div>
             {{-- <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full ml-auto">{{ UserRole::labels()[Auth::user()->role] ?? 'Unknown Role' }}</span> --}}
-            <span
-                class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full ml-auto">{{ Auth::user()->role }}</span>
+            <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full ml-auto">
+                {{ Auth::user()->role === 'admin' ? 'Admin' : 'Staff' }}
+            </span>
         </div>
 
         <!-- Navigation Links -->
