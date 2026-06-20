@@ -1,7 +1,6 @@
 <?php
 namespace App\Models;
 
-use App\Models\Claim;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +10,7 @@ class Policy extends Model
 {
     protected $fillable = [
         'customer_id',
+        'agent_id',
         'source',
         'external_policy_id',
         'policy_number',
@@ -36,9 +36,15 @@ class Policy extends Model
     ];
 
     // Relationships
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class);
     }
 
     public function claims(): HasMany
@@ -47,6 +53,7 @@ class Policy extends Model
     }
 
     // Source helpers
+
     public function isFromGenova(): bool
     {
         return $this->source === 'genova';
@@ -63,6 +70,7 @@ class Policy extends Model
     }
 
     // Status helpers
+
     public function isActive(): bool
     {
         return $this->status === 'active';
@@ -78,11 +86,11 @@ class Policy extends Model
         return $this->status === 'pending_renewal';
     }
 
-    //Auto calculate status based on end_date
-    protected static function booted()
+    // ── Auto-calculate status on save ─────────────────────────────────────────
+
+    protected static function booted(): void
     {
         static::saving(function ($policy) {
-            // Auto-calculate status before saving
             if ($policy->end_date) {
                 $policy->status = $policy->calculateStatus();
             }
@@ -110,11 +118,16 @@ class Policy extends Model
         return 'active';
     }
 
-    // ── Query Scopes ──────────────────────────────────────────────────────────────
+    // Query Scopes
 
     public function scopeForCustomers(Builder $query, \Illuminate\Support\Collection $customerIds): Builder
     {
         return $query->whereIn('customer_id', $customerIds);
+    }
+
+    public function scopeForAgent(Builder $query, int $agentId): Builder
+    {
+        return $query->where('agent_id', $agentId);
     }
 
     public function scopeSearch(Builder $query, ?string $search): Builder
@@ -148,6 +161,7 @@ class Policy extends Model
         return $query->where('status', $status);
     }
 
+    // Accessors
     public function getVehicleNumberAttribute(): string
     {
         $raw = $this->raw_payload ?? [];
@@ -164,7 +178,7 @@ class Policy extends Model
     }
 
     /**
-     * Extract normalized vehicle data for a specific risk,
+     * Extract normalised vehicle data for a specific risk,
      * ready to pre-populate claim form fields.
      * Handles all three payload formats: Genova rich, GLIMS, Legacy.
      */

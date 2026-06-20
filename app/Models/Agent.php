@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Agent extends Authenticatable
@@ -23,6 +24,7 @@ class Agent extends Authenticatable
         'sub_user_category',
         'gender',
         'league',
+        'branch_id',
     ];
 
     protected $hidden = [
@@ -37,8 +39,19 @@ class Agent extends Authenticatable
         'local_password_set_at' => 'datetime',
     ];
 
+    // Relationships
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * All policies this agent is associated with.
+     * Policies are still owned by a customer (customer_id),
+     * but agent_id links them here for the agent's view.
+     */
+    public function policies(): HasMany
+    {
+        return $this->hasMany(Policy::class);
     }
 }

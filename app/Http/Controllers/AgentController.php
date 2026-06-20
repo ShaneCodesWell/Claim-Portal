@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
@@ -9,7 +8,6 @@ use App\Models\Agent;
 use App\Models\Branch;
 use App\Models\Claim;
 use App\Models\Department;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class AgentController extends Controller
@@ -31,11 +29,11 @@ class AgentController extends Controller
      */
     public function create()
     {
-        $agents       = Agent::latest()->paginate(5);
-        $roles        = UserRole::staffRoles();
-        $roleLabels   = UserRole::labels();
-        $departments  = Department::where('is_active', true)->get();
-        $branches     = Branch::where('is_active', true)->get();
+        $agents      = Agent::latest()->paginate(5);
+        $roles       = UserRole::staffRoles();
+        $roleLabels  = UserRole::labels();
+        $departments = Department::where('is_active', true)->get();
+        $branches    = Branch::where('is_active', true)->get();
 
         return view('admin.organization.agent.create', compact('agents', 'roles', 'roleLabels', 'departments', 'branches'));
     }

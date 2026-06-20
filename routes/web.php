@@ -1,7 +1,8 @@
 <?php
 
+use App\Http\Controllers\Auth\AgentAuthController;
 use App\Http\Controllers\AgentController;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
@@ -11,10 +12,10 @@ use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
 use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
-use App\Http\Controllers\Staff\GlimsSyncController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Staff\CommitteeClaimController;
+use App\Http\Controllers\Staff\GlimsSyncController;
 use App\Http\Controllers\Surveyor\ClaimController as SurveyorClaimController;
+use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Agent\ClaimController as AgentClaimController;
 use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
 use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
@@ -22,13 +23,20 @@ use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
 // Auth Routes
 Route::get('/', [AuthController::class, 'showUserSelectForm'])->name('user.select');
 
+// Customer Auth
 Route::get('/login-user', [AuthController::class, 'showLoginForm'])->name('login');
-Route::get('/staff-login', [AuthController::class, 'staffLoginForm'])->name('staff.login');
-Route::get('/agent-login', [AuthController::class, 'agentLoginForm'])->name('agent.login');
-
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+
+// Staff Auth
+Route::get('/staff-login', [AuthController::class, 'staffLoginForm'])->name('staff.login');
 Route::post('/staff-login', [AuthController::class, 'staffLogin'])->name('staff.login.submit');
-Route::post('/agent-login', [AuthController::class, 'agentLogin'])->name('agent.login.submit');
+
+// Agent Auth
+Route::get('/agent-login', [AgentAuthController::class, 'showLoginForm'])->name('agent.login');
+Route::post('/agent-login/ajax', [AgentAuthController::class, 'loginAjax'])->name('agent.login.ajax');
+Route::post('/agent-login/verify-otp', [AgentAuthController::class, 'verifyOtp'])->name('agent.login.verify.otp');
+Route::post('/agent-login/resend-otp', [AgentAuthController::class, 'resendOtp'])->name('agent.login.resend.otp');
+Route::post('/agent-logout', [AgentAuthController::class, 'logout'])->name('agent.logout');
 
 // AJAX password setup — called from the modal's password setup - multi-step login
 Route::post('login/ajax', [AuthController::class, 'loginAjax'])->name('login.ajax');

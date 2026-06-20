@@ -467,4 +467,22 @@ class GlimsApiService
             '_raw'                   => $detail,
         ];
     }
+
+    /**
+     * Fetch all policies associated with a given agent code from GLIMS middleware.
+     *
+     * GET /cs-middleware/api/policies/search/?search_type=agent_code&search_value={agentCode}&page={page}
+     *
+     * @param  string $agentCode  The agent's partner_code stored on the Agent model.
+     * @param  int    $page       Page number (1-based). Defaults to 1.
+     * @return \Illuminate\Http\Client\Response
+     */
+    public function getAgentPolicies(string $agentCode, int $page = 1): \Illuminate\Http\Client\Response
+    {
+        return $this->http()->get("{$this->baseUrl}/api/policies/search/", [
+            'search_type'  => 'agent_code',
+            'search_value' => $agentCode,
+            'page'         => $page,
+        ]);
+    }
 }

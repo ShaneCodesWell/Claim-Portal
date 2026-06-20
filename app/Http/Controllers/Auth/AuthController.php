@@ -1,6 +1,7 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Policy;
 use App\Services\GenovaApiService;
@@ -41,10 +42,10 @@ class AuthController extends Controller
         return view('auth.staff-login');
     }
 
-    public function agentLoginForm()
-    {
-        return view('auth.agent-login');
-    }
+    // public function agentLoginForm()
+    // {
+    //     return view('auth.agent-login');
+    // }
 
     // Agent login method
     public function agentLogin(Request $request)
@@ -94,8 +95,9 @@ class AuthController extends Controller
 
             // Redirect based on role
             return match ($user->role) {
-                'Admin' => redirect()->route('staff.claims.index'),
-                default => redirect()->route('staff.claims.index'),
+                'Admin'    => redirect()->route('staff.claims.index'),
+                'surveyor' => redirect()->route('surveyor.claims.index'),
+                default    => redirect()->route('staff.claims.index'),
             };
         }
 
@@ -235,7 +237,7 @@ class AuthController extends Controller
             }
         }
 
-        // Nothing found anywhere 
+        // Nothing found anywhere
         Log::error('loginAjax: All auth sources failed', [
             'identifier' => $identifier,
             'login_type' => $loginType,

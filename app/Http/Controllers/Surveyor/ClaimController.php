@@ -15,8 +15,7 @@ class ClaimController extends Controller
 
     public function index(Request $request)
     {
-        $query = Claim::where('status', ClaimStatus::UNDER_SURVEY)
-            ->with(['customer', 'policy', 'branch']);
+        $query = Claim::where('status', ClaimStatus::UNDER_SURVEY)->with(['customer', 'policy', 'branch']);
 
         match ($request->filter) {
             'low'    => $query->where('amount', '<=', 30000),

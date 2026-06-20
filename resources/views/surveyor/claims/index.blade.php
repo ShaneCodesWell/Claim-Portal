@@ -28,11 +28,11 @@
 
     <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-2">
         @foreach ([
-            'all'    => 'All Claims',
-            'low'    => 'Same Day (≤ 30k)',
-            'medium' => 'Medium (30k – 100k)',
-            'high'   => 'High (> 100k)',
-        ] as $value => $label)
+        'all' => 'All Claims',
+        'low' => 'Same Day (≤ 30k)',
+        'medium' => 'Medium (30k – 100k)',
+        'high' => 'High (> 100k)',
+    ] as $value => $label)
             <a href="{{ route('surveyor.claims.index', array_merge(request()->only('search'), ['filter' => $value])) }}"
                 class="px-4 py-2 text-sm font-medium
                     {{ request('filter', 'all') === $value
@@ -48,13 +48,20 @@
             <table class="min-w-300 md:min-w-full w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Policy Number</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Claim Amount</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sent to Survey</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Client</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Policy Number</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Product</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Claim Amount</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Sent to Survey</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Status</th>
+                        <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -62,7 +69,8 @@
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-4 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
+                                    <div
+                                        class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
                                         {{ strtoupper(substr($claim->customer->name, 0, 1)) }}{{ strtoupper(substr(strrchr($claim->customer->name, ' '), 1, 1)) }}
                                     </div>
                                     <span class="text-sm font-medium text-gray-900">{{ $claim->customer->name }}</span>
@@ -71,17 +79,22 @@
                             <td class="px-4 py-4 font-mono text-sm text-gray-700">
                                 <div>{{ $claim->policy->policy_number }}</div>
                                 @php($source = strtolower($claim->policy->source))
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium
                                     {{ $source === 'genova' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700' }}">
                                     {{ strtoupper($claim->policy->source) }}
                                 </span>
                             </td>
-                            <td class="px-4 py-4 text-xs font-medium text-gray-900">{{ $claim->policy->product_name }}</td>
-                            <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵ {{ number_format($claim->amount) }}</td>
-                            <td class="px-4 py-4 text-xs text-gray-700">{{ $claim->surveyed_at?->format('M d, Y') ?? '—' }}</td>
+                            <td class="px-4 py-4 text-xs font-medium text-gray-900">{{ $claim->policy->product_name }}
+                            </td>
+                            <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
+                                {{ number_format($claim->amount) }}</td>
+                            <td class="px-4 py-4 text-xs text-gray-700">
+                                {{ $claim->surveyed_at?->format('M d, Y') ?? '—' }}</td>
                             @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
                             <td class="px-4 py-4">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border {{ $badge['class'] }}">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border {{ $badge['class'] }}">
                                     {{ $badge['label'] }}
                                 </span>
                             </td>
@@ -126,7 +139,7 @@
     </div>
 
     <script>
-        document.getElementById('searchInput').addEventListener('keydown', function (e) {
+        document.getElementById('searchInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 document.getElementById('filterForm').submit();

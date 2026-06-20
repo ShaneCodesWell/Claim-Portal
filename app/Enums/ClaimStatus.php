@@ -98,6 +98,13 @@ enum ClaimStatus: string {
         ];
     }
 
+    public static function incoming(): array
+    {
+        return [
+            self::SUBMITTED,
+        ];
+    }
+
     // Convenience groupings
     public static function surveyStages(): array
     {
