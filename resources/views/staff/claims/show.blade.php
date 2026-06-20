@@ -33,91 +33,100 @@
 
         {{-- Quick Status Update --}}
         <form action="{{ route('staff.claims.status', $claim) }}" method="POST" class="flex items-center gap-2">
+            @csrf
             <a href="{{ route('staff.claims.index') }}"
                 class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
                 <i class="fas fa-arrow-left text-sm"></i> Back
             </a>
-            @csrf
-            <select name="status"
-                class="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                @foreach (\App\Enums\ClaimStatus::labels() as $value => $label)
-                    <option value="{{ $value }}" @selected($claim->status === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <button type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition font-medium">
-                Update Status
-            </button>
+            @if (in_array($claim->status, ['submitted', 'pending_info']))
+                <select name="status"
+                    class="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    @foreach (\App\Enums\ClaimStatus::labels() as $value => $label)
+                        <option value="{{ $value }}" @selected($claim->status === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition font-medium">
+                    Update Status
+                </button>
+            @else
+                <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
+                    <i class="fas fa-lock"></i> Editing locked
+                </span>
+            @endif
         </form>
 
-        {{-- Send to Survey --}}
-        @if (
-            !in_array(
-                $claim->status,
-                array_merge(\App\Enums\ClaimStatus::terminal(), [
-                    \App\Enums\ClaimStatus::UNDER_SURVEY,
-                    \App\Enums\ClaimStatus::COMMITTEE_REVIEW,
-                ])))
-            <div x-data="{ open: false }">
-                <button @click="open = true"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-cyan-700 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition">
-                    <i class="fas fa-search-location text-xs"></i> Send to Survey
-                </button>
+        <div class="flex gap-2">
+            {{-- Send to Survey --}}
+            @if (
+                !in_array(
+                    $claim->status,
+                    array_merge(\App\Enums\ClaimStatus::terminal(), [
+                        \App\Enums\ClaimStatus::UNDER_SURVEY,
+                        \App\Enums\ClaimStatus::COMMITTEE_REVIEW,
+                    ])))
+                <div x-data="{ open: false }">
+                    <button @click="open = true"
+                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-cyan-700 bg-cyan-50 border border-cyan-300 rounded-lg hover:bg-cyan-100 transition">
+                        <i class="fas fa-search-location text-xs"></i> Send to Survey
+                    </button>
 
-                <div x-show="open" x-cloak class="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
-                    @click.self="open = false">
-                    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Send Claim to Survey</h3>
-                        <p class="text-sm text-gray-500 mb-4">This will route the claim to the survey team for
-                            assessment.</p>
-                        <form action="{{ route('staff.claims.send-to-survey', $claim->id) }}" method="POST">
-                            @csrf
-                            <textarea name="note" rows="3" maxlength="500" placeholder="Optional note for the surveyor..."
-                                class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-300"></textarea>
-                            <div class="flex justify-end gap-2 mt-4">
-                                <button type="button" @click="open = false"
-                                    class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                                <button type="submit"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg">Confirm</button>
-                            </div>
-                        </form>
+                    <div x-show="open" x-cloak class="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+                        @click.self="open = false">
+                        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Send Claim to Survey</h3>
+                            <p class="text-sm text-gray-500 mb-4">This will route the claim to the survey team for
+                                assessment.</p>
+                            <form action="{{ route('staff.claims.send-to-survey', $claim->id) }}" method="POST">
+                                @csrf
+                                <textarea name="note" rows="3" maxlength="500" placeholder="Optional note for the surveyor..."
+                                    class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-300"></textarea>
+                                <div class="flex justify-end gap-2 mt-4">
+                                    <button type="button" @click="open = false"
+                                        class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                    <button type="submit"
+                                        class="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg">Confirm</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endif
+            @endif
 
-        {{-- Send to Committee --}}
-        @if (
-            !in_array(
-                $claim->status,
-                array_merge(\App\Enums\ClaimStatus::terminal(), [\App\Enums\ClaimStatus::COMMITTEE_REVIEW])))
-            <div x-data="{ open: false }">
-                <button @click="open = true"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100 transition">
-                    <i class="fas fa-gavel text-xs"></i> Send to Committee
-                </button>
+            {{-- Send to Committee --}}
+            @if (
+                !in_array(
+                    $claim->status,
+                    array_merge(\App\Enums\ClaimStatus::terminal(), [\App\Enums\ClaimStatus::COMMITTEE_REVIEW])))
+                <div x-data="{ open: false }">
+                    <button @click="open = true"
+                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-orange-700 border border-orange-300 bg-orange-50 rounded-lg hover:bg-orange-100 transition">
+                        <i class="fas fa-gavel text-xs"></i> Send to Committee
+                    </button>
 
-                <div x-show="open" x-cloak class="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
-                    @click.self="open = false">
-                    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Escalate to Claims Committee</h3>
-                        <p class="text-sm text-gray-500 mb-4">This will route the claim to the committee for a final
-                            decision.</p>
-                        <form action="{{ route('staff.claims.send-to-committee', $claim->id) }}" method="POST">
-                            @csrf
-                            <textarea name="note" rows="3" maxlength="500" placeholder="Optional note for the committee..."
-                                class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-orange-300"></textarea>
-                            <div class="flex justify-end gap-2 mt-4">
-                                <button type="button" @click="open = false"
-                                    class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                                <button type="submit"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg">Confirm</button>
-                            </div>
-                        </form>
+                    <div x-show="open" x-cloak class="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+                        @click.self="open = false">
+                        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Escalate to Claims Committee</h3>
+                            <p class="text-sm text-gray-500 mb-4">This will route the claim to the committee for a final
+                                decision.</p>
+                            <form action="{{ route('staff.claims.send-to-committee', $claim->id) }}" method="POST">
+                                @csrf
+                                <textarea name="note" rows="3" maxlength="500" placeholder="Optional note for the committee..."
+                                    class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-orange-300"></textarea>
+                                <div class="flex justify-end gap-2 mt-4">
+                                    <button type="button" @click="open = false"
+                                        class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                    <button type="submit"
+                                        class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg">Confirm</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endif
+            @endif
+        </div>
+
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -125,39 +134,8 @@
         {{-- ==================== LEFT COLUMN ==================== --}}
         <div class="space-y-5">
 
-            {{-- Customer Card --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-user-circle text-blue-500"></i> Customer
-                    </h3>
-                </div>
-                <div class="p-4">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div
-                            class="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
-                            {{ strtoupper(substr($claim->customer->name ?? 'C', 0, 1)) }}
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">{{ $claim->customer->name ?? 'N/A' }}</p>
-                            <p class="text-xs text-gray-500">{{ $claim->customer->external_customer_code ?? '' }}</p>
-                        </div>
-                    </div>
-                    <div class="space-y-1.5 text-xs text-gray-600">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-phone w-3 text-gray-400"></i>
-                            {{ $claim->customer->phone ?? 'N/A' }}
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-envelope w-3 text-gray-400"></i>
-                            {{ $claim->customer->email ?? 'N/A' }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {{-- Policy Card --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            {{-- <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <i class="fas fa-file-contract text-blue-500"></i> Policy
@@ -189,7 +167,7 @@
                         </span>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             {{-- Assignment Card --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -198,45 +176,54 @@
                         <i class="fas fa-user-check text-blue-500"></i> Assignment
                     </h3>
                 </div>
-                <div class="p-4">
-                    @if ($claim->assignedTo)
-                        <div class="flex items-center gap-3 mb-3">
-                            <div
-                                class="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-semibold">
-                                {{ strtoupper(substr($claim->assignedTo->name, 0, 1)) }}
+                @if (in_array($claim->status, ['submitted', 'pending_info']))
+                    <div class="p-4">
+                        @if ($claim->assignedTo)
+                            <div class="flex items-center gap-3 mb-3">
+                                <div
+                                    class="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-semibold">
+                                    {{ strtoupper(substr($claim->assignedTo->name, 0, 1)) }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">{{ $claim->assignedTo->name }}</p>
+                                    <p class="text-xs text-gray-500">{{ $claim->assignedTo->email }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-800">{{ $claim->assignedTo->name }}</p>
-                                <p class="text-xs text-gray-500">{{ $claim->assignedTo->email }}</p>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400">
-                            Assigned {{ $claim->assigned_at?->diffForHumans() }}
-                        </p>
-                    @else
-                        <p class="text-sm text-gray-400 italic">Not yet assigned</p>
-                    @endif
+                            <p class="text-xs text-gray-400">
+                                Assigned {{ $claim->assigned_at?->diffForHumans() }}
+                            </p>
+                        @else
+                            <p class="text-sm text-gray-400 italic">Not yet assigned</p>
+                        @endif
 
-                    {{-- Reassign Form --}}
-                    <form action="{{ route('staff.claims.assign', $claim) }}" method="POST" class="mt-4 space-y-2">
-                        @csrf
-                        <select name="assigned_to"
-                            class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                            <option value="">Select staff member...</option>
-                            @foreach ($staffMembers as $staff)
-                                <option value="{{ $staff->id }}" @selected($claim->assigned_to === $staff->id)>
-                                    {{ $staff->name }} ({{ ucfirst(str_replace('_', ' ', $staff->role)) }})
-                                </option>
-                            @endforeach
-                        </select>
-                        <input type="text" name="note" placeholder="Reason for assignment (optional)"
-                            class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
-                        <button type="submit"
-                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded-lg transition font-medium">
-                            {{ $claim->assignedTo ? 'Reassign Claim' : 'Assign Claim' }}
-                        </button>
-                    </form>
-                </div>
+                        {{-- Reassign Form --}}
+                        <form action="{{ route('staff.claims.assign', $claim) }}" method="POST"
+                            class="mt-4 space-y-2">
+                            @csrf
+                            <select name="assigned_to"
+                                class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="">Select staff member...</option>
+                                @foreach ($staffMembers as $staff)
+                                    <option value="{{ $staff->id }}" @selected($claim->assigned_to === $staff->id)>
+                                        {{ $staff->name }} ({{ ucfirst(str_replace('_', ' ', $staff->role)) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="text" name="note" placeholder="Reason for assignment (optional)"
+                                class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+                            <button type="submit"
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded-lg transition font-medium">
+                                {{ $claim->assignedTo ? 'Reassign Claim' : 'Assign Claim' }}
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <div class="flex items-center justify-center p-2">
+                        <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
+                            <i class="fas fa-lock"></i> Editing locked
+                        </span>
+                    </div>
+                @endif
             </div>
 
             {{-- Documents Card --}}
@@ -348,85 +335,248 @@
         <div class="lg:col-span-2 space-y-5">
 
             {{-- Form Data Card --}}
+            {{-- Claim Summary Card (merged policy + form data) --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                {{-- Header with action button --}}
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                            <i class="fas fa-clipboard-list text-blue-500"></i> Claim Form Data
-                        </h3>
-                        {{-- <span
-                            class="text-xs text-gray-400 capitalize">{{ str_replace('_', ' ', $claim->claim_type) }}</span> --}}
-                    </div>
+                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-file-alt text-blue-500"></i> Claim Summary
+                    </h3>
                     <div class="flex gap-2">
                         <button onclick="openPrintModal()"
                             class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                             <i class="fas fa-eye"></i> Preview Form
                         </button>
-                        <a href="{{ route('staff.claims.edit', $claim) }}"
+                        {{-- <a href="{{ route('staff.claims.edit', $claim) }}"
                             class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                             <i class="fas fa-edit"></i> Edit Form
-                        </a>
+                        </a> --}}
+                        @if (in_array($claim->status, ['submitted', 'pending_info']))
+                            <a href="{{ route('staff.claims.edit', $claim) }}"
+                                class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                                <i class="fas fa-edit"></i> Edit Form
+                            </a>
+                        @else
+                            <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
+                                <i class="fas fa-lock"></i> Editing locked
+                            </span>
+                        @endif
                     </div>
-                    <x-claim-form-modal :claim="$claim" />
-                </div>
-                <div class="p-5">
-                    @if ($claim->form_data && count($claim->form_data))
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                            @foreach ($claim->form_data as $key => $value)
-                                @if (!is_array($value) && $value !== null && $value !== '')
-                                    <div class="flex flex-col">
-                                        <span class="text-xs text-gray-400 capitalize mb-0.5">
-                                            {{ str_replace('_', ' ', $key) }}
-                                        </span>
-                                        <span class="text-sm text-gray-800 font-medium">
-                                            @if (is_bool($value))
-                                                {{ $value ? 'Yes' : 'No' }}
-                                            @else
-                                                {{ $value }}
-                                            @endif
-                                        </span>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </div>
 
-                        {{-- Array fields (injured persons, property items etc.) --}}
-                        @foreach ($claim->form_data as $key => $value)
-                            @if (is_array($value) && count($value))
-                                <div class="mt-5 pt-4 border-t border-gray-100">
-                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                                        {{ str_replace('_', ' ', $key) }}
+                </div>
+                <x-claim-form-modal :claim="$claim" />
+
+                <div class="p-5 space-y-5">
+
+                    {{-- Section: Policy Information --}}
+                    @php $policy = $claim->policy; @endphp
+                    @if ($policy)
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-file-contract text-blue-400"></i> Policy
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                <div>
+                                    <span class="text-gray-500 block">Policy No.</span>
+                                    <span
+                                        class="font-mono font-medium text-gray-800">{{ $policy->policy_number ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block">Product</span>
+                                    <span class="text-gray-700">{{ $policy->product_name ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block">Class</span>
+                                    <span class="text-gray-700">{{ $policy->business_class_name ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block">Expiry</span>
+                                    <span
+                                        class="{{ $policy->end_date?->isPast() ? 'text-red-600' : 'text-gray-700' }}">
+                                        {{ $policy->end_date?->format('d M Y') ?? 'N/A' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="border-gray-100">
+                    @endif
+
+                    {{-- Section: Claimant / Policyholder --}}
+                    @php
+                        $claimant = [
+                            'name' => $claim->form_data['claimant_name'] ?? ($claim->policy?->customer?->name ?? ''),
+                            'email' => $claim->form_data['claimant_email'] ?? ($claim->policy?->customer?->email ?? ''),
+                            'phone' => $claim->form_data['claimant_phone'] ?? ($claim->policy?->customer?->phone ?? ''),
+                            'occupation' => $claim->form_data['claimant_occupation'] ?? '',
+                        ];
+                    @endphp
+                    <div>
+                        <h4
+                            class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <i class="fas fa-user-circle text-blue-400"></i> Claimant / Policyholder
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                            <div>
+                                <span class="text-gray-500 block">Full Name</span>
+                                <span class="text-gray-800 font-medium">{{ $claimant['name'] ?: '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Email</span>
+                                <span class="text-gray-700">{{ $claimant['email'] ?: '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Phone</span>
+                                <span class="text-gray-700">{{ $claimant['phone'] ?: '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Occupation</span>
+                                <span class="text-gray-700">{{ $claimant['occupation'] ?: '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Section: Vehicle Particulars --}}
+                    @php
+                        $vehicleFields = ['registration_no', 'make', 'model', 'year_of_make'];
+                        $hasVehicle = collect($vehicleFields)->some(fn($k) => !empty($claim->form_data[$k]));
+                    @endphp
+                    @if ($hasVehicle)
+                        <hr class="border-gray-100">
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-car text-blue-400"></i> Vehicle Particulars
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                @foreach ($vehicleFields as $key)
+                                    @php
+                                        $label = str_replace('_', ' ', $key);
+                                        $value = $claim->form_data[$key] ?? '';
+                                    @endphp
+                                    @if ($value)
+                                        <div>
+                                            <span class="text-gray-500 block">{{ ucfirst($label) }}</span>
+                                            <span class="text-gray-800 font-medium">{{ $value }}</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Section: Accident Circumstances --}}
+                    @php
+                        $accidentKeys = [
+                            'accident_date',
+                            'accident_time',
+                            'exact_location',
+                            'accident_description',
+                            'people_in_vehicle',
+                            'vehicle_damage',
+                            'damaged_vehicle_location',
+                        ];
+                        $hasAccident = collect($accidentKeys)->some(fn($k) => !empty($claim->form_data[$k]));
+                    @endphp
+                    @if ($hasAccident)
+                        <hr class="border-gray-100">
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle text-amber-400"></i> Accident Details
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                                @foreach (['accident_date', 'accident_time', 'exact_location', 'people_in_vehicle', 'vehicle_damage', 'damaged_vehicle_location'] as $key)
+                                    @php
+                                        $label = str_replace('_', ' ', $key);
+                                        $value = $claim->form_data[$key] ?? '';
+                                    @endphp
+                                    @if ($value)
+                                        <div>
+                                            <span class="text-gray-500 block">{{ ucfirst($label) }}</span>
+                                            <span class="text-gray-800">{{ $value }}</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                            @if (!empty($claim->form_data['accident_description']))
+                                <div class="mt-3">
+                                    <span class="text-gray-500 text-xs block">Description</span>
+                                    <p
+                                        class="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 mt-1 border border-gray-100">
+                                        {{ $claim->form_data['accident_description'] }}
                                     </p>
-                                    <div class="overflow-x-auto rounded-lg border border-gray-100">
-                                        <table class="w-full text-xs">
-                                            <thead class="bg-gray-50 border-b border-gray-100">
-                                                <tr>
-                                                    @foreach (array_keys((array) $value[0]) as $col)
-                                                        <th
-                                                            class="px-3 py-2 text-left font-medium text-gray-500 capitalize">
-                                                            {{ str_replace('_', ' ', $col) }}
-                                                        </th>
-                                                    @endforeach
-                                                </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-gray-50">
-                                                @foreach ($value as $row)
-                                                    <tr class="hover:bg-gray-50">
-                                                        @foreach ((array) $row as $cell)
-                                                            <td class="px-3 py-2 text-gray-700">{{ $cell ?: '—' }}
-                                                            </td>
-                                                        @endforeach
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
                                 </div>
                             @endif
-                        @endforeach
-                    @else
+                        </div>
+                    @endif
+
+                    {{-- Section: Driver Details (if applicable) --}}
+                    @php
+                        $driverKeys = ['driver_fullname', 'driver_address', 'driver_phone', 'driver_license'];
+                        $hasDriver = collect($driverKeys)->some(fn($k) => !empty($claim->form_data[$k]));
+                    @endphp
+                    @if ($hasDriver)
+                        <hr class="border-gray-100">
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-user-tie text-blue-400"></i> Driver at Time of Accident
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                                @foreach ($driverKeys as $key)
+                                    @php
+                                        $label = str_replace('_', ' ', $key);
+                                        $value = $claim->form_data[$key] ?? '';
+                                    @endphp
+                                    @if ($value)
+                                        <div>
+                                            <span class="text-gray-500 block">{{ ucfirst($label) }}</span>
+                                            <span class="text-gray-800">{{ $value }}</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Section: Other Key Fields (consent, hire purchase, etc.) --}}
+                    @php
+                        $otherKeys = ['vehicle_consent', 'hire_purchase', 'police_report'];
+                        $hasOther = collect($otherKeys)->some(fn($k) => !empty($claim->form_data[$k]));
+                    @endphp
+                    @if ($hasOther)
+                        <hr class="border-gray-100">
+                        <div>
+                            <h4
+                                class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fas fa-flag text-blue-400"></i> Additional Details
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                                @foreach ($otherKeys as $key)
+                                    @php
+                                        $label = str_replace('_', ' ', $key);
+                                        $value = $claim->form_data[$key] ?? '';
+                                        if ($value === 'yes' || $value === 'no') {
+                                            $value = ucfirst($value);
+                                        }
+                                    @endphp
+                                    @if ($value)
+                                        <div>
+                                            <span class="text-gray-500 block">{{ ucfirst($label) }}</span>
+                                            <span class="text-gray-800">{{ $value }}</span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- If no data at all --}}
+                    @if (!$hasVehicle && !$hasAccident && !$hasDriver && !$hasOther && empty($claimant['name']))
                         <p class="text-sm text-gray-400 italic">No form data available.</p>
                     @endif
+
                 </div>
             </div>
 

@@ -111,17 +111,20 @@ class PolicyResource extends JsonResource
     {
         return collect($risks)
             ->map(fn($risk) => [
-                'id'                     => null, // GLIMS has no separate risk ID in middleware
+                'id'                     => null,
                 'risk_ref_no'            => $risk['risk_ref_no'] ?? null,
-                'vehicle_make'           => $risk['vehicle_make'] ?? null,           // pending IT
-                'vehicle_model'          => $risk['vehicle_model'] ?? null,          // pending IT
-                'vehicle_yr_manufacture' => $risk['vehicle_yr_manufacture'] ?? null, // pending IT
-                'vehicle_chassis_no'     => $risk['vehicle_chassis_no'] ?? null,     // pending IT
-                'vehicle_colour'         => $risk['vehicle_colour'] ?? null,         // pending IT
-                'vehicle_body_type'      => $risk['vehicle_body_type'] ?? null,      // pending IT
+                'vehicle_make'           => $risk['vehicle_make'] ?? null,
+                'vehicle_model'          => $risk['vehicle_model'] ?? null,
+                'vehicle_yr_manufacture' => $risk['vehicle_yr_manufacture'] ?? null,
+                'vehicle_chassis_no'     => $risk['vehicle_chassis_no'] ?? null,
+                'vehicle_colour'         => $risk['vehicle_colour'] ?? null,
+                'vehicle_body_type'      => $risk['vehicle_body_type'] ?? null,
                 'sum_insured'            => $risk['sum_insured'] ?? null,
                 'total_premium'          => $risk['total_premium'] ?? null,
-                'covers'                 => [], // not in middleware response yet
+                'seats'                  => $risk['seats'] ?? null,
+                'cubic_capacity'         => $risk['cubic_capacity'] ?? null,
+                'usage'                  => $risk['usage'] ?? null,
+                'covers'                 => $risk['covers'] ?? [],
             ])
             ->values()
             ->toArray();

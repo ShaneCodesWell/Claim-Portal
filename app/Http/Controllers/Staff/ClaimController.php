@@ -92,9 +92,6 @@ class ClaimController extends Controller
             'motor'            => ['partial' => 'partials.forms.motor-form', 'label' => 'Motor'],
             'fire'             => ['partial' => 'partials.forms.fire-form', 'label' => 'Fire'],
             'general_accident' => ['partial' => 'partials.forms.general-accident-form', 'label' => 'General Accident'],
-            // Uncomment as you add more partials:
-            // 'marine'        => ['partial' => 'partials.forms.marine-form',          'label' => 'Marine'],
-            // 'engineering'   => ['partial' => 'partials.forms.engineering-form',     'label' => 'Engineering'],
         ];
 
         if (! isset($viewMap[$claimType])) {
@@ -108,11 +105,18 @@ class ClaimController extends Controller
             'policy'   => $policy,
             'riskId'   => $riskId,
             'formView' => $viewMap[$claimType]['partial'],
-            'formData' => [],
             'action'   => route('customers.claims.store', $customer),
             'method'   => 'POST',
             'claim'    => null,
             'context'  => 'staff',
+            'formData' => array_merge(
+                [
+                    'fullname' => $customer->name ?? '',
+                    'email'    => $customer->email ?? '',
+                    'phone'    => $customer->phone ?? '',
+                ],
+                $policy->vehicleFormData($riskId ? (int) $riskId : null)
+            ),
         ]);
     }
 

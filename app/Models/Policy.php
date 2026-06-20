@@ -162,4 +162,48 @@ class Policy extends Model
 
         return $entry['vehicle_number'] ?? '';
     }
+
+    /**
+     * Extract normalized vehicle data for a specific risk,
+     * ready to pre-populate claim form fields.
+     * Handles all three payload formats: Genova rich, GLIMS, Legacy.
+     */
+    public function vehicleFormData(?int $riskId = null): array
+    {
+        $raw   = $this->raw_payload ?? [];
+        $risks = $raw['risks'] ?? [];
+
+        if (! empty($risks)) {
+            $risk = ($riskId !== null && isset($risks[$riskId]))
+                ? $risks[$riskId]
+                : reset($risks);
+
+            return [
+                'registration_no' => $risk['risk_ref_no'] ?? '',
+                'make'            => $risk['vehicle_make'] ?? '',
+                'model'           => $risk['vehicle_model'] ?? '',
+                'year_of_make'    => $risk['vehicle_yr_manufacture'] ?? '',
+                'vehicle_chassis' => $risk['vehicle_chassis_no'] ?? '',
+                'vehicle_colour'  => $risk['vehicle_colour'] ?? '',
+                'body_type'       => $risk['vehicle_body_type'] ?? '',
+                'seats'           => $risk['seats'] ?? '',
+                'cubic_capacity'  => $risk['cubic_capacity'] ?? '',
+            ];
+        }
+
+        // Legacy Genova fallback
+        $entry = is_array($raw[0] ?? null) ? $raw[0] : $raw;
+
+        return [
+            'registration_no' => $entry['vehicle_number'] ?? '',
+            'make'            => '',
+            'model'           => '',
+            'year_of_make'    => '',
+            'vehicle_chassis' => '',
+            'vehicle_colour'  => '',
+            'body_type'       => '',
+            'seats'           => '',
+            'cubic_capacity'  => '',
+        ];
+    }
 }
