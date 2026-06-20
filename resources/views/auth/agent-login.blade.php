@@ -29,17 +29,9 @@
                             100: '#dbeafe',
                             500: '#3b82f6',
                             600: '#2563eb',
+                            700: '#1d4ed8',
                             800: '#1e40af',
                             900: '#1e3a8a',
-                        },
-                        agent: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
                         },
                     },
                 },
@@ -88,7 +80,8 @@
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #16a34a;
+            background: #2563eb;
+            /* brand-600 */
             animation: loaderPulse 1.4s ease-in-out infinite;
         }
 
@@ -172,13 +165,15 @@
         }
 
         .otp-digit:focus {
-            border-color: #16a34a;
-            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+            border-color: #3b82f6;
+            /* brand-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
         .otp-digit.filled {
-            border-color: #16a34a;
-            background: #f0fdf4;
+            border-color: #3b82f6;
+            background: #eff6ff;
+            /* brand-50 */
         }
     </style>
 </head>
@@ -207,7 +202,7 @@
     <div class="max-w-md w-full relative z-10 mt-16 mb-4">
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
 
-            <div class="bg-agent-900 px-6 py-4 text-center">
+            <div class="bg-brand-900 px-6 py-4 text-center">
                 <div class="flex items-center justify-center gap-3 mb-1">
                     <div
                         class="bg-white/10 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
@@ -236,12 +231,12 @@
                         <div class="relative">
                             <i class="fas fa-phone absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                             <input type="text" name="phone" id="phone" required placeholder="e.g., 0244123456"
-                                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-agent-500 focus:border-agent-500 transition bg-white">
+                                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition bg-white">
                         </div>
                     </div>
 
                     <button type="submit" id="sendOtpBtn"
-                        class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-agent-600 hover:bg-agent-700 text-white text-sm font-semibold rounded-xl shadow-sm transition duration-200">
+                        class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl shadow-sm transition duration-200">
                         <i class="fas fa-paper-plane text-sm"></i>
                         <span>Send Verification Code</span>
                     </button>
@@ -252,7 +247,7 @@
                 class="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400">
                 <span><i class="fas fa-shield-alt mr-1"></i> 256-bit SSL</span>
                 <a href="{{ route('login') }}" class="hover:text-gray-600 transition">
-                    <i class="fas fa-user mr-1"></i>Customer Login
+                    <i class="fas fa-user mr-1"></i>Intermediary Login
                 </a>
             </div>
         </div>
@@ -276,18 +271,18 @@
                 <div class="flex items-center justify-center mb-6">
                     <div class="relative w-20 h-20">
                         <svg class="orbit-ring absolute inset-0 w-full h-full" viewBox="0 0 80 80">
-                            <circle cx="40" cy="40" r="36" fill="none" stroke="#dcfce7"
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#dbeafe"
                                 stroke-width="2" />
-                            <circle cx="40" cy="4" r="4" fill="#16a34a" />
+                            <circle cx="40" cy="4" r="4" fill="#2563eb" />
                         </svg>
                         <svg class="orbit-ring-slow absolute inset-0 w-full h-full" viewBox="0 0 80 80">
-                            <circle cx="40" cy="40" r="26" fill="none" stroke="#f0fdf4"
+                            <circle cx="40" cy="40" r="26" fill="none" stroke="#eff6ff"
                                 stroke-width="1.5" />
-                            <circle cx="40" cy="14" r="3" fill="#86efac" />
+                            <circle cx="40" cy="14" r="3" fill="#93c5fd" />
                         </svg>
                         <div class="absolute inset-0 flex items-center justify-center">
                             <div
-                                class="w-10 h-10 bg-agent-900 rounded-full flex items-center justify-center shadow-lg">
+                                class="w-10 h-10 bg-brand-900 rounded-full flex items-center justify-center shadow-lg">
                                 <i class="fas fa-handshake text-white text-sm"></i>
                             </div>
                         </div>
@@ -305,7 +300,7 @@
 
             {{-- STAGE: OTP SENT (brief interstitial) --}}
             <div id="stage-success" class="modal-stage">
-                <div class="bg-agent-900 px-6 py-5 text-center">
+                <div class="bg-brand-900 px-6 py-5 text-center">
                     <div class="flex items-center justify-center mb-3">
                         <div
                             class="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
@@ -322,9 +317,9 @@
                     <p class="text-sm text-gray-600 mb-5">We've sent a 6-digit verification code to your registered
                         phone number.</p>
                     <div
-                        class="flex items-center gap-2 bg-agent-50 border border-agent-100 rounded-xl p-3 text-left mb-4">
-                        <i class="fas fa-info-circle text-agent-600 text-sm shrink-0"></i>
-                        <p class="text-xs text-agent-800">Taking you to the verification screen now...</p>
+                        class="flex items-center gap-2 bg-brand-50 border border-brand-100 rounded-xl p-3 text-left mb-4">
+                        <i class="fas fa-info-circle text-brand-600 text-sm shrink-0"></i>
+                        <p class="text-xs text-brand-800">Taking you to the verification screen now...</p>
                     </div>
                     <div class="flex justify-center gap-2">
                         <div class="loader-dot"></div>
@@ -336,7 +331,7 @@
 
             {{-- STAGE: OTP ENTRY --}}
             <div id="stage-otp-entry" class="modal-stage">
-                <div class="bg-agent-900 px-6 py-5 text-center">
+                <div class="bg-brand-900 px-6 py-5 text-center">
                     <div class="flex items-center justify-center mb-3">
                         <div
                             class="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
@@ -369,7 +364,7 @@
                         </div>
 
                         <button type="submit" id="verifyOtpBtn"
-                            class="w-full py-2.5 bg-agent-600 hover:bg-agent-700 text-white text-sm font-semibold rounded-xl transition">
+                            class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition">
                             <i class="fas fa-check-circle mr-2"></i>Verify Code
                         </button>
                     </form>
@@ -399,7 +394,7 @@
                 <h3 class="font-display text-xl text-gray-900 mb-2">Unable to verify</h3>
                 <p id="errorMessage" class="text-sm text-gray-500 mb-6 leading-relaxed"></p>
                 <button id="errorRetryBtn"
-                    class="w-full py-2.5 bg-agent-600 hover:bg-agent-700 text-white text-sm font-semibold rounded-xl transition">
+                    class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition">
                     <i class="fas fa-redo mr-2"></i>Try Again
                 </button>
             </div>
@@ -543,7 +538,7 @@
 
                 let remaining = seconds;
                 btn.disabled = true;
-                btn.classList.remove('text-agent-600', 'hover:text-agent-700');
+                btn.classList.remove('text-brand-600', 'hover:text-brand-700');
                 btn.classList.add('text-gray-400');
 
                 const updateBtn = () => {
@@ -559,7 +554,7 @@
                         btn.disabled = false;
                         btn.innerHTML = 'Resend code';
                         btn.classList.remove('text-gray-400');
-                        btn.classList.add('text-agent-600', 'hover:text-agent-700');
+                        btn.classList.add('text-brand-600', 'hover:text-brand-700');
                     }
                 }, 1000);
             }

@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Http\Requests\StoreAgentRequest;
 use App\Http\Requests\UpdateAgentRequest;
+use App\Http\Resources\PolicyResource;
 use App\Models\Agent;
 use App\Models\Branch;
-use App\Models\Claim;
+use App\Models\Customer;
 use App\Models\Department;
+use App\Models\Policy;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AgentController extends Controller
@@ -15,13 +18,39 @@ class AgentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $claims = Claim::with(['customer', 'policy', 'assignedTo', 'branch'])
-            ->latest()
-            ->paginate(5);
+        $agent = Auth::guard('agent')->user();
 
-        return view('agent.dashboard.index', compact('claims'));
+        if (! $agent) {
+            return redirect()->route('agent.login')->with('error', 'Session expired. Please login again.');
+        }
+
+        $policies = Policy::forAgent($agent->id)
+            ->with('customer')
+            ->search($request->input('search'))
+            ->ofType($request->input('type'))
+            ->ofStatus($request->input('status'))
+            ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
+            ->orderBy('last_synced_at', 'desc')
+            ->paginate(6)
+            ->withQueryString();
+
+        $policies->setCollection(
+            $policies->getCollection()->map(fn($p) => (new PolicyResource($p))->toArray(request()))
+        );
+
+        $businessClasses = Policy::forAgent($agent->id)
+            ->whereNotNull('business_class_name')
+            ->distinct()
+            ->pluck('business_class_name');
+
+        $statusCounts = Policy::forAgent($agent->id)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        return view('agent.dashboard.index', compact('agent', 'policies', 'businessClasses', 'statusCounts'));
     }
 
     /**

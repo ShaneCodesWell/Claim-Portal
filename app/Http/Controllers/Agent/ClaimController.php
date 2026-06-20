@@ -3,12 +3,12 @@ namespace App\Http\Controllers\Agent;
 
 use App\Enums\ClaimSource;
 use App\Enums\ClaimStatus;
+use App\Http\Controllers\Controller;
 use App\Models\Claim;
 use App\Models\ClaimDocument;
-use App\Models\Policy;
 use App\Models\Customer;
+use App\Models\Policy;
 use App\Services\ClaimService;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -85,7 +85,7 @@ class ClaimController extends Controller
             ->latest()
             ->paginate(5);
 
-        return view('agent.dashboard.index', compact('claims', 'customer'));
+        return view('agent.claims.index', compact('claims', 'customer'));
     }
 
     public function show(Claim $claim)

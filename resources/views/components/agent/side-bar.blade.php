@@ -3,22 +3,23 @@
     <div class="h-full flex flex-col">
         <!-- Sidebar header with logo -->
         <div class="px-5 py-3 flex items-center gap-3 border-b border-gray-100">
-            <div class="flex items-center justify-center">
-                <img src="/images/Vanguard.png" alt="Logo" class="w-40 h-12">
+            <div class="flex items-center justify-center shrink-0">
+                <img src="/images/Vanguard.png" alt="Logo" class="w-40 h-12 object-contain">
             </div>
-            {{-- <span
-                class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full ml-auto">{{ $customer->name ?? 'Unknown Customer' }}</span> --}}
+            <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full ml-auto whitespace-nowrap">
+                Agent
+            </span>
         </div>
 
         <!-- Navigation Links -->
         <nav class="flex-1 px-3 py-6 space-y-1.5">
-            <a href="{{ route('dashboard') }}"
+            <a href="{{ route('agent.dashboard.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-clipboard-list w-5"></i>
                 <span>My Policies</span>
                 {{-- <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">3</span> --}}
             </a>
-            <a href="{{ route('claims.index') }}"
+            <a href="{{ route('agent.claims.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-file-alt w-5"></i>
                 <span>My Claims</span>

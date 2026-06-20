@@ -1,331 +1,215 @@
-<x-layouts.staff>
-    <!-- Header with stats and filters -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <i class="fas fa-clipboard-list text-blue-500 text-2xl"></i>
-                Incoming Claims
-            </h2>
-            <p class="text-gray-500 text-sm mt-1">
-                All customer-initiated claims · ready for team review
-            </p>
-        </div>
-        <div class="flex items-center gap-3">
-            <div class="relative">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                <input type="text" id="searchInput" placeholder="Search client, policy..."
-                    class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-300 w-64 bg-white" />
+<x-layouts.agent>
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium mb-1">
+                        Welcome back, <span
+                            class="font-bold text-blue-500">{{ Auth::guard('agent')->user()?->name ?? 'Intermediary' }}</span>
+                    </p>
+                    <h2 class="text-xl font-semibold text-gray-900">
+                        My Claims
+                    </h2>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Track the status of your submitted claims and access supporting documents.
+                    </p>
+                </div>
+
+                <button onclick="window.location.reload()"
+                    class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
+                    <i class="fas fa-refresh text-gray-500"></i> Refresh
+                </button>
             </div>
-            <button id="filterResetBtn"
-                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
-                <i class="fas fa-refresh text-gray-500"></i> Reset
-            </button>
-            {{-- <button
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition flex items-center gap-2">
-                <i class="fas fa-download"></i> Export
-            </button> --}}
         </div>
     </div>
 
-    <!-- Claim Amount Filter Tabs -->
-    <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-2">
-        <button data-filter="all"
-            class="amount-filter-tab px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
-            All Claims
-        </button>
-        <button data-filter="low"
-            class="amount-filter-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
-            Same Day (≤ 30k)
-        </button>
-        <button data-filter="medium"
-            class="amount-filter-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
-            Medium (30k - 100k)
-        </button>
-        <button data-filter="high"
-            class="amount-filter-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
-            High (> 100k)
-        </button>
+    <!-- Claim Status Summary Pills -->
+    <div class="flex flex-wrap gap-3 mb-6">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-indigo-400"></span>
+            <span class="text-sm text-gray-600">Total Claims</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $claims->total() }}</span>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+            <span class="text-sm text-gray-600">Pending Review</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'pending')->count() }}</span>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-blue-400"></span>
+            <span class="text-sm text-gray-600">In Progress</span>
+            <span
+                class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'in_progress')->count() }}</span>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span class="text-sm text-gray-600">Approved</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'approved')->count() }}</span>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-rose-400"></span>
+            <span class="text-sm text-gray-600">Declined</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'declined')->count() }}</span>
+        </div>
     </div>
 
-    <!-- Claims Table -->
+    <!-- Claims Table / List -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <!-- Toolbar -->
+        <div
+            class="px-5 py-4 border-b border-gray-200 bg-gray-50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900">
+                    All Claim Requests
+                </h3>
+                <p class="text-xs text-gray-500 mt-0.5">
+                    Claims you've submitted across your active policies
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input type="text" placeholder="Search by claim ID or policy..."
+                        class="pl-8 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 w-64 bg-white" />
+                </div>
+                <button
+                    class="bg-white border border-gray-300 hover:bg-gray-50 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 transition flex items-center gap-2">
+                    <i class="fas fa-filter text-xs"></i>
+                    Filter
+                </button>
+            </div>
+        </div>
+
+        <!-- Table (Responsive) -->
         <div class="overflow-x-auto custom-scroll">
-            <table class="min-w-300 md:min-w-full w-full">
+            <table class="min-w-225 md:min-w-full w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Client</th>
+                            Claim ID</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy Number</th>
+                            Policy / Product</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy Period</th>
+                            Submitted On</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Product</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Claim Amount</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Assigned To</th>
+                            Amount Requested</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Status</th>
                         <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Actions</th>
                     </tr>
                 </thead>
-                <tbody id="claimsTableBody" class="divide-y divide-gray-200">
-                    {{-- @forelse ( as )
-                        
+                <tbody class="divide-y divide-gray-200">
+                    @forelse ($claims as $claim)
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-4">
+                                <span
+                                    class="font-mono text-sm font-medium text-gray-900">{{ $claim->claim_number }}</span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ $claim->policy->product_name }}</div>
+                                <div class="text-xs text-gray-500">Policy: {{ $claim->policy->policy_number }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 text-sm text-gray-600">{{ $claim->created_at->format('M j, Y') }}</td>
+                            <td class="px-4 py-4 text-sm font-semibold text-gray-900">
+                                GH₵ {{ number_format($claim->amount, 2) }}</td>
+                            <td class="px-4 py-4">
+                                @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border {{ $badge['class'] }}">
+                                    {{ $badge['label'] }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                style="overflow: visible;">
+
+                                <button @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50 inline-flex items-center">
+                                    Details
+                                    <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                </button>
+
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    x-anchor.bottom-end="$el.previousElementSibling"
+                                    class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
+
+                                    <a href="{{ route('claims.show', $claim->id) }}"
+                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                        <i class="fas fa-eye text-xs text-blue-500"></i>
+                                        View Full Details
+                                    </a>
+
+                                    @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
+                                        {{-- <form method="POST" action="{{ route('agent.claims.cancel', $claim->id) }}" --}}
+                                            <form method="POST" action="#"
+                                            onsubmit="return confirm('Are you sure you want to cancel this claim? It will be sent back to Submitted.')">
+                                            @csrf
+                                            <button type="submit"
+                                                class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                <i class="fas fa-undo text-xs"></i>
+                                                Cancel Claim
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                </div>
+                            </td>
+                        </tr>
                     @empty
-                        
-                    @endforelse --}}
-                    <!-- Row 1: John Davis - Low (25,000) -->
-                    <tr class="hover:bg-gray-50 transition" data-amount="25000">
-                        <td class="px-4 py-4">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
-                                    JD</div>
-                                <span class="text-sm font-medium text-gray-900">John Davis</span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
-                            <div>P-1001-101-2026-000020</div>
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-green-100 text-green-700">GLIMS</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs text-gray-700">
-                            <div>15-01-2024</div>
-                            <span class="text-xs text-gray-400">to</span> 14-01-2025</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs font-medium text-gray-900">Comprehensive</td>
-                        <td class="px-4 py-4 text-sm font-medium text-gray-900">GHS 25,000.00</td>
-                        <td class="px-4 py-4 text-sm text-gray-700">Jessica Arthur</td>
-                        <td class="px-4 py-4">
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">Pending</span>
-                        </td>
-                        <td class="px-4 py-4 text-right relative" x-data="{ open: false }" style="overflow: visible;">
-                            <button @click="open = !open"
-                                class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div x-show="open" @click.outside="open = false" x-transition
-                                class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                <a href="{{ route('process-claim-motor') }}"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
-                                </a>
-                                <div class="border-t border-gray-100 my-1"></div>
-                                <button onclick="assignClaim(1)"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-user-check text-xs text-emerald-500"></i> Assign Claim
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Row 2: Sarah Boateng - Medium (65,000) -->
-                    <tr class="hover:bg-gray-50 transition" data-amount="65000">
-                        <td class="px-4 py-4">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
-                                    SB</div>
-                                <span class="text-sm font-medium text-gray-900">Sarah Boateng</span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
-                            <div>P-1001-102-2026-000095</div>
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-green-100 text-green-700">GLIMS</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs text-gray-700">
-                            <div>10-09-2023</div>
-                            <span class="text-xs text-gray-400">to</span> 09-09-2024</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs font-medium text-gray-900">Happy Home</td>
-                        <td class="px-4 py-4 text-sm font-medium text-gray-900">GHS 65,000.00</td>
-                        <td class="px-4 py-4 text-sm text-gray-700">Afia Kyei</td>
-                        <td class="px-4 py-4">
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">Assigned</span>
-                        </td>
-                        <td class="px-4 py-4 text-right relative" x-data="{ open: false }" style="overflow: visible;">
-                            <button @click="open = !open"
-                                class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div x-show="open" @click.outside="open = false" x-transition
-                                class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                <a href="{{ route('process-claim-fire') }}"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
-                                </a>
-                                <div class="border-t border-gray-100 my-1"></div>
-                                <button onclick="assignClaim(1)"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-user-check text-xs text-emerald-500"></i> Assign Claim
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Row 3: Olivia Addo - High (150,000) -->
-                    <tr class="hover:bg-gray-50 transition" data-amount="150000">
-                        <td class="px-4 py-4">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
-                                    OA</div>
-                                <span class="text-sm font-medium text-gray-900">Olivia Addo</span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-4 font-mono text-sm text-gray-700">
-                            <div>P-1003-310-2026-000150</div>
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium bg-blue-100 text-blue-700">Genova</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs text-gray-700">
-                            <div>01-03-20243</div>
-                            <span class="text-xs text-gray-400">to</span> 01-09-2024</span>
-                        </td>
-                        <td class="px-4 py-4 text-xs font-medium text-gray-900">Vanguard Safe Travel</td>
-                        <td class="px-4 py-4 text-sm font-medium text-gray-900">GHS 150,000.00</td>
-                        <td class="px-4 py-4 text-sm text-gray-400">Unassigned</td>
-                        <td class="px-4 py-4">
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">New</span>
-                        </td>
-                        <td class="px-4 py-4 text-right relative" x-data="{ open: false }" style="overflow: visible;">
-                            <button @click="open = !open"
-                                class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div x-show="open" @click.outside="open = false" x-transition
-                                class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                <a href="{{ route('process-claim-general-accident') }}"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
-                                </a>
-                                <div class="border-t border-gray-100 my-1"></div>
-                                <button onclick="assignClaim(1)"
-                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                    <i class="fas fa-user-check text-xs text-emerald-500"></i> Assign Claim
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="6" class="px-4 py-12 text-center text-sm text-gray-500">
+                                <div class="flex flex-col items-center justify-center gap-3">
+                                    <i class="fas fa-inbox text-4xl text-gray-300"></i>
+                                    <p class="text-gray-600">You haven't submitted any claims yet.</p>
+                                    <a href="{{ route('agent.dashboard.index') }}"
+                                        class="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-xl shadow-sm transition">
+                                        <i class="fas fa-plus-circle"></i> Start a Claim
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
-
-        <!-- Footer with pagination info -->
-        <div class="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center flex-wrap gap-3">
+        <!-- Pagination -->
+        <div class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
             <div class="text-sm text-gray-500">
-                <i class="fas fa-clipboard-list mr-1"></i>
-                Showing <span id="visibleCount">3</span> of <span id="totalCount">3</span> registered claims
+                <i class="fas fa-file mr-1"></i>
+                @if ($claims->firstItem())
+                    Showing {{ $claims->lastItem() }} of {{ $claims->total() }} claims
+                @else
+                    No claims found
+                @endif
             </div>
             <div class="flex gap-2">
-                <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50"><i
-                        class="fas fa-chevron-left"></i> Previous</button>
-                <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm">1</button>
-                <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">Next <i
-                        class="fas fa-chevron-right"></i></button>
+                {{ $claims->links() }}
             </div>
         </div>
     </div>
 
+    <!-- Helpful Tip / Support Card -->
     <div
-        class="mt-6 bg-blue-50/40 rounded-xl border border-blue-100 p-4 flex flex-wrap justify-between items-center gap-3">
-        <div class="flex items-center gap-3 text-sm text-blue-800">
-            <i class="fas fa-info-circle text-blue-500 text-lg"></i>
-            <span><strong>Claims team overview:</strong> Use the amount filters to triage claims by value.</span>
+        class="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <p class="text-sm font-medium text-gray-800">
+                <i class="fas fa-life-ring text-blue-500 mr-2"></i> Need help with a claim?
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+                Contact our claims support team for assistance with pending or in-progress claims.
+            </p>
         </div>
-        <div class="flex gap-2">
-            <span class="bg-white px-3 py-1 rounded-full text-xs shadow-sm"><i class="far fa-file-alt"></i> Modal
-                preview</span>
-            <span class="bg-white px-3 py-1 rounded-full text-xs shadow-sm"><i class="far fa-folder-open"></i> File
-                list modal</span>
-        </div>
+        <button
+            class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 w-full sm:w-auto justify-center">
+            <i class="fas fa-headset"></i> Contact Support
+        </button>
     </div>
 
-    <script>
-        // Amount filter logic
-        const filterTabs = document.querySelectorAll('.amount-filter-tab');
-        const tableRows = document.querySelectorAll('#claimsTableBody tr');
-        const totalCountSpan = document.getElementById('totalCount');
-        const visibleCountSpan = document.getElementById('visibleCount');
-        const searchInput = document.getElementById('searchInput');
-        const resetBtn = document.getElementById('filterResetBtn');
-
-        let currentAmountFilter = 'all';
-        let currentSearchTerm = '';
-
-        function filterTable() {
-            let visible = 0;
-            tableRows.forEach(row => {
-                const amount = parseInt(row.getAttribute('data-amount'));
-                let matchesAmount = true;
-                if (currentAmountFilter === 'low') matchesAmount = amount <= 30000;
-                else if (currentAmountFilter === 'medium') matchesAmount = amount > 30000 && amount <= 100000;
-                else if (currentAmountFilter === 'high') matchesAmount = amount > 100000;
-
-                // Search filter (client name or policy number)
-                const clientName = row.querySelector('td:first-child .text-sm.font-medium')?.innerText
-                    .toLowerCase() || '';
-                const policyNumber = row.querySelector('td:nth-child(2)')?.innerText.toLowerCase() || '';
-                const matchesSearch = currentSearchTerm === '' || clientName.includes(currentSearchTerm) ||
-                    policyNumber.includes(currentSearchTerm);
-
-                if (matchesAmount && matchesSearch) {
-                    row.style.display = '';
-                    visible++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            visibleCountSpan.innerText = visible;
-        }
-
-        // Tab click handlers
-        filterTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                currentAmountFilter = tab.getAttribute('data-filter');
-                filterTabs.forEach(t => {
-                    t.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                    t.classList.add('text-gray-500');
-                });
-                tab.classList.remove('text-gray-500');
-                tab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-                filterTable();
-            });
-        });
-
-        // Search input
-        searchInput.addEventListener('input', (e) => {
-            currentSearchTerm = e.target.value.toLowerCase().trim();
-            filterTable();
-        });
-
-        // Reset button: clear search and set filter to All
-        resetBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            currentSearchTerm = '';
-            // Reset amount filter to All
-            currentAmountFilter = 'all';
-            filterTabs.forEach(t => {
-                t.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                t.classList.add('text-gray-500');
-            });
-            const allTab = document.querySelector('.amount-filter-tab[data-filter="all"]');
-            if (allTab) {
-                allTab.classList.remove('text-gray-500');
-                allTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-            }
-            filterTable();
-        });
-
-        // Initialize counts
-        totalCountSpan.innerText = tableRows.length;
-        filterTable();
-    </script>
-</x-layouts.staff>
+</x-layouts.agent>
