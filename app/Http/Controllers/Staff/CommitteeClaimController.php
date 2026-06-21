@@ -29,7 +29,16 @@ class CommitteeClaimController extends Controller
             abort(403, 'This claim is not currently with the Claims Committee.');
         }
 
-        $claim->load(['customer', 'policy', 'branch', 'activities.user', 'documents']);
+        $claim->load([
+            'customer',
+            'policy',
+            'branch',
+            'activities.user',
+            'documents',
+            'assignedTo',
+            'surveyor',
+            'committeeDecidedBy',
+        ]);
 
         return view('staff.committee.show', compact('claim'));
     }

@@ -374,7 +374,7 @@
         </div>
     </div>
 
-    {{-- Document Preview Modal (reuse same structure as staff) --}}
+    {{-- Document Preview Modal --}}
     <x-documents-modal />
 
     {{-- Flash Messages --}}

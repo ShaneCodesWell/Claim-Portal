@@ -362,8 +362,8 @@
                             </span>
                         @endif
                     </div>
-
                 </div>
+                {{-- Print Modal Preview --}}
                 <x-claim-form-modal :claim="$claim" />
 
                 <div class="p-5 space-y-5">
@@ -711,9 +711,9 @@
 
             // Reset body
             body.innerHTML = `<div class="text-center text-gray-400">
-        <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
-        <p class="text-sm">Loading document...</p>
-        </div>`;
+                <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                <p class="text-sm">Loading document...</p>
+                </div>`;
 
             if (mimeType.includes('pdf')) {
                 iconEl.className = 'fas fa-file-pdf text-red-400';
@@ -727,13 +727,13 @@
             } else {
                 iconEl.className = 'fas fa-file text-gray-400';
                 body.innerHTML = `<div class="text-center text-gray-500 py-12">
-            <i class="fas fa-file-alt text-5xl mb-4 text-gray-300"></i>
-            <p class="text-sm font-medium">${name}</p>
-            <p class="text-xs text-gray-400 mt-1">Preview not available for this file type.</p>
-            <a href="${url}?download=1" class="mt-4 inline-block bg-blue-600 text-white text-sm px-4 py-2 rounded-lg">
-                Download to view
-            </a>
-        </div>`;
+                    <i class="fas fa-file-alt text-5xl mb-4 text-gray-300"></i>
+                    <p class="text-sm font-medium">${name}</p>
+                    <p class="text-xs text-gray-400 mt-1">Preview not available for this file type.</p>
+                    <a href="${url}?download=1" class="mt-4 inline-block bg-blue-600 text-white text-sm px-4 py-2 rounded-lg">
+                        Download to view
+                    </a>
+                </div>`;
             }
 
             modal.classList.remove('hidden');
