@@ -580,6 +580,64 @@
                 </div>
             </div>
 
+            {{-- Survey Findings --}}
+            @if ($claim->survey_notes)
+                <div class="bg-white rounded-xl border border-cyan-200 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-cyan-100 bg-cyan-50/50 flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-search-location text-cyan-500"></i> Survey Findings
+                        </h3>
+                        <div class="text-xs text-gray-500 flex items-center gap-2">
+                            <span>by <strong
+                                    class="text-gray-700">{{ $claim->surveyor?->name ?? 'Unknown' }}</strong></span>
+                            <span>&middot;</span>
+                            <span>{{ $claim->survey_completed_at?->format('d M Y, g:i A') ?? '—' }}</span>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <p
+                            class="text-sm text-gray-700 bg-cyan-50/30 rounded-lg p-4 border border-cyan-100 whitespace-pre-line leading-relaxed">
+                            {{ $claim->survey_notes }}
+                        </p>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Committee Notes --}}
+            @if ($claim->committee_notes)
+                <div class="bg-white rounded-xl border border-orange-200 shadow-sm overflow-hidden">
+                    <div
+                        class="px-5 py-4 border-b border-orange-100 bg-orange-50/50 flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-gavel text-orange-500"></i> Committee Decision
+                        </h3>
+                        <div class="text-xs text-gray-500 flex items-center gap-2">
+                            @php
+                                $decisionColors = [
+                                    'approved' => 'bg-green-100 text-green-700',
+                                    'rejected' => 'bg-red-100 text-red-700',
+                                ];
+                                $decisionColor = $decisionColors[$claim->status] ?? 'bg-gray-100 text-gray-600';
+                            @endphp
+                            <span class="px-2.5 py-1 rounded-full text-xs font-medium {{ $decisionColor }}">
+                                {{ \App\Enums\ClaimStatus::labels()[$claim->status] ?? $claim->status }}
+                            </span>
+                            <span>&middot;</span>
+                            <span>by <strong
+                                    class="text-gray-700">{{ $claim->committeeDecidedBy?->name ?? 'Unknown' }}</strong></span>
+                            <span>&middot;</span>
+                            <span>{{ $claim->committee_decided_at?->format('d M Y, g:i A') ?? '—' }}</span>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <p
+                            class="text-sm text-gray-700 bg-orange-50/30 rounded-lg p-4 border border-orange-100 whitespace-pre-line leading-relaxed">
+                            {{ $claim->committee_notes }}
+                        </p>
+                    </div>
+                </div>
+            @endif
+
             {{-- Request Additional Info --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
@@ -601,34 +659,6 @@
                     </form>
                 </div>
             </div>
-
-            {{-- Documents Card --}}
-            {{-- <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-paperclip text-blue-500"></i> Documents
-                    </h3>
-                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                        {{ $claim->documents->count() }}
-                    </span>
-                </div>
-                <div class="p-4">
-                    @forelse($claim->documents as $doc)
-                        <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-file text-gray-400 text-sm"></i>
-                                <span
-                                    class="text-xs text-gray-700 truncate max-w-35">{{ $doc->original_name }}</span>
-                            </div>
-                            <a href="{{ Storage::url($doc->file_path) }}" target="_blank"
-                                class="text-xs text-blue-600 hover:underline">View</a>
-                        </div>
-                    @empty
-                        <p class="text-xs text-gray-400 italic">No documents uploaded yet.</p>
-                    @endforelse
-                </div>
-            </div> --}}
-
         </div>
     </div>
 

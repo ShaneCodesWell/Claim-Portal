@@ -353,7 +353,9 @@
                     </h3>
                 </div>
                 <div class="p-5">
-                    <form action="{{ route('surveyor.claims.complete', $claim) }}" method="POST" class="space-y-3">
+                    <form action="{{ route('surveyor.claims.complete', $claim) }}" method="POST" class="space-y-3"
+                        id="surveyCompleteForm"
+                        data-unassigned="{{ is_null($claim->surveyed_by) ? 'true' : 'false' }}">
                         @csrf
                         <textarea name="survey_notes" rows="5" required maxlength="2000"
                             placeholder="Describe your findings, observations, estimated damage, and recommendation..."
@@ -403,6 +405,34 @@
     @endif
 
     <script>
+        // SweetAlert confirmation for unassigned survey submission
+        const surveyForm = document.getElementById('surveyCompleteForm');
+        if (surveyForm) {
+            surveyForm.addEventListener('submit', function(e) {
+                if (this.dataset.unassigned === 'true') {
+                    e.preventDefault();
+                    const form = this;
+                    Swal.fire({
+                        title: 'Submit Survey?',
+                        html: `This survey report will be logged under your name<br><strong>{{ Auth::user()->name }}</strong>.`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0d9488',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Yes, Submit',
+                        cancelButtonText: 'Cancel',
+                        reverseButtons: true,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Prevent the listener from firing again on programmatic submit
+                            form.dataset.unassigned = 'false';
+                            form.submit();
+                        }
+                    });
+                }
+            });
+        }
+
         function openDocPreview(url, name, mimeType) {
             const modal = document.getElementById('docViewModal');
             const body = document.getElementById('docViewBody');

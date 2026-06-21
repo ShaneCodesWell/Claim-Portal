@@ -81,6 +81,7 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     // Claims
     Route::get('claims', [StaffClaimController::class, 'index'])->name('staff.claims.index');
     Route::get('claims/my-queue', [StaffClaimController::class, 'myQueue'])->name('staff.claims.my-queue');
+    Route::get('claims/archive', [StaffClaimController::class, 'archive'])->name('staff.claims.archive');
     Route::get('claims/{claim}', [StaffClaimController::class, 'show'])->name('staff.claims.show');
     Route::get('/documents/{document}/preview', [StaffClaimController::class, 'previewDocument'])->name('staff.documents.preview');
     Route::get('claims/{claim}/print', [StaffClaimController::class, 'print'])->name('staff.claims.print');
@@ -155,9 +156,6 @@ Route::middleware(['agent'])->prefix('agent')->group(function () {
 
 // Admin-only routes — only admins can access
 Route::middleware(['admin'])->prefix('admin')->group(function () {
-
-    // Archive
-    Route::get('claims/archive', [StaffClaimController::class, 'archive'])->name('staff.claims.archive');
 
     // Organization
     Route::get('/organization', [CompanyController::class, 'index'])->name('organization');

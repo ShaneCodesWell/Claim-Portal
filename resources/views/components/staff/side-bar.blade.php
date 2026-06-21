@@ -54,6 +54,16 @@
             </a>
             <div class="pt-4 mt-4 border-t border-gray-100">
                 @if (Auth::user()->isAdmin())
+                    <a href="{{ route('staff.claims.archive') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition
+                        {{ request()->routeIs('staff.claims.archive')
+                            ? 'bg-gray-100 text-gray-800 font-medium'
+                            : 'text-gray-600 hover:bg-gray-100' }}">
+                        <i class="fas fa-archive w-5"></i>
+                        <span>Claims Archive</span>
+                    </a>
+                @endif
+                @if (Auth::user()->isAdmin())
                     <a href="{{ route('organization') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                         <i class="fas fa-building w-5"></i>

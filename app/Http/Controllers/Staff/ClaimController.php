@@ -69,7 +69,7 @@ class ClaimController extends Controller
 
     public function show(Claim $claim)
     {
-        $claim->load(['customer', 'policy', 'assignedTo', 'branch', 'activities.user', 'documents']);
+        $claim->load(['customer', 'policy', 'assignedTo', 'branch', 'activities.user', 'documents', 'surveyor', 'committeeDecidedBy']);
 
         $staffMembers = User::where('is_active', true)
             ->whereIn('role', UserRole::staffRoles())
@@ -450,5 +450,29 @@ class ClaimController extends Controller
         $this->claimService->sendToCommittee($claim, Auth::user(), $request->note);
 
         return back()->with('success', 'Claim escalated to the Claims Committee.');
+    }
+
+    public function archive(Request $request)
+    {
+        abort_unless(Auth::user()->isAdmin(), 403);
+
+        $query = Claim::with(['customer', 'policy', 'assignedTo', 'committeeDecidedBy'])
+            ->whereIn('status', ClaimStatus::terminal());
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('policy', fn($q) => $q->where('policy_number', 'like', "%{$search}%"));
+            });
+        }
+
+        $claims = $query->latest()->paginate(15)->withQueryString();
+
+        return view('staff.claims.archive', compact('claims'));
     }
 }
