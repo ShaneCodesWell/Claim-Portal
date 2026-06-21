@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Auth\AgentAuthController;
 use App\Http\Controllers\AgentController;
+use App\Http\Controllers\Auth\AgentAuthController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CompanyController;
@@ -123,8 +123,11 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
 // Surveyor portal
 Route::middleware(['auth', 'surveyor'])->prefix('surveyor')->name('surveyor.')->group(function () {
     Route::get('claims', [SurveyorClaimController::class, 'index'])->name('claims.index');
+    Route::get('claims/my-queue', [SurveyorClaimController::class, 'myQueue'])->name('claims.my-queue');
     Route::get('claims/{claim}', [SurveyorClaimController::class, 'show'])->name('claims.show');
     Route::post('claims/{claim}/complete', [SurveyorClaimController::class, 'complete'])->name('claims.complete');
+    Route::post('claims/{claim}/assign-to-me', [SurveyorClaimController::class, 'assignToMe'])->name('claims.assign-to-me');
+    Route::post('claims/{claim}/documents', [SurveyorClaimController::class, 'uploadDocuments'])->name('claims.documents');
 });
 
 // Claims Committee (staff layout, gated by 'committee' middleware)
@@ -152,6 +155,9 @@ Route::middleware(['agent'])->prefix('agent')->group(function () {
 
 // Admin-only routes — only admins can access
 Route::middleware(['admin'])->prefix('admin')->group(function () {
+
+    // Archive
+    Route::get('claims/archive', [StaffClaimController::class, 'archive'])->name('staff.claims.archive');
 
     // Organization
     Route::get('/organization', [CompanyController::class, 'index'])->name('organization');

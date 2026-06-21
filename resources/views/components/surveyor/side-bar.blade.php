@@ -11,13 +11,34 @@
 
         <!-- Navigation Links -->
         <nav class="flex-1 px-3 py-6 space-y-1.5">
-            <a href="{{ route('staff.claims.index') }}"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+            <a href="{{ route('surveyor.claims.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition
+            {{ request()->routeIs('surveyor.claims.index')
+                ? 'bg-cyan-50 text-cyan-700 font-medium'
+                : 'text-gray-600 hover:bg-gray-100' }}">
                 <i class="fas fa-clipboard-list w-5"></i>
-                <span>Customer Claims</span>
-                <span
-                    class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['submitted_claims'] }}</span>
+                <span>All Survey Claims</span>
+                @if ($stats['all_survey_count'] > 0)
+                    <span class="ml-auto bg-cyan-100 text-cyan-700 text-xs px-2 py-0.5 rounded-full">
+                        {{ $stats['all_survey_count'] }}
+                    </span>
+                @endif
             </a>
+
+            <a href="{{ route('surveyor.claims.my-queue') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition
+            {{ request()->routeIs('surveyor.claims.my-queue')
+                ? 'bg-cyan-50 text-cyan-700 font-medium'
+                : 'text-gray-600 hover:bg-gray-100' }}">
+                <i class="fas fa-user-check w-5"></i>
+                <span>My Assigned</span>
+                @if ($stats['my_queue_count'] > 0)
+                    <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">
+                        {{ $stats['my_queue_count'] }}
+                    </span>
+                @endif
+            </a>
+
             <div class="pt-4 mt-4 border-t border-gray-100">
                 <form action="{{ route('logout') }}" method="POST"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 transition">

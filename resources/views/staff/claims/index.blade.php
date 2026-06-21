@@ -57,8 +57,8 @@
                             Client</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policy Number</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy Period</th>
+                        {{-- <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Policy Period</th> --}}
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Product</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -96,11 +96,11 @@
                                     {{ strtoupper($claim->policy->source) }}
                                 </span>
                             </td>
-                            <td class="px-4 py-4 text-xs text-gray-700">
+                            {{-- <td class="px-4 py-4 text-xs text-gray-700">
                                 <div>{{ \Carbon\Carbon::parse($claim->policy->start_date)->format('M d, Y') }}</div>
                                 <span class="text-xs text-gray-400">to</span>
                                 {{ \Carbon\Carbon::parse($claim->policy->end_date)->format('M d, Y') }}</span>
-                            </td>
+                            </td> --}}
                             <td class="px-4 py-4 text-xs font-medium text-gray-900">{{ $claim->policy->product_name }}
                             </td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵

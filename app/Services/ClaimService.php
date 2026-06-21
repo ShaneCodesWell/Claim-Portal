@@ -295,6 +295,25 @@ class ClaimService
         );
     }
 
+    // Assign Surveyor
+    public function assignSurveyor(Claim $claim, User $surveyor, ?string $note = null): void
+    {
+        $previous = $claim->surveyed_by;
+
+        $claim->update([
+            'surveyed_by' => $surveyor->id,
+            'surveyed_at' => $claim->surveyed_at ?? now(),
+        ]);
+
+        $this->logActivity(
+            $claim,
+            $surveyor,
+            'surveyor_assigned',
+            $note ?? "Claim self-assigned to {$surveyor->name} for survey.",
+            ['assigned_to' => $surveyor->id, 'previous_surveyor' => $previous]
+        );
+    }
+
     // Surveyor submits their findings
     public function completeSurvey(Claim $claim, User $surveyor, string $notes): void
     {

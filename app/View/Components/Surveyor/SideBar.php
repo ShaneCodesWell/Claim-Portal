@@ -1,9 +1,11 @@
 <?php
 namespace App\View\Components\Surveyor;
 
+use App\Enums\ClaimStatus;
 use App\Models\Claim;
 use Closure;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Component;
 
 class SideBar extends Component
@@ -15,7 +17,8 @@ class SideBar extends Component
     public function __construct()
     {
         $this->stats = [
-            'submitted_claims' => Claim::where('status', 'submitted')->count(),
+            'all_survey_count' => Claim::where('status', 'under_survey')->count(),
+            'my_queue_count'   => Claim::where('status', ClaimStatus::UNDER_SURVEY)->where('surveyed_by', Auth::id())->count(),
         ];
     }
 

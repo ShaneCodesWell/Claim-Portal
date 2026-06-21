@@ -15,7 +15,8 @@ class ClaimController extends Controller
 
     public function index(Request $request)
     {
-        $query = Claim::where('status', ClaimStatus::UNDER_SURVEY)->with(['customer', 'policy', 'branch']);
+        $query = Claim::where('status', ClaimStatus::UNDER_SURVEY)
+            ->with(['customer', 'policy', 'branch', 'surveyor']);
 
         match ($request->filter) {
             'low'    => $query->where('amount', '<=', 30000),
@@ -33,8 +34,22 @@ class ClaimController extends Controller
         }
 
         $claims = $query->latest('surveyed_at')->paginate(15)->withQueryString();
+        $stats  = $this->stats();
 
-        return view('surveyor.claims.index', compact('claims'));
+        return view('surveyor.claims.index', compact('claims', 'stats'));
+    }
+
+    public function myQueue(Request $request)
+    {
+        $claims = Claim::where('status', ClaimStatus::UNDER_SURVEY)
+            ->where('surveyed_by', Auth::id())
+            ->with(['customer', 'policy', 'branch'])
+            ->latest('surveyed_at')
+            ->paginate(15);
+
+        $stats = $this->stats();
+
+        return view('surveyor.claims.my-queue', compact('claims', 'stats'));
     }
 
     public function show(Claim $claim)
@@ -43,9 +58,38 @@ class ClaimController extends Controller
             abort(403, 'This claim is not currently under survey.');
         }
 
-        $claim->load(['customer', 'policy', 'branch', 'activities.user', 'documents']);
+        $claim->load(['customer', 'policy', 'branch', 'activities.user', 'documents', 'surveyor']);
+        $stats = $this->stats();
 
-        return view('surveyor.claims.show', compact('claim'));
+        return view('surveyor.claims.show', compact('claim', 'stats'));
+    }
+
+    public function assignToMe(Request $request, Claim $claim)
+    {
+        if (! $claim->isUnderSurvey()) {
+            abort(403, 'This claim is not currently under survey.');
+        }
+
+        $this->claimService->assignSurveyor($claim, Auth::user());
+
+        return back()->with('success', 'Claim assigned to you.');
+    }
+
+    public function uploadDocuments(Request $request, Claim $claim)
+    {
+        $request->validate([
+            'documents'   => 'required|array',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+        ]);
+
+        $this->claimService->attachDocuments(
+            claim: $claim,
+            files: $request->file('documents'),
+            uploadedBy: Auth::user(),
+            type: 'survey_document',
+        );
+
+        return back()->with('success', count($request->file('documents')) . ' document(s) uploaded.');
     }
 
     public function complete(Request $request, Claim $claim)
@@ -63,5 +107,15 @@ class ClaimController extends Controller
         return redirect()
             ->route('surveyor.claims.index')
             ->with('success', "Survey completed for claim {$claim->claim_number}.");
+    }
+
+    private function stats(): array
+    {
+        return [
+            'all_survey_count' => Claim::where('status', ClaimStatus::UNDER_SURVEY)->count(),
+            'my_queue_count'   => Claim::where('status', ClaimStatus::UNDER_SURVEY)
+                ->where('surveyed_by', Auth::id())
+                ->count(),
+        ];
     }
 }

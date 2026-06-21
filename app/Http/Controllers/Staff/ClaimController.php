@@ -24,7 +24,10 @@ class ClaimController extends Controller
     public function index(Request $request)
     {
         $query = Claim::with(['customer', 'policy', 'assignedTo', 'branch'])
-            ->where('status', ClaimStatus::incoming())
+            ->whereIn('status', [
+                ClaimStatus::SUBMITTED,
+                ClaimStatus::SURVEY_COMPLETED,
+            ])
             ->latest();
 
         match ($request->filter) {

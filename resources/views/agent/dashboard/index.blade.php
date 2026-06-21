@@ -6,13 +6,14 @@
                 <div>
                     <p class="text-sm text-gray-500 font-medium mb-1">
                         Agent Dashboard - <span
-                            class="font-bold text-blue-500">{{ Auth::guard('agent')->user()?->name ?? 'Unknown' }}</span>
+                            class="font-bold text-blue-500">{{ Auth::guard('agent')->user()?->name ?? 'Agent' }}</span>
                     </p>
                     <h2 class="text-xl font-semibold text-gray-900">
                         Policy Access Portal
                     </h2>
                     <p class="text-sm text-gray-500 mt-1">
-                        Search for a specific policy by number, or browse the list of policies assigned to you.
+                        Search for a specific policy by number or vehicle registration, or browse the list of policies
+                        assigned to you.
                     </p>
                 </div>
                 <button onclick="window.location.reload()"
@@ -65,9 +66,10 @@
                     <div>
                         <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                             <i class="fas fa-file-contract text-blue-500"></i>
-                            Intermediary Policies
+                            Your Assigned Policies
                         </h2>
-                        <p class="text-xs text-gray-500 mt-0.5">Click on any policy to view details or file a claim</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Click the 'Actions' button on any policy to view details
+                            or file a claim</p>
                     </div>
 
                     <!-- Filters -->
@@ -104,7 +106,7 @@
 
                                 <!-- Clear button - matches new height -->
                                 @if (request()->hasAny(['search', 'type', 'status']))
-                                    <a href="{{ route('dashboard') }}"
+                                    <a href="{{ route('agent.dashboard.index') }}"
                                         class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition flex items-center gap-2 text-sm font-medium whitespace-nowrap">
                                         <i class="fas fa-times-circle"></i> Clear
                                     </a>
@@ -122,7 +124,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">No policies found</h3>
                     <p class="text-gray-500 max-w-md mx-auto mb-6">
-                        Try adjusting your search or filter criteria, or refresh to sync the latest policies.
+                        Try adjusting your search or filter criteria, or click Refresh to load the latest policies.
                     </p>
                     <button onclick="location.reload()"
                         class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition inline-flex items-center gap-2">
@@ -278,8 +280,9 @@
             <i class="fas fa-info-circle mr-2"></i> Agent Access Note
         </p>
         <p class="text-sm text-blue-700 mt-1">
-            Use the search box above to quickly locate a specific policy by number. The list below shows all policies
-            currently brought in by you. If you believe a policy is missing, please contact Support.
+            Use the search box above to quickly locate a specific policy by number or vehicle registration. The list
+            below shows all policies currently assigned to you. If you believe a policy is missing, please contact our
+            support team.
         </p>
     </div>
 </x-layouts.agent>
