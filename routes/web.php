@@ -136,6 +136,7 @@ Route::middleware(['staff', 'committee'])->prefix('admin/committee')->name('comm
     Route::get('claims', [CommitteeClaimController::class, 'index'])->name('claims.index');
     Route::get('claims/{claim}', [CommitteeClaimController::class, 'show'])->name('claims.show');
     Route::post('claims/{claim}/decide', [CommitteeClaimController::class, 'decide'])->name('claims.decide');
+    Route::post('claims/{claim}/documents', [CommitteeClaimController::class, 'uploadDocuments'])->name('claims.documents');
 });
 
 // Agent routes — only agents can access

@@ -99,8 +99,28 @@
                         <p class="text-xs text-gray-400 italic">No documents uploaded.</p>
                     @endforelse
                 </div>
-                {{-- Print Modal Preview --}}
-                <x-claim-form-modal :claim="$claim" />
+            </div>
+
+            {{-- Upload Documents Card --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-upload text-orange-500"></i> Upload Survey Documents
+                    </h3>
+                </div>
+                <div class="p-4">
+                    <form action="{{ route('committee.claims.documents', $claim) }}" method="POST"
+                        enctype="multipart/form-data" class="space-y-3">
+                        @csrf
+                        <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf"
+                            class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer" />
+                        <p class="text-xs text-gray-400">PDF, JPG, PNG up to 5MB each</p>
+                        <button type="submit"
+                            class="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
+                            <i class="fas fa-upload text-xs"></i> Upload Documents
+                        </button>
+                    </form>
+                </div>
             </div>
 
 
@@ -206,8 +226,10 @@
                         </button>
                     </div>
                 </div>
-                <div class="p-5 space-y-5">
+                {{-- Print Modal Preview --}}
+                <x-claim-form-modal :claim="$claim" />
 
+                <div class="p-5 space-y-5">
                     {{-- Policy --}}
                     @php $policy = $claim->policy; @endphp
                     @if ($policy)
@@ -477,8 +499,13 @@
         document.getElementById('committeeDecisionForm')
             ?.addEventListener('submit', function(e) {
                 e.preventDefault();
+
                 const form = this;
-                const decision = document.activeElement.value;
+
+                // Get the button that triggered the submit
+                const submitter = e.submitter;
+
+                const decision = submitter.value;
                 const isApprove = decision === 'approved';
 
                 Swal.fire({
@@ -493,6 +520,15 @@
                     reverseButtons: true,
                 }).then((result) => {
                     if (result.isConfirmed) {
+
+                        // Create hidden input so Laravel receives decision
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'decision';
+                        input.value = decision;
+
+                        form.appendChild(input);
+
                         form.submit();
                     }
                 });
