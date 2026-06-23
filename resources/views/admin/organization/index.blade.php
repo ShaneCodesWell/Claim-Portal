@@ -242,7 +242,7 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Department Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Department Code</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Head of Department</th>
@@ -259,7 +259,8 @@
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $department->code }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $department->head?->name ?? 'N/A' }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-700">{{ $department->branch?->name ?? 'N/A' }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $department->branch?->name ?? 'N/A' }}
+                                </td>
                                 <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                     style="overflow: visible;">
                                     <button @click="open = !open"
@@ -467,16 +468,16 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span
-                                        class="text-sm text-gray-700">{{ $agent->partner_code ?? 'N/A' }}</span>
+                                    <span class="text-sm text-gray-700">{{ $agent->partner_code ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="text-sm text-gray-700">{{ $agent->user_category ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-sm text-gray-700">{{ $agent->sub_user_category ?? 'N/A' }}</span>
+                                    <span
+                                        class="text-sm text-gray-700">{{ $agent->sub_user_category ?? 'N/A' }}</span>
                                 </td>
-                                
+
                                 <td class="px-6 py-4">
                                     <span class="text-sm text-gray-700">{{ $agent->phone ?? 'N/A' }}</span>
                                 </td>
@@ -580,7 +581,7 @@
                 const params = new URLSearchParams(window.location.search);
                 const requestedTab = params.get('tab');
 
-                if (requestedTab && sections[requestedTab.replace('tab-', '')]) {
+                if (requestedTab) {
                     activateTab(requestedTab.replace('tab-', ''));
                 } else {
                     activateTab('profile');

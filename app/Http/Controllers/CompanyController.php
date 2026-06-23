@@ -3,8 +3,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCompanyRequest;
 use App\Http\Requests\UpdateCompanyRequest;
-use App\Models\Branch;
 use App\Models\Agent;
+use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Department;
 use App\Models\User;
@@ -16,11 +16,39 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $branches     = Branch::all();
-        $company      = Company::firstOrFail();
-        $staffMembers = User::latest()->paginate(5);
-        $departments  = Department::all();
-        $agents       = Agent::latest()->paginate(5);
+        $company = Company::firstOrFail();
+
+        $staffMembers = User::latest()->paginate(5, ['*'], 'staff_page')
+            ->appends([
+                'tab'         => 'tab-team',
+                'agents_page' => request('agents_page', 1),
+                'branch_page' => request('branch_page', 1),
+                'dept_page'   => request('dept_page', 1),
+            ]);
+
+        $agents = Agent::latest()->paginate(10, ['*'], 'agents_page')
+            ->appends([
+                'tab'         => 'tab-agents',
+                'staff_page'  => request('staff_page', 1),
+                'branch_page' => request('branch_page', 1),
+                'dept_page'   => request('dept_page', 1),
+            ]);
+
+        $branches = Branch::paginate(10, ['*'], 'branch_page')
+            ->appends([
+                'tab'         => 'tab-branches',
+                'staff_page'  => request('staff_page', 1),
+                'agents_page' => request('agents_page', 1),
+                'dept_page'   => request('dept_page', 1),
+            ]);
+
+        $departments = Department::where('is_active', true)->paginate(10, ['*'], 'dept_page')
+            ->appends([
+                'tab'         => 'tab-departments',
+                'staff_page'  => request('staff_page', 1),
+                'agents_page' => request('agents_page', 1),
+                'branch_page' => request('branch_page', 1),
+            ]);
 
         return view('admin.organization.index', compact('company', 'staffMembers', 'departments', 'branches', 'agents'));
     }

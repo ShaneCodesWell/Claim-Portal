@@ -21,6 +21,15 @@
             </h3>
             <form action="{{ route('staff.store') }}" id="singleStaffForm" class="space-y-4" method="POST">
                 @csrf
+                @if ($errors->any())
+                    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
@@ -165,14 +174,36 @@
             </div>
         </div>
     </div>
-
     <script>
+        // Single Staff Form — SweetAlert confirmation
+        document.getElementById('singleStaffForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const form = this;
+
+            Swal.fire({
+                title: 'Add Staff Member?',
+                text: 'Please confirm you want to create this staff account.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '<i class="fas fa-save"></i> Yes, Create',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+
         // Bulk upload file selection preview
         const fileInput = document.getElementById('bulkFile');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
         const uploadBtn = document.getElementById('uploadBulkBtn');
 
-        fileInput.addEventListener('change', function(e) {
+        fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
                 fileNameDisplay.textContent = `Selected: ${this.files[0].name}`;
                 fileNameDisplay.classList.remove('hidden');
@@ -186,31 +217,12 @@
         uploadBtn.addEventListener('click', function() {
             if (!fileInput.files.length) return;
             alert(`Uploading ${fileInput.files[0].name}... (demo - process on server)`);
-            // In real implementation, use FormData and AJAX
         });
 
-        // Sample Excel download (just a placeholder)
+        // Sample Excel download placeholder
         document.querySelector('a[href="#"]').addEventListener('click', function(e) {
             e.preventDefault();
             alert('Sample Excel template download would start here.');
-        });
-
-        // Staff search (simple filter)
-        const staffSearch = document.getElementById('staffSearch');
-        const tableRows = document.querySelectorAll('#staffTableBody tr');
-        staffSearch.addEventListener('input', function() {
-            const term = this.value.toLowerCase();
-            let visible = 0;
-            tableRows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                if (text.includes(term)) {
-                    row.style.display = '';
-                    visible++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            document.getElementById('showingCount').innerText = visible;
         });
     </script>
 </x-layouts.staff>

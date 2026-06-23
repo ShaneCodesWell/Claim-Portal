@@ -20,20 +20,20 @@ class StaffController extends Controller
      * Display a listing of the resource.
      */
 
-    public function processClaimMotor()
-    {
-        return view('staff.process-claim.motor');
-    }
+    // public function processClaimMotor()
+    // {
+    //     return view('staff.process-claim.motor');
+    // }
 
-    public function processClaimFire()
-    {
-        return view('staff.process-claim.fire');
-    }
+    // public function processClaimFire()
+    // {
+    //     return view('staff.process-claim.fire');
+    // }
 
-    public function processClaimGeneralAccident()
-    {
-        return view('staff.process-claim.general-accident');
-    }
+    // public function processClaimGeneralAccident()
+    // {
+    //     return view('staff.process-claim.general-accident');
+    // }
 
     public function claimForms()
     {

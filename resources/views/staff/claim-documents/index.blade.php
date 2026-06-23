@@ -80,11 +80,11 @@
                         <span class="text-xs bg-gray-100 px-2 py-1 rounded-full">{{ $docs->count() }}</span>
                         @php $latestClaim = $policy->claims->first(); @endphp
                         @if ($latestClaim)
-                            <button onclick="openClaimFormModal({{ $latestClaim->id }})"
+                            {{-- <button onclick="openClaimFormModal({{ $latestClaim->id }})"
                                 class="text-gray-400 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition"
                                 title="Preview Claim Form">
                                 <i class="fas fa-eye text-xs"></i>
-                            </button>
+                            </button> --}}
                         @endif
                         <i
                             class="policy-toggle-icon fas fa-chevron-down text-gray-400 text-xs transition-transform"></i>
@@ -173,7 +173,6 @@
                             @endforeach
                         </div>
                     @endif
-
                 </div>
             </div>
         @empty
