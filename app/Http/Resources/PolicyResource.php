@@ -109,25 +109,45 @@ class PolicyResource extends JsonResource
      */
     private function extractGlimsRisks(array $risks): array
     {
-        return collect($risks)
-            ->map(fn($risk) => [
-                'id'                     => null,
-                'risk_ref_no'            => $risk['risk_ref_no'] ?? null,
-                'vehicle_make'           => $risk['vehicle_make'] ?? null,
-                'vehicle_model'          => $risk['vehicle_model'] ?? null,
-                'vehicle_yr_manufacture' => $risk['vehicle_yr_manufacture'] ?? null,
-                'vehicle_chassis_no'     => $risk['vehicle_chassis_no'] ?? null,
-                'vehicle_colour'         => $risk['vehicle_colour'] ?? null,
-                'vehicle_body_type'      => $risk['vehicle_body_type'] ?? null,
-                'sum_insured'            => $risk['sum_insured'] ?? null,
-                'total_premium'          => $risk['total_premium'] ?? null,
-                'seats'                  => $risk['seats'] ?? null,
-                'cubic_capacity'         => $risk['cubic_capacity'] ?? null,
-                'usage'                  => $risk['usage'] ?? null,
-                'covers'                 => $risk['covers'] ?? [],
-            ])
+        // Group by vehicle identity (plate + chassis) to collapse
+        // endorsement transactions on the same vehicle into one entry.
+        // Within each group, pick the transaction with the highest _raw.rn
+        // (latest transaction), and use net_premium as the resolved premium.
+
+        $grouped = collect($risks)
+            ->groupBy(function ($risk) {
+                $plate   = $risk['risk_ref_no'] ?? 'unknown';
+                $chassis = $risk['vehicle_chassis_no'] ?? 'unknown';
+                return $plate . '|' . $chassis;
+            })
+            ->map(function ($group) {
+                // Pick the entry with the highest rn — that's the latest transaction
+                $latest = $group->sortByDesc(fn($r) => $r['_raw']['created'] ?? '')->first();
+
+                // net_premium from the latest transaction is the resolved figure
+                $resolvedPremium = $latest['_raw']['net_premium'] ?? $latest['total_premium'] ?? null;
+
+                return [
+                    'id'                     => null,
+                    'risk_ref_no'            => $latest['risk_ref_no'] ?? null,
+                    'vehicle_make'           => $latest['vehicle_make'] ?? null,
+                    'vehicle_model'          => $latest['vehicle_model'] ?? null,
+                    'vehicle_yr_manufacture' => $latest['vehicle_yr_manufacture'] ?? null,
+                    'vehicle_chassis_no'     => $latest['vehicle_chassis_no'] ?? null,
+                    'vehicle_colour'         => $latest['vehicle_colour'] ?? null,
+                    'vehicle_body_type'      => $latest['vehicle_body_type'] ?? null,
+                    'sum_insured'            => $latest['sum_insured'] ?? null,
+                    'total_premium'          => $resolvedPremium,
+                    'seats'                  => $latest['seats'] ?? null,
+                    'cubic_capacity'         => $latest['cubic_capacity'] ?? null,
+                    'usage'                  => $latest['usage'] ?? null,
+                    'covers'                 => $latest['covers'] ?? [],
+                ];
+            })
             ->values()
             ->toArray();
+
+        return $grouped;
     }
 
     /**

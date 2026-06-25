@@ -256,7 +256,10 @@ class AuthController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Session expired.'], 401);
         }
 
-        $request->validate(['customer_code' => 'required|string']);
+        $request->validate([
+            'customer_code' => 'required|string',
+            'name'          => 'sometimes|string',
+        ]);
 
         $customerCode = $request->customer_code;
         session(['pending_customer_code' => $customerCode]);
@@ -264,16 +267,24 @@ class AuthController extends Controller
         // Pin the local DB record if it exists and pull the correct name + phone from it
         $customer = Customer::where('external_customer_code', $customerCode)->first();
         if ($customer) {
-            session([
-                'selected_customer_id' => $customer->id,
-                'pending_name'         => $customer->name, // always use the selected customer's name
-            ]);
+            session(['selected_customer_id' => $customer->id]);
 
             // Backfill phone into session if it wasn't set (e.g. GLIMS multi-profile flow)
             if (! session('pending_phone') && $customer->phone) {
                 session(['pending_phone' => $customer->phone]);
             }
         }
+
+        // Use posted name first (fresh from GLIMS profile),
+        // fall back to DB name, then session, then generic fallback
+        $resolvedName = $request->input('name') ?? $customer?->name ?? session('pending_name') ?? 'there';
+
+        // Only accept DB name if it's not a placeholder
+        if (in_array($resolvedName, ['Unknown', 'there', ''])) {
+            $resolvedName = $request->input('name') ?? 'there';
+        }
+
+        session(['pending_name' => $resolvedName]);
 
         $phone = session('pending_phone');
 
@@ -284,8 +295,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // pending_name is now correctly set from the selected customer record
-        return $this->sendOtpAndRespond($phone, session('pending_name', 'there'));
+        return $this->sendOtpAndRespond($phone, $resolvedName);
     }
 
     // New OTP without relying on Genova or Glims
@@ -463,12 +473,12 @@ class AuthController extends Controller
         return $profiles;
     }
 
-    // ── PRIVATE: Resolve profiles from GLIMS only ─────────────────────
+    // PRIVATE: Resolve profiles from GLIMS only
     private function resolveGlimsProfiles(string $phone): array
     {
         $profiles = [];
 
-        // ── Try middleware API first ──────────────────────────────────────────────
+        // Try middleware API first
         try {
             $profiles = $this->glims->resolveProfilesByPhone($phone);
 
@@ -485,7 +495,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // ── API returned nothing — fall back to local synced DB ──────────────────
+        // API returned nothing — fall back to local synced DB
         Log::info('resolveGlimsProfiles: API empty, falling back to local DB', ['phone' => $phone]);
 
         $localCustomer = Customer::where('phone', $phone)
@@ -652,60 +662,64 @@ class AuthController extends Controller
         $pendingName  = session('pending_name');
         $authSource   = session('auth_source', 'genova');
 
-        $customer = null;
-
-        // 1. By customer code (most reliable)
+        // 1. Always try by customer code first — this is the unique profile identifier
         if ($customerCode) {
             $customer = Customer::where('external_customer_code', $customerCode)->first();
+
+            if ($customer) {
+                $updates = [];
+
+                if (empty($customer->phone)) {
+                    $updates['phone'] = $phone;
+                }
+
+                // If name was previously saved as Unknown, fix it now
+                if (empty($customer->name) || $customer->name === 'Unknown') {
+                    $updates['name'] = $pendingName ?? $customer->name;
+                }
+
+                if (! empty($updates)) {
+                    $customer->update($updates);
+                }
+
+                return $customer->fresh();
+            }
+
+            // Customer code exists but no DB record yet — create one
+            $sources = str_contains($authSource, 'glims') ? ['glims'] : ['genova'];
+
+            Log::info('resolveCustomerFromSession: creating new customer record', [
+                'customer_code' => $customerCode,
+                'phone'         => $phone,
+                'source'        => $authSource,
+            ]);
+
+            return Customer::create([
+                'external_customer_id'   => null,
+                'external_customer_code' => $customerCode,
+                'name'                   => $pendingName ?? 'Unknown',
+                'phone'                  => $phone,
+                'email'                  => null,
+                'sources'                => $sources,
+            ]);
         }
 
-        // 2. By phone — catches GLIMS records that have phone stored
+        // 2. No customer code at all — last resort phone lookup
+        // Only used when auth source couldn't provide a code (edge case)
+        Log::warning('resolveCustomerFromSession: no customer code in session, falling back to phone', [
+            'phone' => $phone,
+        ]);
+
+        $customer = Customer::where('phone', $phone)
+            ->where('external_customer_code', $customerCode) // won't match anything — safe guard
+            ->first();
+
         if (! $customer) {
-            $customer = Customer::where('phone', $phone)->first();
-        }
-
-        if ($customer) {
-            $updates = [];
-
-            // Backfill phone if it was null (common in GLIMS-synced records)
-            if (empty($customer->phone)) {
-                $updates['phone'] = $phone;
-            }
-
-            // Backfill customer code if it was missing
-            if (empty($customer->external_customer_code) && $customerCode) {
-                $updates['external_customer_code'] = $customerCode;
-            }
-
-            if (! empty($updates)) {
-                $customer->update($updates);
-            }
-
-            return $customer->fresh();
-        }
-
-        // 3. Create if truly not found — match existing GLIMS record format
-        if (! $customerCode) {
             Log::error('resolveCustomerFromSession: no customer code, cannot create', ['phone' => $phone]);
             return null;
         }
 
-        $sources = str_contains($authSource, 'glims') ? ['glims'] : ['genova'];
-
-        Log::info('resolveCustomerFromSession: creating new customer record', [
-            'customer_code' => $customerCode,
-            'phone'         => $phone,
-            'source'        => $authSource,
-        ]);
-
-        return Customer::create([
-            'external_customer_id'   => null,
-            'external_customer_code' => $customerCode,
-            'name'                   => $pendingName ?? 'Unknown',
-            'phone'                  => $phone,
-            'email'                  => null,
-            'sources'                => $sources,
-        ]);
+        return $customer;
     }
 
     private function maskPhone(string $phone): string

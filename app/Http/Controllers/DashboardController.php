@@ -86,14 +86,37 @@ class DashboardController extends Controller
      *
      * Returns at minimum [$customer->id] so the query always has something to work with.
      */
+    // private function resolveCustomerIds(Customer $customer): array
+    // {
+    //     // Start with the authenticated customer's own ID
+    //     $ids = [$customer->id];
+
+    //     // If we have a phone number, find any other Customer records sharing it (different source, same person)
+    //     if ($customer->phone) {
+    //         $relatedIds = Customer::where('phone', $customer->phone)->where('id', '!=', $customer->id)->pluck('id')->toArray();
+
+    //         if (! empty($relatedIds)) {
+    //             $ids = array_merge($ids, $relatedIds);
+    //         }
+    //     }
+
+    //     return array_unique($ids);
+    // }
+
+    // This is the right way
     private function resolveCustomerIds(Customer $customer): array
     {
         // Start with the authenticated customer's own ID
         $ids = [$customer->id];
 
-        // If we have a phone number, find any other Customer records sharing it (different source, same person)
-        if ($customer->phone) {
-            $relatedIds = Customer::where('phone', $customer->phone)->where('id', '!=', $customer->id)->pluck('id')->toArray();
+        if ($customer->phone && $customer->external_customer_code) {
+            // Only merge records that share BOTH phone AND customer code
+            // (same person, different source) — not just same phone (different people)
+            $relatedIds = Customer::where('phone', $customer->phone)
+                ->where('external_customer_code', $customer->external_customer_code)
+                ->where('id', '!=', $customer->id)
+                ->pluck('id')
+                ->toArray();
 
             if (! empty($relatedIds)) {
                 $ids = array_merge($ids, $relatedIds);
