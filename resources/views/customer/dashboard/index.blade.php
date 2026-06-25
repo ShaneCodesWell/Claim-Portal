@@ -54,12 +54,12 @@
                     </div>
                     <div class="text-sm font-medium text-blue-700">Active Policies</div>
                 </div>
-                <div class="flex items-center gap-3 px-4 py-2 bg-red-50 border border-red-100 rounded-full">
+                {{-- <div class="flex items-center gap-3 px-4 py-2 bg-red-50 border border-red-100 rounded-full">
                     <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-red-600">
                         <span class="font-bold text-sm" id="expired-count">{{ $statusCounts['expired'] ?? 0 }}</span>
                     </div>
                     <div class="text-sm font-medium text-red-700">Expired</div>
-                </div>
+                </div> --}}
             </div>
         </div>
 
@@ -101,12 +101,12 @@
                                 </select>
 
                                 <!-- Status - shorter width, less vertical padding -->
-                                <select name="status" id="status-select"
+                                {{-- <select name="status" id="status-select"
                                     class="px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 text-sm w-auto md:w-32">
                                     <option value="">All Statuses</option>
                                     <option value="active" @selected(request('status') === 'active')>Active</option>
                                     <option value="expired" @selected(request('status') === 'expired')>Expired</option>
-                                </select>
+                                </select> --}}
 
                                 <!-- Clear button - matches new height -->
                                 @if (request()->hasAny(['search', 'type', 'status']))
@@ -122,19 +122,31 @@
             </div>
 
             @if (!isset($policies) || count($policies) === 0)
-                <div id="empty-state" class="p-16 text-center">
-                    <div class="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-folder-open text-blue-400 text-4xl"></i>
+                {{-- Check if this is a fresh login with sync in progress --}}
+                @if (is_null($customer->last_synced_at))
+                    <div id="syncing-state" class="p-12 text-center">
+                        <div class="flex items-center justify-center gap-3 mb-3">
+                            <i class="fas fa-sync-alt text-blue-500 text-lg animate-spin"></i>
+                            <span class="text-base font-semibold text-gray-700">Fetching your policies...</span>
+                        </div>
+                        <p class="text-xs text-gray-400" id="polling-status">Connecting to Vanguard Assurance...</p>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">No policies found</h3>
-                    <p class="text-gray-500 max-w-md mx-auto mb-6">
-                        Try adjusting your search or filter criteria, or refresh to sync the latest policies.
-                    </p>
-                    <button onclick="location.reload()"
-                        class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition inline-flex items-center gap-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
+                @else
+                    {{-- genuinely empty --}}
+                    <div id="empty-state" class="p-16 text-center">
+                        <div class="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-folder-open text-blue-400 text-4xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">No policies found</h3>
+                        <p class="text-gray-500 max-w-md mx-auto mb-6">
+                            Try adjusting your search or filter criteria, or refresh to sync the latest policies.
+                        </p>
+                        <button onclick="location.reload()"
+                            class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition inline-flex items-center gap-2">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                @endif
             @else
                 <div class="overflow-x-auto">
                     <table class="min-w-full table-fixed divide-y divide-gray-100">
@@ -280,6 +292,82 @@
 
     <x-policy-details-modal />
 
+    {{-- Polling policy Data on the Dashbaord --}}
+    @if (is_null($customer->last_synced_at))
+        <script>
+            (function() {
+                const POLL_URL = '{{ route('dashboard.poll') }}';
+                const statusEl = document.getElementById('polling-status');
+                const messages = [
+                    'Connecting to Vanguard Assurance...',
+                    'Loading your motor policies...',
+                    'Loading your fire policies...',
+                    'Almost there...',
+                ];
+
+                let attempt = 0;
+                let msgIndex = 0;
+                let maxAttempts = 20; // 20 × 3s = 60s max wait
+
+                // Rotate the status message every 3s so it feels alive
+                const msgTimer = setInterval(() => {
+                    msgIndex = (msgIndex + 1) % messages.length;
+                    if (statusEl) statusEl.textContent = messages[msgIndex];
+                }, 3000);
+
+                function poll() {
+                    attempt++;
+
+                    fetch(POLL_URL, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.ready) {
+                                // Policies are in — reload to render the table
+                                clearInterval(msgTimer);
+                                if (statusEl) statusEl.textContent =
+                                    `Found ${data.count} polic${data.count === 1 ? 'y' : 'ies'}. Loading...`;
+                                setTimeout(() => window.location.reload(), 600);
+                            } else if (attempt >= maxAttempts) {
+                                // Timed out — show a gentle message with a manual refresh button
+                                clearInterval(msgTimer);
+                                const syncingEl = document.getElementById('syncing-state');
+                                if (syncingEl) {
+                                    syncingEl.innerHTML = `
+                            <div class="w-32 h-32 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <i class="fas fa-clock text-amber-400 text-4xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Taking longer than expected</h3>
+                            <p class="text-gray-500 max-w-md mx-auto mb-6">
+                                Your policies are still being fetched. Please refresh in a moment.
+                            </p>
+                            <button onclick="location.reload()"
+                                class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition inline-flex items-center gap-2">
+                                <i class="fas fa-sync-alt"></i> Refresh Now
+                            </button>`;
+                                }
+                            } else {
+                                // Not ready yet — poll again in 3s
+                                setTimeout(poll, 3000);
+                            }
+                        })
+                        .catch(() => {
+                            // Network hiccup — keep trying unless maxed out
+                            if (attempt < maxAttempts) {
+                                setTimeout(poll, 3000);
+                            }
+                        });
+                }
+
+                // Start polling after 2s — give the job a moment to begin
+                setTimeout(poll, 2000);
+            })();
+        </script>
+    @endif
     <script>
         const policiesMap = @json($policiesMapData);
 
@@ -357,11 +445,11 @@
                 `<div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
                ${isExpired
                    ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
-                                              <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
-                                          </button>`
+                                                                  <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                                                              </button>`
                    : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
-                                              <i class="fas fa-file-invoice"></i> Process Claim
-                                          </a>`
+                                                                  <i class="fas fa-file-invoice"></i> Process Claim
+                                                              </a>`
                }
            </div>` :
                 '';
@@ -387,10 +475,10 @@
                             <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
                         </div>
                         ${covers.length > 0 ? `
-                                            <div class="border-t border-gray-200 pt-3">
-                                                <p class="text-xs text-gray-500 mb-2">Covers Included</p>
-                                                <div class="flex flex-wrap gap-1.5">${coverTags}</div>
-                                            </div>` : ''}
+                                                                <div class="border-t border-gray-200 pt-3">
+                                                                    <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                                                                    <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                                                                </div>` : ''}
                         ${claimButton}
                     </div>
                 </div>`;

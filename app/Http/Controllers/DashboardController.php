@@ -126,4 +126,28 @@ class DashboardController extends Controller
         return array_unique($ids);
     }
 
+    
+    public function pollPolicies(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $customer = Auth::guard('customer')->user();
+
+        if (! $customer) {
+            return response()->json(['ready' => false]);
+        }
+
+        $customerIds = $this->resolveCustomerIds($customer);
+
+        $count = Policy::whereIn('customer_id', $customerIds)
+            ->where('status', 'active')
+            ->count();
+
+        $syncing = is_null($customer->last_synced_at);
+
+        return response()->json([
+            'ready'   => $count > 0,
+            'count'   => $count,
+            'syncing' => $syncing,
+        ]);
+    }
+
 }

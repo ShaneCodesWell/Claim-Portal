@@ -62,6 +62,7 @@ Route::middleware('auth.customer')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/poll', [DashboardController::class, 'pollPolicies'])->name('dashboard.poll')->middleware('auth:customer');
 
     // Claims
     Route::post('claims', [CustomerClaimController::class, 'store'])->name('claims.store');

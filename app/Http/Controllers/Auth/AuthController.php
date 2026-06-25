@@ -397,6 +397,10 @@ class AuthController extends Controller
             'selected_customer_id', 'auth_source', 'login_type', 'username',
         ]);
 
+        // Fallback dispatch — covers brand-new customers who didn't exist
+        // when sendOtpAndRespond fired the early dispatch.
+        // SyncCustomerPoliciesJob skips if synced within last 30 min,
+        // so dispatching twice is safe — the job deduplicates itself.
         try {
             SyncCustomerPoliciesJob::dispatch($customer);
         } catch (\Exception $e) {
@@ -647,6 +651,26 @@ class AuthController extends Controller
                 'status'  => 'error',
                 'message' => 'We found your account but could not send the verification code. Please try again.',
             ], 500);
+        }
+
+        // Dispatch sync job early
+        // Start syncing while the user is reading their SMS and entering OTP.
+        // By the time they land on the dashboard, policies may already be ready.
+        $customerCode = session('pending_customer_code');
+        if ($customerCode) {
+            $customer = Customer::where('external_customer_code', $customerCode)->first();
+            if ($customer) {
+                try {
+                    SyncCustomerPoliciesJob::dispatch($customer);
+                    Log::info('sendOtpAndRespond: early sync dispatched', [
+                        'customer_id' => $customer->id,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::warning('sendOtpAndRespond: early sync dispatch failed', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
 
         return response()->json([

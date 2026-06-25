@@ -316,7 +316,7 @@
             </div>
 
             {{-- Request Additional Info --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            {{-- <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <i class="fas fa-question-circle text-amber-500"></i> Request Additional Information
@@ -334,7 +334,7 @@
                         </button>
                     </form>
                 </div>
-            </div>
+            </div> --}}
         </div>
     </div>
 
