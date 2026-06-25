@@ -323,6 +323,10 @@ class ClaimController extends Controller
         $claim->load(['policy', 'documents', 'assignedTo', 'customer']);
         $policy = $claim->policy;
 
+        if (! $claim->isEditable()) {
+            abort(403, 'This claim can no longer be edited.');
+        }
+
         $viewMap = [
             'motor'            => 'staff.claims.edit.motor',
             'fire'             => 'staff.claims.edit.fire',
@@ -360,6 +364,10 @@ class ClaimController extends Controller
         ]);
 
         $claim->update(['form_data' => $validated['form_data']]);
+
+        if (! $claim->isEditable()) {
+            abort(403, 'This claim can no longer be edited.');
+        }
 
         // Delete marked documents
         if (! empty($validated['delete_documents'])) {
@@ -414,7 +422,7 @@ class ClaimController extends Controller
 
         // Guard: only cancellable statuses
         if (! in_array($claim->status, ClaimStatus::cancellable())) {
-            return back()->with('error', 'This claim cannot be cancelled in its current status.');
+            return back()->with('error', 'This claim cannot be cancelled in at this point.');
         }
 
         $this->claimService->cancel(

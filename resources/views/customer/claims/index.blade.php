@@ -138,7 +138,7 @@
 
                                 <div x-show="open" @click.outside="open = false" x-transition
                                     x-anchor.bottom-end="$el.previousElementSibling"
-                                    class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-[9999]">
+                                    class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
 
                                     <a href="{{ route('claims.show', $claim->id) }}"
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
@@ -147,17 +147,16 @@
                                     </a>
 
                                     @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
-                                        <form method="POST" action="{{ route('claims.cancel', $claim->id) }}"
-                                            onsubmit="return confirm('Are you sure you want to cancel this claim? It will be sent back to Submitted.')">
+                                        <form method="POST" action="{{ route('staff.claims.cancel', $claim->id) }}"
+                                            class="cancel-claim-form">
                                             @csrf
                                             <button type="submit"
                                                 class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                                <i class="fas fa-undo text-xs"></i>
+                                                <i class="fas fa-circle-xmark text-xs"></i>
                                                 Cancel Claim
                                             </button>
                                         </form>
                                     @endif
-
                                 </div>
                             </td>
                         </tr>
@@ -210,4 +209,27 @@
             <i class="fas fa-headset"></i> Contact Support
         </button>
     </div>
+    <script>
+        document.querySelectorAll('.cancel-claim-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Cancel this claim?',
+                    text: 'This will cancel the claim and notify the customer. This action cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, cancel claim',
+                    cancelButtonText: 'Go back',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
 </x-layouts.app>

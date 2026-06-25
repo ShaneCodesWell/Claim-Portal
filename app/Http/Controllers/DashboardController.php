@@ -44,11 +44,12 @@ class DashboardController extends Controller
         $customerIds = $this->resolveCustomerIds($customer);
 
         $policies = Policy::whereIn('customer_id', $customerIds)
+            ->where('status', 'active')
             ->with('customer')
             ->search($request->input('search'))
             ->ofType($request->input('type'))
-            ->ofStatus($request->input('status'))
-            ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
+        // ->ofStatus($request->input('status'))
+        // ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
             ->orderBy('last_synced_at', 'desc')
             ->paginate(6)
             ->withQueryString();
@@ -58,11 +59,13 @@ class DashboardController extends Controller
         );
 
         $businessClasses = Policy::whereIn('customer_id', $customerIds)
+            ->where('status', 'active')
             ->whereNotNull('business_class_name')
             ->distinct()
             ->pluck('business_class_name');
 
         $statusCounts = Policy::whereIn('customer_id', $customerIds)
+            ->where('status', 'active')
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');

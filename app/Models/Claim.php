@@ -123,6 +123,11 @@ class Claim extends Model
         return $this->status === ClaimStatus::COMMITTEE_REVIEW;
     }
 
+    public function isEditable(): bool
+    {
+        return ClaimStatus::isEditable($this->status);
+    }
+
     // Other helpers
     public static function generateClaimNumber(): string
     {

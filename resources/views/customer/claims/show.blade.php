@@ -89,7 +89,7 @@
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <i class="fas fa-file-alt text-blue-500"></i> Claim Summary
                     </h3>
-                    @if (in_array($claim->status, ['submitted', 'pending_info']))
+                    @if (\App\Enums\ClaimStatus::isEditable($claim->status))
                         <a href="{{ route('claims.edit', $claim) }}"
                             class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                             <i class="fas fa-edit"></i> Edit Form

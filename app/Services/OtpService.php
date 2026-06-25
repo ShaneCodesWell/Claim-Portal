@@ -1,6 +1,6 @@
 <?php
-
 namespace App\Services;
+
 use App\Models\Otp;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +24,12 @@ class OtpService
             'code'       => $code,
             'expires_at' => Carbon::now()->addMinutes(10),
         ]);
+
+        // Skip the actual SMS in local — OTP is in the DB for manual lookup
+        if (app()->environment('local')) {
+            Log::info("OTP [{$code}] generated for {$phoneLocal} — SMS skipped (local)");
+            return true;
+        }
 
         $message = "Your Claim Portal verification code is: {$code}. Valid for 10 minutes. Do not share this code with anyone.";
 

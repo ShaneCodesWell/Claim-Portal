@@ -92,9 +92,10 @@ enum ClaimStatus: string {
     public static function cancellable(): array
     {
         return [
-            self::UNDER_REVIEW,
-            self::PENDING_INFO,
+            self::SUBMITTED,
             self::IN_PROGRESS,
+            self::PENDING_INFO,
+            self::UNDER_REVIEW,
         ];
     }
 
@@ -103,6 +104,21 @@ enum ClaimStatus: string {
         return [
             self::SUBMITTED,
         ];
+    }
+
+    public static function editable(): array
+    {
+        return [
+            self::SUBMITTED,
+            self::IN_PROGRESS,
+            self::UNDER_REVIEW,
+            self::PENDING_INFO,
+        ];
+    }
+
+    public static function isEditable(string $status): bool
+    {
+        return in_array($status, self::editable());
     }
 
     // Convenience groupings
