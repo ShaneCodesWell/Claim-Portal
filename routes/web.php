@@ -71,8 +71,10 @@ Route::middleware('auth.customer')->group(function () {
     Route::get('claims/edit/{claim}', [CustomerClaimController::class, 'edit'])->name('claims.edit');
     Route::put('claims/update/{claim}', [CustomerClaimController::class, 'update'])->name('claims.update');
 
-    // Preview Document
+    // Documents
+    Route::post('claims/{claim}/documents', [CustomerClaimController::class, 'uploadDocuments'])->name('customer.claims.documents');
     Route::get('/documents/{document}/preview', [CustomerClaimController::class, 'previewDocument'])->name('customer.documents.preview');
+    Route::delete('claims/documents/{document}', [CustomerClaimController::class, 'destroyDocument'])->name('customer.claims.documents.destroy');
 
 });
 
@@ -84,8 +86,14 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('claims/my-queue', [StaffClaimController::class, 'myQueue'])->name('staff.claims.my-queue');
     Route::get('claims/archive', [StaffClaimController::class, 'archive'])->name('staff.claims.archive');
     Route::get('claims/{claim}', [StaffClaimController::class, 'show'])->name('staff.claims.show');
+
+    // Documents
+    Route::post('claims/{claim}/documents', [StaffClaimController::class, 'uploadDocuments'])->name('staff.claims.documents');
     Route::get('/documents/{document}/preview', [StaffClaimController::class, 'previewDocument'])->name('staff.documents.preview');
+    Route::delete('claims/documents/{document}', [StaffClaimController::class, 'destroyDocument'])->name('staff.claims.documents.destroy');
     Route::get('claims/{claim}/print', [StaffClaimController::class, 'print'])->name('staff.claims.print');
+
+    // Status
     Route::post('claims/{claim}/assign', [StaffClaimController::class, 'assign'])->name('staff.claims.assign');
     Route::post('claims/{claim}/status', [StaffClaimController::class, 'updateStatus'])->name('staff.claims.status');
     Route::post('claims/{claim}/request-info', [StaffClaimController::class, 'requestInfo'])->name('staff.claims.request-info');

@@ -241,23 +241,57 @@
                 <div class="p-4">
                     @forelse($claim->documents as $doc)
                         <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
                                 @if (str_contains($doc->mime_type, 'pdf'))
-                                    <i class="fas fa-file-pdf text-red-400 text-sm"></i>
+                                    <i class="fas fa-file-pdf text-red-400 text-sm shrink-0"></i>
                                 @else
-                                    <i class="fas fa-image text-blue-400 text-sm"></i>
+                                    <i class="fas fa-image text-blue-400 text-sm shrink-0"></i>
                                 @endif
                                 <span class="text-xs text-gray-700 truncate max-w-35">{{ $doc->original_name }}</span>
                             </div>
-                            <button
-                                onclick="openDocPreview('{{ route('staff.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
-                                class="text-xs text-blue-600 hover:underline">
-                                View
-                            </button>
+                            <div class="flex items-center gap-3 shrink-0">
+                                <button
+                                    onclick="openDocPreview('{{ route('staff.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
+                                    class="text-xs text-blue-600 hover:underline">
+                                    View
+                                </button>
+                                @if (in_array($claim->status, ['submitted', 'pending_info']) &&
+                                        ($doc->uploaded_by === Auth::id() || Auth::user()->isAdmin()))
+                                    <form action="{{ route('staff.claims.documents.destroy', $doc->id) }}"
+                                        method="POST" class="delete-doc-form">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="text-xs text-red-500 hover:underline">Remove</button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     @empty
                         <p class="text-xs text-gray-400 italic">No documents uploaded yet.</p>
                     @endforelse
+                </div>
+            </div>
+
+            {{-- Upload Documents Card --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-upload text-indigo-500"></i> Upload Documents
+                    </h3>
+                </div>
+                <div class="p-4">
+                    <form action="{{ route('staff.claims.documents', $claim) }}" method="POST"
+                        enctype="multipart/form-data" class="space-y-3">
+                        @csrf
+                        <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf"
+                            class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
+                        <p class="text-xs text-gray-400">PDF, JPG, PNG up to 5MB each</p>
+                        <button type="submit"
+                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
+                            <i class="fas fa-upload text-xs"></i> Upload Documents
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -407,10 +441,10 @@
                     {{-- Section: Claimant / Policyholder --}}
                     @php
                         $claimant = [
-                            'name' => $claim->form_data['claimant_name'] ?? ($claim->policy?->customer?->name ?? ''),
-                            'email' => $claim->form_data['claimant_email'] ?? ($claim->policy?->customer?->email ?? ''),
-                            'phone' => $claim->form_data['claimant_phone'] ?? ($claim->policy?->customer?->phone ?? ''),
-                            'occupation' => $claim->form_data['claimant_occupation'] ?? '',
+                            'name' => $claim->form_data['name'] ?? ($claim->policy?->customer?->name ?? ''),
+                            'email' => $claim->form_data['email'] ?? ($claim->policy?->customer?->email ?? ''),
+                            'phone' => $claim->form_data['phone'] ?? ($claim->policy?->customer?->phone ?? ''),
+                            'occupation' => $claim->form_data['occupation'] ?? '',
                         ];
                     @endphp
                     <div>
@@ -756,6 +790,26 @@
         });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeDocPreview();
+        });
+
+        // Deleting An uploaded Document
+        document.querySelectorAll('.delete-doc-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Remove this document?',
+                    text: 'This cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, remove it',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                }).then(result => {
+                    if (result.isConfirmed) form.submit();
+                });
+            });
         });
     </script>
 

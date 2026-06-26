@@ -22,9 +22,11 @@ class ClaimController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'policy_id'  => 'required',
-            'claim_type' => 'required|string',
-            'form_data'  => 'required|array',
+            'policy_id'   => 'required',
+            'claim_type'  => 'required|string',
+            'form_data'   => 'required|array',
+            'documents'   => 'nullable|array', // add these two
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
         ]);
 
         $customer = Auth::guard('customer')->user();
@@ -44,10 +46,6 @@ class ClaimController extends Controller
             return response()->json(['success' => false, 'message' => 'Policy not found. Please go back and select your policy again.'], 404);
         }
 
-        // if ($policy->customer_id !== $customer->id) {
-        //     return response()->json(['success' => false, 'message' => 'This policy does not belong to your account.'], 403);
-        // }
-
         $riskId   = $request->input('risk_id') ? (int) $request->input('risk_id') : null;
         $formData = $validated['form_data'];
 
@@ -63,6 +61,16 @@ class ClaimController extends Controller
             source: ClaimSource::CUSTOMER_PORTAL,
             riskId: $riskId,
         );
+
+        // Attach documents if any were uploaded
+        if ($request->hasFile('documents')) {
+            $this->claimService->attachDocuments(
+                claim: $claim,
+                files: $request->file('documents'),
+                uploadedBy: null,
+                type: 'supporting',
+            );
+        }
 
         return response()->json([
             'success'      => true,
@@ -199,6 +207,23 @@ class ClaimController extends Controller
         ]);
     }
 
+    public function uploadDocuments(Request $request, Claim $claim)
+    {
+        $request->validate([
+            'documents'   => 'required|array',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+        ]);
+
+        $this->claimService->attachDocuments(
+            claim: $claim,
+            files: $request->file('documents'),
+            uploadedBy: Auth::user(),
+            type: 'survey_document',
+        );
+
+        return back()->with('success', count($request->file('documents')) . ' document(s) uploaded.');
+    }
+
     public function previewDocument(ClaimDocument $document, Request $request)
     {
         // Verify the document belongs to a claim owned by this customer
@@ -218,6 +243,26 @@ class ClaimController extends Controller
             'Content-Type'        => $document->mime_type,
             'Content-Disposition' => 'inline; filename="' . $document->original_name . '"',
         ]);
+    }
+
+    public function destroyDocument(ClaimDocument $document): \Illuminate\Http\RedirectResponse
+    {
+        $customer = Auth::guard('customer')->user();
+
+        // Ensure the document belongs to a claim owned by this customer
+        if ($document->claim->customer_id !== $customer->id) {
+            abort(403);
+        }
+
+        // Only allow deletion if the claim is still editable
+        if (! in_array($document->claim->status, ['submitted', 'pending_info'])) {
+            return back()->with('error', 'Documents can no longer be removed from this claim.');
+        }
+
+        Storage::disk('local')->delete($document->file_path);
+        $document->delete();
+
+        return back()->with('success', 'Document removed successfully.');
     }
 
     public function cancel(Request $request, Claim $claim)

@@ -207,6 +207,23 @@ class ClaimController extends Controller
         return str_replace(' ', '_', strtolower(trim($businessClass)));
     }
 
+    public function uploadDocuments(Request $request, Claim $claim)
+    {
+        $request->validate([
+            'documents'   => 'required|array',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+        ]);
+
+        $this->claimService->attachDocuments(
+            claim: $claim,
+            files: $request->file('documents'),
+            uploadedBy: Auth::user(),
+            type: 'survey_document',
+        );
+
+        return back()->with('success', count($request->file('documents')) . ' document(s) uploaded.');
+    }
+
     public function previewDocument(ClaimDocument $document, Request $request)
     {
         // Verify the document belongs to a claim owned by this customer
@@ -226,6 +243,25 @@ class ClaimController extends Controller
             'Content-Type'        => $document->mime_type,
             'Content-Disposition' => 'inline; filename="' . $document->original_name . '"',
         ]);
+    }
+
+    public function destroyDocument(ClaimDocument $document): \Illuminate\Http\RedirectResponse
+    {
+        $staff = Auth::user();
+
+        // Admins can delete any document; everyone else can only remove their own uploads
+        if (! $staff->isAdmin() && $document->uploaded_by !== $staff->id) {
+            return back()->with('error', 'You can only remove documents you uploaded.');
+        }
+
+        if (! in_array($document->claim->status, ['submitted', 'pending_info'])) {
+            return back()->with('error', 'Documents can no longer be removed from this claim.');
+        }
+
+        Storage::disk('local')->delete($document->file_path);
+        $document->delete();
+
+        return back()->with('success', 'Document removed successfully.');
     }
 
     public function print(Claim $claim)
