@@ -126,7 +126,6 @@ class DashboardController extends Controller
         return array_unique($ids);
     }
 
-    
     public function pollPolicies(Request $request): \Illuminate\Http\JsonResponse
     {
         $customer = Auth::guard('customer')->user();
@@ -141,12 +140,12 @@ class DashboardController extends Controller
             ->where('status', 'active')
             ->count();
 
-        $syncing = is_null($customer->last_synced_at);
+        $syncDone = ! is_null($customer->fresh()->last_synced_at); // fresh() to avoid stale cache
 
         return response()->json([
-            'ready'   => $count > 0,
+            'ready'   => $syncDone, // done = sync completed, not "has policies"
             'count'   => $count,
-            'syncing' => $syncing,
+            'syncing' => ! $syncDone,
         ]);
     }
 

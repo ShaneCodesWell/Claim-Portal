@@ -31,13 +31,10 @@
             </div>
         </div>
 
+        {{-- Dont update the status here, complete the flow --}}
         {{-- Quick Status Update --}}
-        <form action="{{ route('staff.claims.status', $claim) }}" method="POST" class="flex items-center gap-2">
+        {{-- <form action="{{ route('staff.claims.status', $claim) }}" method="POST" class="flex items-center gap-2">
             @csrf
-            <a href="{{ route('staff.claims.index') }}"
-                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
-                <i class="fas fa-arrow-left text-sm"></i> Back
-            </a>
             @if ($claim->isEditable())
                 <select name="status"
                     class="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
@@ -54,7 +51,7 @@
                     <i class="fas fa-lock"></i> Editing locked
                 </span>
             @endif
-        </form>
+        </form> --}}
 
         <div class="flex gap-2">
             {{-- Send to Survey --}}
@@ -125,6 +122,11 @@
                     </div>
                 </div>
             @endif
+
+            <a href="{{ route('staff.claims.index') }}"
+                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
+                <i class="fas fa-arrow-left text-sm"></i> Back
+            </a>
         </div>
 
     </div>

@@ -24,275 +24,269 @@
 
     {{-- Flash Messages --}}
     @if (session('success'))
-        <div
-            class="mx-4 mt-4 mb-4 sm:mx-6 p-3 bg-green-50 border border-green-200 rounded-xl text-xs text-green-800 font-medium">
+        <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-xs text-green-800 font-medium">
             {{ session('success') }}
         </div>
     @endif
 
     @if (session('error'))
-        <div
-            class="mx-4 mt-4 mb-4 sm:mx-6 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-medium">
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-medium">
             {{ session('error') }}
         </div>
     @endif
 
-    {{-- Main Container --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 space-y-6">
-        {{-- Header with Stats --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Policy Dashboard</h1>
-                <p class="text-gray-500 text-sm mt-1">
+                <p class="text-sm text-gray-500 font-medium mb-1">
+                    Welcome back, <span
+                        class="font-bold text-blue-500">{{ ucwords(strtolower($customer->name ?? 'Customer')) }}</span>
+                </p>
+                <h2 class="text-xl font-semibold text-gray-900">
+                    Policy Dashboard
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">
                     Manage your insurance policies and submit new claim requests.
                 </p>
             </div>
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="flex items-center gap-3 px-4 py-2 bg-blue-50 border border-blue-100 rounded-full">
-                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-600">
-                        <span class="font-bold text-sm" id="active-count">{{ $statusCounts['active'] ?? 0 }}</span>
+
+            {{-- <button onclick="window.location.reload()"
+                    class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
+                    <i class="fas fa-refresh text-gray-500"></i> Refresh
+                </button> --}}
+        </div>
+    </div>
+
+    <!-- Policy Status Summary Pills -->
+    <div class="flex flex-wrap gap-3 mb-6">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-indigo-400"></span>
+            <span class="text-sm text-gray-600">Total Policies</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $policies->total() }}</span>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span class="text-sm text-gray-600">Active</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $statusCounts['active'] ?? 0 }}</span>
+        </div>
+
+        {{-- <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+            <span class="text-sm text-gray-600">Pending Renewal</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $statusCounts['pending_renewal'] ?? 0 }}</span>
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-rose-400"></span>
+            <span class="text-sm text-gray-600">Expired</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $statusCounts['expired'] ?? 0 }}</span>
+        </div> --}}
+    </div>
+
+    <!-- Policies Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <!-- Toolbar -->
+        <div
+            class="px-5 py-4 border-b border-gray-200 bg-gray-50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900">
+                    Your Insurance Policies
+                </h3>
+                <p class="text-xs text-gray-500 mt-0.5">
+                    Click on any policy to view details or file a claim
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <form method="GET" action="{{ route('dashboard') }}" id="filter-form" class="flex items-center gap-3">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input type="text" name="search" id="search-input" value="{{ request('search') }}"
+                            placeholder="Search policies..."
+                            class="pl-8 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 w-52 bg-white" />
                     </div>
-                    <div class="text-sm font-medium text-blue-700">Active Policies</div>
-                </div>
-                {{-- <div class="flex items-center gap-3 px-4 py-2 bg-red-50 border border-red-100 rounded-full">
-                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-red-600">
-                        <span class="font-bold text-sm" id="expired-count">{{ $statusCounts['expired'] ?? 0 }}</span>
-                    </div>
-                    <div class="text-sm font-medium text-red-700">Expired</div>
-                </div> --}}
+
+                    <select name="type" id="type-select"
+                        class="px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 bg-white text-gray-700">
+                        <option value="">All Types</option>
+                        @foreach ($businessClasses as $class)
+                            <option value="{{ $class }}" @selected(request('type') === $class)>{{ $class }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    @if (request()->hasAny(['search', 'type', 'status']))
+                        <a href="{{ route('dashboard') }}"
+                            class="bg-white border border-gray-300 hover:bg-gray-50 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 transition flex items-center gap-2">
+                            <i class="fas fa-times text-xs"></i> Clear
+                        </a>
+                    @endif
+                </form>
             </div>
         </div>
 
-        {{-- Policies Table Section --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-3 border-b border-gray-200 bg-gray-50/50 rounded-t-xl">
-                <div class="flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center md:justify-between">
-                    <!-- Header text -->
-                    <div>
-                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                            <i class="fas fa-file-contract text-blue-500"></i>
-                            Your Insurance Policies
-                        </h2>
-                        <p class="text-xs text-gray-500 mt-0.5">Click on any policy to view details or file a claim</p>
-                    </div>
-
-                    <!-- Filters -->
-                    <div class="w-full md:w-auto">
-                        <form method="GET" action="{{ route('dashboard') }}" id="filter-form">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <!-- Search - grows, becomes longer -->
-                                <div class="relative flex-1 min-w-50 md:flex-2">
-                                    <i
-                                        class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                                    <input type="text" name="search" id="search-input"
-                                        value="{{ request('search') }}" placeholder="Search..."
-                                        class="pl-9 pr-4 py-2 border border-gray-300 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white" />
-                                </div>
-
-                                <!-- Type - shorter width, less vertical padding -->
-                                <select name="type" id="type-select"
-                                    class="px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 text-sm w-auto md:w-32">
-                                    <option value="">All Types</option>
-                                    @foreach ($businessClasses as $class)
-                                        <option value="{{ $class }}" @selected(request('type') === $class)>
-                                            {{ $class }}
-                                        </option>
-                                    @endforeach
-                                </select>
-
-                                <!-- Status - shorter width, less vertical padding -->
-                                {{-- <select name="status" id="status-select"
-                                    class="px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 text-sm w-auto md:w-32">
-                                    <option value="">All Statuses</option>
-                                    <option value="active" @selected(request('status') === 'active')>Active</option>
-                                    <option value="expired" @selected(request('status') === 'expired')>Expired</option>
-                                </select> --}}
-
-                                <!-- Clear button - matches new height -->
-                                @if (request()->hasAny(['search', 'type', 'status']))
-                                    <a href="{{ route('dashboard') }}"
-                                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition flex items-center gap-2 text-sm font-medium whitespace-nowrap">
-                                        <i class="fas fa-times-circle"></i> Clear
-                                    </a>
-                                @endif
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            @if (!isset($policies) || count($policies) === 0)
-                {{-- Check if this is a fresh login with sync in progress --}}
-                @if (is_null($customer->last_synced_at))
-                    <div id="syncing-state" class="p-12 text-center">
-                        <div class="flex items-center justify-center gap-3 mb-3">
-                            <i class="fas fa-sync-alt text-blue-500 text-lg animate-spin"></i>
-                            <span class="text-base font-semibold text-gray-700">Fetching your policies...</span>
-                        </div>
+        @if (!isset($policies) || count($policies) === 0)
+            @if (is_null($customer->last_synced_at))
+                <!-- Syncing State -->
+                <div id="syncing-state" class="px-4 py-12 text-center text-sm text-gray-500">
+                    <div class="flex flex-col items-center justify-center gap-3">
+                        <i class="fas fa-sync-alt text-blue-400 text-4xl animate-spin"></i>
+                        <p class="text-gray-600 font-medium">Fetching your policies...</p>
                         <p class="text-xs text-gray-400" id="polling-status">Connecting to Vanguard Assurance...</p>
                     </div>
-                @else
-                    {{-- genuinely empty --}}
-                    <div id="empty-state" class="p-16 text-center">
-                        <div class="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-folder-open text-blue-400 text-4xl"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">No policies found</h3>
-                        <p class="text-gray-500 max-w-md mx-auto mb-6">
-                            Try adjusting your search or filter criteria, or refresh to sync the latest policies.
-                        </p>
+                </div>
+            @else
+                <!-- Empty State -->
+                <div class="px-4 py-12 text-center text-sm text-gray-500">
+                    <div class="flex flex-col items-center justify-center gap-3">
+                        <i class="fas fa-folder-open text-4xl text-gray-300"></i>
+                        <p class="text-gray-600">No policies found. Try adjusting your filters.</p>
                         <button onclick="location.reload()"
-                            class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition inline-flex items-center gap-2">
+                            class="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-xl shadow-sm transition">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                     </div>
-                @endif
-            @else
-                <div class="overflow-x-auto">
-                    <table class="min-w-full table-fixed divide-y divide-gray-100">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Policy Details</th>
-                                <th
-                                    class="px-6 py-3 w-60 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Policy Number</th>
-                                {{-- <th
-                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Insured Name</th> --}}
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Product</th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Status</th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Renewal Date</th>
-                                <th
-                                    class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-100" id="policies-table-body">
-                            @foreach ($policies as $policy)
-                                <tr class="hover:bg-gray-50 transition">
-                                    <td class="px-6 py-3">
-                                        <div>
-                                            <div class="text-sm font-semibold text-gray-900">
-                                                {{ $policy['business_class_name'] }}
-                                            </div>
-
-                                            <div class="text-xs text-gray-500">
-                                                {{ $policy['vehicle_number'] ?? ' ' }}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-3">
-                                        <div class="text-xs font-mono font-medium text-gray-900">
-                                            {{ $policy['policy_number'] }}
-                                        </div>
-                                    </td>
-                                    {{-- <td class="px-6 py-3">
-                                        <div class="text-xs font-medium text-gray-900">
-                                            {{ ucwords(strtolower($customer->name)) }}
-                                        </div>
-                                        <p class="text-xs text-gray-400 mt-0.5">
-                                            {{ $customer->external_customer_code }}
-                                        </p>
-                                    </td> --}}
-                                    <td class="px-6 py-3">
-                                        <div class="text-xs font-medium text-gray-900">
-                                            {{ $policy['product_name'] }}
-                                        </div>
-                                    </td>
-
-                                    <td class="px-6 py-3">
-                                        <span
-                                            class="px-3 py-1 inline-flex text-xs font-semibold rounded-full
-                                                {{ $policy['status'] === 'active'
-                                                    ? 'bg-green-100 text-green-700 border border-green-200'
-                                                    : ($policy['status'] === 'pending_renewal'
-                                                        ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                                                        : 'bg-red-100 text-red-700 border border-red-200') }}">
-                                            {{ ucfirst(str_replace('_', ' ', $policy['status'])) }}
-                                        </span>
-                                    </td>
-
-                                    <td class="px-6 py-3">
-                                        <div class="text-xs text-gray-900 font-medium">
-                                            {{ $policy['renewal_date'] ?? '-' }}
-                                        </div>
-                                    </td>
-
-                                    <td class="px-6 py-3 text-right">
-                                        @php
-                                            $key = strtolower($policy['business_class_name'] ?? '');
-                                            $claimFormUrl =
-                                                ($claimFormRoutes[$key] ?? '/motor-form') .
-                                                '?policyId=' .
-                                                $policy['policy_id'];
-                                            $isFleet = count($policy['risks'] ?? []) > 1;
-                                        @endphp
-                                        <div class="relative inline-block">
-                                            <button onclick="toggleDropdown(event, {{ $policy['policy_id'] }})"
-                                                id="dropdown-button-{{ $policy['policy_id'] }}"
-                                                class="text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors inline-flex items-center font-medium text-sm">
-                                                Actions <i class="fas fa-chevron-down ml-2 text-xs"></i>
-                                            </button>
-                                            <div id="dropdown-{{ $policy['policy_id'] }}"
-                                                class="hidden absolute right-0 mt-1 w-48 rounded-lg shadow-lg bg-white ring-1 ring-gray-200 z-30">
-                                                <div class="py-1">
-                                                    <button onclick="viewDetails({{ $policy['policy_id'] }})"
-                                                        class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center transition">
-                                                        <i class="fas fa-eye mr-2"></i> View Details
-                                                    </button>
-                                                    @if (!$isFleet)
-                                                        @if ($policy['status'] === 'expired')
-                                                            <button onclick="showExpiredPolicyAlert()"
-                                                                class="w-full text-left px-4 py-2.5 text-sm flex items-center text-gray-400 cursor-not-allowed opacity-50">
-                                                                <i class="fas fa-file-invoice mr-2"></i> Process Claim
-                                                                <i class="fas fa-lock ml-auto text-xs"></i>
-                                                            </button>
-                                                        @else
-                                                            <a href="{{ $claimFormUrl }}"
-                                                                class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 flex items-center transition">
-                                                                <i class="fas fa-file-invoice mr-2"></i> Process Claim
-                                                            </a>
-                                                        @endif
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                {{-- Pagination --}}
-                <div
-                    class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
-                    <div class="text-sm text-gray-500">
-                        @if ($policies->firstItem())
-                            Showing {{ $policies->lastItem() }} of {{ $policies->total() }}
-                            policies
-                        @else
-                            No policies found
-                        @endif
-                    </div>
-                    <div class="flex gap-2">
-                        {{ $policies->links() }}
-                    </div>
                 </div>
             @endif
+        @else
+            <!-- Table (Responsive) -->
+            <div class="overflow-x-auto custom-scroll">
+                <table class="min-w-225 md:min-w-full w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th
+                                class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Policy Number</th>
+                            <th
+                                class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Policy Details</th>
+                            <th
+                                class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Product</th>
+                            <th
+                                class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Status</th>
+                            <th
+                                class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Renewal Date</th>
+                            <th
+                                class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200" id="policies-table-body">
+                        @foreach ($policies as $policy)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-4">
+                                    <span
+                                        class="font-mono text-sm font-medium text-gray-900">{{ $policy['policy_number'] }}</span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ $policy['business_class_name'] }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">{{ $policy['vehicle_number'] ?? ' ' }}</div>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-600">{{ $policy['product_name'] }}</td>
+                                <td class="px-4 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border
+                                        {{ $policy['status'] === 'active'
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                            : ($policy['status'] === 'pending_renewal'
+                                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                                : 'bg-rose-50 text-rose-700 border-rose-200') }}">
+                                        {{ ucfirst(str_replace('_', ' ', $policy['status'])) }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-600">{{ $policy['renewal_date'] ?? '-' }}</td>
+                                <td class="px-4 py-4 text-right relative" style="overflow: visible;">
+                                    @php
+                                        $key = strtolower($policy['business_class_name'] ?? '');
+                                        $claimFormUrl =
+                                            ($claimFormRoutes[$key] ?? '/motor-form') .
+                                            '?policyId=' .
+                                            $policy['policy_id'];
+                                        $isFleet = count($policy['risks'] ?? []) > 1;
+                                    @endphp
+                                    <div class="relative inline-block">
+                                        <button onclick="toggleDropdown(event, {{ $policy['policy_id'] }})"
+                                            id="dropdown-button-{{ $policy['policy_id'] }}"
+                                            class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50 inline-flex items-center">
+                                            Actions
+                                            <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                        </button>
+                                        <div id="dropdown-{{ $policy['policy_id'] }}"
+                                            class="hidden absolute right-0 mt-1 w-48 rounded-xl shadow-lg bg-white border border-gray-200 py-2 z-30">
+                                            <button onclick="viewDetails({{ $policy['policy_id'] }})"
+                                                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                                <i class="fas fa-eye text-xs text-blue-500"></i>
+                                                View Details
+                                            </button>
+                                            @if (!$isFleet)
+                                                @if ($policy['status'] === 'expired')
+                                                    <button onclick="showExpiredPolicyAlert()"
+                                                        class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-gray-400 cursor-not-allowed opacity-50">
+                                                        <i class="fas fa-file-invoice text-xs"></i>
+                                                        Process Claim
+                                                        <i class="fas fa-lock ml-auto text-xs"></i>
+                                                    </button>
+                                                @else
+                                                    <a href="{{ $claimFormUrl }}"
+                                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                                        <i class="fas fa-file-invoice text-xs text-green-500"></i>
+                                                        Process Claim
+                                                    </a>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div
+                class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-file mr-1"></i>
+                    @if ($policies->firstItem())
+                        Showing {{ $policies->lastItem() }} of {{ $policies->total() }} policies
+                    @else
+                        No policies found
+                    @endif
+                </div>
+                <div class="flex gap-2">
+                    {{ $policies->links() }}
+                </div>
+            </div>
+        @endif
+    </div>
+
+    <!-- Support Card -->
+    <div
+        class="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <p class="text-sm font-medium text-gray-800">
+                <i class="fas fa-life-ring text-blue-500 mr-2"></i> Need help with a policy or claim?
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+                Contact our support team for assistance with your insurance policies or claim submissions.
+            </p>
         </div>
+        <button
+            class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 w-full sm:w-auto justify-center">
+            <i class="fas fa-headset"></i> Contact Support
+        </button>
     </div>
 
     <x-policy-details-modal />
 
-    {{-- Polling policy Data on the Dashbaord --}}
+    {{-- Polling on fresh login --}}
     @if (is_null($customer->last_synced_at))
         <script>
             (function() {
@@ -300,16 +294,15 @@
                 const statusEl = document.getElementById('polling-status');
                 const messages = [
                     'Connecting to Vanguard Assurance...',
-                    'Loading your motor policies...',
-                    'Loading your fire policies...',
+                    'Loading your active policies...',
+                    'Fetching policy details...',
                     'Almost there...',
                 ];
 
                 let attempt = 0;
                 let msgIndex = 0;
-                let maxAttempts = 20; // 20 × 3s = 60s max wait
+                let maxAttempts = 20;
 
-                // Rotate the status message every 3s so it feels alive
                 const msgTimer = setInterval(() => {
                     msgIndex = (msgIndex + 1) % messages.length;
                     if (statusEl) statusEl.textContent = messages[msgIndex];
@@ -327,47 +320,55 @@
                         .then(r => r.json())
                         .then(data => {
                             if (data.ready) {
-                                // Policies are in — reload to render the table
                                 clearInterval(msgTimer);
-                                if (statusEl) statusEl.textContent =
-                                    `Found ${data.count} polic${data.count === 1 ? 'y' : 'ies'}. Loading...`;
-                                setTimeout(() => window.location.reload(), 600);
+                                if (data.count > 0) {
+                                    // Policies found — reload to render the table
+                                    if (statusEl) statusEl.textContent =
+                                        `Found ${data.count} polic${data.count === 1 ? 'y' : 'ies'}. Loading...`;
+                                    setTimeout(() => window.location.reload(), 600);
+                                } else {
+                                    // Sync finished but no policies linked to this account
+                                    const syncingEl = document.getElementById('syncing-state');
+                                    if (syncingEl) {
+                                        syncingEl.innerHTML = `
+                                            <div class="flex flex-col items-center justify-center gap-3">
+                                                <i class="fas fa-folder-open text-4xl text-gray-300"></i>
+                                                <p class="text-gray-600 font-medium">No policies found</p>
+                                                <p class="text-sm text-gray-500">There are no active policies linked to your account.</p>
+                                            </div>`;
+                                    }
+                                }
                             } else if (attempt >= maxAttempts) {
-                                // Timed out — show a gentle message with a manual refresh button
                                 clearInterval(msgTimer);
                                 const syncingEl = document.getElementById('syncing-state');
                                 if (syncingEl) {
                                     syncingEl.innerHTML = `
-                            <div class="w-32 h-32 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <i class="fas fa-clock text-amber-400 text-4xl"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-gray-800 mb-2">Taking longer than expected</h3>
-                            <p class="text-gray-500 max-w-md mx-auto mb-6">
-                                Your policies are still being fetched. Please refresh in a moment.
-                            </p>
-                            <button onclick="location.reload()"
-                                class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition inline-flex items-center gap-2">
-                                <i class="fas fa-sync-alt"></i> Refresh Now
-                            </button>`;
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <i class="fas fa-clock text-amber-400 text-4xl"></i>
+                                            <p class="text-gray-600 font-medium">Taking longer than expected</p>
+                                            <p class="text-sm text-gray-500">Your policies are still being fetched. Please refresh in a moment.</p>
+                                            <button onclick="location.reload()"
+                                                class="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-xl shadow-sm transition">
+                                                <i class="fas fa-sync-alt"></i> Refresh Now
+                                            </button>
+                                        </div>`;
                                 }
                             } else {
-                                // Not ready yet — poll again in 3s
                                 setTimeout(poll, 3000);
                             }
                         })
                         .catch(() => {
-                            // Network hiccup — keep trying unless maxed out
                             if (attempt < maxAttempts) {
                                 setTimeout(poll, 3000);
                             }
                         });
                 }
 
-                // Start polling after 2s — give the job a moment to begin
                 setTimeout(poll, 2000);
             })();
         </script>
     @endif
+
     <script>
         const policiesMap = @json($policiesMapData);
 
@@ -384,7 +385,7 @@
             document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
         });
 
-        // ── Risk accordion (used by modal HTML) ───────────────────────────────────
+        // ── Risk accordion ────────────────────────────────────────────────────────
         function toggleRisk(btn) {
             const body = btn.closest('.risk-card').querySelector('.risk-body');
             const chevron = btn.querySelector('.risk-chevron');
@@ -408,7 +409,7 @@
             document.getElementById('modal-risk-count').textContent = visible;
         }
 
-        // ── Build a risk card from raw API data ───────────────────────────────────
+        // ── Build a risk card ─────────────────────────────────────────────────────
         function buildRiskCard(risk, policy = null, isFleet = false) {
             const regNo = risk.risk_ref_no || '-';
             const make = risk.vehicle_make || '';
@@ -417,11 +418,9 @@
             const chassis = risk.vehicle_chassis_no || '-';
             const colour = risk.vehicle_colour || '-';
             const sumInsured = risk.sum_insured ?
-                `GHS ${parseFloat(risk.sum_insured).toLocaleString()}` :
-                '-';
+                `GHS ${parseFloat(risk.sum_insured).toLocaleString()}` : '-';
             const premium = risk.total_premium ?
-                `GHS ${parseFloat(risk.total_premium).toLocaleString()}` :
-                '-';
+                `GHS ${parseFloat(risk.total_premium).toLocaleString()}` : '-';
 
             const covers = Object.values(risk.covers ?? {});
             const coverTags = covers.map(c =>
@@ -437,22 +436,20 @@
             const subtitle = make ? `${regNo} · ${year}` : regNo;
             const searchData = [make, model, regNo, year, chassis].join(' ').toLowerCase();
 
-            // Per-risk claim button — only for fleet, only if active
             const riskClaimUrl = policy ? `${policy.claim_form_url}&riskId=${risk.id}` : '#';
             const isExpired = policy?.status === 'expired';
 
             const claimButton = isFleet ?
                 `<div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
-               ${isExpired
-                   ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
-                                                                  <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
-                                                              </button>`
-                   : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
-                                                                  <i class="fas fa-file-invoice"></i> Process Claim
-                                                              </a>`
-               }
-           </div>` :
-                '';
+                    ${isExpired
+                        ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
+                                               <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                                           </button>`
+                        : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
+                                               <i class="fas fa-file-invoice"></i> Process Claim
+                                           </a>`
+                    }
+                </div>` : '';
 
             return `
                 <div class="risk-card border border-gray-200 rounded-xl overflow-hidden" data-risk-search="${searchData}">
@@ -475,10 +472,10 @@
                             <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
                         </div>
                         ${covers.length > 0 ? `
-                                                                <div class="border-t border-gray-200 pt-3">
-                                                                    <p class="text-xs text-gray-500 mb-2">Covers Included</p>
-                                                                    <div class="flex flex-wrap gap-1.5">${coverTags}</div>
-                                                                </div>` : ''}
+                                            <div class="border-t border-gray-200 pt-3">
+                                                <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                                                <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                                            </div>` : ''}
                         ${claimButton}
                     </div>
                 </div>`;
@@ -499,7 +496,6 @@
             document.getElementById('modal-end-date').textContent = policy.end_date ?? 'N/A';
             document.getElementById('modal-renewal-date').textContent = policy.renewal_date ?? 'N/A';
 
-            // Status badge
             const statusStyles = {
                 active: 'text-green-600 bg-green-50',
                 expired: 'text-red-600 bg-red-50',
@@ -510,7 +506,6 @@
             statusEl.className =
                 `text-xs font-semibold px-2.5 py-1 rounded-full ${statusStyles[policy.status] ?? 'text-gray-600 bg-gray-50'}`;
 
-            // Populate risks accordion
             const riskEntries = Object.values(policy.risks ?? {});
             const isFleet = riskEntries.length > 1;
 
@@ -521,7 +516,6 @@
                 riskEntries.map(risk => buildRiskCard(risk, policy, isFleet)).join('') :
                 '<p class="text-sm text-gray-400 text-center py-6">No risk details available yet.</p>';
 
-            // Footer File Claim button — hide for fleet, show for single risk
             const fileClaimBtn = document.getElementById('modal-file-claim-btn');
             if (isFleet) {
                 fileClaimBtn.style.display = 'none';
@@ -546,8 +540,6 @@
                 }
             }
 
-
-
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             document.getElementById(`dropdown-${policyId}`)?.classList.add('hidden');
@@ -558,7 +550,6 @@
             modal.style.display = 'none';
             modal.setAttribute('data-policy-id', '');
             document.body.style.overflow = '';
-            // Reset risk search
             const searchInput = document.getElementById('modal-risk-search');
             if (searchInput) {
                 searchInput.value = '';
@@ -588,7 +579,6 @@
         const form = document.getElementById('filter-form');
         const searchInput = document.getElementById('search-input');
         const typeSelect = document.getElementById('type-select');
-        const statusSelect = document.getElementById('status-select');
 
         let debounceTimer;
         searchInput.addEventListener('input', () => {
@@ -596,7 +586,6 @@
             debounceTimer = setTimeout(() => form.submit(), 400);
         });
         typeSelect.addEventListener('change', () => form.submit());
-        statusSelect.addEventListener('change', () => form.submit());
     </script>
 
 </x-layouts.app>

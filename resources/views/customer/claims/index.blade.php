@@ -1,26 +1,24 @@
 <x-layouts.app>
     <!-- Page Header -->
     <div class="mb-6">
-        <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                    <p class="text-sm text-gray-500 font-medium mb-1">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+                {{-- <p class="text-sm text-gray-500 font-medium mb-1">
                         Welcome back, <span
-                            class="font-bold text-blue-500">{{ $customer->name ?? 'Unknown Customer' }}</span>
-                    </p>
-                    <h2 class="text-xl font-semibold text-gray-900">
-                        My Claims
-                    </h2>
-                    <p class="text-sm text-gray-500 mt-1">
-                        Track the status of your submitted claims and access supporting documents.
-                    </p>
-                </div>
-
-                <button onclick="window.location.reload()"
-                    class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
-                    <i class="fas fa-refresh text-gray-500"></i> Refresh
-                </button>
+                            class="font-bold text-blue-500">{{ ucwords(strtolower($customer->name ?? 'Customer')) }}</span>
+                    </p> --}}
+                <h2 class="text-xl font-semibold text-gray-900">
+                    My Claims
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">
+                    Track the status of your submitted claims and access supporting documents.
+                </p>
             </div>
+
+            {{-- <button onclick="window.location.reload()"
+                class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
+                <i class="fas fa-refresh text-gray-500"></i> Refresh
+            </button> --}}
         </div>
     </div>
 
