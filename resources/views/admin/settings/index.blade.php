@@ -231,7 +231,7 @@
                         <div>
                             <p class="font-medium">Genova Insure</p>
                             <p class="text-xs text-gray-500">
-                                Connect to Genova Insure
+                                Connected to Genova Insure
                             </p>
                         </div>
                     </div>
@@ -239,7 +239,7 @@
                         Connect
                     </button>
                 </div>
-                {{-- <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                             <i class="fa fa-cog fa-spin text-sm fa-fw text-green-600"></i>
@@ -247,16 +247,16 @@
                         <div>
                             <p class="font-medium">GLIMS</p>
                             <p class="text-xs text-gray-500">
-                                Connect to GLIMS
+                                Connected to GLIMS
                             </p>
                         </div>
                     </div>
                     <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
                         Connect
                     </button>
-                </div> --}}
+                </div>
                 <!-- GLIMS Integration -->
-                <div class="border border-gray-200 rounded-xl p-4" id="glims-integration-card">
+                {{-- <div class="border border-gray-200 rounded-xl p-4" id="glims-integration-card">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -273,13 +273,11 @@
                         </div>
                     </div>
 
-                    {{-- Last sync info --}}
                     <div id="glims-sync-info" class="text-xs text-gray-500 mb-3 hidden">
                         <i class="fas fa-clock mr-1"></i>
                         <span id="glims-last-run">Never synced</span>
                     </div>
 
-                    {{-- Progress bar (shown during sync) --}}
                     <div id="glims-progress" class="hidden mb-3">
                         <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
                             <span id="glims-progress-message">Syncing...</span>
@@ -292,7 +290,6 @@
                         </div>
                     </div>
 
-                    {{-- Result message --}}
                     <div id="glims-result" class="hidden text-xs rounded-lg p-2 mb-3"></div>
 
                     <button id="glims-sync-btn" onclick="triggerGlimsSync()" disabled
@@ -300,7 +297,7 @@
                         <i class="fas fa-sync-alt"></i>
                         <span>Sync GLIMS Data</span>
                     </button>
-                </div>
+                </div> --}}
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -337,135 +334,135 @@
         </div>
     </div> --}}
     <script>
-        const GLIMS_TRIGGER_URL = '{{ route('staff.glims.sync.trigger') }}';
-        const GLIMS_STATUS_URL = '{{ route('staff.glims.sync.status') }}';
-        const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+        // const GLIMS_TRIGGER_URL = '{{ route('staff.glims.sync.trigger') }}';
+        // const GLIMS_STATUS_URL = '{{ route('staff.glims.sync.status') }}';
+        // const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-        let statusPoller = null;
+        // let statusPoller = null;
 
         // ── Check status on page load ──────────────────────────────
-        async function checkGlimsStatus() {
-            try {
-                const res = await fetch(GLIMS_STATUS_URL);
-                const data = await res.json();
+        // async function checkGlimsStatus() {
+        //     try {
+        //         const res = await fetch(GLIMS_STATUS_URL);
+        //         const data = await res.json();
 
-                updateConnectionBadge(data.connected);
-                updateSyncUI(data);
+        //         updateConnectionBadge(data.connected);
+        //         updateSyncUI(data);
 
-                // If a sync is running, start polling
-                if (data.status === 'running') {
-                    startPolling();
-                }
-            } catch (e) {
-                updateConnectionBadge(false);
-            }
-        }
+        //         // If a sync is running, start polling
+        //         if (data.status === 'running') {
+        //             startPolling();
+        //         }
+        //     } catch (e) {
+        //         updateConnectionBadge(false);
+        //     }
+        // }
 
-        function updateConnectionBadge(connected) {
-            const badge = document.getElementById('glims-connection-badge');
-            const btn = document.getElementById('glims-sync-btn');
+        // function updateConnectionBadge(connected) {
+        //     const badge = document.getElementById('glims-connection-badge');
+        //     const btn = document.getElementById('glims-sync-btn');
 
-            if (connected) {
-                badge.className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-700';
-                badge.innerHTML = '<i class="fas fa-circle text-[8px] mr-1"></i>Connected';
-                btn.disabled = false;
-            } else {
-                badge.className = 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-600';
-                badge.innerHTML = '<i class="fas fa-circle text-[8px] mr-1"></i>Offline';
-                btn.disabled = true;
-            }
-        }
+        //     if (connected) {
+        //         badge.className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-700';
+        //         badge.innerHTML = '<i class="fas fa-circle text-[8px] mr-1"></i>Connected';
+        //         btn.disabled = false;
+        //     } else {
+        //         badge.className = 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-600';
+        //         badge.innerHTML = '<i class="fas fa-circle text-[8px] mr-1"></i>Offline';
+        //         btn.disabled = true;
+        //     }
+        // }
 
-        function updateSyncUI(data) {
-            const info = document.getElementById('glims-sync-info');
-            const lastRun = document.getElementById('glims-last-run');
-            const progress = document.getElementById('glims-progress');
-            const bar = document.getElementById('glims-progress-bar');
-            const msg = document.getElementById('glims-progress-message');
-            const count = document.getElementById('glims-progress-count');
-            const result = document.getElementById('glims-result');
-            const btn = document.getElementById('glims-sync-btn');
+        // function updateSyncUI(data) {
+        //     const info = document.getElementById('glims-sync-info');
+        //     const lastRun = document.getElementById('glims-last-run');
+        //     const progress = document.getElementById('glims-progress');
+        //     const bar = document.getElementById('glims-progress-bar');
+        //     const msg = document.getElementById('glims-progress-message');
+        //     const count = document.getElementById('glims-progress-count');
+        //     const result = document.getElementById('glims-result');
+        //     const btn = document.getElementById('glims-sync-btn');
 
-            if (data.status === 'running') {
-                progress.classList.remove('hidden');
-                result.classList.add('hidden');
-                msg.textContent = data.message ?? 'Syncing...';
-                count.textContent = data.synced ? `${data.synced} policies` : '';
+        //     if (data.status === 'running') {
+        //         progress.classList.remove('hidden');
+        //         result.classList.add('hidden');
+        //         msg.textContent = data.message ?? 'Syncing...';
+        //         count.textContent = data.synced ? `${data.synced} policies` : '';
 
-                // Animate bar (indeterminate since we don't know total)
-                bar.style.width = '60%';
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Syncing...</span>';
+        //         // Animate bar (indeterminate since we don't know total)
+        //         bar.style.width = '60%';
+        //         btn.disabled = true;
+        //         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Syncing...</span>';
 
-            } else if (data.status === 'completed') {
-                progress.classList.add('hidden');
-                result.classList.remove('hidden');
-                result.className = 'text-xs rounded-lg p-2 mb-3 bg-green-50 text-green-700 border border-green-200';
-                result.innerHTML = `<i class="fas fa-check-circle mr-1"></i>${data.message}`;
-                info.classList.remove('hidden');
-                lastRun.textContent = 'Last sync: ' + (data.last_run_at ?? 'just now');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Sync GLIMS Data</span>';
+        //     } else if (data.status === 'completed') {
+        //         progress.classList.add('hidden');
+        //         result.classList.remove('hidden');
+        //         result.className = 'text-xs rounded-lg p-2 mb-3 bg-green-50 text-green-700 border border-green-200';
+        //         result.innerHTML = `<i class="fas fa-check-circle mr-1"></i>${data.message}`;
+        //         info.classList.remove('hidden');
+        //         lastRun.textContent = 'Last sync: ' + (data.last_run_at ?? 'just now');
+        //         btn.disabled = false;
+        //         btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Sync GLIMS Data</span>';
 
-            } else if (data.status === 'failed') {
-                progress.classList.add('hidden');
-                result.classList.remove('hidden');
-                result.className = 'text-xs rounded-lg p-2 mb-3 bg-red-50 text-red-700 border border-red-200';
-                result.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${data.message}`;
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Retry Sync</span>';
-            }
-        }
+        //     } else if (data.status === 'failed') {
+        //         progress.classList.add('hidden');
+        //         result.classList.remove('hidden');
+        //         result.className = 'text-xs rounded-lg p-2 mb-3 bg-red-50 text-red-700 border border-red-200';
+        //         result.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${data.message}`;
+        //         btn.disabled = false;
+        //         btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Retry Sync</span>';
+        //     }
+        // }
 
         // ── Trigger sync ───────────────────────────────────────────
-        async function triggerGlimsSync() {
-            const btn = document.getElementById('glims-sync-btn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Starting...</span>';
+        // async function triggerGlimsSync() {
+        //     const btn = document.getElementById('glims-sync-btn');
+        //     btn.disabled = true;
+        //     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Starting...</span>';
 
-            try {
-                const res = await fetch(GLIMS_TRIGGER_URL, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': CSRF,
-                        'Accept': 'application/json'
-                    },
-                });
-                const data = await res.json();
+        //     try {
+        //         const res = await fetch(GLIMS_TRIGGER_URL, {
+        //             method: 'POST',
+        //             headers: {
+        //                 'X-CSRF-TOKEN': CSRF,
+        //                 'Accept': 'application/json'
+        //             },
+        //         });
+        //         const data = await res.json();
 
-                if (data.success) {
-                    startPolling();
-                } else {
-                    const result = document.getElementById('glims-result');
-                    result.classList.remove('hidden');
-                    result.className = 'text-xs rounded-lg p-2 mb-3 bg-red-50 text-red-700 border border-red-200';
-                    result.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${data.message}`;
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Sync GLIMS Data</span>';
-                }
-            } catch (e) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Sync GLIMS Data</span>';
-            }
-        }
+        //         if (data.success) {
+        //             startPolling();
+        //         } else {
+        //             const result = document.getElementById('glims-result');
+        //             result.classList.remove('hidden');
+        //             result.className = 'text-xs rounded-lg p-2 mb-3 bg-red-50 text-red-700 border border-red-200';
+        //             result.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${data.message}`;
+        //             btn.disabled = false;
+        //             btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Sync GLIMS Data</span>';
+        //         }
+        //     } catch (e) {
+        //         btn.disabled = false;
+        //         btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Sync GLIMS Data</span>';
+        //     }
+        // }
 
         // ── Poll status every 3s while running ────────────────────
-        function startPolling() {
-            if (statusPoller) return; // already polling
-            statusPoller = setInterval(async () => {
-                const res = await fetch(GLIMS_STATUS_URL);
-                const data = await res.json();
-                updateSyncUI(data);
+        // function startPolling() {
+        //     if (statusPoller) return; // already polling
+        //     statusPoller = setInterval(async () => {
+        //         const res = await fetch(GLIMS_STATUS_URL);
+        //         const data = await res.json();
+        //         updateSyncUI(data);
 
-                if (data.status !== 'running') {
-                    clearInterval(statusPoller);
-                    statusPoller = null;
-                }
-            }, 3000);
-        }
+        //         if (data.status !== 'running') {
+        //             clearInterval(statusPoller);
+        //             statusPoller = null;
+        //         }
+        //     }, 3000);
+        // }
 
         // Run on load
-        checkGlimsStatus();
+        // checkGlimsStatus();
 
         (function() {
             // ---------- FUNCTIONAL SETTINGS TABS ----------

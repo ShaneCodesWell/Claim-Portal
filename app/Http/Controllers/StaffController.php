@@ -195,18 +195,21 @@ class StaffController extends Controller
      */
     public function store(StoreStaffRequest $request)
     {
-        $validated             = $request->validated();
-        $validated['password'] = bcrypt($validated['password']);
+        $validated = $request->validated();
 
+        // Extract before create — not a column on users table
+        $branchIds = $validated['branch_ids'] ?? [];
+        unset($validated['branch_ids']);
+
+        $validated['password']            = bcrypt($validated['password']);
         $validated['is_committee_member'] = $request->boolean('is_committee_member');
+        $validated['is_admin']            = $request->boolean('is_admin') || $validated['role'] === 'admin';
 
-        // If role is admin, set is_admin to true
-        $isAdmin               = $request->boolean('is_admin') || $validated['role'] === 'admin';
-        $validated['is_admin'] = $isAdmin;
+        $user = User::create($validated);
+        $user->branches()->sync($branchIds); // ← attach branches
 
-        User::create($validated);
-
-        return redirect()->route('organization', ['tab' => 'team'])->with('success', 'Staff member added successfully.');
+        return redirect()->route('organization', ['tab' => 'team'])
+            ->with('success', 'Staff member added successfully.');
     }
 
     /**
@@ -237,6 +240,9 @@ class StaffController extends Controller
     {
         $validated = $request->validated();
 
+        $branchIds = $validated['branch_ids'] ?? [];
+        unset($validated['branch_ids']);
+
         if (empty($validated['password'])) {
             unset($validated['password']);
         } else {
@@ -244,14 +250,13 @@ class StaffController extends Controller
         }
 
         $validated['is_committee_member'] = $request->boolean('is_committee_member');
-
-        // If role is admin, set is_admin to true
-        $isAdmin               = $request->boolean('is_admin') || $validated['role'] === 'admin';
-        $validated['is_admin'] = $isAdmin;
+        $validated['is_admin']            = $request->boolean('is_admin') || $validated['role'] === 'admin';
 
         $staff->update($validated);
+        $staff->branches()->sync($branchIds);
 
-        return redirect()->route('organization', ['tab' => 'team'])->with('success', 'Staff member updated successfully.');
+        return redirect()->route('organization', ['tab' => 'team'])
+            ->with('success', 'Staff member updated successfully.');
     }
 
     /**

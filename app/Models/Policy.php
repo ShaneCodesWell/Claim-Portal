@@ -119,7 +119,6 @@ class Policy extends Model
     }
 
     // Query Scopes
-
     public function scopeForCustomers(Builder $query, \Illuminate\Support\Collection $customerIds): Builder
     {
         return $query->whereIn('customer_id', $customerIds);

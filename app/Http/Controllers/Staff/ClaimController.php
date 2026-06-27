@@ -24,6 +24,10 @@ class ClaimController extends Controller
 
     public function index(Request $request)
     {
+        $branches = \App\Models\Branch::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         $query = Claim::with(['customer', 'policy', 'assignedTo', 'branch'])
             ->whereIn('status', [
                 ClaimStatus::SUBMITTED,
@@ -38,6 +42,7 @@ class ClaimController extends Controller
             default  => null,
         };
 
+        // Search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -46,9 +51,17 @@ class ClaimController extends Controller
             });
         }
 
+        // Branch filter
+        if ($request->filled('branch')) {
+            $branchCode = $request->branch;
+            $query->whereHas('policy', fn($q) =>
+                $q->where('policy_number', 'like', "P-{$branchCode}-%")
+            );
+        }
+
         $claims = $query->paginate(5)->withQueryString();
 
-        return view('staff.claims.index', compact('claims'));
+        return view('staff.claims.index', compact('claims', 'branches'));
     }
 
     public function myQueue()

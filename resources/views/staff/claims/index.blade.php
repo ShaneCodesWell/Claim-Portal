@@ -10,18 +10,36 @@
                 All customer-initiated claims · ready for team review
             </p>
         </div>
-        <div class="flex items-center gap-3">
-            {{-- Replace the search input --}}
+        <div class="flex items-center gap-3 flex-wrap">
             <form method="GET" action="{{ route('staff.claims.index') }}" id="filterForm">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" name="search" id="searchInput" value="{{ request('search') }}"
-                        placeholder="Search client, policy..."
-                        class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-300 w-64 bg-white" />
-                    {{-- keep current filter when searching --}}
-                    <input type="hidden" name="filter" value="{{ request('filter', 'all') }}">
+                {{-- Preserve amount filter and branch when searching --}}
+                <input type="hidden" name="filter" value="{{ request('filter', 'all') }}">
+                <input type="hidden" name="branch" value="{{ request('branch') }}">
+
+                <div class="flex items-center gap-3 flex-wrap">
+                    {{-- Search --}}
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" name="search" id="searchInput" value="{{ request('search') }}"
+                            placeholder="Search client, policy..."
+                            class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-300 w-56 bg-white" />
+                    </div>
+
+                    {{-- Branch filter --}}
+                    <select name="branch" onchange="this.form.submit()"
+                        class="py-2 pl-3 pr-8 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white text-gray-700">
+                        <option value="">All Branches</option>
+                        @foreach ($branches as $branch)
+                            <option value="{{ $branch->code }}"
+                                {{ request('branch') === $branch->code ? 'selected' : '' }}>
+                                {{ $branch->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
             </form>
+
+            {{-- Reset clears everything --}}
             <a href="{{ route('staff.claims.index') }}"
                 class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
                 <i class="fas fa-refresh text-gray-500"></i> Reset
@@ -34,10 +52,10 @@
         @foreach ([
         'all' => 'All Claims',
         'low' => 'Same Day (≤ 30k)',
-        'medium' => 'Medium (30k – 100k)',
+        'medium' => 'Medium (30k - 100k)',
         'high' => 'High (> 100k)',
     ] as $value => $label)
-            <a href="{{ route('staff.claims.index', array_merge(request()->only('search'), ['filter' => $value])) }}"
+            <a href="{{ route('staff.claims.index', array_merge(request()->only('search', 'branch'), ['filter' => $value])) }}"
                 class="amount-filter-tab px-4 py-2 text-sm font-medium
                 {{ request('filter', 'all') === $value
                     ? 'text-blue-600 border-b-2 border-blue-600'

@@ -229,12 +229,12 @@
     </div>
 
     <!-- Workspace Tip -->
-    <div class="mt-6 bg-blue-50/40 rounded-xl border border-blue-100 shadow-xs p-4">
+    {{-- <div class="mt-6 bg-blue-50/40 rounded-xl border border-blue-100 shadow-xs p-4">
         <p class="text-sm font-medium text-blue-800"><i class="fas fa-info-circle text-blue-500 text-lg"></i>
             Workspace tip
         </p>
         <p class="text-sm text-blue-800 mt-1">
             Keep pending claims at the top of your workflow. Resolve them first before moving to in-progress items.
         </p>
-    </div>
+    </div> --}}
 </x-layouts.staff>

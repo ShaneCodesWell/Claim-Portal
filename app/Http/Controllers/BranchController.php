@@ -14,7 +14,7 @@ class BranchController extends Controller
      */
     public function index()
     {
-        $branches = Branch::withCount('users')->latest()->paginate(10);
+        $branches = Branch::withCount('users')->orderBy('created_at', 'desc')->paginate(10);
         return view('admin.organization.index', ['tab' => 'branches'])->with('branches', $branches);
     }
 
