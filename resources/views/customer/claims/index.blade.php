@@ -145,7 +145,7 @@
                                     </a>
 
                                     @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
-                                        <form method="POST" action="{{ route('staff.claims.cancel', $claim->id) }}"
+                                        <form method="POST" action="{{ route('claims.cancel', $claim->id) }}"
                                             class="cancel-claim-form">
                                             @csrf
                                             <button type="submit"
@@ -207,6 +207,38 @@
             <i class="fas fa-headset"></i> Contact Support
         </button>
     </div>
+    {{-- Flash Messages --}}
+    @if (session('success') || session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+
+                @if (session('success'))
+                    Toast.fire({
+                        icon: 'success',
+                        title: @json(session('success'))
+                    });
+                @endif
+
+                @if (session('error'))
+                    Toast.fire({
+                        icon: 'error',
+                        title: @json(session('error'))
+                    });
+                @endif
+            });
+        </script>
+    @endif
     <script>
         document.querySelectorAll('.cancel-claim-form').forEach(form => {
             form.addEventListener('submit', function(e) {
@@ -214,7 +246,7 @@
 
                 Swal.fire({
                     title: 'Cancel this claim?',
-                    text: 'This will cancel the claim and notify the customer. This action cannot be undone.',
+                    text: 'Are you sure you want to cancel this claim? This action cannot be undone.',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#dc2626',

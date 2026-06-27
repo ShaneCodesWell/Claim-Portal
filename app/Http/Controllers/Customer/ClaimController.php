@@ -35,7 +35,7 @@ class ClaimController extends Controller
             return response()->json(['success' => false, 'message' => 'Session expired. Please log in again.'], 401);
         }
 
-        $policy = Policy::where('customer_id', $customer->id)
+        $policy = Policy::whereIn('customer_id', $customer->resolvedCustomerIds())
             ->where(function ($q) use ($validated) {
                 $q->where('external_policy_id', $validated['policy_id'])
                     ->orWhere('id', $validated['policy_id']);
@@ -69,6 +69,7 @@ class ClaimController extends Controller
                 files: $request->file('documents'),
                 uploadedBy: null,
                 type: 'supporting',
+                uploadedByCustomer: $customer,
             );
         }
 
@@ -82,10 +83,11 @@ class ClaimController extends Controller
 
     public function index()
     {
-        $customer = Auth::guard('customer')->user();
+        $customer    = Auth::guard('customer')->user();
         $customerIds = $customer->resolvedCustomerIds();
 
-        $claims = Claim::whereIn('customer_id', $customerIds) // ← was: where('customer_id', $customer->id)
+        $claims = Claim::whereIn('customer_id', $customerIds)
+            ->where('status', '!=', ClaimStatus::CANCELLED)
             ->with(['policy'])
             ->latest()
             ->paginate(5);
@@ -95,6 +97,13 @@ class ClaimController extends Controller
 
     public function show(Claim $claim)
     {
+        $customer    = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
+
+        if (! in_array($claim->customer_id, $customerIds)) {
+            abort(403);
+        }
+
         $claim->load(['policy', 'activities.user', 'documents']);
         return view('customer.claims.show', compact('claim'));
     }
@@ -104,7 +113,12 @@ class ClaimController extends Controller
         $claim->load(['policy', 'activities.user', 'documents', 'customer']);
 
         // Load the customer Data for display
-        $customer = Customer::find($claim->policy->customer_id);
+        $customer    = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
+
+        if (! in_array($claim->customer_id, $customerIds)) {
+            abort(403);
+        }
 
         // Only allow editing if claim is still in a state where edits make sense
         $editableStatuses = ['submitted', 'pending_info'];
@@ -154,6 +168,13 @@ class ClaimController extends Controller
 
     public function update(Request $request, Claim $claim)
     {
+        $customer    = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
+
+        if (! in_array($claim->customer_id, $customerIds)) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'claim_type'         => 'required|string',
             'form_data'          => 'required|array',
@@ -195,6 +216,7 @@ class ClaimController extends Controller
                 files: $request->file('documents'),
                 uploadedBy: null,
                 type: 'supporting',
+                uploadedByCustomer: $customer,
             );
         }
 
@@ -210,6 +232,13 @@ class ClaimController extends Controller
 
     public function uploadDocuments(Request $request, Claim $claim)
     {
+        $customer    = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
+
+        if (! in_array($claim->customer_id, $customerIds)) {
+            abort(403);
+        }
+
         $request->validate([
             'documents'   => 'required|array',
             'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
@@ -220,6 +249,7 @@ class ClaimController extends Controller
             files: $request->file('documents'),
             uploadedBy: Auth::user(),
             type: 'survey_document',
+            uploadedByCustomer: $customer,
         );
 
         return back()->with('success', count($request->file('documents')) . ' document(s) uploaded.');
@@ -227,8 +257,13 @@ class ClaimController extends Controller
 
     public function previewDocument(ClaimDocument $document, Request $request)
     {
-        // Verify the document belongs to a claim owned by this customer
-        // (skip this check on staff routes — add middleware instead)
+        $customer    = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
+
+        if (! in_array($document->claim->customer_id, $customerIds)) {
+            abort(403);
+        }
+
         $path = Storage::disk('local')->path($document->file_path);
 
         if (! file_exists($path)) {
@@ -248,10 +283,11 @@ class ClaimController extends Controller
 
     public function destroyDocument(ClaimDocument $document): \Illuminate\Http\RedirectResponse
     {
-        $customer = Auth::guard('customer')->user();
+        $customer    = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
 
         // Ensure the document belongs to a claim owned by this customer
-        if ($document->claim->customer_id !== $customer->id) {
+        if (! in_array($document->claim->customer_id, $customerIds)) {
             abort(403);
         }
 
@@ -273,7 +309,8 @@ class ClaimController extends Controller
         ]);
 
         // Ensure the claim belongs to this customer
-        if ($claim->customer_id !== Auth::guard('customer')->user()->id) {
+        $customerIds = Auth::guard('customer')->user()->resolvedCustomerIds();
+        if (! in_array($claim->customer_id, $customerIds)) {
             abort(403);
         }
 
@@ -287,6 +324,6 @@ class ClaimController extends Controller
             note: $request->note,
         );
 
-        return back()->with('success', 'Your claim has been reset to Submitted.');
+        return back()->with('success', 'Your claim has been cancelled successfully.');
     }
 }

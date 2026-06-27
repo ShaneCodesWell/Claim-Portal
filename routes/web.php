@@ -70,6 +70,7 @@ Route::middleware('auth.customer')->group(function () {
     Route::get('claims/show/{claim}', [CustomerClaimController::class, 'show'])->name('claims.show');
     Route::get('claims/edit/{claim}', [CustomerClaimController::class, 'edit'])->name('claims.edit');
     Route::put('claims/update/{claim}', [CustomerClaimController::class, 'update'])->name('claims.update');
+    Route::post('claims/{claim}/cancel', [CustomerClaimController::class, 'cancel'])->name('claims.cancel');
 
     // Documents
     Route::post('claims/{claim}/documents', [CustomerClaimController::class, 'uploadDocuments'])->name('customer.claims.documents');

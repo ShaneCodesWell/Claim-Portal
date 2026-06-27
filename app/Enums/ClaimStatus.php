@@ -12,6 +12,7 @@ enum ClaimStatus: string {
     const APPROVED         = 'approved';
     const REJECTED         = 'rejected';
     const CLOSED           = 'closed';
+    const CANCELLED        = 'cancelled';
 
     public static function all(): array
     {
@@ -26,6 +27,7 @@ enum ClaimStatus: string {
             self::APPROVED,
             self::REJECTED,
             self::CLOSED,
+            self::CANCELLED,
         ];
     }
 
@@ -46,6 +48,7 @@ enum ClaimStatus: string {
             self::APPROVED         => 'Approved',
             self::REJECTED         => 'Rejected',
             self::CLOSED           => 'Closed',
+            self::CANCELLED        => 'Cancelled',
         ];
     }
 
@@ -62,6 +65,7 @@ enum ClaimStatus: string {
             self::APPROVED         => 'green',
             self::REJECTED         => 'red',
             self::CLOSED           => 'gray',
+            self::CANCELLED        => 'gray',
         ];
     }
 

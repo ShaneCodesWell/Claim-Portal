@@ -217,24 +217,26 @@ class ClaimService
         Claim $claim,
         array $files,
         ?User $uploadedBy = null,
-        string $type = 'supporting'
+        string $type = 'supporting',
+        ?Customer $uploadedByCustomer = null
     ): void {
         foreach ($files as $file) {
             // Store under claims/{claim_number}/filename — private disk
             $path = $file->storeAs(
                 "claims/{$claim->claim_number}",
                 $file->getClientOriginalName(),
-                'local' // stored in storage/app — not publicly accessible
+                'local'
             );
 
             ClaimDocument::create([
-                'claim_id'      => $claim->id,
-                'uploaded_by'   => $uploadedBy?->id,
-                'type'          => $type,
-                'original_name' => $file->getClientOriginalName(),
-                'file_path'     => $path,
-                'mime_type'     => $file->getMimeType(),
-                'file_size'     => $file->getSize(),
+                'claim_id'                => $claim->id,
+                'uploaded_by'             => $uploadedBy?->id,
+                'uploaded_by_customer_id' => $uploadedByCustomer?->id,
+                'type'                    => $type,
+                'original_name'           => $file->getClientOriginalName(),
+                'file_path'               => $path,
+                'mime_type'               => $file->getMimeType(),
+                'file_size'               => $file->getSize(),
             ]);
         }
 
@@ -254,7 +256,7 @@ class ClaimService
             $previousStatus   = $claim->status;
 
             $claim->update([
-                'status'      => ClaimStatus::SUBMITTED,
+                'status'      => ClaimStatus::CANCELLED,
                 'assigned_to' => null,
                 'assigned_by' => null,
                 'assigned_at' => null,
