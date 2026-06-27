@@ -34,4 +34,34 @@ class Customer extends Authenticatable
     {
         return $this->hasMany(Policy::class);
     }
+
+    /**
+     * Returns all local Customer IDs that belong to the same real-world person.
+     * Same phone + different source system = same person, different record.
+     */
+    public function resolvedCustomerIds(): array
+    {
+        $ids = [$this->id];
+
+        if (! $this->phone) {
+            return $ids;
+        }
+
+        $mySources = $this->sources ?? ['genova'];
+
+        $relatedIds = static::where('phone', $this->phone)
+            ->where('id', '!=', $this->id)
+            ->where(function ($query) use ($mySources) {
+                foreach ($mySources as $source) {
+                    $query->where(function ($q) use ($source) {
+                        $q->whereJsonDoesntContain('sources', $source)
+                            ->orWhereNull('sources');
+                    });
+                }
+            })
+            ->pluck('id')
+            ->toArray();
+
+        return array_unique(array_merge($ids, $relatedIds));
+    }
 }

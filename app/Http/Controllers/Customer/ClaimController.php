@@ -83,8 +83,9 @@ class ClaimController extends Controller
     public function index()
     {
         $customer = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
 
-        $claims = Claim::where('customer_id', $customer->id)
+        $claims = Claim::whereIn('customer_id', $customerIds) // ← was: where('customer_id', $customer->id)
             ->with(['policy'])
             ->latest()
             ->paginate(5);

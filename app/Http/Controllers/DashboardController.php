@@ -41,7 +41,7 @@ class DashboardController extends Controller
         // Resolve all customer IDs that belong to this person
         // (handles the case where the same person has separate Customer records
         //  from Genova and GLIMS that haven't been merged yet)
-        $customerIds = $this->resolveCustomerIds($customer);
+        $customerIds = $customer->resolvedCustomerIds();
 
         $policies = Policy::whereIn('customer_id', $customerIds)
             ->where('status', 'active')
@@ -73,66 +73,6 @@ class DashboardController extends Controller
         return view('customer.dashboard.index', compact('customer', 'policies', 'businessClasses', 'statusCounts'));
     }
 
-    /**
-     * Resolve all local Customer IDs that belong to the same real-world person.
-     *
-     * The most common split case:
-     *   - Customer logs in via Genova → Customer record A (source: genova)
-     *   - Same person also has a GLIMS record → Customer record B (source: glims)
-     *   - Both records share the same phone number
-     *
-     * We collect all matching IDs and use whereIn() so both sets of policies
-     * show on the dashboard without needing to merge the Customer records.
-     *
-     * Returns at minimum [$customer->id] so the query always has something to work with.
-     */
-    // private function resolveCustomerIds(Customer $customer): array
-    // {
-    //     // Start with the authenticated customer's own ID
-    //     $ids = [$customer->id];
-
-    //     // If we have a phone number, find any other Customer records sharing it (different source, same person)
-    //     if ($customer->phone) {
-    //         $relatedIds = Customer::where('phone', $customer->phone)->where('id', '!=', $customer->id)->pluck('id')->toArray();
-
-    //         if (! empty($relatedIds)) {
-    //             $ids = array_merge($ids, $relatedIds);
-    //         }
-    //     }
-
-    //     return array_unique($ids);
-    // }
-
-    // This is the right way
-    private function resolveCustomerIds(Customer $customer): array
-    {
-        // Start with the authenticated customer's own ID
-        $ids = [$customer->id];
-
-        if (! $customer->phone) {
-            return $ids;
-        }
-
-        // Find sibling records from a DIFFERENT source system with the same phone.
-        // e.g. same person exists in Genova (code: GEN-123) AND GLIMS (code: GLM-456).
-        // Same code can never match cross-system — that's exactly what differs.
-        // Source differentiation prevents merging two unrelated people
-        // who share a number within the same system.
-        $mySources = $customer->sources ?? ['genova'];
-
-        $relatedIds = Customer::where('phone', $customer->phone)
-            ->where('id', '!=', $customer->id)
-            ->where(function ($query) use ($mySources) {
-                foreach ($mySources as $source) {
-                    $query->whereJsonDoesntContain('sources', $source);
-                }
-            })
-            ->pluck('id')
-            ->toArray();
-
-        return array_unique(array_merge($ids, $relatedIds));
-    }
-
     public function pollPolicies(Request $request): \Illuminate\Http\JsonResponse
     {
         $customer = Auth::guard('customer')->user();
@@ -141,7 +81,7 @@ class DashboardController extends Controller
             return response()->json(['ready' => false]);
         }
 
-        $customerIds = $this->resolveCustomerIds($customer);
+        $customerIds = $customer->resolvedCustomerIds();
 
         $count = Policy::whereIn('customer_id', $customerIds)
             ->where('status', 'active')
