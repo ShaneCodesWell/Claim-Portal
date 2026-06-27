@@ -109,21 +109,28 @@ class DashboardController extends Controller
         // Start with the authenticated customer's own ID
         $ids = [$customer->id];
 
-        if ($customer->phone && $customer->external_customer_code) {
-            // Only merge records that share BOTH phone AND customer code
-            // (same person, different source) — not just same phone (different people)
-            $relatedIds = Customer::where('phone', $customer->phone)
-                ->where('external_customer_code', $customer->external_customer_code)
-                ->where('id', '!=', $customer->id)
-                ->pluck('id')
-                ->toArray();
-
-            if (! empty($relatedIds)) {
-                $ids = array_merge($ids, $relatedIds);
-            }
+        if (! $customer->phone) {
+            return $ids;
         }
 
-        return array_unique($ids);
+        // Find sibling records from a DIFFERENT source system with the same phone.
+        // e.g. same person exists in Genova (code: GEN-123) AND GLIMS (code: GLM-456).
+        // Same code can never match cross-system — that's exactly what differs.
+        // Source differentiation prevents merging two unrelated people
+        // who share a number within the same system.
+        $mySources = $customer->sources ?? ['genova'];
+
+        $relatedIds = Customer::where('phone', $customer->phone)
+            ->where('id', '!=', $customer->id)
+            ->where(function ($query) use ($mySources) {
+                foreach ($mySources as $source) {
+                    $query->whereJsonDoesntContain('sources', $source);
+                }
+            })
+            ->pluck('id')
+            ->toArray();
+
+        return array_unique(array_merge($ids, $relatedIds));
     }
 
     public function pollPolicies(Request $request): \Illuminate\Http\JsonResponse

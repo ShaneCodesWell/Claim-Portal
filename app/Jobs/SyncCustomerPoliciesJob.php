@@ -19,8 +19,10 @@ class SyncCustomerPoliciesJob implements ShouldQueue
     public int $tries   = 2;
     public int $timeout = 120;
 
-    public function __construct(public Customer $customer)
-    {}
+    public function __construct(
+        public Customer $customer,
+        public ?string $secondaryCode = null// ← GLIMS code when profile was merged
+    ) {}
 
     public function handle(
         GenovaApiService $api,
@@ -35,17 +37,19 @@ class SyncCustomerPoliciesJob implements ShouldQueue
             return;
         }
 
-        Log::info('SyncCustomerPoliciesJob: starting', ['customer_id' => $this->customer->id]);
+        Log::info('SyncCustomerPoliciesJob: starting', [
+            'customer_id'    => $this->customer->id,
+            'secondary_code' => $this->secondaryCode,
+        ]);
 
         $customerCode = $this->customer->external_customer_code;
-        $sources      = $this->customer->sources ?? [];
 
-        // GLIMS sync
-        // Single API call for policy list + one detail call per policy.
-        // Runs first; failure never blocks Genova.
-        // if ($customerCode && in_array('glims', $sources)) {
-        if ($customerCode) {
-            $this->syncGlims($glims, $policySync, $customerCode);
+        // Prefer the explicit GLIMS code from a merged profile;
+        // fall back to external_customer_code (works when customer is GLIMS-only)
+        $glimsCode = $this->secondaryCode ?? $customerCode;
+
+        if ($glimsCode) {
+            $this->syncGlims($glims, $policySync, $glimsCode);
         }
 
         // Genova sync
@@ -60,7 +64,6 @@ class SyncCustomerPoliciesJob implements ShouldQueue
     }
 
     // GLIMS sync path
-
     private function syncGlims(
         GlimsApiService $glims,
         PolicySyncService $policySync,

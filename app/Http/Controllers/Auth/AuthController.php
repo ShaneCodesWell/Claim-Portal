@@ -257,12 +257,18 @@ class AuthController extends Controller
         }
 
         $request->validate([
-            'customer_code' => 'required|string',
-            'name'          => 'sometimes|string',
+            'customer_code'  => 'required|string',
+            'name'           => 'sometimes|string',
+            'secondary_code' => 'sometimes|nullable|string',
         ]);
 
         $customerCode = $request->customer_code;
         session(['pending_customer_code' => $customerCode]);
+
+        // ── NEW: persist secondary code for merged cross-system profiles ──
+        if ($secondaryCode = $request->input('secondary_code')) {
+            session(['pending_secondary_code' => $secondaryCode]);
+        }
 
         // Pin the local DB record if it exists and pull the correct name + phone from it
         $customer = Customer::where('external_customer_code', $customerCode)->first();
@@ -391,9 +397,13 @@ class AuthController extends Controller
     {
         Auth::guard('customer')->login($customer);
 
+        // Grab secondary code BEFORE wiping the session
+        $secondaryCode = session('pending_secondary_code');
+
         session()->forget([
             'pending_auth', 'pending_user_id', 'pending_phone',
             'pending_name', 'pending_customer_code',
+            'pending_secondary_code',
             'selected_customer_id', 'auth_source', 'login_type', 'username',
         ]);
 
@@ -402,7 +412,7 @@ class AuthController extends Controller
         // SyncCustomerPoliciesJob skips if synced within last 30 min,
         // so dispatching twice is safe — the job deduplicates itself.
         try {
-            SyncCustomerPoliciesJob::dispatch($customer);
+            SyncCustomerPoliciesJob::dispatch($customer, $secondaryCode);
         } catch (\Exception $e) {
             // Never let a sync failure block the login
             Log::error('completeLogin: sync job dispatch failed', [
@@ -415,26 +425,39 @@ class AuthController extends Controller
     // ── PRIVATE: Resolve profiles from Genova + GLIMS ─────────────────
     private function resolveProfiles(?string $phone, int $userId): array
     {
-        $profiles = [];
-
         if (! $phone) {
-            return $profiles;
+            return [];
         }
 
-        // Genova profiles
+        // Index Genova profiles by normalised name
+        $byName = [];
         foreach ($this->resolveGenovaProfiles($phone, $userId) as $profile) {
-            $profiles[] = $profile;
+            $key                = mb_strtolower(trim($profile['name']));
+            $profile['sources'] = [$profile['source']];
+            $byName[$key]       = $profile;
         }
 
-        // GLIMS profiles — skip any customer code already found in Genova
-        $existingCodes = collect($profiles)->pluck('code');
+        // Merge GLIMS — same name = same person, absorb silently as secondary
+        $existingCodes = collect($byName)->pluck('code');
         foreach ($this->resolveGlimsProfiles($phone) as $gp) {
-            if (! $existingCodes->contains($gp['code'])) {
-                $profiles[] = $gp;
+            if ($existingCodes->contains($gp['code'])) {
+                continue; // literally the same record, skip
+            }
+
+            $key = mb_strtolower(trim($gp['name']));
+
+            if (array_key_exists($key, $byName)) {
+                // Same person in both systems — merge, don't show twice
+                $byName[$key]['secondary_code']   = $gp['code'];
+                $byName[$key]['secondary_source'] = $gp['source'];
+                $byName[$key]['sources'][]        = $gp['source'];
+            } else {
+                $gp['sources'] = [$gp['source']];
+                $byName[$key]  = $gp;
             }
         }
 
-        return $profiles;
+        return array_values($byName);
     }
 
     // ── PRIVATE: Resolve profiles from Genova only ────────────────────

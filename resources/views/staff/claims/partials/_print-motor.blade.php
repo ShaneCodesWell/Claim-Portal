@@ -330,7 +330,7 @@
         {{-- Other vehicle details --}}
         <tr>
             <td class="field-label" style="width:35%; vertical-align:top;">
-                Other Vehicle
+                Other Vehicle(s)
             </td>
             <td class="field-value">
                 @if ($involvedVehicles->isNotEmpty())

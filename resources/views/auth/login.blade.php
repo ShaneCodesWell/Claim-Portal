@@ -628,24 +628,21 @@
                     card.className =
                         'w-full text-left p-4 border border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition flex items-center gap-3';
 
-                    const initials = profile.name.split(' ').slice(0, 2).map(w => w[0] ?? '').join('')
+                    const initials = profile.name
+                        .split(' ')
+                        .slice(0, 2)
+                        .map(w => w[0] ?? '')
+                        .join('')
                         .toUpperCase();
-                    const sourceBadge = profile.source === 'glims' || profile.source === 'glims_local' ?
-                        '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full ml-1">GLIMS</span>' :
-                        '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-1">Genova</span>';
 
                     card.innerHTML = `
                         <div class="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center text-sm font-semibold shrink-0">${initials}</div>
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center flex-wrap gap-1">
-                                <p class="text-sm font-medium text-gray-900 truncate">${profile.name}</p>
-                                ${sourceBadge}
-                                ${profile.is_match ? '<span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Suggested</span>' : ''}
-                            </div>
-                            <p class="text-xs text-gray-500">${profile.code}</p>
+                            <p class="text-sm font-medium text-gray-900 truncate">${profile.name}</p>
                         </div>
                         <i class="fas fa-chevron-right text-gray-400 text-xs shrink-0"></i>
                     `;
+
                     card.addEventListener('click', () => selectProfile(profile));
                     list.appendChild(card);
                 });
@@ -656,17 +653,25 @@
                 startMessageCycle();
 
                 try {
+                    const params = {
+                        customer_code: profile.code,
+                        name: profile.name,
+                    };
+
+                    // Pass the secondary code if this was a merged cross-system profile
+                    if (profile.secondary_code) {
+                        params.secondary_code = profile.secondary_code;
+                    }
+
                     const res = await fetch(SELECT_URL, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': CSRF,
-                            'Accept': 'application/json'
+                            'Accept': 'application/json',
                         },
-                        body: new URLSearchParams({
-                            customer_code: profile.code,
-                            name: profile.name,
-                        }),
+                        body: new URLSearchParams(params),
                     });
+
                     stopMessageCycle();
                     const data = await res.json();
 

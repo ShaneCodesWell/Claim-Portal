@@ -1151,6 +1151,49 @@
             });
         }
 
+        const MAX_FILE_SIZE_MB = 5;
+        const MAX_FILE_COUNT = 10;
+        const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+
+        function addFiles(newFiles) {
+            const errors = [];
+
+            for (const file of newFiles) {
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    errors.push(`"${file.name}" is not a supported file type.`);
+                    continue;
+                }
+
+                if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                    errors.push(`"${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`);
+                    continue;
+                }
+
+                if (uploadedFiles.length >= MAX_FILE_COUNT) {
+                    errors.push(`You can upload a maximum of ${MAX_FILE_COUNT} files.`);
+                    break;
+                }
+
+                // Prevent duplicates by name + size
+                const isDuplicate = uploadedFiles.some(
+                    f => f.name === file.name && f.size === file.size
+                );
+                if (isDuplicate) {
+                    errors.push(`"${file.name}" has already been added.`);
+                    continue;
+                }
+
+                uploadedFiles.push(file);
+            }
+
+            if (errors.length) {
+                // Use your existing error display if you have one, or alert as fallback
+                showClaimError(errors.join('\n'));
+            }
+
+            renderPreviews();
+        }
+
         window.removeFile = function(index) {
             uploadedFiles.splice(index, 1);
             renderPreviews();
@@ -1167,15 +1210,14 @@
         dropzone?.addEventListener('drop', (e) => {
             e.preventDefault();
             dropzone.classList.remove('border-blue-500', 'bg-blue-50');
-            uploadedFiles.push(...Array.from(e.dataTransfer.files));
-            renderPreviews();
+            addFiles(Array.from(e.dataTransfer.files));
         });
         fileInput?.addEventListener('change', (e) => {
-            uploadedFiles.push(...Array.from(e.target.files));
-            renderPreviews();
+            addFiles(Array.from(e.target.files));
+            e.target.value = '';
         });
 
-        // ── Form submission ────────────────────────────────────────────────────
+        // Form submission
         document.getElementById('motorForm')?.addEventListener('submit', async function(e) {
             e.preventDefault();
 
