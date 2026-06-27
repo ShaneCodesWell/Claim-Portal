@@ -16,6 +16,7 @@
     <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}" />
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/apple-touch-icon.png') }}" />
     <link rel="manifest" href="{{ asset('images/site.webmanifest') }}" />
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -212,7 +213,7 @@
                 <p class="text-blue-200 text-xs">Vanguard Assurance Claims Portal</p>
             </div>
 
-            <div class="p-6">
+            <div class="p-6" x-data="loginForm()" x-init="init()">
                 <div class="mb-4 text-center">
                     <p class="text-gray-600 text-sm">Enter your details to receive a verification code</p>
                     @if ($errors->any())
@@ -222,33 +223,70 @@
                     @endif
                 </div>
 
-                <form action="{{ route('login.submit') }}" method="POST" class="space-y-5" id="verificationForm">
-                    @csrf
-                    <div>
-                        <label for="login_type" class="block text-sm font-medium text-gray-700 mb-1">Login with</label>
-                        <select name="login_type" id="login_type"
-                            class="w-full pl-4 pr-8 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
-                            <option value="mobile_no">Phone Number</option>
-                            <option value="policy_number">Policy Number</option>
-                            <option value="vehicle_number">Vehicle Number</option>
-                        </select>
-                    </div>
+                {{-- Login type tabs --}}
+                <div class="flex bg-gray-100 rounded-xl p-1 gap-1 mb-5">
+                    <template x-for="tab in tabs" :key="tab.value">
+                        <button type="button" @click="selectType(tab.value)"
+                            :class="[
+                                'flex-1 flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg text-xs font-medium transition-all duration-200',
+                                activeType === tab.value ?
+                                'bg-white text-brand-800 shadow-sm' :
+                                'text-gray-500 hover:text-gray-700'
+                            ]">
+                            <i :class="'fas ' + tab.icon + ' text-sm'"></i>
+                            <span x-text="tab.label"></span>
+                        </button>
+                    </template>
+                </div>
 
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number /
-                            Policy / Vehicle Number</label>
+                {{-- WIP notice (shown for non-phone types) --}}
+                <div x-show="activeConfig.wip" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-1"
+                    class="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-xs text-amber-800">
+                    <i class="fas fa-clock text-amber-500 mt-0.5 shrink-0"></i>
+                    <span x-text="activeConfig.wipText"></span>
+                </div>
+
+                <form action="{{ route('login.submit') }}" method="POST" class="space-y-4" id="verificationForm">
+                    @csrf
+
+                    {{-- Hidden field carries the actual login_type value --}}
+                    <input type="hidden" name="login_type" :value="activeType">
+
+                    <div x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0">
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1"
+                            x-text="activeConfig.label"></label>
                         <div class="relative">
-                            <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input type="text" name="username" id="username" required
-                                placeholder="e.g., 0244123456 or policy number"
-                                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition bg-white">
+                            <i :class="'fas ' + activeConfig.icon +
+                                ' absolute left-3 top-1/2 -translate-y-1/2 text-sm transition-colors'"
+                                :style="activeConfig.wip ? 'color: #d1d5db' : 'color: #9ca3af'"></i>
+                            <input type="text" name="username" id="username" :placeholder="activeConfig.placeholder"
+                                :disabled="activeConfig.wip" :required="!activeConfig.wip"
+                                :class="[
+                                    'w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm transition-all duration-200',
+                                    activeConfig.wip ?
+                                    'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' :
+                                    'border-gray-300 bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500'
+                                ]"
+                                x-ref="usernameInput">
                         </div>
                     </div>
 
-                    <button type="submit" id="sendOtpBtn"
-                        class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl shadow-sm transition duration-200">
+                    <button type="submit" :disabled="activeConfig.wip"
+                        :class="[
+                            'w-full flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-semibold rounded-xl shadow-sm transition-all duration-200',
+                            activeConfig.wip ?
+                            'bg-gray-200 text-gray-400 cursor-not-allowed' :
+                            'bg-brand-600 hover:bg-brand-700 text-white'
+                        ]">
                         <i class="fas fa-paper-plane text-sm"></i>
-                        <span>Send Verification Code</span>
+                        <span>Send verification code</span>
                     </button>
                 </form>
             </div>
@@ -456,6 +494,67 @@
 
         </div>
     </div>
+
+    <script>
+        function loginForm() {
+            return {
+                activeType: 'mobile_no',
+                tabs: [{
+                        value: 'mobile_no',
+                        label: 'Phone',
+                        icon: 'fa-mobile-alt'
+                    },
+                    {
+                        value: 'policy_number',
+                        label: 'Policy No.',
+                        icon: 'fa-file-alt'
+                    },
+                    {
+                        value: 'vehicle_number',
+                        label: 'Vehicle No.',
+                        icon: 'fa-car'
+                    },
+                ],
+                configs: {
+                    mobile_no: {
+                        label: 'Mobile number',
+                        icon: 'fa-mobile-alt',
+                        placeholder: 'e.g. 0244 000 000',
+                        wip: false,
+                        wipText: '',
+                    },
+                    policy_number: {
+                        label: 'Policy number',
+                        icon: 'fa-file-alt',
+                        placeholder: 'e.g. P-1001-101-2026-000000',
+                        wip: true,
+                        wipText: 'Policy number login is not available yet. Please use your phone number for now.',
+                    },
+                    vehicle_number: {
+                        label: 'Vehicle number',
+                        icon: 'fa-car',
+                        placeholder: 'e.g. GR 1234-24',
+                        wip: true,
+                        wipText: 'Vehicle number login is not available yet. Please use your phone number for now.',
+                    },
+                },
+                get activeConfig() {
+                    return this.configs[this.activeType];
+                },
+                init() {
+                    // Always reset to phone on load — prevents browser form restoration
+                    // from leaving a non-phone type active across back-navigations
+                    this.activeType = 'mobile_no';
+                },
+                selectType(type) {
+                    this.activeType = type;
+                    if (!this.activeConfig.wip) {
+                        this.$nextTick(() => this.$refs.usernameInput.focus());
+                    }
+                },
+            };
+        }
+    </script>
 
     <script>
         (() => {

@@ -31,10 +31,10 @@
         <button data-type="image" class="type-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
             Images ({{ $totalImages }})
         </button>
-        <button data-type="spreadsheet"
+        {{-- <button data-type="spreadsheet"
             class="type-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
             Spreadsheets ({{ $totalOther }})
-        </button>
+        </button> --}}
         <button data-type="other" class="type-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
             Other ({{ $totalOther }})
         </button>
