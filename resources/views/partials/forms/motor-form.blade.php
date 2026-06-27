@@ -107,8 +107,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Full Name <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="fullname"
-                            value="{{ $f['fullname'] ?? '' }}"
+                        <input type="text" name="fullname" value="{{ $f['fullname'] ?? '' }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                     </div>
 
@@ -117,8 +116,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Email Address <span class="text-red-500">*</span>
                         </label>
-                        <input type="email" name="email"
-                            value="{{ $f['email'] ?? '' }}"
+                        <input type="email" name="email" value="{{ $f['email'] ?? '' }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                     </div>
 
@@ -127,8 +125,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Phone Number <span class="text-red-500">*</span>
                         </label>
-                        <input type="tel" name="phone"
-                            value="{{ $f['phone'] ?? '' }}"
+                        <input type="tel" name="phone" value="{{ $f['phone'] ?? '' }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                     </div>
 
@@ -137,8 +134,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Occupation
                         </label>
-                        <input type="text" name="occupation"
-                            value="{{ $f['occupation'] ?? '' }}"
+                        <input type="text" name="occupation" value="{{ $f['occupation'] ?? '' }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                     </div>
                 </div>
@@ -1213,6 +1209,7 @@
                 address: val('address'),
                 age: val('age'),
                 occupation: val('occupation'),
+                email: val('email'),
                 phone: val('phone'),
                 drivers_license: val('drivers_license'),
                 license_issue_date: val('license_issue_date'),

@@ -383,10 +383,6 @@
                             class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                             <i class="fas fa-eye"></i> Preview Form
                         </button>
-                        {{-- <a href="{{ route('staff.claims.edit', $claim) }}"
-                            class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
-                            <i class="fas fa-edit"></i> Edit Form
-                        </a> --}}
                         @if ($claim->isEditable())
                             <a href="{{ route('staff.claims.edit', $claim) }}"
                                 class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">

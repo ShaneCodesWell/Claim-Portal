@@ -48,7 +48,7 @@
         <tr>
             <td style="border:none;">&nbsp;</td>
             <td class="field-label">Renewal Date</td>
-            <td class="field-value">{{ $f('renewal_date') }}</td>
+            <td class="field-value">{{ $policy?->renewal_date?->format('F j, Y') }}</td>
         </tr>
     </tbody>
 </table>
@@ -72,8 +72,8 @@
         </tr>
         <tr>
             <td class="field-label">Telephone No:</td>
-                <td class="field-value">{{ $f('phone') }}
-                </td>
+            <td class="field-value">{{ $f('phone') }}
+            </td>
             </td>
         </tr>
     </tbody>

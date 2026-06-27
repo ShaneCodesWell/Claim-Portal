@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use \Illuminate\Http\RedirectResponse;
 
 class ClaimController extends Controller
 {
@@ -245,7 +246,7 @@ class ClaimController extends Controller
         ]);
     }
 
-    public function destroyDocument(ClaimDocument $document): \Illuminate\Http\RedirectResponse
+    public function destroyDocument(ClaimDocument $document): RedirectResponse
     {
         $staff = Auth::user();
 
