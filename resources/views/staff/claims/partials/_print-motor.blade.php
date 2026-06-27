@@ -8,6 +8,9 @@
     // Parse injured persons arrays (stored as JSON strings in the payload)
     $ownInjured = collect(json_decode($f('your_vehicle_injured') ?: '[]', true) ?? []);
     $otherInjured = collect(json_decode($f('other_vehicle_injured') ?: '[]', true) ?? []);
+
+    // Parse involved vehicles
+    $involvedVehicles = collect(json_decode($f('involved_vehicles') ?: '[]', true) ?? []);
 @endphp
 
 {{-- ══════════ HEADER ══════════ --}}
@@ -60,9 +63,10 @@
             <td class="field-label" style="width:35%">Name of Insured</td>
             <td class="field-value">{{ $f('fullname') ?: $customer?->full_name ?? '' }}</td>
         </tr>
+        {{-- Added an email fallback --}}
         <tr>
             <td class="field-label">Address</td>
-            <td class="field-value">{{ $f('address') }}</td>
+            <td class="field-value">{{ $f('address') ?: $customer?->email ?? '' }}</td> 
         </tr>
         <tr>
             <td class="field-label">Occupation</td>
@@ -151,7 +155,7 @@
             <td class="field-label">Driving Licence No.</td>
             <td class="field-value">{{ $f('driver_license') }}</td>
             <td class="field-label">Date of Issue</td>
-            <td class="field-value">{{ $f('driver_license_date') }}</td>
+            <td class="field-value">{{ formatDate($f('driver_license_date')) }}</td>
         </tr>
         <tr>
             <td colspan="4" style="border:1px solid #000; padding:4px 6px; font-size:10px;">
@@ -325,14 +329,29 @@
 
         {{-- Other vehicle details --}}
         <tr>
-            <td class="field-label" style="width:35%">Other vehicle — Regd. No.</td>
+            <td class="field-label" style="width:35%; vertical-align:top;">
+                Other Vehicle
+            </td>
             <td class="field-value">
-                {{ $f('involved_vehicle_reg') }}
-                @if ($f('involved_vehicle_make'))
-                    &nbsp;&nbsp; <strong>Make:</strong> {{ $f('involved_vehicle_make') }}
-                @endif
-                @if ($f('involved_vehicle_model'))
-                    &nbsp;&nbsp; <strong>Model:</strong> {{ $f('involved_vehicle_model') }}
+                @if ($involvedVehicles->isNotEmpty())
+                    @foreach ($involvedVehicles as $index => $vehicle)
+                        <div @if (!$loop->last) style="margin-bottom:6px;" @endif>
+                            <strong>Reg. No.:</strong>
+                            {{ $vehicle['reg'] ?? 'N/A' }}
+                            @if (!empty($vehicle['make']))
+                                &nbsp;&nbsp;
+                                <strong>Make:</strong>
+                                {{ $vehicle['make'] }}
+                            @endif
+                            @if (!empty($vehicle['model']))
+                                &nbsp;&nbsp;
+                                <strong>Model:</strong>
+                                {{ $vehicle['model'] }}
+                            @endif
+                        </div>
+                    @endforeach
+                @else
+                    <span style="color:#888;font-style:italic;">None provided</span>
                 @endif
             </td>
         </tr>
@@ -416,7 +435,7 @@
     <div class="signature-line" style="margin-top:24px;">
         <div style="flex:1;">
             <p class="sig-label">DATE</p>
-            <div class="sig-field">{{ $f('declaration_date') }}</div>
+            <div class="sig-field">{{ formatDate($f('declaration_date')) }}</div>
         </div>
         <div style="flex:1;">
             <p class="sig-label">SIGNATURE / NAME</p>

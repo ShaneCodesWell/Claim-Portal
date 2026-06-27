@@ -136,41 +136,6 @@
         {{-- ==================== LEFT COLUMN ==================== --}}
         <div class="space-y-5">
 
-            {{-- Policy Card --}}
-            {{-- <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-file-contract text-blue-500"></i> Policy
-                    </h3>
-                </div>
-                <div class="p-4 space-y-2 text-xs">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Policy No.</span>
-                        <span
-                            class="font-mono font-medium text-gray-800">{{ $claim->policy->policy_number ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Product</span>
-                        <span
-                            class="text-gray-700 text-right max-w-[60%]">{{ $claim->policy->product_name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Class</span>
-                        <span class="text-gray-700">{{ $claim->policy->business_class_name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Source</span>
-                        <span class="text-gray-700 capitalize">{{ $claim->policy->source ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Expires</span>
-                        <span class="{{ $claim->policy?->end_date?->isPast() ? 'text-red-600' : 'text-gray-700' }}">
-                            {{ $claim->policy?->end_date?->format('d M Y') ?? 'N/A' }}
-                        </span>
-                    </div>
-                </div>
-            </div> --}}
-
             {{-- Assignment Card --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
@@ -379,7 +344,7 @@
                         <i class="fas fa-file-alt text-blue-500"></i> Claim Summary
                     </h3>
                     <div class="flex gap-2">
-                        <button onclick="openPrintModal()"
+                        <button type="button" onclick="openPrintModal()"
                             class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                             <i class="fas fa-eye"></i> Preview Form
                         </button>
