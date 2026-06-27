@@ -64,37 +64,73 @@
             @endphp
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+
                 {{-- Policy Header --}}
                 <div
                     class="p-4 border-b border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition policy-header">
                     <div class="flex items-center gap-3">
-                        <div class="h-10 w-10 {{ $typeColor }} rounded-xl flex items-center justify-center">
-                            <i class="{{ $typeIcon }} text-sm"></i>
+                        {{-- Static folder icon — no more dynamic matching --}}
+                        <div class="h-10 w-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
+                            <i class="fas fa-folder text-gray-400 text-sm"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-gray-800 text-sm">{{ $customer?->name ?? 'Unknown' }}</h3>
-                            <p class="text-xs text-gray-500">{{ $policy->policy_number }}</p>
+                            <h3 class="font-semibold text-gray-800 text-sm">{{ $customer?->name ?? 'Unknown' }}</h3>
+                            <p class="text-xs text-gray-400 font-mono">{{ $policy->policy_number }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-xs bg-gray-100 px-2 py-1 rounded-full">{{ $docs->count() }}</span>
+                        <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">{{ $docs->count() }}
+                            files</span>
+
                         @php $latestClaim = $policy->claims->first(); @endphp
                         @if ($latestClaim)
-                            {{-- <button onclick="openClaimFormModal({{ $latestClaim->id }})"
-                                class="text-gray-400 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition"
-                                title="Preview Claim Form">
-                                <i class="fas fa-eye text-xs"></i>
-                            </button> --}}
+                            <button type="button"
+                                onclick="event.stopPropagation(); toggleUploadForm('upload-{{ $latestClaim->id }}')"
+                                class="text-white bg-blue-600 hover:bg-blue-700 w-7 h-7 flex items-center justify-center rounded-lg transition"
+                                title="Upload Document">
+                                <i class="fas fa-plus text-xs"></i>
+                            </button>
                         @endif
+
                         <i
-                            class="policy-toggle-icon fas fa-chevron-down text-gray-400 text-xs transition-transform"></i>
+                            class="policy-toggle-icon fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200"></i>
                     </div>
                 </div>
+
+                {{-- Upload form — hidden by default --}}
+                @if ($latestClaim)
+                    <div id="upload-{{ $latestClaim->id }}" class="hidden border-b border-gray-100 bg-blue-50/60 p-4">
+                        <form action="{{ route('staff.claims.documents', $latestClaim) }}" method="POST"
+                            enctype="multipart/form-data" class="flex items-center gap-2">
+                            @csrf
+                            <label
+                                class="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 cursor-pointer hover:border-blue-400 transition text-sm text-gray-400">
+                                <i class="fas fa-paperclip text-xs"></i>
+                                <span class="upload-label truncate">Choose files...</span>
+                                <input type="file" name="documents[]" multiple
+                                    accept="image/jpeg,image/png,image/gif,application/pdf" class="hidden"
+                                    onchange="updateUploadLabel(this)">
+                            </label>
+                            <button type="submit"
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-2 rounded-lg transition whitespace-nowrap">
+                                <i class="fas fa-upload mr-1"></i> Upload
+                            </button>
+                            <button type="button" onclick="toggleUploadForm('upload-{{ $latestClaim->id }}')"
+                                class="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 transition">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </form>
+                        <p class="text-xs text-gray-400 mt-2 pl-1">
+                            JPG, PNG, PDF · max 5MB each · attaches to <span
+                                class="font-medium text-gray-500">{{ $latestClaim->claim_number }}</span>
+                        </p>
+                    </div>
+                @endif
 
                 {{-- Documents List --}}
                 <div class="policy-docs hidden divide-y divide-gray-100">
 
-                    {{-- ── Claim Forms section ── --}}
+                    {{-- Claim Forms --}}
                     @if ($group['claims']->isNotEmpty())
                         <div class="p-4 space-y-2">
                             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Claim Forms</p>
@@ -102,7 +138,7 @@
                                 <div
                                     class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                                     <div class="flex items-center gap-3">
-                                        <i class="fas fa-file-alt text-blue-400 text-lg"></i>
+                                        <i class="fas fa-file-alt text-blue-400"></i>
                                         <div>
                                             <p class="font-medium text-gray-800 text-xs">{{ $claimRow['number'] }}</p>
                                             <p class="text-xs text-gray-400">
@@ -120,7 +156,7 @@
                         </div>
                     @endif
 
-                    {{-- ── Uploaded Documents section ── --}}
+                    {{-- Uploaded Documents --}}
                     @if ($docs->isNotEmpty())
                         <div class="p-4 space-y-2">
                             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Attachments</p>
@@ -148,31 +184,48 @@
                                         ? number_format($doc->file_size / 1024, 1) . ' KB'
                                         : 'Unknown';
                                 @endphp
-                                <div class="doc-row flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100"
+
+                                <div class="doc-row flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition"
                                     data-doc-type="{{ $docType }}">
-                                    <div class="flex items-center gap-3">
-                                        <i class="{{ $icon }} text-lg"></i>
-                                        <div>
-                                            <p class="font-medium text-gray-800 text-xs">{{ $doc->original_name }}</p>
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <i class="{{ $icon }} text-lg shrink-0"></i>
+                                        <div class="min-w-0">
+                                            <p class="font-medium text-gray-800 text-xs truncate">
+                                                {{ $doc->original_name }}</p>
                                             <p class="text-xs text-gray-400">{{ $size }} ·
                                                 {{ $doc->created_at->format('M d, Y') }}</p>
                                         </div>
                                     </div>
-                                    <div class="flex gap-2">
+
+                                    {{-- Actions — single block, no duplicates --}}
+                                    <div class="flex items-center gap-1 shrink-0 ml-2">
                                         <button
                                             onclick="openDocPreview('{{ route('staff.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
-                                            class="text-gray-500 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition">
+                                            class="text-gray-400 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition"
+                                            title="Preview">
                                             <i class="far fa-eye text-sm"></i>
                                         </button>
                                         <a href="{{ route('staff.documents.preview', $doc->id) }}?download=1"
-                                            class="text-blue-600 hover:text-blue-800 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition">
+                                            class="text-gray-400 hover:text-blue-600 w-7 h-7 flex items-center justify-center rounded hover:bg-blue-50 transition"
+                                            title="Download">
                                             <i class="fas fa-download text-sm"></i>
                                         </a>
+                                        <form action="{{ route('staff.claims.documents.destroy', $doc->id) }}"
+                                            method="POST" onsubmit="return confirmDeleteDoc(event, this)">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="text-gray-400 hover:text-red-600 w-7 h-7 flex items-center justify-center rounded hover:bg-red-50 transition"
+                                                title="Delete">
+                                                <i class="fas fa-trash text-xs"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @endif
+
                 </div>
             </div>
         @empty
@@ -205,6 +258,39 @@
 
     {{-- Shared Document Preview Modal --}}
     <x-documents-modal />
+
+    {{-- Flash Messages --}}
+    @if (session('success') || session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+
+                @if (session('success'))
+                    Toast.fire({
+                        icon: 'success',
+                        title: @json(session('success'))
+                    });
+                @endif
+
+                @if (session('error'))
+                    Toast.fire({
+                        icon: 'error',
+                        title: @json(session('error'))
+                    });
+                @endif
+            });
+        </script>
+    @endif
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -302,13 +388,13 @@
                 }
 
                 content.innerHTML = `
-        <div class="flex items-center justify-center py-20">
-            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span class="ml-3 text-sm text-gray-500">Loading preview...</span>
-        </div>`;
+                    <div class="flex items-center justify-center py-20">
+                        <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <span class="ml-3 text-sm text-gray-500">Loading preview...</span>
+                    </div>`;
 
                 fetch(printUrl, {
                         headers: {
@@ -324,22 +410,22 @@
                     })
                     .then(html => {
                         const rendered = `<style>
-            #claimFormModalContent table { width:100%; border-collapse:collapse; margin-bottom:10px; }
-            #claimFormModalContent th, #claimFormModalContent td { border:1px solid #000; padding:4px 6px; font-size:10px; vertical-align:top; }
-            #claimFormModalContent th { font-weight:bold; background:#f0f0f0; text-transform:uppercase; font-size:9px; }
-            #claimFormModalContent .field-label { font-weight:bold; text-transform:uppercase; background:#fafafa; }
-            #claimFormModalContent .field-value { min-height:18px; }
-            #claimFormModalContent * { font-family: Arial, sans-serif; font-size:11px; }
-            #claimFormModalContent .no-print { display:none !important; }
-        </style>${html}`;
+                            #claimFormModalContent table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+                            #claimFormModalContent th, #claimFormModalContent td { border:1px solid #000; padding:4px 6px; font-size:10px; vertical-align:top; }
+                            #claimFormModalContent th { font-weight:bold; background:#f0f0f0; text-transform:uppercase; font-size:9px; }
+                            #claimFormModalContent .field-label { font-weight:bold; text-transform:uppercase; background:#fafafa; }
+                            #claimFormModalContent .field-value { min-height:18px; }
+                            #claimFormModalContent * { font-family: Arial, sans-serif; font-size:11px; }
+                            #claimFormModalContent .no-print { display:none !important; }
+                        </style>${html}`;
                         loadedClaimForms[printUrl] = rendered;
                         content.innerHTML = rendered;
                     })
                     .catch(err => {
                         content.innerHTML = `<p class="text-center text-red-500 py-12 text-sm">
-            Failed to load preview (${err.message}). 
-            <a href="${printUrl}" target="_blank" class="underline">Open in new tab instead.</a>
-        </p>`;
+                            Failed to load preview (${err.message}). 
+                            <a href="${printUrl}" target="_blank" class="underline">Open in new tab instead.</a>
+                        </p>`;
                     });
             };
 
@@ -366,6 +452,52 @@
                 if (e.target === this) closeClaimFormModal();
             });
         });
+
+        // Toggle upload form visibility
+        window.toggleUploadForm = function(id) {
+            const form = document.getElementById(id);
+            if (!form) return;
+            form.classList.toggle('hidden');
+
+            // Also expand the card if it's collapsed
+            if (!form.classList.contains('hidden')) {
+                const card = form.closest('.bg-white.rounded-xl');
+                const docs = card?.querySelector('.policy-docs');
+                const icon = card?.querySelector('.policy-toggle-icon');
+                if (docs?.classList.contains('hidden')) {
+                    docs.classList.remove('hidden');
+                    if (icon) icon.style.transform = 'rotate(180deg)';
+                }
+            }
+        };
+
+        // Update file input label with selected file names
+        window.updateUploadLabel = function(input) {
+            const label = input.closest('label').querySelector('.upload-label');
+            if (!label) return;
+            label.textContent = input.files.length === 1 ?
+                input.files[0].name :
+                `${input.files.length} files selected`;
+        };
+
+        // SweetAlert confirm before delete
+        window.confirmDeleteDoc = function(e, form) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Delete this document?',
+                text: 'This cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+            }).then(result => {
+                if (result.isConfirmed) form.submit();
+            });
+            return false;
+        };
     </script>
 
     {{-- At the very bottom, before closing x-layouts.staff --}}
