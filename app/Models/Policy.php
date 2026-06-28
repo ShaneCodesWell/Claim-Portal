@@ -111,9 +111,10 @@ class Policy extends Model
             return 'expired';
         }
 
-        if ($daysUntilExpiry <= 30) {
-            return 'pending_renewal';
-        }
+        // Lets keep it active or expired
+        // if ($daysUntilExpiry <= 30) {
+        //     return 'pending_renewal';
+        // }
 
         return 'active';
     }

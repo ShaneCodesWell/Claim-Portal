@@ -99,14 +99,11 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::post('claims/{claim}/status', [StaffClaimController::class, 'updateStatus'])->name('staff.claims.status');
     Route::post('claims/{claim}/request-info', [StaffClaimController::class, 'requestInfo'])->name('staff.claims.request-info');
     Route::post('claims/{claim}/form-data', [StaffClaimController::class, 'updateFormData'])->name('staff.claims.form-data');
+    Route::post('claims/{claim}/finalize', [StaffClaimController::class, 'finalize'])->name('staff.claims.finalize');
 
     Route::get('claims/{claim}/edit', [StaffClaimController::class, 'edit'])->name('staff.claims.edit');
     Route::put('claims/{claim}/edit', [StaffClaimController::class, 'update'])->name('staff.claims.update');
     Route::post('claims/{claim}/cancel', [StaffClaimController::class, 'cancel'])->name('staff.claims.cancel');
-
-    Route::get('/staff/process-claim/motor', [StaffController::class, 'processClaimMotor'])->name('process-claim-motor');
-    Route::get('/staff/process-claim/fire', [StaffController::class, 'processClaimFire'])->name('process-claim-fire');
-    Route::get('/staff/process-claim/general-accident', [StaffController::class, 'processClaimGeneralAccident'])->name('process-claim-general-accident');
 
     // Claim Forms & Documents
     Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');

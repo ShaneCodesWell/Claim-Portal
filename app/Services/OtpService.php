@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Log;
 
 class OtpService
 {
-    public function __construct(private ArkeselService $sms) {}
+    public function __construct(private ArkeselService $sms)
+    {}
 
     public function send(string $phoneLocal): bool
     {
@@ -26,10 +27,10 @@ class OtpService
         ]);
 
         // Skip the actual SMS in local — OTP is in the DB for manual lookup
-        if (app()->environment('local')) {
-            Log::info("OTP [{$code}] generated for {$phoneLocal} — SMS skipped (local)");
-            return true;
-        }
+        // if (app()->environment('local')) {
+        //     Log::info("OTP [{$code}] generated for {$phoneLocal} — SMS skipped (local)");
+        //     return true;
+        // }
 
         $message = "Your Claim Portal verification code is: {$code}. Valid for 10 minutes. Do not share this code with anyone.";
 

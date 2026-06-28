@@ -61,17 +61,11 @@ class DashboardController extends Controller
             ->distinct()
             ->pluck('business_class_name');
 
-        // Policies that are not expired are active right
         $statusCounts = Policy::whereIn('customer_id', $customerIds)
-            ->selectRaw("
-                CASE
-                    WHEN status = 'expired' THEN 'expired'
-                    ELSE 'active'
-                END as status_group,
-                COUNT(*) as total
-            ")
-            ->groupBy('status_group')
-            ->pluck('total', 'status_group');
+            ->where('status', 'active')
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
         return view('customer.dashboard.index', compact('customer', 'policies', 'businessClasses', 'statusCounts'));
     }

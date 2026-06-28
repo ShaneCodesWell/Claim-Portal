@@ -34,6 +34,8 @@ class Claim extends Model
         'committee_notes',
         'committee_decided_by',
         'committee_decided_at',
+        'finalized_by',
+        'finalized_at',
     ];
 
     protected $casts = [
@@ -44,6 +46,7 @@ class Claim extends Model
         'survey_completed_at'  => 'datetime',
         'committee_review_at'  => 'datetime',
         'committee_decided_at' => 'datetime',
+        'finalized_at'         => 'datetime',
     ];
 
     // Relationships
@@ -126,6 +129,18 @@ class Claim extends Model
     public function isEditable(): bool
     {
         return ClaimStatus::isEditable($this->status);
+    }
+
+    public function finalizedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'finalized_by');
+    }
+
+    public function isFinalizableBy(User $user): bool
+    {
+        return $user->isAdmin()
+        || $user->isClaimHead()
+        || $this->assigned_to === $user->id;
     }
 
     // Other helpers

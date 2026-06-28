@@ -573,7 +573,6 @@
                     @if (!$hasVehicle && !$hasAccident && !$hasDriver && !$hasOther && empty($claimant['name']))
                         <p class="text-sm text-gray-400 italic">No form data available.</p>
                     @endif
-
                 </div>
             </div>
 
@@ -656,6 +655,45 @@
                     </form>
                 </div>
             </div>
+
+            {{-- Finalize Claim --}}
+            {{-- @if ($claim->status === \App\Enums\ClaimStatus::APPROVED && $claim->isFinalizableBy(auth()->user())) --}}
+                <div class="bg-white rounded-xl border border-green-200 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-green-100 bg-green-50/50 flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-check-double text-green-500"></i> Finalize Claim
+                        </h3>
+                        {{-- <span class="text-xs text-green-600 bg-green-100 px-2.5 py-1 rounded-full font-medium">
+                            Approved by committee
+                        </span> --}}
+                    </div>
+                    <div class="p-5">
+                        <p class="text-sm text-gray-500 mb-4">
+                            If all documents have been provided and claim has been approved. Finalize to mark processing as complete and notify
+                            the customer.
+                        </p>
+                        <form action="{{ route('staff.claims.finalize', $claim) }}" method="POST"
+                            id="finalizeForm">
+                            @csrf
+                            <textarea name="note" rows="2" placeholder="Optional note (e.g. forwarded to Finance team on 28 Jun)..."
+                                class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400 outline-none resize-none mb-3"></textarea>
+                            <button type="button"
+                                onclick="Swal.fire({
+                        title: 'Finalize this claim?',
+                        text: 'This will mark the claim as fully processed and notify the customer via SMS.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#16a34a',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Yes, finalize it'
+                    }).then(result => { if (result.isConfirmed) document.getElementById('finalizeForm').submit(); })"
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm px-5 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                                <i class="fas fa-check-double text-xs"></i> Finalize Claim
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {{-- @endif --}}
         </div>
     </div>
 

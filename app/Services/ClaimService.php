@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\DB;
 
 class ClaimService
 {
+
+    // Add to ClaimService constructor
+    public function __construct(private ClaimNotificationService $notifications)
+    {}
+
     // Register a new claim
     public function register(
         Customer $customer,
@@ -98,6 +103,8 @@ class ClaimService
             'status'      => ClaimStatus::UNDER_REVIEW,
         ]);
 
+        $this->notifications->notifyUnderReview($claim);
+
         $this->logActivity(
             $claim,
             null,
@@ -118,6 +125,8 @@ class ClaimService
             'assigned_at' => now(),
             'status'      => ClaimStatus::UNDER_REVIEW,
         ]);
+
+        $this->notifications->notifyUnderReview($claim);
 
         $action = $previousAssignee ? 'reassigned' : 'assigned';
 
@@ -366,6 +375,12 @@ class ClaimService
             'committee_decided_at' => now(),
         ]);
 
+        if ($decision === ClaimStatus::APPROVED) {
+            $this->notifications->notifyApproved($claim);
+        } else {
+            $this->notifications->notifyRejected($claim);
+        }
+
         $this->logActivity(
             $claim,
             $decidedBy,
@@ -373,5 +388,29 @@ class ClaimService
             $notes ?? "Committee decision: " . ClaimStatus::labels()[$decision] . " by {$decidedBy->name}.",
             ['decision' => $decision, 'decided_by' => $decidedBy->id]
         );
+    }
+
+    public function finalize(Claim $claim, User $finalizedBy, ?string $note = null): void
+    {
+        // Guard — only finalize approved claims when the flow changes
+        // if ($claim->status !== ClaimStatus::APPROVED) {
+        //     throw new \LogicException("Only approved claims can be finalized.");
+        // }
+
+        $claim->update([
+            'status'       => ClaimStatus::CLOSED,
+            'finalized_by' => $finalizedBy->id,
+            'finalized_at' => now(),
+        ]);
+
+        $this->logActivity(
+            $claim,
+            $finalizedBy,
+            'finalized',
+            $note ?? "Claim processing completed by {$finalizedBy->name}.",
+            ['finalized_by' => $finalizedBy->id]
+        );
+
+        $this->notifications->notifyFinalized($claim);
     }
 }

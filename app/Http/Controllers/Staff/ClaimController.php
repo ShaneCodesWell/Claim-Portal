@@ -464,6 +464,26 @@ class ClaimController extends Controller
         ]);
     }
 
+    public function finalize(Claim $claim, ClaimService $claimService): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if (! $claim->isFinalizableBy($user)) {
+            abort(403, 'You do not have permission to finalize this claim.');
+        }
+
+        // Add this if the flow changes
+        // if ($claim->status !== ClaimStatus::APPROVED) {
+        //     return back()->with('error', 'Only approved claims can be finalized.');
+        // }
+
+        $claimService->finalize($claim, $user);
+
+        return redirect()
+            ->route('staff.claims.show', $claim)
+            ->with('success', 'Claim has been finalized and processing is complete.');
+    }
+
     public function cancel(Request $request, Claim $claim)
     {
         $request->validate([

@@ -18,6 +18,15 @@ class ArkeselService
 
     public function sendSms(string $phone, string $message): bool
     {
+        // Skip actual send in local — log instead
+        if (app()->environment('local')) {
+            Log::info('Arkesel: SMS skipped (local)', [
+                'phone'   => $phone,
+                'message' => $message,
+            ]);
+            return true;
+        }
+        
         try {
             $response = Http::withHeaders([
                 'api-key' => $this->apiKey,
