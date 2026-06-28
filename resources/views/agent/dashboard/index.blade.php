@@ -6,7 +6,7 @@
                 <div>
                     <p class="text-sm text-gray-500 font-medium mb-1">
                         Agent Dashboard - <span
-                            class="font-bold text-blue-500">{{ Auth::guard('agent')->user()?->name ?? 'Agent' }}</span>
+                            class="font-bold text-blue-500">{{ Auth::guard('agent')->user()?->name ?? 'Intermediary' }}</span>
                     </p>
                     <h2 class="text-xl font-semibold text-gray-900">
                         Policy Access Portal
@@ -25,7 +25,7 @@
     </div>
 
     <!-- Search Section - Find a specific policy -->
-    {{-- <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
         <div class="flex items-start gap-3 mb-4">
             <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                 <i class="fas fa-search text-blue-600"></i>
@@ -53,7 +53,7 @@
         <p class="text-xs text-gray-400 mt-3">
             <i class="fas fa-lock text-xs"></i> Access policies that have your polices here.
         </p>
-    </div> --}}
+    </div>
 
     <!-- Assigned Policies List -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -180,10 +180,10 @@
                                     </td>
                                     <td class="px-6 py-3">
                                         <div class="text-xs font-medium text-gray-900">
-                                            {{ ucwords(strtolower($customer->name)) }}
+                                            {{ ucwords(strtolower($policy['customer_name'])) }}
                                         </div>
                                         <p class="text-xs text-gray-400 mt-0.5">
-                                            {{ $customer->external_customer_code }}
+                                            {{ $policy['customer_code'] }}
                                         </p>
                                     </td>
                                     <td class="px-6 py-3">
@@ -277,7 +277,7 @@
     <!-- Helpful Tip -->
     <div class="mt-6 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm p-4">
         <p class="text-sm font-medium text-blue-800">
-            <i class="fas fa-info-circle mr-2"></i> Agent Access Note
+            <i class="fas fa-info-circle mr-2"></i> Intermediary Access Note
         </p>
         <p class="text-sm text-blue-700 mt-1">
             Use the search box above to quickly locate a specific policy by number or vehicle registration. The list

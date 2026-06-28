@@ -196,7 +196,7 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::put('/settings/staff-update/{staff}', [StaffController::class, 'update'])->name('staff.update');
     Route::delete('/settings/staff-delete/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
 
-    // Agent Management
+    // Intermediary Management
     Route::get('/settings/create-agent', [AgentController::class, 'create'])->name('agents.create');
     Route::post('/settings/agents-store', [AgentController::class, 'store'])->name('agents.store');
     Route::get('/settings/edit-agent/{agent}', [AgentController::class, 'edit'])->name('agents.edit');

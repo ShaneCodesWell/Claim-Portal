@@ -2,9 +2,9 @@
 namespace Database\Seeders;
 
 use App\Models\Agent;
+use App\Models\Customer;
 use App\Models\Policy;
 use Illuminate\Database\Seeder;
-
 
 class AgentPoliciesSeeder extends Seeder
 {
@@ -12,17 +12,18 @@ class AgentPoliciesSeeder extends Seeder
     {
         // Grab your local test agent
         // Swap the phone number for whatever you used when registering locally
-        $agent = Agent::where('phone', '+233241277284')->firstOrFail();
+        $agent        = Agent::where('phone', '0241277284')->firstOrFail();
+        $testCustomer = Customer::first()?->id ?? null;
 
         $policies = [
 
             // 1. Single-risk motor policy
             [
-                'customer_id'         => 999001,
+                'customer_id'         => $testCustomer,
                 'agent_id'            => $agent->id,
                 'source'              => 'glims',
                 'external_policy_id'  => '30999999',
-                'policy_number'       => 'P-TEST-GLIMS-SINGLE-001',
+                'policy_number'       => 'P-201-1002-2026-000088',
                 'product_id'          => '203',
                 'product_name'        => 'MOTOR THIRD PARTY ONLY',
                 'business_class_id'   => null,
@@ -33,7 +34,7 @@ class AgentPoliciesSeeder extends Seeder
                 'renewal_date'        => '2026-03-01',
                 'last_synced_at'      => now(),
                 'raw_payload'         => [
-                    'POLICY_NUMBER'        => 'P-TEST-GLIMS-SINGLE-001',
+                    'POLICY_NUMBER'        => 'P-201-1002-2026-000088',
                     'POLICY_ID'            => 30999999,
                     'POLICY_CREATED_AT'    => '2025-03-01T09:00:00',
                     'POLICY_START_DATE'    => '2025-03-01',
@@ -43,7 +44,7 @@ class AgentPoliciesSeeder extends Seeder
                     'POLICY_PRODUCT_NAME'  => 'MOTOR THIRD PARTY ONLY',
                     'POLICY_PRODUCT_CODE'  => '203',
                     'POLICY_BRANCH_NAME'   => 'EAST LEGON',
-                    'POLICY_AGENT_CODE'    => $agent->agent_code ?? 30004,
+                    'POLICY_AGENT_CODE'    => $agent->partner_code ?? 30004,
                     'POLICY_AGENT_NAME'    => $agent->name ?? 'TEST AGENT',
                     'POLICY_CURRENCY'      => 'GHC',
                     'POLICY_TOTAL_PREMIUM' => 482,
@@ -77,11 +78,11 @@ class AgentPoliciesSeeder extends Seeder
 
             // 2. Fleet motor policy (3 vehicles)
             [
-                'customer_id'         => 999002,
+                'customer_id'         => $testCustomer,
                 'agent_id'            => $agent->id,
                 'source'              => 'glims',
                 'external_policy_id'  => '30000000',
-                'policy_number'       => 'P-TEST-GLIMS-FLEET-001',
+                'policy_number'       => 'P-201-1002-2026-000077',
                 'product_id'          => '201',
                 'product_name'        => 'MOTOR COMPREHENSIVE',
                 'business_class_id'   => null,
@@ -92,7 +93,7 @@ class AgentPoliciesSeeder extends Seeder
                 'renewal_date'        => '2026-06-01',
                 'last_synced_at'      => now(),
                 'raw_payload'         => [
-                    'POLICY_NUMBER'        => 'P-TEST-GLIMS-FLEET-001',
+                    'POLICY_NUMBER'        => 'P-201-1002-2026-000077',
                     'POLICY_ID'            => 30000000,
                     'POLICY_CREATED_AT'    => '2025-06-01T10:30:00',
                     'POLICY_START_DATE'    => '2025-06-01',
@@ -102,7 +103,7 @@ class AgentPoliciesSeeder extends Seeder
                     'POLICY_PRODUCT_NAME'  => 'MOTOR COMPREHENSIVE',
                     'POLICY_PRODUCT_CODE'  => '201',
                     'POLICY_BRANCH_NAME'   => 'ACHIMOTA',
-                    'POLICY_AGENT_CODE'    => $agent->agent_code ?? 30004,
+                    'POLICY_AGENT_CODE'    => $agent->partner_code ?? 30004,
                     'POLICY_AGENT_NAME'    => $agent->name ?? 'TEST AGENT',
                     'POLICY_CURRENCY'      => 'GHC',
                     'POLICY_TOTAL_PREMIUM' => 4200,

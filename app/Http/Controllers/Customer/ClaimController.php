@@ -87,7 +87,7 @@ class ClaimController extends Controller
         $customerIds = $customer->resolvedCustomerIds();
 
         $claims = Claim::whereIn('customer_id', $customerIds)
-            ->where('status', '!=', ClaimStatus::CANCELLED)
+            ->whereNotIn('status', ClaimStatus::notActive())
             ->with(['policy'])
             ->latest()
             ->paginate(5);

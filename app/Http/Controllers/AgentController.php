@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateAgentRequest;
 use App\Http\Resources\PolicyResource;
 use App\Models\Agent;
 use App\Models\Branch;
-use App\Models\Customer;
 use App\Models\Department;
 use App\Models\Policy;
 use Illuminate\Http\Request;
@@ -72,8 +71,8 @@ class AgentController extends Controller
      */
     public function store(StoreAgentRequest $request)
     {
-        $validated             = $request->validated();
-        $validated['password'] = bcrypt($validated['password']);
+        $validated = $request->validated();
+        // $validated['password'] = bcrypt($validated['password']);
 
         Agent::create($validated);
 
@@ -108,11 +107,11 @@ class AgentController extends Controller
     {
         $validated = $request->validated();
 
-        if (empty($validated['password'])) {
-            unset($validated['password']);
-        } else {
-            $validated['password'] = bcrypt($validated['password']);
-        }
+        // if (empty($validated['password'])) {
+        //     unset($validated['password']);
+        // } else {
+        //     $validated['password'] = bcrypt($validated['password']);
+        // }
 
         $agent->update($validated);
 

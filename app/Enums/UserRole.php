@@ -3,7 +3,6 @@ namespace App\Enums;
 
 enum UserRole: string {
     case ADMIN      = 'admin';
-    case BROKER     = 'broker';
     case CLAIM_HEAD = 'claim_head';
     case CLAIMS_ADJUSTER = 'claims_adjuster';
     case SURVEYOR = 'surveyor';
@@ -19,7 +18,6 @@ enum UserRole: string {
     {
         return [
             self::ADMIN->value,
-            self::BROKER->value,
             self::CLAIM_HEAD->value,
             self::CLAIMS_ADJUSTER->value,
             self::SURVEYOR->value,
@@ -32,7 +30,6 @@ enum UserRole: string {
     {
         return [
             self::ADMIN->value      => 'Administrator',
-            self::BROKER->value     => 'Broker',
             self::CLAIM_HEAD->value => 'Claim Head',
             self::CLAIMS_ADJUSTER->value => 'Claims Adjuster',
             self::SURVEYOR->value   => 'Surveyor',

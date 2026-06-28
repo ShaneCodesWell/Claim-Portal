@@ -125,6 +125,19 @@ enum ClaimStatus: string {
         return in_array($status, self::editable());
     }
 
+    public static function notActive(): array
+    {
+        return [
+            self::CANCELLED,
+            self::CLOSED,
+        ];
+    }
+
+    public static function isNotActive(string $status): bool
+    {
+        return in_array($status, self::notActive());
+    }
+
     // Convenience groupings
     public static function surveyStages(): array
     {

@@ -46,7 +46,7 @@
             Team & Roles
         </button>
         <button data-tab="agents" class="org-tab px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700">
-            Agents
+            Intermediaries
         </button>
     </div>
 
@@ -431,7 +431,7 @@
                 <a href="{{ route('agents.create') }}"
                     class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg transition">
                     <i class="fas fa-plus-circle text-xs"></i>
-                    Add Agent
+                    Add Intermediary
                 </a>
             </div>
             <div class="overflow-x-auto">

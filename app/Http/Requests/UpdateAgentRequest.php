@@ -43,7 +43,6 @@ class UpdateAgentRequest extends FormRequest
             'branch_id'         => 'required|exists:branches,id',
             'user_category'     => 'nullable|string|max:255',
             'sub_user_category' => 'nullable|string|max:255',
-            'password'          => 'nullable|string|min:8|confirmed',
         ];
     }
 }

@@ -4,13 +4,22 @@
         <div>
             <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <i class="fas fa-users text-blue-500 text-2xl"></i>
-                Agent Management
+                Intermediary Management
             </h2>
             <p class="text-gray-500 text-sm mt-1">
-                Edit the agent details below. To manage all agents, go back to the <a
-                    href="{{ route('organization') }}?tab=tab-agents" class="text-blue-600 hover:underline">Agents
-                    List</a>.
+                Edit the Intermediary details below. To manage all Intermediaries, go back to the
+                <a href="{{ route('organization') }}?tab=tab-agents" class="text-blue-600 hover:underline">
+                    Agents List
+                </a>.
             </p>
+        </div>
+        {{-- Back Button --}}
+        <div class="sm:ml-auto flex items-center gap-2">
+            <a href="{{ route('organization') }}?tab=tab-agents"
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </a>
         </div>
     </div>
 
@@ -19,7 +28,7 @@
         <!-- Single Staff Form -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <i class="fas fa-user-edit text-blue-500"></i> Edit Single Agent
+                <i class="fas fa-user-edit text-blue-500"></i> Edit an Intermediary
             </h3>
             <form action="{{ route('agents.update', $agent->id) }}" id="singleStaffForm" class="space-y-4"
                 method="POST">
@@ -150,21 +159,21 @@
                         </select>
                     </div>
                     {{-- Password --}}
-                    <div>
+                    {{-- <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             New Password
                         </label>
                         <input type="password" name="password"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                    </div>
+                    </div> --}}
                     {{-- Confirm Password --}}
-                    <div>
+                    {{-- <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Confirm New Password
                         </label>
                         <input type="password" name="password_confirmation"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="flex justify-end pt-2 gap-3">
                     <a href="{{ route('organization') }}?tab=tab-agents"
