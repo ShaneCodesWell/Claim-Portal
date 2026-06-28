@@ -73,7 +73,7 @@ class ClaimController extends Controller
             ->paginate(15);
 
         $stats = [
-            'total_claims'  => Claim::where('assigned_to', Auth::user()->id)->count(),
+            'total_claims'  => Claim::where('assigned_to', Auth::user()->id)->where('status', '!=', 'closed')->count(),
             'under_review'  => Claim::where('assigned_to', Auth::user()->id)->where('status', 'under_review')->count(),
             'closed_claims' => Claim::where('assigned_to', Auth::user()->id)->where('status', 'closed')->count(),
         ];

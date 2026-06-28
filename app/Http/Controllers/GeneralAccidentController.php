@@ -19,7 +19,13 @@ class GeneralAccidentController extends Controller
         $policy   = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
         $customer = Customer::findOrFail($policy->customer_id);
 
-        return view('forms.general_accident_form.index', compact('policy', 'customer', 'policyId'));
+        $formData = [
+            'fullname'        => $customer->name ?? '',
+            'email'           => $customer->email ?? '',
+            'phone'           => $customer->phone ?? '',
+        ];
+
+        return view('forms.general_accident_form.index', compact('policy', 'customer', 'policyId', 'formData'));
     }
 
     /**

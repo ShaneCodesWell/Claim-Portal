@@ -634,30 +634,31 @@
                 </div>
             @endif
 
-            {{-- Request Additional Info --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-question-circle text-amber-500"></i> Request Additional Information
-                    </h3>
+            @if (\App\Enums\ClaimStatus::isEditable($claim->status))
+                {{-- Request Additional Info --}}
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-question-circle text-amber-500"></i> Request Additional Information
+                        </h3>
+                    </div>
+                    <div class="p-5">
+                        <form action="{{ route('staff.claims.request-info', $claim) }}" method="POST"
+                            class="space-y-3">
+                            @csrf
+                            <textarea name="note" rows="3" required
+                                placeholder="Describe what additional information or documents you need from the customer..."
+                                class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 outline-none resize-none"></textarea>
+                            <button type="submit"
+                                class="bg-amber-500 hover:bg-amber-600 text-white text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                                <i class="fas fa-paper-plane text-xs"></i> Send Request
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="p-5">
-                    <form action="{{ route('staff.claims.request-info', $claim) }}" method="POST"
-                        class="space-y-3">
-                        @csrf
-                        <textarea name="note" rows="3" required
-                            placeholder="Describe what additional information or documents you need from the customer..."
-                            class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 outline-none resize-none"></textarea>
-                        <button type="submit"
-                            class="bg-amber-500 hover:bg-amber-600 text-white text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
-                            <i class="fas fa-paper-plane text-xs"></i> Send Request
-                        </button>
-                    </form>
-                </div>
-            </div>
 
-            {{-- Finalize Claim --}}
-            {{-- @if ($claim->status === \App\Enums\ClaimStatus::APPROVED && $claim->isFinalizableBy(auth()->user())) --}}
+                {{-- Finalize Claim --}}
+                {{-- @if ($claim->status === \App\Enums\ClaimStatus::APPROVED && $claim->isFinalizableBy(auth()->user())) --}}
                 <div class="bg-white rounded-xl border border-green-200 shadow-sm overflow-hidden">
                     <div class="px-5 py-4 border-b border-green-100 bg-green-50/50 flex items-center justify-between">
                         <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -669,7 +670,8 @@
                     </div>
                     <div class="p-5">
                         <p class="text-sm text-gray-500 mb-4">
-                            If all documents have been provided and claim has been approved. Finalize to mark processing as complete and notify
+                            If all documents have been provided and claim has been approved. Finalize to mark processing
+                            as complete and notify
                             the customer.
                         </p>
                         <form action="{{ route('staff.claims.finalize', $claim) }}" method="POST"
@@ -693,7 +695,8 @@
                         </form>
                     </div>
                 </div>
-            {{-- @endif --}}
+                {{-- @endif --}}
+            @endif
         </div>
     </div>
 

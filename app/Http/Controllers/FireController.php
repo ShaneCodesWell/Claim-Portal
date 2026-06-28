@@ -1,13 +1,12 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use App\Models\Policy;
-use App\Models\Fire;
-use App\Models\Customer;
-use Illuminate\Http\Request;
 use App\Http\Requests\StoreFireRequest;
 use App\Http\Requests\UpdateFireRequest;
+use App\Models\Customer;
+use App\Models\Fire;
+use App\Models\Policy;
+use Illuminate\Http\Request;
 
 class FireController extends Controller
 {
@@ -17,10 +16,16 @@ class FireController extends Controller
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
-        $policy = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
+        $policy   = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
         $customer = Customer::findOrFail($policy->customer_id);
 
-        return view('forms.fire_form.index', compact('policy', 'policyId', 'customer'));
+        $formData = [
+            'fullname' => $customer->name ?? '',
+            'email'    => $customer->email ?? '',
+            'phone'    => $customer->phone ?? '',
+        ];
+
+        return view('forms.fire_form.index', compact('policy', 'policyId', 'customer', 'formData'));
     }
 
     /**
