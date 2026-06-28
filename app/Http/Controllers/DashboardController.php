@@ -2,7 +2,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\PolicyResource;
-use App\Models\Customer;
 use App\Models\Policy;
 use App\Services\GenovaApiService;
 use App\Services\GlimsService;
@@ -44,12 +43,10 @@ class DashboardController extends Controller
         $customerIds = $customer->resolvedCustomerIds();
 
         $policies = Policy::whereIn('customer_id', $customerIds)
-            ->where('status', 'active')
+            ->where('status', '!=', 'expired')
             ->with('customer')
             ->search($request->input('search'))
             ->ofType($request->input('type'))
-        // ->ofStatus($request->input('status'))
-        // ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
             ->orderBy('last_synced_at', 'desc')
             ->paginate(6)
             ->withQueryString();
@@ -64,11 +61,17 @@ class DashboardController extends Controller
             ->distinct()
             ->pluck('business_class_name');
 
+        // Policies that are not expired are active right
         $statusCounts = Policy::whereIn('customer_id', $customerIds)
-            ->where('status', 'active')
-            ->selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+            ->selectRaw("
+                CASE
+                    WHEN status = 'expired' THEN 'expired'
+                    ELSE 'active'
+                END as status_group,
+                COUNT(*) as total
+            ")
+            ->groupBy('status_group')
+            ->pluck('total', 'status_group');
 
         return view('customer.dashboard.index', compact('customer', 'policies', 'businessClasses', 'statusCounts'));
     }

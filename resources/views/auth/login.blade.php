@@ -495,6 +495,7 @@
         </div>
     </div>
 
+    {{-- Alpine switch for type selector --}}
     <script>
         function loginForm() {
             return {
