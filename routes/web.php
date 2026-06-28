@@ -150,6 +150,7 @@ Route::middleware(['staff', 'committee'])->prefix('admin/committee')->name('comm
 Route::middleware(['agent'])->prefix('agent')->group(function () {
     // mirrors customer claim routes but with ClaimSource::AGENT_PORTAL
     Route::get('/agent/dashboard', [AgentController::class, 'index'])->name('agent.dashboard.index');
+    Route::get('/agent/search', [AgentController::class, 'search'])->name('agent.policy.search');
 
     // Claims
     Route::post('/agent/claims', [AgentClaimController::class, 'store'])->name('agent.claims.store');

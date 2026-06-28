@@ -9,6 +9,7 @@ use App\Models\Agent;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Policy;
+use App\Services\GlimsApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,6 +18,41 @@ class AgentController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // public function index(Request $request)
+    // {
+    //     $agent = Auth::guard('agent')->user();
+
+    //     if (! $agent) {
+    //         return redirect()->route('agent.login')->with('error', 'Session expired. Please login again.');
+    //     }
+
+    //     $policies = Policy::forAgent($agent->id)
+    //         ->with('customer')
+    //         ->search($request->input('search'))
+    //         ->ofType($request->input('type'))
+    //         ->ofStatus($request->input('status'))
+    //         ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
+    //         ->orderBy('last_synced_at', 'desc')
+    //         ->paginate(6)
+    //         ->withQueryString();
+
+    //     $policies->setCollection(
+    //         $policies->getCollection()->map(fn($p) => (new PolicyResource($p))->toArray(request()))
+    //     );
+
+    //     $businessClasses = Policy::forAgent($agent->id)
+    //         ->whereNotNull('business_class_name')
+    //         ->distinct()
+    //         ->pluck('business_class_name');
+
+    //     $statusCounts = Policy::forAgent($agent->id)
+    //         ->selectRaw('status, count(*) as total')
+    //         ->groupBy('status')
+    //         ->pluck('total', 'status');
+
+    //     return view('agent.dashboard.index', compact('agent', 'policies', 'businessClasses', 'statusCounts'));
+    // }
+
     public function index(Request $request)
     {
         $agent = Auth::guard('agent')->user();
@@ -25,31 +61,62 @@ class AgentController extends Controller
             return redirect()->route('agent.login')->with('error', 'Session expired. Please login again.');
         }
 
-        $policies = Policy::forAgent($agent->id)
-            ->with('customer')
-            ->search($request->input('search'))
-            ->ofType($request->input('type'))
-            ->ofStatus($request->input('status'))
-            ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
-            ->orderBy('last_synced_at', 'desc')
-            ->paginate(6)
-            ->withQueryString();
+        return view('agent.dashboard.index', [
+            'agent'           => $agent,
+            'policies'        => collect(),
+            'businessClasses' => collect(),
+            'statusCounts'    => collect(),
+            'searchResult'    => null,
+            'searchQuery'     => null,
+        ]);
+    }
 
-        $policies->setCollection(
-            $policies->getCollection()->map(fn($p) => (new PolicyResource($p))->toArray(request()))
-        );
+    public function search(Request $request, GlimsApiService $glims)
+    {
+        $agent = Auth::guard('agent')->user();
 
-        $businessClasses = Policy::forAgent($agent->id)
-            ->whereNotNull('business_class_name')
-            ->distinct()
-            ->pluck('business_class_name');
+        if (! $agent) {
+            return redirect()->route('agent.login');
+        }
 
-        $statusCounts = Policy::forAgent($agent->id)
-            ->selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $policyNumber = trim($request->input('policy_number'));
 
-        return view('agent.dashboard.index', compact('agent', 'policies', 'businessClasses', 'statusCounts'));
+        if (empty($policyNumber)) {
+            return redirect()->route('agent.dashboard.index');
+        }
+
+        // Check local DB first — verifies this policy belongs to this agent
+        $localPolicy = Policy::where('policy_number', $policyNumber)
+            ->where('agent_id', $agent->id)
+            ->first();
+
+        if (! $localPolicy) {
+            return view('agent.dashboard.index', [
+                'agent'           => $agent,
+                'policies'        => collect(),
+                'businessClasses' => collect(),
+                'statusCounts'    => collect(),
+                'searchResult'    => null,
+                'searchQuery'     => $policyNumber,
+                'searchError'     => 'No policy found with that number in your portfolio.',
+            ]);
+        }
+
+        // Fetch rich details from GLIMS for display
+        $details = $glims->getPolicyDetails($policyNumber);
+
+        return view('agent.dashboard.index', [
+            'agent'           => $agent,
+            'policies'        => collect(),
+            'businessClasses' => collect(),
+            'statusCounts'    => collect(),
+            'searchResult'    => [
+                'local'   => (new PolicyResource($localPolicy))->toArray(request()),
+                'details' => $details, // rich vehicle/risk data
+            ],
+            'searchQuery'     => $policyNumber,
+            'searchError'     => null,
+        ]);
     }
 
     /**
