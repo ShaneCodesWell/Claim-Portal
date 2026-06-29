@@ -5,7 +5,7 @@
         Back
     </a>
     <div class="flex justify-center">
-        <div class="grid grid-cols-1 lg:grid-cols-1 gap-6 px-32">
+        <div class="grid grid-cols-1 gap-6 px-4 sm:px-8 lg:px-32 w-full">
             <div class="lg:col-span-2">
                 @include('partials.forms.general-accident-form', [
                     'formData' => $formData,

@@ -15,9 +15,9 @@
     <div class="overflow-hidden border border-gray-200">
 
         {{-- Header --}}
-        <div class="px-8 pt-6 pb-0 bg-white">
-            <div class="grid grid-cols-[160px_1fr_auto] items-start gap-6">
-                <div class="pt-1">
+        <div class="px-4 sm:px-6 md:px-8 pt-6 pb-0 bg-white">
+            <div class="grid grid-cols-1 md:grid-cols-[160px_1fr_auto] items-center md:items-start gap-4 md:gap-6">
+                <div class="flex justify-center md:justify-start pt-1">
                     <img src="{{ asset('images/Vanguard.png') }}" alt="Vanguard Assurance Logo"
                         class="w-36 h-12 object-contain" />
                 </div>
@@ -29,7 +29,7 @@
                         We always stand by you
                     </p>
                 </div>
-                <div class="text-right text-[11px] text-gray-500 leading-relaxed pt-1">
+                <div class="text-center md:text-right text-[11px] text-gray-500 leading-relaxed pt-1">
                     <p>vacmmails@vanguardassurance.com</p>
                     <p>claimsdepartment@vanguardassurance.com</p>
                     <p>030 266 6485 / 6486 / 6487</p>
@@ -40,7 +40,7 @@
         </div>
 
         {{-- Title band --}}
-        <div class="bg-[#0b529d] px-8 py-2.5 flex items-center justify-center gap-4">
+        <div class="bg-[#0b529d] px-4 sm:px-6 md:px-8 py-2.5 flex items-center justify-center gap-4">
             <div class="flex-1 border-t border-white/20"></div>
             <p class="text-[13px] font-medium tracking-widest uppercase text-white whitespace-nowrap">
                 Motor Accident Report Form{{ $isEdit ? ' — Edit' : '' }}
@@ -50,14 +50,14 @@
 
         {{-- Context banner --}}
         @if ($isEdit && $isStaff)
-            <div class="bg-indigo-50 border-b border-indigo-200 px-8 py-2 text-center">
+            <div class="bg-indigo-50 border-b border-indigo-200 px-4 sm:px-6 md:px-8 py-2 text-center">
                 <p class="text-[11.5px] text-indigo-700 font-medium">
                     <i class="fas fa-user-shield mr-1"></i>
                     Editing as staff — all changes will be logged with your name and timestamp.
                 </p>
             </div>
         @elseif($isEdit)
-            <div class="bg-amber-50 border-b border-amber-200 px-8 py-2 text-center">
+            <div class="bg-amber-50 border-b border-amber-200 px-4 sm:px-6 md:px-8 py-2 text-center">
                 <p class="text-[11.5px] text-amber-700 font-medium">
                     <i class="fas fa-edit mr-1"></i>
                     Editing claim <strong>{{ $claim->claim_number }}</strong> — fields are pre-filled with your original
@@ -65,7 +65,7 @@
                 </p>
             </div>
         @else
-            <div class="bg-gray-50 border-b border-gray-200 px-8 py-2 text-center">
+            <div class="bg-gray-50 border-b border-gray-200 px-4 sm:px-6 md:px-8 py-2 text-center">
                 <p class="text-[11.5px] text-gray-500">
                     Please complete all sections accurately. Fields marked * are required.
                 </p>
@@ -74,7 +74,7 @@
 
     </div>
 
-    <div class="py-6 px-12">
+    <div class="py-4 px-4 sm:px-6 md:px-8 lg:px-12">
 
         {{-- Note box --}}
         <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-lg">
@@ -175,7 +175,7 @@
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Is the vehicle the subject of a hire
                         purchase or loan agreement? <span class="text-red-500">*</span></label>
-                    <div class="flex gap-4">
+                    <div class="flex flex-wrap gap-4">
                         <label class="flex items-center">
                             <input type="radio" name="hire_purchase" value="yes" class="conditional-radio mr-2"
                                 data-target="financeCompanySection"
@@ -209,7 +209,7 @@
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Was the vehicle being used with your
                         consent? <span class="text-red-500">*</span></label>
-                    <div class="flex gap-4">
+                    <div class="flex flex-wrap gap-4">
                         <label class="flex items-center">
                             <input type="radio" name="vehicleConsent" value="yes" class="mr-2"
                                 {{ ($f['vehicle_consent'] ?? '') === 'yes' ? 'checked' : '' }}> Yes
@@ -410,7 +410,7 @@
 
                 {{-- Injured in your vehicle --}}
                 <div class="mb-8">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <h4 class="text-md font-semibold text-gray-700">Injured Persons in Your Vehicle</h4>
                         <button type="button" onclick="addInjuredPerson('yourVehicle')"
                             class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
@@ -480,82 +480,8 @@
                     </div>
                 </div>
 
-                {{-- Injured in other vehicle --}}
-                {{-- <div class="mb-8">
-                    <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-md font-semibold text-gray-700">Injured Persons in Other Vehicle</h4>
-                        <button type="button" onclick="addInjuredPerson('otherVehicle')"
-                            class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-                            <i class="fas fa-plus mr-1"></i> Add
-                        </button>
-                    </div>
-                    <div id="otherVehicleInjuredPersons" class="space-y-4">
-                        @php
-                            $otherInjuredPersons = json_decode($f['other_vehicle_injured'] ?? '[]', true);
-                            if (!is_array($otherInjuredPersons)) {
-                                $otherInjuredPersons = [];
-                            }
-                        @endphp
-                        @forelse($otherInjuredPersons as $i => $person)
-                            <div class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                        <input type="text" name="other_vehicle_injured[{{ $i }}][name]"
-                                            value="{{ $person['name'] ?? '' }}"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                    </div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                                        <input type="number" name="other_vehicle_injured[{{ $i }}][age]"
-                                            value="{{ $person['age'] ?? '' }}"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                    </div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                        <input type="text"
-                                            name="other_vehicle_injured[{{ $i }}][address]"
-                                            value="{{ $person['address'] ?? '' }}"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                    </div>
-                                </div>
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Extent of
-                                        Injuries</label>
-                                    <textarea name="other_vehicle_injured[{{ $i }}][injuries]" rows="2"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $person['injuries'] ?? '' }}</textarea>
-                                </div>
-                                <div class="mt-2 flex justify-end">
-                                    <button type="button" onclick="removeInjuredPerson(this)"
-                                        class="text-red-600 hover:text-red-800 text-sm">
-                                        <i class="fas fa-trash mr-1"></i> Remove
-                                    </button>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                        <input type="text" name="other_vehicle_injured[0][name]"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                    </div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                                        <input type="number" name="other_vehicle_injured[0][age]"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                    </div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                        <input type="text" name="other_vehicle_injured[0][address]"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                    </div>
-                                </div>
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Extent of
-                                        Injuries</label>
-                                    <textarea name="other_vehicle_injured[0][injuries]" rows="2"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
-                                </div>
-                            </div>
-                        @endforelse
-                    </div>
-                </div> --}}
-
                 <div class="mb-6">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <label class="block text-sm font-medium text-gray-700">Details of vehicles involved</label>
                         <button type="button" onclick="addVehicle()"
                             class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
@@ -645,31 +571,11 @@
                     <textarea name="other_vehicle_damage" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['other_vehicle_damage'] ?? '' }}</textarea>
                 </div>
 
-                {{-- Claim made --}}
-                {{-- <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Has any claim been made upon you? <span
-                            class="text-red-500">*</span></label>
-                    <div class="flex gap-4">
-                        <label class="flex items-center"><input type="radio" name="claim_made" value="yes"
-                                class="conditional-radio mr-2" data-target="claimMadeSection"
-                                {{ ($f['claim_made'] ?? '') === 'yes' ? 'checked' : '' }}> Yes</label>
-                        <label class="flex items-center"><input type="radio" name="claim_made" value="no"
-                                class="conditional-radio mr-2" data-target="claimMadeSection"
-                                {{ ($f['claim_made'] ?? '') === 'no' ? 'checked' : '' }}> No</label>
-                    </div>
-                    <div id="claimMadeSection"
-                        class="{{ ($f['claim_made'] ?? '') === 'yes' ? '' : 'hidden' }} mt-3 pl-4 border-l-2 border-blue-200">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">State particulars below <span
-                                class="text-red-500">*</span></label>
-                        <textarea name="claim_made_details" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['claim_made_details'] ?? '' }}</textarea>
-                    </div>
-                </div> --}}
-
                 {{-- Police report --}}
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Was the accident reported to the
                         police? <span class="text-red-500">*</span></label>
-                    <div class="flex gap-4">
+                    <div class="flex flex-wrap gap-4">
                         <label class="flex items-center"><input type="radio" name="police_report" value="yes"
                                 class="conditional-radio mr-2" data-target="policeReportSection"
                                 {{ ($f['police_report'] ?? '') === 'yes' ? 'checked' : '' }}> Yes</label>
@@ -684,33 +590,6 @@
                         <textarea name="police_report_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['police_report_details'] ?? '' }}</textarea>
                     </div>
                 </div>
-
-                {{-- <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Name Police Officer who took
-                        particulars <span class="text-red-500">*</span></label>
-                    <input type="text" name="officer_details" value="{{ $f['officer_details'] ?? '' }}"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                </div> --}}
-
-                {{-- Indemnifying policy --}}
-                {{-- <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Do you hold more than one policy
-                        indemnifying you in respect of this accident? <span class="text-red-500">*</span></label>
-                    <div class="flex gap-4">
-                        <label class="flex items-center"><input type="radio" name="indem_policy" value="yes"
-                                class="conditional-radio mr-2" data-target="indemPolicySection"
-                                {{ ($f['indem_policy'] ?? '') === 'yes' ? 'checked' : '' }}> Yes</label>
-                        <label class="flex items-center"><input type="radio" name="indem_policy" value="no"
-                                class="conditional-radio mr-2" data-target="indemPolicySection"
-                                {{ ($f['indem_policy'] ?? '') === 'no' ? 'checked' : '' }}> No</label>
-                    </div>
-                    <div id="indemPolicySection"
-                        class="{{ ($f['indem_policy'] ?? '') === 'yes' ? '' : 'hidden' }} mt-3 pl-4 border-l-2 border-blue-200">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">State the details of the other
-                            policy.</label>
-                        <textarea name="indem_policy_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['indem_policy_details'] ?? '' }}</textarea>
-                    </div>
-                </div> --}}
             </section>
 
             {{-- ── SECTION 5: DOCUMENTS ── --}}
@@ -726,7 +605,7 @@
                         <div class="space-y-2">
                             @foreach ($claim->documents as $doc)
                                 <div
-                                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    class="flex flex-wrap items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                                     <div class="flex items-center gap-2">
                                         <i
                                             class="fas {{ str_contains($doc->mime_type, 'pdf') ? 'fa-file-pdf text-red-400' : 'fa-image text-blue-400' }} text-sm"></i>
@@ -761,7 +640,8 @@
                     <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/gif,application/pdf"
                         multiple class="hidden">
                 </div>
-                <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                </div>
             </section>
 
             {{-- ── SECTION 6: STAFF NOTE (staff edit only) ── --}}
@@ -840,9 +720,10 @@
             @endif
 
             {{-- ── ACTION BUTTONS ── --}}
-            <div class="mt-8 pt-4 border-t border-gray-200 flex items-center gap-3">
+            <div
+                class="mt-8 pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <button type="submit"
-                    class="px-6 py-2 {{ $isStaff ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700' }} text-white font-medium rounded-lg transition flex items-center gap-2">
+                    class="w-full sm:w-auto px-6 py-2 {{ $isStaff ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700' }} text-white font-medium rounded-lg transition flex items-center justify-center gap-2">
                     @if (!$isEdit)
                         <span>Submit Claim</span><i class="fas fa-paper-plane"></i>
                     @else
@@ -851,7 +732,7 @@
                 </button>
                 @if ($isEdit)
                     <a href="{{ $isStaff ? route('staff.claims.show', $claim) : route('claims.show', $claim) }}"
-                        class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition">
+                        class="w-full sm:w-auto px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition text-center">
                         Cancel
                     </a>
                 @endif

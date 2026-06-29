@@ -9,15 +9,12 @@
     <!-- Header -->
     <div class="overflow-hidden border border-gray-200">
 
-        {{-- Top accent bar --}}
-        {{-- <div class="h-1 bg-[#1a3a5c]"></div> --}}
-
         {{-- Main header --}}
-        <div class="px-8 pt-6 pb-0 bg-white">
-            <div class="grid grid-cols-[160px_1fr_auto] items-start gap-6">
+        <div class="px-4 sm:px-6 md:px-8 pt-6 pb-0 bg-white">
+            <div class="grid grid-cols-1 md:grid-cols-[160px_1fr_auto] items-center md:items-start gap-4 md:gap-6">
 
                 {{-- Logo --}}
-                <div class="pt-1">
+                <div class="flex justify-center md:justify-start pt-1">
                     <img src="{{ asset('images/Vanguard.png') }}" alt="Vanguard Assurance Logo"
                         class="w-36 h-12 object-contain" />
                 </div>
@@ -33,7 +30,7 @@
                 </div>
 
                 {{-- Contact info --}}
-                <div class="text-right text-[11px] text-gray-500 leading-relaxed pt-1">
+                <div class="text-center md:text-right text-[11px] text-gray-500 leading-relaxed pt-1">
                     <p>vacmmails@vanguardassurance.com</p>
                     <p>claimsdepartment@vanguardassurance.com</p>
                     <p>030 266 6485 / 6486 / 6487</p>
@@ -46,7 +43,7 @@
         </div>
 
         {{-- Document title band --}}
-        <div class="bg-[#0b529d] px-8 py-2.5 flex items-center justify-center gap-4">
+        <div class="bg-[#0b529d] px-4 sm:px-6 md:px-8 py-2.5 flex items-center justify-center gap-4">
             <div class="flex-1 border-t border-white/20"></div>
             <p class="text-[13px] font-medium tracking-widest uppercase text-white whitespace-nowrap">
                 Fire Claim Form
@@ -55,7 +52,7 @@
         </div>
 
         {{-- Subtitle --}}
-        <div class="bg-gray-50 border-b border-gray-200 px-8 py-2 text-center">
+        <div class="bg-gray-50 border-b border-gray-200 px-4 sm:px-6 md:px-8 py-2 text-center">
             <p class="text-[11.5px] text-gray-500">
                 Please complete all sections accurately. Fields marked * are required.
             </p>
@@ -63,7 +60,7 @@
 
     </div>
 
-    <div class="py-6 px-12">
+    <div class="py-4 px-4 sm:px-6 md:px-8 lg:px-12">
         <!-- Note box (warning) -->
         <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-lg">
             <p class="text-sm text-gray-700 leading-relaxed">
@@ -86,23 +83,22 @@
             <section class="mb-8">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-file-contract text-blue-500"></i>  --}}
                     I. Policy & Insured Information
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Policy
-                            No.</label><x-input name="policy_no" required /></div>
+                            No.</label><x-input name="policy_no" class="w-full" required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Renewal
                             Date</label><input type="date" name="renewal_date"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                             required /></div>
                     <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Name of
-                            Insured</label><x-input name="insured_name" required /></div>
+                            Insured</label><x-input name="insured_name" class="w-full" required /></div>
                     <div class="md:col-span-2"><label
                             class="block text-sm font-medium text-gray-700 mb-1">Address</label><x-input name="address"
-                            required /></div>
+                            class="w-full" required /></div>
                     <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Nature of
-                            Business</label><x-input name="nature_of_business" required /></div>
+                            Business</label><x-input name="nature_of_business" class="w-full" required /></div>
                 </div>
             </section>
 
@@ -110,26 +106,26 @@
             <section class="mb-8">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-fire text-blue-500"></i>  --}}
                     II. Details of Loss/Incident
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Date and Time of
-                            Accident</label><x-input name="incident_datetime" type="datetime-local" required /></div>
+                            Accident</label><x-input name="incident_datetime" type="datetime-local" class="w-full"
+                            required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Exact
-                            Location</label><x-input name="exact_location" required /></div>
+                            Location</label><x-input name="exact_location" class="w-full" required /></div>
                 </div>
                 <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Description
-                        of Incident</label><x-textarea name="incident_description" rows="3" required /></div>
+                        of Incident</label><x-textarea name="incident_description" rows="3" class="w-full"
+                        required /></div>
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Nature of Damage/Loss to
-                        Property</label><x-textarea name="damage_nature" rows="3" required /></div>
+                        Property</label><x-textarea name="damage_nature" rows="3" class="w-full" required /></div>
             </section>
 
             {{-- Section 3: Particulars of Claim (Table) --}}
             <section class="mb-8">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                     <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                        {{-- <i class="fas fa-table-list text-blue-500"></i>  --}}
                         III. Particulars of Claim
                     </h3>
                     <button type="button" onclick="addPropertyRow()"
@@ -196,22 +192,22 @@
             <section class="mb-8">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-flag-checkered text-blue-500"></i>  --}}
                     IV. Reports & Witness Information
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Name and
                             address of any
-                            person injured</label><x-input name="injured_persons" /></div>
+                            person injured</label><x-input name="injured_persons" class="w-full" /></div>
                     <x-conditional-section question="Was it reported to the Police?" name="police_reported"
                         yes-section-id="policeDetails" required="true">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Police Witness/Officer
                             Number & Evidence Details</label>
-                        <x-textarea name="police_evidence" rows="2" />
+                        <x-textarea name="police_evidence" rows="2" class="w-full" />
                     </x-conditional-section>
                     <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Other
                             Information
-                            Necessary</label><x-textarea name="additional_info" rows="2" /></div>
+                            Necessary</label><x-textarea name="additional_info" rows="2" class="w-full" />
+                    </div>
                 </div>
             </section>
 
@@ -219,7 +215,6 @@
             <section class="mb-8">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-camera text-blue-500"></i>  --}}
                     Add Images
                 </h3>
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition cursor-pointer"
@@ -231,7 +226,8 @@
                     <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/gif" multiple
                         class="hidden">
                 </div>
-                <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                </div>
             </section>
 
             {{-- DECLARATION --}}

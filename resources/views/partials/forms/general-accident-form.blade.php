@@ -2,22 +2,18 @@
     $f = $formData ?? [];
     $isStaff = ($context ?? 'customer') === 'staff';
     $isEdit = !is_null($claim ?? null);
-
 @endphp
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <!-- Header with logo and company details (matching motor/fire forms) -->
     <div class="overflow-hidden border border-gray-200">
 
-        {{-- Top accent bar --}}
-        {{-- <div class="h-1 bg-[#1a3a5c]"></div> --}}
-
         {{-- Main header --}}
-        <div class="px-8 pt-6 pb-0 bg-white">
-            <div class="grid grid-cols-[160px_1fr_auto] items-start gap-6">
+        <div class="px-4 sm:px-6 md:px-8 pt-6 pb-0 bg-white">
+            <div class="grid grid-cols-1 md:grid-cols-[160px_1fr_auto] items-center md:items-start gap-4 md:gap-6">
 
                 {{-- Logo --}}
-                <div class="pt-1">
+                <div class="flex justify-center md:justify-start pt-1">
                     <img src="{{ asset('images/Vanguard.png') }}" alt="Vanguard Assurance Logo"
                         class="w-36 h-12 object-contain" />
                 </div>
@@ -33,7 +29,7 @@
                 </div>
 
                 {{-- Contact info --}}
-                <div class="text-right text-[11px] text-gray-500 leading-relaxed pt-1">
+                <div class="text-center md:text-right text-[11px] text-gray-500 leading-relaxed pt-1">
                     <p>vacmmails@vanguardassurance.com</p>
                     <p>claimsdepartment@vanguardassurance.com</p>
                     <p>030 266 6485 / 6486 / 6487</p>
@@ -46,7 +42,7 @@
         </div>
 
         {{-- Document title band --}}
-        <div class="bg-[#0b529d] px-8 py-2.5 flex items-center justify-center gap-4">
+        <div class="bg-[#0b529d] px-4 sm:px-6 md:px-8 py-2.5 flex items-center justify-center gap-4">
             <div class="flex-1 border-t border-white/20"></div>
             <p class="text-[13px] font-medium tracking-widest uppercase text-white whitespace-nowrap">
                 Travel Protection Claim Form
@@ -55,7 +51,7 @@
         </div>
 
         {{-- Subtitle --}}
-        <div class="bg-gray-50 border-b border-gray-200 px-8 py-2 text-center">
+        <div class="bg-gray-50 border-b border-gray-200 px-4 sm:px-6 md:px-8 py-2 text-center">
             <p class="text-[11.5px] text-gray-500">
                 Please complete all sections accurately. Fields marked * are required.
             </p>
@@ -63,7 +59,7 @@
 
     </div>
 
-    <div class="py-6 px-12">
+    <div class="py-4 px-4 sm:px-6 md:px-8 lg:px-12">
         <!-- Note box (original content, restyled) -->
         <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-lg">
             <div class="flex items-start gap-3">
@@ -108,15 +104,12 @@
             <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-file-alt text-blue-500"></i>  --}}
                     THIS FORM MUST BE COMPLETED IN FULL
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Selling Agent/Broker
-                            <span class="text-red-500">*</span></label><x-input name="agent_broker" required /></div>
-                    {{-- <div><label class="block text-sm font-medium text-gray-700 mb-1">Policy Number <span
-                                            class="text-red-500">*</span></label><x-input name="policy_no"
-                                        :value="$policy->policy_number" readonly required /></div> --}}
+                            <span class="text-red-500">*</span></label><x-input name="agent_broker" class="w-full"
+                            required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Departure Date <span
                                 class="text-red-500">*</span></label><input type="date" name="departure_date"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -132,40 +125,43 @@
             <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-user-circle text-blue-500"></i>  --}}
                     INSURED PERSON
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Surname <span
-                                class="text-red-500">*</span></label><x-input name="surname" required />
+                                class="text-red-500">*</span></label><x-input name="surname" class="w-full" required />
                     </div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">First Name(s) <span
-                                class="text-red-500">*</span></label><x-input name="firstname" required />
+                                class="text-red-500">*</span></label><x-input name="firstname" class="w-full"
+                            required />
                     </div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Age <span
-                                class="text-red-500">*</span></label><x-input name="insured_age" required />
+                                class="text-red-500">*</span></label><x-input name="insured_age" class="w-full"
+                            required />
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Postal Address <span
-                                class="text-red-500">*</span></label><x-input name="postal_address" required /></div>
+                                class="text-red-500">*</span></label><x-input name="postal_address" class="w-full"
+                            required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Code</label><x-input
-                            name="postal_code" /></div>
+                            name="postal_code" class="w-full" /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Physical Address <span
-                                class="text-red-500">*</span></label><x-input name="physical_address" required /></div>
+                                class="text-red-500">*</span></label><x-input name="physical_address" class="w-full"
+                            required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Address
-                            Code</label><x-input name="address_code" /></div>
+                            Code</label><x-input name="address_code" class="w-full" /></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Business</label><x-input
-                            name="business" /></div>
+                            name="business" class="w-full" /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">FAX</label><x-input
-                            name="fax" /></div>
+                            name="fax" class="w-full" /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Res/Cell</label><x-input
-                            name="res_cell" /></div>
+                            name="res_cell" class="w-full" /></div>
                 </div>
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Email
-                        Address</label><x-input name="email" /></div>
+                        Address</label><x-input name="email" class="w-full" /></div>
             </section>
 
             <!-- Conditional Sections: Contacted AAFIYA & Police Report -->
@@ -174,7 +170,7 @@
                     name="contacted_aafiya" yes-section-id="contactedAafiyaDetails" required="true">
                     <label class="block text-sm font-medium text-gray-700 mb-1">If Yes, Please provide
                         details... <span class="text-red-500">*</span></label>
-                    <x-textarea name="contacted_aafiya_details" rows="3"
+                    <x-textarea name="contacted_aafiya_details" rows="3" class="w-full"
                         placeholder="Describe the details here..." />
                 </x-conditional-section>
 
@@ -182,7 +178,7 @@
                     yes-section-id="policeReportDetails" required="true">
                     <label class="block text-sm font-medium text-gray-700 mb-1">If Yes, Please provide
                         details... <span class="text-red-500">*</span></label>
-                    <x-textarea name="police_report_details" rows="2"
+                    <x-textarea name="police_report_details" rows="2" class="w-full"
                         placeholder="Describe the details here..." />
                 </x-conditional-section>
             </section>
@@ -191,7 +187,6 @@
             <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-stethoscope text-blue-500"></i>  --}}
                     SECTION 1 - MEDICAL AND RELATED EXPENSES
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -202,28 +197,30 @@
                             required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Place of Illness /
                             Injury <span class="text-red-500">*</span></label><x-input name="place_of_illness"
-                            required /></div>
+                            class="w-full" required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Cause of Illness /
                             Injury <span class="text-red-500">*</span></label><x-input name="cause_of_illness"
-                            required /></div>
+                            class="w-full" required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Diagnosis <span
-                                class="text-red-500">*</span></label><x-input name="diagnosis_sec1" required /></div>
+                                class="text-red-500">*</span></label><x-input name="diagnosis_sec1" class="w-full"
+                            required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name of Doctor
                             Consulted <span class="text-red-500">*</span></label><x-input name="doctor_fullname_sec1"
-                            required /></div>
+                            class="w-full" required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Telephone of Doctor
                             Consulted <span class="text-red-500">*</span></label><x-input name="doctor_telephone"
-                            required /></div>
+                            class="w-full" required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Name Of Hospital
                             Admitted To <span class="text-red-500">*</span></label><x-input name="hospital_name"
-                            required /></div>
+                            class="w-full" required /></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Total Amount Claimed
                             <span class="text-red-500">*</span></label><x-input name="total_amount_claimed"
-                            required /></div>
+                            class="w-full" required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Currency <span
-                                class="text-red-500">*</span></label><x-input name="currency" required />
+                                class="text-red-500">*</span></label><x-input name="currency" class="w-full"
+                            required />
                     </div>
                 </div>
                 <x-conditional-section
@@ -231,13 +228,13 @@
                     name="treatment_received" yes-section-id="treatment_received_details" required="true">
                     <label class="block text-sm font-medium text-gray-700 mb-1">If Yes, a report from your
                         treating doctor detailing your medical history <span class="text-red-500">*</span></label>
-                    <x-textarea name="treatment_received_details" rows="3"
+                    <x-textarea name="treatment_received_details" rows="3" class="w-full"
                         placeholder="Describe the details here..." required />
                 </x-conditional-section>
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Have Submitted accounts
                         been paid? <span class="text-red-500">*</span></label>
-                    <div class="flex gap-4"><label class="flex items-center"><input type="radio"
+                    <div class="flex flex-wrap gap-4"><label class="flex items-center"><input type="radio"
                                 name="submitted_accounts_yn" value="yes" required class="mr-2">
                             Yes</label><label class="flex items-center"><input type="radio"
                                 name="submitted_accounts_yn" value="no" required class="mr-2">
@@ -249,13 +246,12 @@
             <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-file-invoice text-blue-500"></i>  --}}
                     SECTION 2 - DETAILS OF CLAIM
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name Of Subject
                             Of Claim <span class="text-red-500">*</span></label><x-input name="claim_subject_name"
-                            required /></div>
+                            class="w-full" required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Date Of Birth <span
                                 class="text-red-500">*</span></label><input type="date" name="dob_claim"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -267,9 +263,10 @@
                             required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Attending Doctor's
                             Full Name <span class="text-red-500">*</span></label><x-input name="doctor_fullname_sec2"
-                            required /></div>
+                            class="w-full" required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Diagnosis <span
-                                class="text-red-500">*</span></label><x-input name="diagnosis_sec2" required /></div>
+                                class="text-red-500">*</span></label><x-input name="diagnosis_sec2" class="w-full"
+                            required /></div>
                 </div>
                 <x-conditional-section
                     question="Has the above-mentioned person suffered previously from Illness/Injury"
@@ -277,7 +274,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">If Yes, A report from the
                         treating doctor detailing medical history is required <span
                             class="text-red-500">*</span></label>
-                    <x-textarea name="previous_injury_details" rows="3"
+                    <x-textarea name="previous_injury_details" rows="3" class="w-full"
                         placeholder="Describe the details here..." required />
                 </x-conditional-section>
             </section>
@@ -286,25 +283,30 @@
             <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-university text-blue-500"></i>  --}}
                     SECTION 3 - ELECTRONIC FUNDS
                     TRANSFER, DECLARATION AND AUTHORITY
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Account Holder's Name
-                            <span class="text-red-500">*</span></label><x-input name="account_holder_name" required />
+                            <span class="text-red-500">*</span></label><x-input name="account_holder_name"
+                            class="w-full" required />
                     </div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Account Number <span
-                                class="text-red-500">*</span></label><x-input name="account_number" required /></div>
+                                class="text-red-500">*</span></label><x-input name="account_number" class="w-full"
+                            required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Name Of Bank <span
-                                class="text-red-500">*</span></label><x-input name="bank_name" required />
+                                class="text-red-500">*</span></label><x-input name="bank_name" class="w-full"
+                            required />
                     </div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Type Of Account <span
-                                class="text-red-500">*</span></label><x-input name="account_type" required /></div>
+                                class="text-red-500">*</span></label><x-input name="account_type" class="w-full"
+                            required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Branch Name <span
-                                class="text-red-500">*</span></label><x-input name="branch_name" required /></div>
+                                class="text-red-500">*</span></label><x-input name="branch_name" class="w-full"
+                            required /></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Branch Code <span
-                                class="text-red-500">*</span></label><x-input name="branch_code" required /></div>
+                                class="text-red-500">*</span></label><x-input name="branch_code" class="w-full"
+                            required /></div>
                 </div>
             </section>
 
@@ -312,12 +314,11 @@
             <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-globe text-blue-500"></i>  --}}
                     General Section
                 </h3>
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Have you incurred any
                         travel claims in the past 5 years? If so, please supply details
-                        below:</label><x-textarea name="general_section" rows="2"
+                        below:</label><x-textarea name="general_section" rows="2" class="w-full"
                         placeholder="Describe the details here..." required /></div>
             </section>
 
@@ -325,7 +326,6 @@
             <section class="mb-8">
                 <h3
                     class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    {{-- <i class="fas fa-camera text-blue-500"></i>  --}}
                     Add Images
                 </h3>
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition cursor-pointer"
@@ -337,7 +337,8 @@
                     <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/gif" multiple
                         class="hidden">
                 </div>
-                <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                </div>
             </section>
 
             {{-- DECLARATION --}}
