@@ -131,7 +131,7 @@
                         <i class="fas fa-history text-orange-500"></i> Activity Timeline
                     </h3>
                 </div>
-                <div class="p-5">
+                <div class="p-5 max-h-96 overflow-y-auto">
                     @forelse($claim->activities as $activity)
                         @php
                             $activityIcons = [

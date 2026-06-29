@@ -267,7 +267,8 @@
                         <i class="fas fa-history text-blue-500"></i> Activity Timeline
                     </h3>
                 </div>
-                <div class="p-5">
+                {{-- Scrollable container – add max height and overflow --}}
+                <div class="p-5 max-h-96 overflow-y-auto">
                     @forelse($claim->activities as $activity)
                         @php
                             $activityIcons = [
