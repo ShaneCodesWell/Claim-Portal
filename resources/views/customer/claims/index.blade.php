@@ -202,10 +202,10 @@
                 Contact our claims support team for assistance with pending or in-progress claims.
             </p>
         </div>
-        <button
+        <a href="tel:+233302666485"
             class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 w-full sm:w-auto justify-center">
             <i class="fas fa-headset"></i> Contact Support
-        </button>
+        </a>
     </div>
     {{-- Flash Messages --}}
     @if (session('success') || session('error'))

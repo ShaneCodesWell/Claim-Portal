@@ -14,12 +14,15 @@
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-clipboard-list w-5"></i>
                 <span>My Policies</span>
-                {{-- <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">3</span> --}}
+                <span
+                    class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['my_policies'] }}</span>
             </a>
             <a href="{{ route('claims.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-file-alt w-5"></i>
                 <span>My Claims</span>
+                <span
+                    class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['my_claims'] }}</span>
             </a>
 
             <div class="pt-4 mt-4 border-t border-gray-100">
