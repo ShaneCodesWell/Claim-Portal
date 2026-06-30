@@ -14,6 +14,7 @@ use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\Staff\CommitteeClaimController;
 use App\Http\Controllers\Staff\GlimsSyncController;
+use App\Http\Controllers\Staff\StaffPolicySearchController;
 use App\Http\Controllers\Surveyor\ClaimController as SurveyorClaimController;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Agent\ClaimController as AgentClaimController;
@@ -119,6 +120,10 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     // Customers
     Route::get('/staff/customers', [StaffController::class, 'customers'])->name('customers.index');
     Route::get('/staff/customers/{customer}', [StaffController::class, 'showCustomer'])->name('customers.show');
+
+    // Walk-in / staff-initiated policy search
+    Route::get('/staff/policy-search', [StaffPolicySearchController::class, 'index'])->name('staff.policy-search.index');
+    Route::post('/staff/policy-search', [StaffPolicySearchController::class, 'search'])->name('staff.policy-search.search');
 
     Route::get('/customers/{customer}/claims/create', [StaffClaimController::class, 'create'])->name('customers.claims.create');
     Route::post('/customers/{customer}/claims', [StaffClaimController::class, 'store'])->name('customers.claims.store');

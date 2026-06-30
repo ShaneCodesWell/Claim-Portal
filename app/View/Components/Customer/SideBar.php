@@ -1,6 +1,7 @@
 <?php
 namespace App\View\Components\Customer;
 
+use App\Enums\ClaimStatus;
 use App\Models\Claim;
 use App\Models\Policy;
 use Closure;
@@ -23,7 +24,7 @@ class SideBar extends Component
 
         $this->stats = [
             'my_policies' => Policy::whereIn('customer_id', $customerIds)->where('status', 'active')->count(),
-            'my_claims'   => Claim::whereIn('customer_id', $customerIds)->where('status', 'active')->count(),
+            'my_claims'   => Claim::whereIn('customer_id', $customerIds)->whereIn('status', ClaimStatus::editable())->count(),
         ];
     }
 

@@ -36,6 +36,8 @@ class Claim extends Model
         'committee_decided_at',
         'finalized_by',
         'finalized_at',
+        'initiated_by_staff',
+        'initiated_by',
     ];
 
     protected $casts = [
@@ -47,6 +49,7 @@ class Claim extends Model
         'committee_review_at'  => 'datetime',
         'committee_decided_at' => 'datetime',
         'finalized_at'         => 'datetime',
+        'initiated_by_staff'   => 'boolean',
     ];
 
     // Relationships
@@ -156,5 +159,10 @@ class Claim extends Model
     public function getRegistrationNumberAttribute(): ?string
     {
         return $this->form_data['registration_no'] ?? null;
+    }
+
+    public function initiatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'initiated_by');
     }
 }

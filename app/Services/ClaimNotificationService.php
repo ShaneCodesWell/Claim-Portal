@@ -3,6 +3,7 @@ namespace App\Services;
 
 use App\Models\Claim;
 use App\Models\ClaimNotification;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
 class ClaimNotificationService
@@ -100,5 +101,19 @@ class ClaimNotificationService
     private function customerName(Claim $claim): string
     {
         return $claim->customer?->name ?? 'Valued Customer';
+    }
+
+    /**
+     * Notify the customer that a staff member has opened a claim on their behalf.
+     * Fires once per claim (guarded by sendOnce / 'staff_initiated' type).
+     */
+    public function notifyStaffInitiated(Claim $claim, User $staff): void
+    {
+        $this->sendOnce($claim, 'staff_initiated', function (string $phone) use ($claim, $staff) {
+            $this->sms->sendSms(
+                $phone,
+                "Dear {$this->customerName($claim)}, a claim ({$claim->claim_number}) has been initiated on your behalf by a Vanguard Assurance officer. Our team will be in touch with next steps. - Vanguard Assurance"
+            );
+        });
     }
 }

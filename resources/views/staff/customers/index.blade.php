@@ -11,10 +11,12 @@
             </p>
         </div>
         <div class="flex flex-wrap gap-3">
-            {{-- <button
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow-sm flex items-center gap-2">
-                <i class="fas fa-user-plus"></i> Add Policyholder
-            </button> --}}
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('staff.policy-search.index') }}"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center gap-2 transition">
+                    <i class="fas fa-search"></i> Find Policy / Walk-in Claim
+                </a>
+            </div>
         </div>
     </div>
 

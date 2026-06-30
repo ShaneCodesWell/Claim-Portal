@@ -10,6 +10,7 @@ use App\Models\ClaimDocument;
 use App\Models\Customer;
 use App\Models\Policy;
 use App\Models\User;
+use App\Services\ClaimNotificationService;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,8 +20,10 @@ use \Illuminate\Http\RedirectResponse;
 
 class ClaimController extends Controller
 {
-    public function __construct(protected ClaimService $claimService)
-    {}
+    public function __construct(
+        private ClaimService $claimService,
+        private ClaimNotificationService $notificationService,
+    ) {}
 
     public function index(Request $request)
     {
@@ -139,6 +142,14 @@ class ClaimController extends Controller
         ]);
     }
 
+    /**
+     * Inject ClaimNotificationService alongside ClaimService in the constructor:
+     *
+     * public function __construct(
+     *     private ClaimService             $claimService,
+     *     private ClaimNotificationService $notificationService,
+     * ) {}
+     */
     public function store(Request $request, Customer $customer)
     {
         $validated = $request->validate([
@@ -162,13 +173,6 @@ class ClaimController extends Controller
             return response()->json(['success' => false, 'message' => 'Policy not found.'], 404);
         }
 
-        // if ($policy->customer_id !== $customer->id) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'This policy does not belong to this customer.',
-        //     ], 403);
-        // }
-
         $riskId   = $request->input('risk_id') ? (int) $request->input('risk_id') : null;
         $formData = $validated['form_data'];
 
@@ -185,7 +189,13 @@ class ClaimController extends Controller
             riskId: $riskId,
         );
 
-        // Attribute the action clearly to the staff member
+        // Staff initiation tracking
+        $claim->update([
+            'initiated_by_staff' => true,
+            'initiated_by'       => $staff->id,
+        ]);
+
+        // Activity log
         $note = trim($validated['note'] ?? '');
         $this->claimService->logActivityPublic(
             claim: $claim,
@@ -196,9 +206,11 @@ class ClaimController extends Controller
             meta: [
                 'on_behalf_of_customer_id' => $customer->id,
                 'initiated_by_staff_id'    => $staff->id,
+                'via_policy_search'        => $request->query('via') === 'policy_search',
             ]
         );
 
+        // Documents
         if ($request->hasFile('documents')) {
             $this->claimService->attachDocuments(
                 claim: $claim,
@@ -207,6 +219,9 @@ class ClaimController extends Controller
                 type: 'supporting',
             );
         }
+
+        // SMS — notify the customer
+        $this->notificationService->notifyStaffInitiated($claim, $staff);
 
         return response()->json([
             'success' => true,
