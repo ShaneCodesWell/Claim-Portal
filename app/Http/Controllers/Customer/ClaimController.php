@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Customer;
 
 use App\Enums\ClaimSource;
@@ -16,8 +17,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ClaimController extends Controller
 {
-    public function __construct(protected ClaimService $claimService)
-    {}
+    public function __construct(protected ClaimService $claimService) {}
 
     public function store(Request $request)
     {

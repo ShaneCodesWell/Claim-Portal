@@ -8,9 +8,9 @@
             </button>
         </div>
         <div class="lg:col-span-2">
-            @include('partials.forms.motor-form', [
-                'formData' => $claim->form_data,
-                'action' => route('staff.claims.update', $claim),
+            @include('partials.forms.general-accident-form', [
+                'formData' => $formData,
+                'action' => route('claims.update', $claim),
                 'method' => 'PUT',
                 'claim' => $claim,
                 'context' => 'staff',

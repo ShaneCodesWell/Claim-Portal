@@ -4,6 +4,9 @@
     $isEdit = !is_null($claim ?? null);
     $policyId = $policyId ?? ($policy->external_policy_id ?? '');
     $customer = App\Models\Customer::findOrFail($policy->customer_id);
+
+    $propertyItems = json_decode($f['property_items'] ?? '[]', true);
+    $propertyItems = is_array($propertyItems) ? $propertyItems : [];
 @endphp
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -96,6 +99,7 @@
                             Policy No.
                         </label>
                         <input type="text" name="policy_no"
+                            value="{{ $f['policy_no'] ?? ($policy->policy_number ?? '') }}"
                             class="w-full bg-transparent border-0 p-0 text-gray-700 font-medium focus:outline-none focus:ring-0"
                             readonly required />
                     </div>
@@ -104,6 +108,7 @@
                             Renewal Date
                         </label>
                         <input type="date" name="renewal_date"
+                            value="{{ $f['renewal_date'] ?? ($policy->renewal_date ? \Carbon\Carbon::parse($policy->renewal_date)->format('Y-m-d') : '') }}"
                             class="w-full bg-transparent border-0 p-0 text-gray-700 font-medium focus:outline-none focus:ring-0"
                             readonly required />
                     </div>
@@ -124,7 +129,8 @@
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nature of
                             Business</label>
-                        <x-input name="nature_of_business" class="w-full" required />
+                        <x-input name="nature_of_business" value="{{ $f['nature_of_business'] ?? '' }}" class="w-full"
+                            required />
                     </div>
                 </div>
             </section>
@@ -137,16 +143,19 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Date and Time of
-                            Accident</label><x-input name="incident_datetime" type="datetime-local" class="w-full"
-                            required /></div>
+                            Accident</label><x-input name="incident_datetime"
+                            value="{{ $f['incident_datetime'] ?? '' }}" type="datetime-local" class="w-full" required />
+                    </div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Exact
-                            Location</label><x-input name="exact_location" class="w-full" required /></div>
+                            Location</label><x-input name="exact_location" value="{{ $f['exact_location'] ?? '' }}"
+                            class="w-full" required /></div>
                 </div>
                 <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Description
-                        of Incident</label><x-textarea name="incident_description" rows="3" class="w-full"
-                        required /></div>
+                        of Incident</label><x-textarea name="incident_description"
+                        value="{{ $f['incident_description'] ?? '' }}" rows="3" class="w-full" required /></div>
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Nature of Damage/Loss to
-                        Property</label><x-textarea name="damage_nature" rows="3" class="w-full" required /></div>
+                        Property</label><x-textarea name="damage_nature" value="{{ $f['damage_nature'] ?? '' }}"
+                        rows="3" class="w-full" required /></div>
             </section>
 
             {{-- Section 3: Particulars of Claim (Table) --}}
@@ -174,30 +183,63 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="property-row border-b border-gray-100 hover:bg-gray-50 transition">
-                                <td class="px-2 py-2"><input type="number" name="prop_qty[]" placeholder="0"
-                                        class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                </td>
-                                <td class="px-2 py-2"><input type="text" name="prop_desc[]"
-                                        placeholder="Item description"
-                                        class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                </td>
-                                <td class="px-2 py-2"><input type="number" name="prop_price[]" placeholder="0.00"
-                                        step="0.01"
-                                        class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                </td>
-                                <td class="px-2 py-2"><input type="number" name="prop_deprec[]" placeholder="0.00"
-                                        step="0.01"
-                                        class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                </td>
-                                <td class="px-2 py-2"><input type="number" name="prop_claim[]" placeholder="0.00"
-                                        step="0.01"
-                                        class="claim-amount w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50">
-                                </td>
-                                <td class="px-2 py-2 text-center"><button type="button" onclick="removeRow(this)"
-                                        class="text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-50"><i
-                                            class="fas fa-trash-alt"></i></button></td>
-                            </tr>
+                            @forelse($propertyItems as $item)
+                                <tr class="property-row border-b border-gray-100 hover:bg-gray-50 transition">
+                                    <td class="px-2 py-2"><input type="number" name="prop_qty[]"
+                                            value="{{ $item['qty'] ?? '' }}" placeholder="0"
+                                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                    </td>
+                                    <td class="px-2 py-2"><input type="text" name="prop_desc[]"
+                                            value="{{ $item['description'] ?? '' }}" placeholder="Item description"
+                                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                    </td>
+                                    <td class="px-2 py-2"><input type="number" name="prop_price[]"
+                                            value="{{ $item['price_paid'] ?? '' }}" placeholder="0.00"
+                                            step="0.01"
+                                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                    </td>
+                                    <td class="px-2 py-2"><input type="number" name="prop_deprec[]"
+                                            value="{{ $item['depreciation'] ?? '' }}" placeholder="0.00"
+                                            step="0.01"
+                                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                    </td>
+                                    <td class="px-2 py-2"><input type="number" name="prop_claim[]"
+                                            value="{{ $item['claim_amount'] ?? '' }}" placeholder="0.00"
+                                            step="0.01"
+                                            class="claim-amount w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50">
+                                    </td>
+                                    <td class="px-2 py-2 text-center"><button type="button"
+                                            onclick="removeRow(this)"
+                                            class="text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-50"><i
+                                                class="fas fa-trash-alt"></i></button></td>
+                                </tr>
+                            @empty
+                                <tr class="property-row border-b border-gray-100 hover:bg-gray-50 transition">
+                                    <td class="px-2 py-2"><input type="number" name="prop_qty[]" placeholder="0"
+                                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                    </td>
+                                    <td class="px-2 py-2"><input type="text" name="prop_desc[]"
+                                            placeholder="Item description"
+                                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                    </td>
+                                    <td class="px-2 py-2"><input type="number" name="prop_price[]"
+                                            placeholder="0.00" step="0.01"
+                                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                    </td>
+                                    <td class="px-2 py-2"><input type="number" name="prop_deprec[]"
+                                            placeholder="0.00" step="0.01"
+                                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                    </td>
+                                    <td class="px-2 py-2"><input type="number" name="prop_claim[]"
+                                            placeholder="0.00" step="0.01"
+                                            class="claim-amount w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50">
+                                    </td>
+                                    <td class="px-2 py-2 text-center"><button type="button"
+                                            onclick="removeRow(this)"
+                                            class="text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-50"><i
+                                                class="fas fa-trash-alt"></i></button></td>
+                                </tr>
+                            @endforelse
                         </tbody>
                         <tfoot class="bg-gray-50 border-t border-gray-200">
                             <tr>
@@ -224,16 +266,37 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Name and
                             address of any
-                            person injured</label><x-input name="injured_persons" class="w-full" /></div>
-                    <x-conditional-section question="Was it reported to the Police?" name="police_reported"
-                        yes-section-id="policeDetails" required="true">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Police Witness/Officer
-                            Number & Evidence Details</label>
-                        <x-textarea name="police_evidence" rows="2" class="w-full" />
-                    </x-conditional-section>
+                            person injured</label><x-input name="injured_persons"
+                            value="{{ $f['injured_persons'] ?? '' }}" class="w-full" /></div>
+                    <div class="md:col-span-2 mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Was it reported to the Police?
+                            <span class="text-red-500">*</span></label>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="police_reported" value="yes"
+                                    class="conditional-radio mr-2" data-target="policeDetails" required
+                                    {{ ($f['police_reported'] ?? '') === 'yes' ? 'checked' : '' }}>
+                                <span>Yes</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="police_reported" value="no"
+                                    class="conditional-radio mr-2" data-target="policeDetails" required
+                                    {{ ($f['police_reported'] ?? '') === 'no' ? 'checked' : '' }}>
+                                <span>No</span>
+                            </label>
+                        </div>
+                        <div id="policeDetails"
+                            class="{{ ($f['police_reported'] ?? '') === 'yes' ? '' : 'hidden' }} mt-3 pl-4 border-l-2 border-blue-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Police Witness/Officer
+                                Number & Evidence Details</label>
+                            <x-textarea name="police_evidence" value="{{ $f['police_evidence'] ?? '' }}"
+                                rows="2" class="w-full" />
+                        </div>
+                    </div>
                     <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Other
                             Information
-                            Necessary</label><x-textarea name="additional_info" rows="2" class="w-full" />
+                            Necessary</label><x-textarea name="additional_info"
+                            value="{{ $f['additional_info'] ?? '' }}" rows="2" class="w-full" />
                     </div>
                 </div>
             </section>
@@ -255,6 +318,37 @@
                 </div>
                 <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             </section>
+
+            {{-- Existing documents (edit mode only) --}}
+            @if ($isEdit && $claim->documents->isNotEmpty())
+                <div class="mb-4">
+                    <p class="text-sm font-medium text-gray-700 mb-2">Previously uploaded:</p>
+                    <div class="space-y-2">
+                        @foreach ($claim->documents as $doc)
+                            <div
+                                class="flex flex-wrap items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex items-center gap-2">
+                                    <i
+                                        class="fas {{ str_contains($doc->mime_type, 'pdf') ? 'fa-file-pdf text-red-400' : 'fa-image text-blue-400' }} text-sm"></i>
+                                    <span class="text-sm text-gray-700">{{ $doc->original_name }}</span>
+                                    <span class="text-xs text-gray-400">{{ number_format($doc->file_size / 1024, 1) }}
+                                        KB</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button type="button"
+                                        onclick="openDocPreview('{{ route('staff.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
+                                        class="text-xs text-blue-600 hover:underline">View</button>
+                                    <button type="button"
+                                        onclick="markDocumentForDeletion({{ $doc->id }}, this)"
+                                        class="text-xs text-red-500 hover:underline">Remove</button>
+                                    <input type="hidden" name="delete_documents[]" value=""
+                                        id="delete-doc-{{ $doc->id }}" disabled>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             {{-- ── STAFF NOTE (staff edit only) ── --}}
             @if ($isStaff)
@@ -440,6 +534,8 @@
         </form>
     </div>
 </div>
+{{-- Shared document preview modal --}}
+<x-documents-modal />
 <script>
     const isEdit = {{ $isEdit ? 'true' : 'false' }};
     const isStaff = {{ $isStaff ? 'true' : 'false' }};
@@ -580,12 +676,18 @@
 
     document.addEventListener('DOMContentLoaded', function() {
 
-        // ==================== POLICE CONDITIONAL ====================
-        const policeRadios = document.querySelectorAll('input[name="police_reported"]');
-        const policeSection = document.getElementById('policeDetails');
-        policeRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                policeSection?.classList.toggle('hidden', e.target.value !== 'yes');
+        // ── Conditional radio toggles ──────────────────────────────────────────
+        document.addEventListener('change', function(e) {
+            if (!e.target.classList.contains('conditional-radio')) return;
+
+            const target = document.getElementById(e.target.getAttribute('data-target'));
+            if (!target) return;
+
+            const isYes = e.target.value === 'yes';
+            target.classList.toggle('hidden', !isYes);
+            target.querySelectorAll('input, textarea, select').forEach(input => {
+                input.required = isYes;
+                if (!isYes) input.value = '';
             });
         });
 
@@ -619,7 +721,6 @@
         @if ($policy)
             const prefill = {
                 'policy_no': '{{ $policy->policy_number ?? '' }}',
-                'insured_name': '{{ $policy->insured_name ?? '' }}',
                 'renewal_date': '{{ $policy->renewal_date ? \Carbon\Carbon::parse($policy->renewal_date)->format('Y-m-d') : '' }}',
             };
             Object.entries(prefill).forEach(([name, value]) => {
@@ -652,7 +753,8 @@
             const claimFields = {
                 policy_no: val('policy_no'),
                 renewal_date: val('renewal_date'),
-                insured_name: val('insured_name'),
+                fullname: val('fullname'),
+                email: val('email'),
                 address: val('address'),
                 nature_of_business: val('nature_of_business'),
                 incident_datetime: val('incident_datetime'),
@@ -683,6 +785,10 @@
 
             uploadedFiles.forEach((file, index) => {
                 formData.append(`documents[${index}]`, file, file.name);
+            });
+
+            document.querySelectorAll('[id^="delete-doc-"]:not([disabled])').forEach(input => {
+                formData.append('delete_documents[]', input.value);
             });
 
             const action = document.getElementById('fireClaimForm').dataset.action;

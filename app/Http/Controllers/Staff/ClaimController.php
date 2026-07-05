@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Staff;
 
 use App\Enums\ClaimSource;
@@ -57,7 +58,9 @@ class ClaimController extends Controller
         // Branch filter
         if ($request->filled('branch')) {
             $branchCode = $request->branch;
-            $query->whereHas('policy', fn($q) =>
+            $query->whereHas(
+                'policy',
+                fn($q) =>
                 $q->where('policy_number', 'like', "P-{$branchCode}-%")
             );
         }
@@ -194,7 +197,7 @@ class ClaimController extends Controller
             user: $staff,
             action: 'staff_initiated',
             note: "Claim initiated by {$staff->name} on behalf of {$customer->name}."
-            . ($note ? " Staff note: {$note}" : ''),
+                . ($note ? " Staff note: {$note}" : ''),
             meta: [
                 'on_behalf_of_customer_id' => $customer->id,
                 'initiated_by_staff_id'    => $staff->id,
@@ -402,9 +405,22 @@ class ClaimController extends Controller
         $isAssignedToMe    = $assignee && $assignee->id === $currentUser->id;
         $isAssignedToOther = $assignee && ! $isAssignedToMe;
 
+        $formData = array_merge(
+            $claim->form_data ?? [],
+            [
+                'fullname' => $customer->name ?? '',
+                'email'    => $customer->email ?? '',
+                'phone'    => $customer->phone ?? '',
+            ]
+        );
+
         return view($view, compact(
-            'claim', 'policy',
-            'assignee', 'isAssignedToMe', 'isAssignedToOther'
+            'claim',
+            'policy',
+            'assignee',
+            'formData',
+            'isAssignedToMe',
+            'isAssignedToOther'
         ));
     }
 
