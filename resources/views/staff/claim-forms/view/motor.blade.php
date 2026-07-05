@@ -117,7 +117,7 @@
                                 </div>
                             </div>
                         </section>
-                        
+
                         {{-- SECTION 1: VEHICLE PARTICULARS --}}
                         <section class="mb-8">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
@@ -369,13 +369,6 @@
                                         value="{{ $f['accident_date'] ?? '' }}"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Time <span
-                                            class="text-red-500">*</span></label>
-                                    <input type="time" name="accident_time"
-                                        value="{{ $f['accident_time'] ?? '' }}"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                                </div>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Exact location of incident
@@ -405,13 +398,32 @@
                                 <textarea name="accident_description" rows="4"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">{{ $f['accident_description'] ?? '' }}</textarea>
                             </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">In your opinion, was the
-                                    accident
-                                    caused by you or the other driver? If not, by whom? <span
-                                        class="text-red-500">*</span></label>
-                                <input type="text" name="fault_person" value="{{ $f['fault_person'] ?? '' }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Was the accident caused by
+                                    you? <span class="text-red-500">*</span></label>
+                                <div class="flex flex-wrap gap-4">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="fault_person" value="yes"
+                                            class="conditional-radio mr-2" data-target="accidentSection"
+                                            {{ ($f['fault_person'] ?? '') === 'yes' ? 'checked' : '' }}>
+                                        <span>Yes</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="fault_person" value="no"
+                                            class="conditional-radio mr-2" data-target="accidentSection"
+                                            {{ ($f['fault_person'] ?? '') === 'no' ? 'checked' : '' }}>
+                                        <span>No</span>
+                                    </label>
+                                </div>
+                                <div id="accidentSection"
+                                    class="{{ ($f['fault_person'] ?? '') === 'yes' ? '' : 'hidden' }} mt-3 pl-4 border-l-2 border-blue-200">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Explain how the
+                                        accident occurred
+                                        <span class="text-red-500">*</span></label>
+                                    <input type="text" name="fault_person_details"
+                                        value="{{ $f['fault_person_details'] ?? '' }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                                </div>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Describe the damage to your
@@ -454,295 +466,198 @@
                                 THIRD PARTIES INVOLVED IN ACCIDENT
                             </h3>
 
-                            {{-- Injured in your vehicle --}}
-                            <div class="mb-8">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h4 class="text-md font-semibold text-gray-700">Injured Persons in Your Vehicle
-                                    </h4>
-                                    <button type="button" onclick="addInjuredPerson('yourVehicle')"
-                                        class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-                                        <i class="fas fa-plus mr-1"></i> Add
-                                    </button>
-                                </div>
-                                <div id="yourVehicleInjuredPersons" class="space-y-4">
-                                    @php
-                                        $injuredPersons = json_decode($f['your_vehicle_injured'] ?? '[]', true) ?? [];
-                                    @endphp
-
-                                    @forelse($injuredPersons as $i => $person)
-                                        <div
-                                            class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Full
-                                                        Name</label>
-                                                    <input type="text"
-                                                        name="your_vehicle_injured[{{ $i }}][name]"
-                                                        value="{{ $person['name'] ?? '' }}"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label
-                                                        class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                                                    <input type="number"
-                                                        name="your_vehicle_injured[{{ $i }}][age]"
-                                                        value="{{ $person['age'] ?? '' }}"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label
-                                                        class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                                    <input type="text"
-                                                        name="your_vehicle_injured[{{ $i }}][address]"
-                                                        value="{{ $person['address'] ?? '' }}"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                            </div>
-                                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Extent of
-                                                    Injuries</label>
-                                                <textarea name="your_vehicle_injured[{{ $i }}][injuries]" rows="2"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $person['injuries'] ?? '' }}</textarea>
-                                            </div>
-                                            <div class="mt-2 flex justify-end">
-                                                <button type="button" onclick="removeInjuredPerson(this)"
-                                                    class="text-red-600 hover:text-red-800 text-sm">
-                                                    <i class="fas fa-trash mr-1"></i> Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    @empty
-                                        <div
-                                            class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Full
-                                                        Name</label>
-                                                    <input type="text" name="your_vehicle_injured[0][name]"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label
-                                                        class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                                                    <input type="number" name="your_vehicle_injured[0][age]"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label
-                                                        class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                                    <input type="text" name="your_vehicle_injured[0][address]"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                            </div>
-                                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Extent of
-                                                    Injuries</label>
-                                                <textarea name="your_vehicle_injured[0][injuries]" rows="2"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
-                                            </div>
-                                        </div>
-                                    @endforelse
-                                </div>
-                            </div>
-
-                            {{-- Injured in other vehicle --}}
-                            {{-- <div class="mb-8">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h4 class="text-md font-semibold text-gray-700">Injured Persons in Other Vehicle</h4>
-                                    <button type="button" onclick="addInjuredPerson('otherVehicle')"
-                                        class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-                                        <i class="fas fa-plus mr-1"></i> Add
-                                    </button>
-                                </div>
-                                <div id="otherVehicleInjuredPersons" class="space-y-4">
-                                    @php
-                                        $otherInjuredPersons = json_decode($f['other_vehicle_injured'] ?? '[]', true);
-                                        if (!is_array($otherInjuredPersons)) {
-                                            $otherInjuredPersons = [];
-                                        }
-                                    @endphp
-                                    @forelse($otherInjuredPersons as $i => $person)
-                                        <div class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                                    <input type="text" name="other_vehicle_injured[{{ $i }}][name]"
-                                                        value="{{ $person['name'] ?? '' }}"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                                                    <input type="number" name="other_vehicle_injured[{{ $i }}][age]"
-                                                        value="{{ $person['age'] ?? '' }}"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                                    <input type="text"
-                                                        name="other_vehicle_injured[{{ $i }}][address]"
-                                                        value="{{ $person['address'] ?? '' }}"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                            </div>
-                                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Extent of
-                                                    Injuries</label>
-                                                <textarea name="other_vehicle_injured[{{ $i }}][injuries]" rows="2"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $person['injuries'] ?? '' }}</textarea>
-                                            </div>
-                                            <div class="mt-2 flex justify-end">
-                                                <button type="button" onclick="removeInjuredPerson(this)"
-                                                    class="text-red-600 hover:text-red-800 text-sm">
-                                                    <i class="fas fa-trash mr-1"></i> Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    @empty
-                                        <div class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                                    <input type="text" name="other_vehicle_injured[0][name]"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                                                    <input type="number" name="other_vehicle_injured[0][age]"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                                    <input type="text" name="other_vehicle_injured[0][address]"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                            </div>
-                                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Extent of
-                                                    Injuries</label>
-                                                <textarea name="other_vehicle_injured[0][injuries]" rows="2"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
-                                            </div>
-                                        </div>
-                                    @endforelse
-                                </div>
-                            </div> --}}
-
+                            {{-- Third party involved? --}}
                             <div class="mb-6">
-                                <div class="flex items-center justify-between mb-4">
-                                    <label class="block text-sm font-medium text-gray-700">Details of vehicles
-                                        involved</label>
-                                    <button type="button" onclick="addVehicle()"
-                                        class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-                                        <i class="fas fa-plus mr-1"></i> Add Vehicle
-                                    </button>
-                                </div>
-                                <div id="vehiclesContainer" class="space-y-4">
-                                    @php
-                                        $vehicles = json_decode($f['involved_vehicles'] ?? '[]', true) ?? [];
-                                    @endphp
-
-                                    @forelse($vehicles as $i => $vehicle)
-                                        <div class="vehicle-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div><label
-                                                        class="block text-xs font-medium text-gray-600">Registration
-                                                        Number</label>
-                                                    <input type="text"
-                                                        name="involved_vehicles[{{ $i }}][reg]"
-                                                        value="{{ $vehicle['reg'] ?? '' }}"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label
-                                                        class="block text-xs font-medium text-gray-600">Make</label>
-                                                    <input type="text"
-                                                        name="involved_vehicles[{{ $i }}][make]"
-                                                        value="{{ $vehicle['make'] ?? '' }}"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label
-                                                        class="block text-xs font-medium text-gray-600">Model</label>
-                                                    <input type="text"
-                                                        name="involved_vehicles[{{ $i }}][model]"
-                                                        value="{{ $vehicle['model'] ?? '' }}"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                            </div>
-                                            <div class="mt-2 flex justify-end">
-                                                <button type="button" onclick="removeVehicle(this)"
-                                                    class="text-red-600 hover:text-red-800 text-sm">
-                                                    <i class="fas fa-trash mr-1"></i> Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    @empty
-                                        <div class="vehicle-row border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div><label
-                                                        class="block text-xs font-medium text-gray-600">Registration
-                                                        Number</label>
-                                                    <input type="text" name="involved_vehicles[0][reg]"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label
-                                                        class="block text-xs font-medium text-gray-600">Make</label>
-                                                    <input type="text" name="involved_vehicles[0][make]"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                                <div><label
-                                                        class="block text-xs font-medium text-gray-600">Model</label>
-                                                    <input type="text" name="involved_vehicles[0][model]"
-                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforelse
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Is there a third party
+                                    involved? <span class="text-red-500">*</span></label>
+                                <div class="flex flex-wrap gap-4">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="third_party_involved" value="yes"
+                                            class="conditional-radio mr-2" data-target="thirdPartySection"
+                                            {{ ($f['third_party_involved'] ?? '') === 'yes' ? 'checked' : '' }}>
+                                        <span>Yes</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="third_party_involved" value="no"
+                                            class="conditional-radio mr-2" data-target="thirdPartySection"
+                                            {{ ($f['third_party_involved'] ?? '') === 'no' ? 'checked' : '' }}>
+                                        <span>No</span>
+                                    </label>
                                 </div>
                             </div>
 
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Owner of Accident Vehicle
-                                    Information</label>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Full Name </label>
-                                        <input type="text" name="owner_fullname"
-                                            value="{{ $f['owner_fullname'] ?? '' }}"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <div id="thirdPartySection"
+                                class="{{ ($f['third_party_involved'] ?? '') === 'yes' ? '' : 'hidden' }} mt-3 pl-4 border-l-2 border-blue-200">
+
+                                {{-- Injured in your vehicle --}}
+                                <div class="mb-8">
+                                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                                        <h4 class="text-md font-semibold text-gray-700">Injured Persons in Your Vehicle
+                                        </h4>
+                                        <button type="button" onclick="addInjuredPerson('yourVehicle')"
+                                            class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
+                                            <i class="fas fa-plus mr-1"></i> Add
+                                        </button>
                                     </div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Address </label>
-                                        <input type="text" name="owner_address"
-                                            value="{{ $f['owner_address'] ?? '' }}"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <div id="yourVehicleInjuredPersons" class="space-y-4">
+                                        @php
+                                            $injuredPersons =
+                                                json_decode($f['your_vehicle_injured'] ?? '[]', true) ?? [];
+                                        @endphp
+
+                                        @forelse($injuredPersons as $i => $person)
+                                            <div
+                                                class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                                                    <div><label
+                                                            class="block text-sm font-medium text-gray-700 mb-1">Full
+                                                            Name</label>
+                                                        <input type="text"
+                                                            name="your_vehicle_injured[{{ $i }}][name]"
+                                                            value="{{ $person['name'] ?? '' }}"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                    <div><label
+                                                            class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                                        <input type="number"
+                                                            name="your_vehicle_injured[{{ $i }}][age]"
+                                                            value="{{ $person['age'] ?? '' }}"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                    <div><label
+                                                            class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                                        <input type="text"
+                                                            name="your_vehicle_injured[{{ $i }}][address]"
+                                                            value="{{ $person['address'] ?? '' }}"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                </div>
+                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Extent
+                                                        of
+                                                        Injuries</label>
+                                                    <textarea name="your_vehicle_injured[{{ $i }}][injuries]" rows="2"
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $person['injuries'] ?? '' }}</textarea>
+                                                </div>
+                                                <div class="mt-2 flex justify-end">
+                                                    <button type="button" onclick="removeInjuredPerson(this)"
+                                                        class="text-red-600 hover:text-red-800 text-sm">
+                                                        <i class="fas fa-trash mr-1"></i> Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <div
+                                                class="injured-person-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                                                    <div><label
+                                                            class="block text-sm font-medium text-gray-700 mb-1">Full
+                                                            Name</label>
+                                                        <input type="text" name="your_vehicle_injured[0][name]"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                    <div><label
+                                                            class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                                        <input type="number" name="your_vehicle_injured[0][age]"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                    <div><label
+                                                            class="block text-sm font-medium text-gray-700 mb-1">Phone
+                                                            Number</label>
+                                                        <input type="text" name="your_vehicle_injured[0][phone]"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                </div>
+                                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Extent
+                                                        of
+                                                        Injuries</label>
+                                                    <textarea name="your_vehicle_injured[0][injuries]" rows="2"
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
+                                                </div>
+                                            </div>
+                                        @endforelse
                                     </div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Telephone </label>
-                                        <input type="tel" name="owner_telephone"
-                                            value="{{ $f['owner_telephone'] ?? '' }}"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                </div>
+
+                                {{-- Vehicles involved --}}
+                                <div class="mb-6">
+                                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Details of vehicles
+                                            involved</label>
+                                        <button type="button" onclick="addVehicle()"
+                                            class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
+                                            <i class="fas fa-plus mr-1"></i> Add Vehicle
+                                        </button>
                                     </div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Policy No.
-                                        </label>
-                                        <input type="text" name="owner_policy"
-                                            value="{{ $f['owner_policy'] ?? '' }}"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <div id="vehiclesContainer" class="space-y-4">
+                                        @php
+                                            $vehicles = json_decode($f['involved_vehicles'] ?? '[]', true) ?? [];
+                                        @endphp
+
+                                        @forelse($vehicles as $i => $vehicle)
+                                            <div class="vehicle-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <div><label
+                                                            class="block text-xs font-medium text-gray-600">Registration
+                                                            Number</label>
+                                                        <input type="text"
+                                                            name="involved_vehicles[{{ $i }}][reg]"
+                                                            value="{{ $vehicle['reg'] ?? '' }}"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                    <div><label
+                                                            class="block text-xs font-medium text-gray-600">Make</label>
+                                                        <input type="text"
+                                                            name="involved_vehicles[{{ $i }}][make]"
+                                                            value="{{ $vehicle['make'] ?? '' }}"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                    <div><label
+                                                            class="block text-xs font-medium text-gray-600">Model</label>
+                                                        <input type="text"
+                                                            name="involved_vehicles[{{ $i }}][model]"
+                                                            value="{{ $vehicle['model'] ?? '' }}"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 flex justify-end">
+                                                    <button type="button" onclick="removeVehicle(this)"
+                                                        class="text-red-600 hover:text-red-800 text-sm">
+                                                        <i class="fas fa-trash mr-1"></i> Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <div class="vehicle-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <div><label
+                                                            class="block text-xs font-medium text-gray-600">Registration
+                                                            Number</label>
+                                                        <input type="text" name="involved_vehicles[0][reg]"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                    <div><label
+                                                            class="block text-xs font-medium text-gray-600">Make</label>
+                                                        <input type="text" name="involved_vehicles[0][make]"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                    <div><label
+                                                            class="block text-xs font-medium text-gray-600">Model</label>
+                                                        <input type="text" name="involved_vehicles[0][model]"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforelse
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Details of damage to this
-                                    vehicle <span class="text-red-500">*</span></label>
-                                <textarea name="other_vehicle_damage" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['other_vehicle_damage'] ?? '' }}</textarea>
-                            </div>
-
-                            {{-- Claim made --}}
-                            {{-- <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Has any claim been made upon you? <span
-                                        class="text-red-500">*</span></label>
-                                <div class="flex gap-4">
-                                    <label class="flex items-center"><input type="radio" name="claim_made" value="yes"
-                                            class="conditional-radio mr-2" data-target="claimMadeSection"
-                                            {{ ($f['claim_made'] ?? '') === 'yes' ? 'checked' : '' }}> Yes</label>
-                                    <label class="flex items-center"><input type="radio" name="claim_made" value="no"
-                                            class="conditional-radio mr-2" data-target="claimMadeSection"
-                                            {{ ($f['claim_made'] ?? '') === 'no' ? 'checked' : '' }}> No</label>
-                                </div>
-                                <div id="claimMadeSection"
-                                    class="{{ ($f['claim_made'] ?? '') === 'yes' ? '' : 'hidden' }} mt-3 pl-4 border-l-2 border-blue-200">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">State particulars below <span
-                                            class="text-red-500">*</span></label>
-                                    <textarea name="claim_made_details" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['claim_made_details'] ?? '' }}</textarea>
-                                </div>
-                            </div> --}}
 
                             {{-- Police report --}}
                             <div class="mb-6">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Was the accident reported
                                     to the
                                     police? <span class="text-red-500">*</span></label>
-                                <div class="flex gap-4">
+                                <div class="flex flex-wrap gap-4">
                                     <label class="flex items-center"><input type="radio" name="police_report"
                                             value="yes" class="conditional-radio mr-2"
                                             data-target="policeReportSection"
@@ -759,33 +674,6 @@
                                     <textarea name="police_report_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['police_report_details'] ?? '' }}</textarea>
                                 </div>
                             </div>
-
-                            {{-- <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Name Police Officer who took
-                                    particulars <span class="text-red-500">*</span></label>
-                                <input type="text" name="officer_details" value="{{ $f['officer_details'] ?? '' }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                            </div> --}}
-
-                            {{-- Indemnifying policy --}}
-                            {{-- <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Do you hold more than one policy
-                                    indemnifying you in respect of this accident? <span class="text-red-500">*</span></label>
-                                <div class="flex gap-4">
-                                    <label class="flex items-center"><input type="radio" name="indem_policy" value="yes"
-                                            class="conditional-radio mr-2" data-target="indemPolicySection"
-                                            {{ ($f['indem_policy'] ?? '') === 'yes' ? 'checked' : '' }}> Yes</label>
-                                    <label class="flex items-center"><input type="radio" name="indem_policy" value="no"
-                                            class="conditional-radio mr-2" data-target="indemPolicySection"
-                                            {{ ($f['indem_policy'] ?? '') === 'no' ? 'checked' : '' }}> No</label>
-                                </div>
-                                <div id="indemPolicySection"
-                                    class="{{ ($f['indem_policy'] ?? '') === 'yes' ? '' : 'hidden' }} mt-3 pl-4 border-l-2 border-blue-200">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">State the details of the other
-                                        policy.</label>
-                                    <textarea name="indem_policy_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['indem_policy_details'] ?? '' }}</textarea>
-                                </div>
-                            </div> --}}
                         </section>
 
                         {{-- ── SECTION 5: DOCUMENTS ── --}}

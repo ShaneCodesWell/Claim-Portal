@@ -154,18 +154,14 @@
                 vertical-align: middle;
             }
 
-            .yn-box {
-                display: inline-block;
-                border: 1px solid #000;
-                padding: 2px 8px;
-                font-size: 10px;
+            .yn-box.selected {
+                border: 2px solid #000;
                 font-weight: bold;
-                margin-left: 4px;
             }
 
-            .yn-box.selected {
-                background: #000;
-                color: #fff;
+            .yn-box:not(.selected) {
+                border: 1px solid #999;
+                color: #999;
             }
 
             /* ── Footer ── */
