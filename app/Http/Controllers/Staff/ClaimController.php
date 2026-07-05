@@ -142,14 +142,6 @@ class ClaimController extends Controller
         ]);
     }
 
-    /**
-     * Inject ClaimNotificationService alongside ClaimService in the constructor:
-     *
-     * public function __construct(
-     *     private ClaimService             $claimService,
-     *     private ClaimNotificationService $notificationService,
-     * ) {}
-     */
     public function store(Request $request, Customer $customer)
     {
         $validated = $request->validate([

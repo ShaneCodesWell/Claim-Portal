@@ -10,7 +10,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FireController;
 use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
-use App\Http\Controllers\OfflineController;
+// use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\Staff\CommitteeClaimController;
 use App\Http\Controllers\Staff\GlimsSyncController;
@@ -211,9 +211,9 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
 });
 
 // Offline Application
-Route::prefix('offline')->name('offline.')->group(function () {
-    Route::get('/dashboard', [OfflineController::class, 'index'])->name('dashboard');
-    Route::get('/motor-form', [OfflineController::class, 'motorForm'])->name('motor-form');
-    Route::get('/general-accident-form', [OfflineController::class, 'generalAccidentForm'])->name('general-accident-form');
-    Route::get('/fire-form', [OfflineController::class, 'fireForm'])->name('fire-form');
-});
+// Route::prefix('offline')->name('offline.')->group(function () {
+//     Route::get('/dashboard', [OfflineController::class, 'index'])->name('dashboard');
+//     Route::get('/motor-form', [OfflineController::class, 'motorForm'])->name('motor-form');
+//     Route::get('/general-accident-form', [OfflineController::class, 'generalAccidentForm'])->name('general-accident-form');
+//     Route::get('/fire-form', [OfflineController::class, 'fireForm'])->name('fire-form');
+// });

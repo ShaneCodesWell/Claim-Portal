@@ -2,7 +2,8 @@
     $f = $formData ?? [];
     $isStaff = ($context ?? 'customer') === 'staff';
     $isEdit = !is_null($claim ?? null);
-
+    $policyId = $policyId ?? ($policy->external_policy_id ?? '');
+    $customer = App\Models\Customer::findOrFail($policy->customer_id);
 @endphp
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -75,10 +76,14 @@
             </p>
         </div>
 
-        <form id="fireClaimForm">
+        <form id="fireClaimForm" data-action="{{ $action }}">
             @csrf
-            <input type="hidden" name="policy_id" value="{{ $policyId }}" />
+            @if ($method === 'PUT')
+                @method('PUT')
+            @endif
             <input type="hidden" name="claim_type" value="fire" />
+            <input type="hidden" name="policy_id" value="{{ $policy->external_policy_id ?? $policy->id }}">
+            <input type="hidden" name="risk_id" value="{{ $riskId ?? '' }}">
             {{-- Section 1: Policy & Insured Details --}}
             <section class="mb-8">
                 <h3
@@ -86,19 +91,41 @@
                     I. Policy & Insured Information
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Policy
-                            No.</label><x-input name="policy_no" class="w-full" required /></div>
-                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Renewal
-                            Date</label><input type="date" name="renewal_date"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                            required /></div>
-                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Name of
-                            Insured</label><x-input name="insured_name" class="w-full" required /></div>
-                    <div class="md:col-span-2"><label
-                            class="block text-sm font-medium text-gray-700 mb-1">Address</label><x-input name="address"
-                            class="w-full" required /></div>
-                    <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Nature of
-                            Business</label><x-input name="nature_of_business" class="w-full" required /></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Policy No.
+                        </label>
+                        <input type="text" name="policy_no"
+                            class="w-full bg-transparent border-0 p-0 text-gray-700 font-medium focus:outline-none focus:ring-0"
+                            readonly required />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Renewal Date
+                        </label>
+                        <input type="date" name="renewal_date"
+                            class="w-full bg-transparent border-0 p-0 text-gray-700 font-medium focus:outline-none focus:ring-0"
+                            readonly required />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Name of Insured
+                        </label>
+                        <input type="text" name="fullname" value="{{ $f['fullname'] ?? '' }}" readonly
+                            class="w-full bg-transparent border-0 p-0 text-gray-900 font-medium focus:outline-none focus:ring-0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            E-Mail Address
+                        </label>
+                        <input type="text" name="email" value="{{ $f['email'] ?? '' }}" readonly
+                            class="w-full bg-transparent border-0 p-0 text-gray-900 font-medium focus:outline-none focus:ring-0">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nature of
+                            Business</label>
+                        <x-input name="nature_of_business" class="w-full" required />
+                    </div>
                 </div>
             </section>
 
@@ -222,70 +249,201 @@
                     <i class="fas fa-cloud-upload-alt text-gray-400 text-4xl mb-2"></i>
                     <p class="text-gray-600">Drag & drop images here or <span
                             class="text-blue-600 font-medium">browse</span></p>
-                    <p class="text-xs text-gray-400 mt-1">Supports: JPG, PNG, GIF (max 5MB each)</p>
-                    <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/gif" multiple
-                        class="hidden">
+                    <p class="text-xs text-gray-400 mt-1">Supports: JPG, PNG, PDF (max 5MB each)</p>
+                    <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/gif,application/pdf"
+                        multiple class="hidden">
                 </div>
                 <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                </div>
             </section>
 
-            {{-- DECLARATION --}}
-            <section class="mb-8">
-                <h3
-                    class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
-                    <i class="fas fa-file-signature text-blue-500"></i> DECLARATION
-                </h3>
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-                    <p class="text-xs text-gray-700 leading-relaxed mb-4">I declare that the above
-                        statement is true in all respects to the best of my knowledge and belief and I
-                        hereby leave in the hands of the
-                        Company in accordance with the conditions of the Policy the conduct of all claims
-                        and litigation arising out of this accident and to
-                        which the Policy applies, to deal with, to prosecute and/or settle as they deem fit
-                        without further reference to me; and I undertake to
-                        give all such information and assistance as the Company may require.</p>
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
-                        <p class="text-sm text-gray-700"><span class="font-semibold">Note:</span> The
-                            Company does not admit liability by the issue of this form.</p>
+            {{-- ── STAFF NOTE (staff edit only) ── --}}
+            @if ($isStaff)
+                <section class="mb-8">
+                    <h3
+                        class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                        <i class="fas fa-sticky-note text-indigo-500"></i> Edit Note
+                    </h3>
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Reason for edit <span class="text-xs text-gray-400">(logged in activity timeline)</span>
+                        </label>
+                        <input type="text" name="note"
+                            placeholder="e.g. Customer called to correct property description"
+                            class="w-full px-3 py-2 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none bg-white">
                     </div>
-                </div>
-                <div class="bg-white border-2 border-blue-200 rounded-lg p-4 mb-6">
-                    <label class="flex items-start cursor-pointer"><input type="checkbox"
-                            name="declaration_agreement" required
-                            class="mt-1 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"><span
-                            class="ml-3 text-xs text-gray-700">I have read and understood the
-                            declaration above. I confirm that all information provided in this form is
-                            true and accurate to the best of my knowledge. <span
-                                class="text-red-500">*</span></span></label>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Date of
-                            Declaration <span class="text-red-500">*</span></label><input type="date"
-                            name="declaration_date" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></div>
-                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Digital Signature
-                            <span class="text-xs text-gray-500">(Type your full name)</span> <span
-                                class="text-red-500">*</span></label><input type="text" name="digital_signature"
-                            placeholder="Type your full name as your digital signature"
-                            class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-cursive text-lg"
-                            style="font-family: 'Brush Script MT', cursive;">
-                        <p class="text-xs text-gray-500 mt-1">By typing your name above, you are
-                            providing a legal digital signature for this declaration.</p>
-                    </div>
-                </div>
-            </section>
+                </section>
+            @endif
 
-            <!-- Submit Button -->
-            <div class="mt-8 pt-4 border-t border-gray-200">
+            {{-- ── DECLARATION (customer only) ── --}}
+            @if (!$isStaff)
+                <section class="mb-8">
+                    <h3
+                        class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                        <i class="fas fa-file-signature text-blue-500"></i> DECLARATION
+                    </h3>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                        <p class="text-xs text-gray-700 leading-relaxed mb-4">
+                            I declare that the above statement is true in all respects to the best of my knowledge and
+                            belief
+                            and I hereby leave in the hands of the Company in accordance with the conditions of the
+                            Policy
+                            the conduct of all claims and litigation arising out of this accident and to which the
+                            Policy
+                            applies, to deal with, to prosecute and/or settle as they deem fit without further reference
+                            to me;
+                            and I undertake to give all such information and assistance as the Company may require.
+                        </p>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                            <p class="text-sm text-gray-700"><span class="font-semibold">Note:</span> The Company does
+                                not
+                                admit liability by the issue of this form.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white border-2 border-blue-200 rounded-lg p-4 mb-6">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox" name="declaration_agreement" required
+                                class="mt-1 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                                {{ !empty($f['declaration_agreement']) ? 'checked' : '' }}>
+                            <span class="ml-3 text-xs text-gray-700">I have read and understood the declaration above.
+                                I confirm that all information provided in this form is true and accurate to the best of
+                                my knowledge.
+                                <span class="text-red-500">*</span></span>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date of Declaration <span
+                                    class="text-red-500">*</span></label>
+                            <input type="date" name="declaration_date" value="{{ $f['declaration_date'] ?? '' }}"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Digital Signature
+                                <span class="text-xs text-gray-500">(Type your full name)</span>
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="digital_signature"
+                                value="{{ $f['digital_signature'] ?? '' }}"
+                                placeholder="Type your full name as your digital signature"
+                                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-lg"
+                                style="font-family: 'Brush Script MT', cursive;">
+                            <p class="text-xs text-gray-500 mt-1">By typing your name above, you are providing a legal
+                                digital signature for this declaration.</p>
+                        </div>
+                    </div>
+                </section>
+            @endif
+
+            {{-- ── ACTION BUTTONS ── --}}
+            <div
+                class="mt-8 pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <button type="submit"
-                    class="w-full md:w-auto px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
-                    <span>Submit Claim</span> <i class="fas fa-paper-plane"></i>
+                    class="w-full sm:w-auto px-6 py-2 {{ $isStaff ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700' }} text-white font-medium rounded-lg transition flex items-center justify-center gap-2">
+                    @if (!$isEdit)
+                        <span>Submit Claim</span><i class="fas fa-paper-plane"></i>
+                    @else
+                        <span>Save Changes</span><i class="fas fa-save"></i>
+                    @endif
                 </button>
+                @if ($isEdit)
+                    <a href="{{ $isStaff ? route('staff.claims.show', $claim) : route('claims.show', $claim) }}"
+                        class="w-full sm:w-auto px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition text-center">
+                        Cancel
+                    </a>
+                @endif
             </div>
+
+            @if ($isEdit && $isStaff)
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        @if (!$isAssignedToMe && !$isAssignedToOther)
+                            Swal.fire({
+                                title: 'Claim is unassigned',
+                                html: `
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            Nobody is currently assigned to claim
+                            <strong>{{ $claim->claim_number }}</strong>.<br><br>
+                            Would you like to assign it to yourself before editing?
+                        </p>`,
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonText: 'Yes, assign to me',
+                                cancelButtonText: 'No, just edit',
+                                confirmButtonColor: '#4f46e5',
+                                cancelButtonColor: '#6b7280',
+                                reverseButtons: true,
+                            }).then(result => {
+                                if (result.isConfirmed) {
+                                    fetch('{{ route('staff.claims.assign', $claim) }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                'Accept': 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                                assigned_to: {{ Auth::id() }},
+                                                note: 'Self-assigned before editing form.',
+                                            }),
+                                        })
+                                        .then(res => res.json())
+                                        .then(() => {
+                                            Swal.fire({
+                                                toast: true,
+                                                position: 'top-end',
+                                                icon: 'success',
+                                                title: 'Assigned to you',
+                                                showConfirmButton: false,
+                                                timer: 2500,
+                                                timerProgressBar: true,
+                                            });
+                                        })
+                                        .catch(() => {
+                                            Swal.fire({
+                                                toast: true,
+                                                position: 'top-end',
+                                                icon: 'warning',
+                                                title: 'Could not assign — edits will still be logged',
+                                                showConfirmButton: false,
+                                                timer: 3000,
+                                            });
+                                        });
+                                }
+                            });
+                        @elseif ($isAssignedToOther)
+                            Swal.fire({
+                                title: 'Claim already assigned',
+                                html: `
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            This claim is currently assigned to
+                            <strong>{{ $assignee->name }}</strong>.<br><br>
+                            You can still make edits — everything will be logged with your name
+                            and <strong>{{ $assignee->name }}</strong> will be able to see your changes
+                            in the activity log.
+                        </p>`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Proceed with edits',
+                                cancelButtonText: 'Go back',
+                                confirmButtonColor: '#4f46e5',
+                                cancelButtonColor: '#6b7280',
+                                reverseButtons: true,
+                            }).then(result => {
+                                if (!result.isConfirmed) {
+                                    window.location.href = '{{ route('staff.claims.show', $claim) }}';
+                                }
+                            });
+                        @endif
+                    });
+                </script>
+            @endif
         </form>
     </div>
 </div>
 <script>
+    const isEdit = {{ $isEdit ? 'true' : 'false' }};
+    const isStaff = {{ $isStaff ? 'true' : 'false' }};
+
     // ==================== PROPERTY TABLE ====================
     function setupRowAutoCalc(row) {
         const priceInput = row.querySelector('input[name="prop_price[]"]');
@@ -342,34 +500,82 @@
         updateTotalClaim();
     }
 
-    // ==================== IMAGE UPLOAD ====================
+    function collectPropertyRows() {
+        const rows = document.querySelectorAll('#propertyTable tbody .property-row');
+        return Array.from(rows).map(row => ({
+            qty: row.querySelector('[name="prop_qty[]"]')?.value || '',
+            description: row.querySelector('[name="prop_desc[]"]')?.value || '',
+            price_paid: row.querySelector('[name="prop_price[]"]')?.value || '',
+            depreciation: row.querySelector('[name="prop_deprec[]"]')?.value || '',
+            claim_amount: row.querySelector('[name="prop_claim[]"]')?.value || '',
+        })).filter(item => item.description || item.qty || item.price_paid || item.claim_amount);
+    }
+
+    // ==================== FILE UPLOAD ====================
     let uploadedFiles = [];
+    const MAX_FILE_SIZE_MB = 5;
+    const MAX_FILE_COUNT = 10;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
 
     function renderPreviews() {
         const previewContainer = document.getElementById('imagePreviewContainer');
         previewContainer.innerHTML = '';
         uploadedFiles.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const div = document.createElement('div');
-                div.className = 'relative group';
-                div.innerHTML = `
-                    <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg border border-gray-200 shadow-sm">
+            const div = document.createElement('div');
+            div.className = 'relative group border border-gray-200 rounded-lg overflow-hidden bg-gray-50';
+            if (file.type === 'application/pdf') {
+                div.innerHTML =
+                    `
+                <div class="w-full h-24 flex flex-col items-center justify-center gap-1 bg-red-50">
+                    <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
+                    <span class="text-xs text-gray-500 truncate px-2 w-full text-center">${file.name}</span>
+                </div>
+                <button type="button" onclick="removeImage(${index})"
+                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">✕</button>`;
+            } else {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    div.innerHTML =
+                        `
+                    <img src="${e.target.result}" class="w-full h-24 object-cover">
                     <button type="button" onclick="removeImage(${index})"
-                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">✕</button>
-                `;
-                previewContainer.appendChild(div);
-            };
-            if (file) reader.readAsDataURL(file);
+                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">✕</button>`;
+                };
+                reader.readAsDataURL(file);
+            }
+            previewContainer.appendChild(div);
         });
+    }
+
+    function addFiles(newFiles) {
+        const errors = [];
+        for (const file of newFiles) {
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                errors.push(`"${file.name}" is not a supported file type.`);
+                continue;
+            }
+            if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                errors.push(`"${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`);
+                continue;
+            }
+            if (uploadedFiles.length >= MAX_FILE_COUNT) {
+                errors.push(`You can upload a maximum of ${MAX_FILE_COUNT} files.`);
+                break;
+            }
+            const isDuplicate = uploadedFiles.some(f => f.name === file.name && f.size === file.size);
+            if (isDuplicate) {
+                errors.push(`"${file.name}" has already been added.`);
+                continue;
+            }
+            uploadedFiles.push(file);
+        }
+        if (errors.length) showClaimError(errors.join('\n'));
+        renderPreviews();
     }
 
     window.removeImage = function(index) {
         uploadedFiles.splice(index, 1);
         renderPreviews();
-        const dt = new DataTransfer();
-        uploadedFiles.forEach(f => dt.items.add(f));
-        document.getElementById('imageUpload').files = dt.files;
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -377,10 +583,9 @@
         // ==================== POLICE CONDITIONAL ====================
         const policeRadios = document.querySelectorAll('input[name="police_reported"]');
         const policeSection = document.getElementById('policeDetails');
-
         policeRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
-                policeSection.classList.toggle('hidden', e.target.value !== 'yes');
+                policeSection?.classList.toggle('hidden', e.target.value !== 'yes');
             });
         });
 
@@ -388,7 +593,7 @@
         document.querySelectorAll('#propertyTable tbody .property-row').forEach(row => setupRowAutoCalc(row));
         updateTotalClaim();
 
-        // ==================== IMAGE UPLOAD INIT ====================
+        // ==================== FILE UPLOAD INIT ====================
         const dropzone = document.getElementById('dropzone');
         const fileInput = document.getElementById('imageUpload');
 
@@ -403,13 +608,11 @@
         dropzone?.addEventListener('drop', (e) => {
             e.preventDefault();
             dropzone.classList.remove('border-blue-500', 'bg-blue-50');
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-            uploadedFiles.push(...files);
-            renderPreviews();
+            addFiles(Array.from(e.dataTransfer.files));
         });
         fileInput?.addEventListener('change', (e) => {
-            uploadedFiles.push(...Array.from(e.target.files));
-            renderPreviews();
+            addFiles(Array.from(e.target.files));
+            e.target.value = '';
         });
 
         // ==================== PRE-FILL FROM POLICY ====================
@@ -429,50 +632,61 @@
         document.getElementById('fireClaimForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            if (!isChecked('declaration_agreement')) {
+            if (!isChecked('declaration_agreement') && !isStaff) {
                 showClaimError('Please read and accept the declaration before submitting.');
                 return;
             }
 
-            if (!val('digital_signature').trim()) {
+            if (!isStaff && !val('digital_signature').trim()) {
                 showClaimError('Please provide your digital signature before submitting.');
                 return;
             }
 
-            const formData = {
-                policy_id: val('policy_id') || '{{ $policyId }}',
-                claim_type: 'fire',
-                form_data: {
-                    // Section 1 — Policy & Insured
-                    policy_no: val('policy_no'),
-                    renewal_date: val('renewal_date'),
-                    insured_name: val('insured_name'),
-                    address: val('address'),
-                    nature_of_business: val('nature_of_business'),
+            const formData = new FormData();
+            if (isEdit) formData.append('_method', 'PUT');
+            formData.append('claim_type', 'fire');
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]')
+                .getAttribute('content'));
+            formData.append('policy_id', val('policy_id') || '{{ $policyId }}');
 
-                    // Section 2 — Incident
-                    incident_datetime: val('incident_datetime'),
-                    exact_location: val('exact_location'),
-                    incident_description: val('incident_description'),
-                    damage_nature: val('damage_nature'),
-
-                    // Section 3 — Property items
-                    property_items: collectPropertyRows(),
-
-                    // Section 4 — Reports & Witness
-                    injured_persons: val('injured_persons'),
-                    police_reported: checked('police_reported'),
-                    police_evidence: val('police_evidence'),
-                    additional_info: val('additional_info'),
-
-                    // Declaration
-                    declaration_date: val('declaration_date'),
-                    digital_signature: val('digital_signature'),
-                    declaration_agreement: isChecked('declaration_agreement'),
-                }
+            const claimFields = {
+                policy_no: val('policy_no'),
+                renewal_date: val('renewal_date'),
+                insured_name: val('insured_name'),
+                address: val('address'),
+                nature_of_business: val('nature_of_business'),
+                incident_datetime: val('incident_datetime'),
+                exact_location: val('exact_location'),
+                incident_description: val('incident_description'),
+                damage_nature: val('damage_nature'),
+                property_items: collectPropertyRows(),
+                injured_persons: val('injured_persons'),
+                police_reported: checked('police_reported'),
+                police_evidence: val('police_evidence'),
+                additional_info: val('additional_info'),
+                declaration_date: val('declaration_date'),
+                digital_signature: val('digital_signature'),
+                declaration_agreement: isChecked('declaration_agreement'),
             };
 
-            await submitClaim('fireClaimForm', formData);
+            Object.entries(claimFields).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                    formData.append(`form_data[${key}]`, typeof value === 'object' ? JSON
+                        .stringify(value) : value);
+                }
+            });
+
+            if (isStaff) {
+                const note = val('note');
+                if (note) formData.append('note', note);
+            }
+
+            uploadedFiles.forEach((file, index) => {
+                formData.append(`documents[${index}]`, file, file.name);
+            });
+
+            const action = document.getElementById('fireClaimForm').dataset.action;
+            await submitClaimWithFiles('fireClaimForm', formData, action);
         });
     });
 </script>
