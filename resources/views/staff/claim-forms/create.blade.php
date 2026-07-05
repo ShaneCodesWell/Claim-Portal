@@ -42,7 +42,18 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Template Name *</label>
                     <input type="text" id="tmpl-name" placeholder="e.g., Motor Claim Form"
+                        value="{{ $formTemplate->name ?? '' }}"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Product Type *</label>
+                    <select id="tmpl-product-type"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        <option value="">Select product</option>
+                        <option value="motor" @selected(($formTemplate->product_type ?? '') === 'motor')>Motor</option>
+                        <option value="fire" @selected(($formTemplate->product_type ?? '') === 'fire')>Fire</option>
+                        <option value="general_accident" @selected(($formTemplate->product_type ?? '') === 'general_accident')>General Accident</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Version</label>
@@ -52,8 +63,9 @@
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Description (internal use)</label>
                     <textarea rows="2" placeholder="What product/use case is this form for?"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"></textarea>
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none resize-none">{{ $formTemplate->description ?? '' }}</textarea>
                 </div>
+                <input type="hidden" id="tmpl-id" value="{{ $formTemplate->id ?? '' }}">
             </div>
         </div>
 
@@ -77,7 +89,7 @@
             </button>
         </div>
 
-        {{-- File Attachments --}}
+        {{-- File Attachments Yes/No If we want File attachments on the form --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <i class="fas fa-paperclip text-blue-500"></i> File Attachments
@@ -151,9 +163,7 @@
 
     </div>
 
-    {{-- ============================================================
-         TEMPLATES (hidden, cloned via JS)
-    ============================================================ --}}
+    {{-- TEMPLATES (hidden, cloned via JS) --}}
 
     {{-- Section --}}
     <template id="tpl-section">
@@ -290,12 +300,10 @@
         </div>
     </template>
 
-    {{-- ============================================================
-         REPEATABLE GROUP
+    {{--  REPEATABLE GROUP
          Card-style repeatable block (e.g. Injured Persons).
          Builder: define sub-fields per card.
-         Runtime: "Add another" clones the card with those sub-fields.
-    ============================================================ --}}
+         Runtime: "Add another" clones the card with those sub-fields. --}}
     <template id="tpl-field-repeatable-group">
         <div class="field-row-rgroup border border-teal-200 rounded-xl bg-white p-4" data-field-id="">
             <div class="flex items-start justify-between gap-2 mb-3">
@@ -373,13 +381,11 @@
         </div>
     </template>
 
-    {{-- ============================================================
-         REPEATABLE TABLE
+    {{-- REPEATABLE TABLE
          Row-based repeatable table (e.g. Particulars of Claim).
          Builder: define columns + types.
          Runtime: "Add Row" appends a new <tr>. Totals auto-appear
-         when Number or Calculated columns exist.
-    ============================================================ --}}
+         when Number or Calculated columns exist. --}}
     <template id="tpl-field-repeatable-table">
         <div class="field-row-rtable border border-orange-200 rounded-xl bg-white p-4" data-field-id="">
             <div class="flex items-start justify-between gap-2 mb-3">
@@ -466,6 +472,23 @@
         </div>
     </template>
 
+    {{-- Locked field (custom logic) --}}
+    <template id="tpl-field-locked">
+        <div class="field-row-locked flex items-center justify-between gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg"
+            data-field-id="">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-lock text-amber-500 text-xs"></i>
+                <span class="locked-field-label text-sm font-medium text-gray-700"></span>
+                <span class="text-xs bg-amber-100 border border-amber-300 text-amber-700 px-2 py-0.5 rounded">
+                    Custom logic — not editable here
+                </span>
+            </div>
+            <button class="btn-remove-field text-gray-300 hover:text-red-500 transition text-sm">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </template>
+
     {{-- Column pill inside repeatable table builder --}}
     <template id="tpl-col-pill">
         <div class="col-pill flex items-center justify-between gap-2 p-2 bg-white border border-orange-200 rounded-lg">
@@ -481,9 +504,10 @@
         </div>
     </template>
 
-    {{-- ============================================================
-         JAVASCRIPT
-    ============================================================ --}}
+    {{-- JAVASCRIPT --}}
+    <script>
+        window.existingSchema = @json($formTemplate->schema ?? null);
+    </script>
     <script>
         const fieldTypeLabels = {
             text: 'Input',
@@ -504,14 +528,15 @@
         }
 
         // ── Sections ───────────────────────────────────────────────
-        function addSection() {
+        function addSection(data = null) {
             sectionCount++;
-            const sid = uid();
+            const sid = data?.key || uid();
             const tpl = document.getElementById('tpl-section');
             const clone = tpl.content.cloneNode(true);
             const block = clone.querySelector('.section-block');
             block.dataset.sectionId = sid;
             block.querySelector('.section-badge').textContent = 'Section ' + sectionCount;
+            if (data?.title) block.querySelector('.section-title').value = data.title;
 
             block.querySelector('.btn-remove-section').addEventListener('click', () => {
                 block.remove();
@@ -526,6 +551,15 @@
 
             document.getElementById('sections-container').appendChild(clone);
             renumberSections();
+
+            (data?.fields || []).forEach(field => {
+                const fieldsContainer = block.querySelector('.fields-container');
+                if (field.branches) {
+                    addLockedField(fieldsContainer, field);
+                } else {
+                    addField(fieldsContainer, field.type, field);
+                }
+            });
         }
 
         function renumberSections() {
@@ -536,59 +570,84 @@
         }
 
         // ── Field dispatcher ───────────────────────────────────────
-        function addField(container, type) {
-            if (type === 'radio') return addRadioField(container);
-            if (type === 'repeatable-group') return addRepeatableGroup(container);
-            if (type === 'repeatable-table') return addRepeatableTable(container);
-            addSimpleField(container, type);
+        function addField(container, type, data = null) {
+            if (type === 'radio') return addRadioField(container, data);
+            if (type === 'repeatable-group') return addRepeatableGroup(container, data);
+            if (type === 'repeatable-table') return addRepeatableTable(container, data);
+            addSimpleField(container, type, data);
         }
 
         // ── Simple field ───────────────────────────────────────────
-        function addSimpleField(container, type) {
+        function addSimpleField(container, type, data = null) {
             const tpl = document.getElementById('tpl-field-simple');
             const clone = tpl.content.cloneNode(true);
             const row = clone.querySelector('.field-row');
             row.dataset.fieldId = uid();
+            row.dataset.fieldKey = data?.key || '';
+            row.dataset.fieldType = type;
             row.querySelector('.field-type-tag').textContent = fieldTypeLabels[type];
-            if (type === 'select') row.querySelector('.field-options-row').classList.remove('hidden');
+            if (data?.label) row.querySelector('.field-label-input').value = data.label;
+            if (data?.required) row.querySelector('.field-required').checked = true;
+            if (type === 'select') {
+                row.querySelector('.field-options-row').classList.remove('hidden');
+                if (data?.options) {
+                    const labels = data.options.map(o => (typeof o === 'object' ? o.label : o));
+                    row.querySelector('.field-options-row input').value = labels.join(', ');
+                }
+            }
             row.querySelector('.btn-remove-field').addEventListener('click', () => row.remove());
             container.appendChild(clone);
         }
 
         // ── Radio field ────────────────────────────────────────────
-        function addRadioField(container) {
+        function addRadioField(container, data = null) {
             const tpl = document.getElementById('tpl-field-radio');
             const clone = tpl.content.cloneNode(true);
             const block = clone.querySelector('.field-row-radio');
             block.dataset.fieldId = uid();
+            block.dataset.fieldKey = data?.key || '';
+            if (data?.label) block.querySelector('.field-label-input').value = data.label;
+            const reqBox = block.querySelector('.field-required');
+            if (reqBox) reqBox.checked = data?.required ?? true;
+
             block.querySelector('.btn-remove-field').addEventListener('click', () => block.remove());
             block.querySelectorAll('.btn-add-cond-field').forEach(btn => {
                 btn.addEventListener('click', () => {
                     addConditionalField(block.querySelector('.cond-fields-container'), btn.dataset.type);
                 });
             });
+
             container.appendChild(clone);
+
+            (data?.conditional_fields || []).forEach(cond => {
+                addConditionalField(block.querySelector('.cond-fields-container'), cond.type, cond);
+            });
         }
 
         // ── Conditional child field ────────────────────────────────
-        function addConditionalField(container, type) {
+        function addConditionalField(container, type, data = null) {
             const tpl = document.getElementById('tpl-cond-field');
             const clone = tpl.content.cloneNode(true);
             const row = clone.querySelector('.cond-field');
+            row.dataset.fieldKey = data?.key || '';
+            row.dataset.fieldType = type;
             row.querySelector('.cond-field-type-tag').textContent = fieldTypeLabels[type];
+            if (data?.label) row.querySelector('input[type="text"]').value = data.label;
             row.querySelector('.btn-remove-cond-field').addEventListener('click', () => row.remove());
             container.appendChild(clone);
         }
 
         // ── Repeatable Group ───────────────────────────────────────
-        function addRepeatableGroup(container) {
+        function addRepeatableGroup(container, data = null) {
             const tpl = document.getElementById('tpl-field-repeatable-group');
             const clone = tpl.content.cloneNode(true);
             const block = clone.querySelector('.field-row-rgroup');
             block.dataset.fieldId = uid();
+            block.dataset.fieldKey = data?.key || '';
+            if (data?.label) block.querySelector('.rgroup-label').value = data.label;
+            if (data?.add_button_label) block.querySelector('.rgroup-btn-label').value = data.add_button_label;
 
             block.querySelector('.btn-remove-field').addEventListener('click', () => block.remove());
-
             block.querySelectorAll('.btn-add-subfield').forEach(btn => {
                 btn.addEventListener('click', () => {
                     addSubfield(block.querySelector('.rgroup-subfields'), btn.dataset.type);
@@ -596,28 +655,40 @@
             });
 
             container.appendChild(clone);
+
+            (data?.subfields || []).forEach(sub => {
+                addSubfield(block.querySelector('.rgroup-subfields'), sub.type, sub);
+            });
         }
 
-        function addSubfield(container, type) {
+        function addSubfield(container, type, data = null) {
             const tpl = document.getElementById('tpl-subfield-row');
             const clone = tpl.content.cloneNode(true);
             const row = clone.querySelector('.subfield-row');
+            row.dataset.fieldKey = data?.key || '';
+            row.dataset.fieldType = type;
             row.querySelector('.subfield-type-tag').textContent = fieldTypeLabels[type];
-            if (type === 'select') row.querySelector('.subfield-options-row').classList.remove('hidden');
+            if (data?.label) row.querySelector('input[type="text"]').value = data.label;
+            if (type === 'select') {
+                row.querySelector('.subfield-options-row').classList.remove('hidden');
+                if (data?.options) row.querySelector('.subfield-options-row input').value = data.options.join(', ');
+            }
             row.querySelector('.btn-remove-subfield').addEventListener('click', () => row.remove());
             container.appendChild(clone);
         }
 
         // ── Repeatable Table ───────────────────────────────────────
-        function addRepeatableTable(container) {
+        function addRepeatableTable(container, data = null) {
             const tpl = document.getElementById('tpl-field-repeatable-table');
             const clone = tpl.content.cloneNode(true);
             const block = clone.querySelector('.field-row-rtable');
             block.dataset.fieldId = uid();
+            block.dataset.fieldKey = data?.key || '';
+            if (data?.label) block.querySelector('.rtable-label').value = data.label;
+            if (data?.add_button_label) block.querySelector('.rtable-btn-label').value = data.add_button_label;
 
             block.querySelector('.btn-remove-field').addEventListener('click', () => block.remove());
 
-            // Add column on button click
             block.querySelector('.btn-add-col').addEventListener('click', () => {
                 const nameInput = block.querySelector('.rtable-col-input');
                 const typeSelect = block.querySelector('.rtable-col-type');
@@ -632,7 +703,6 @@
                 nameInput.focus();
             });
 
-            // Also add column on Enter key in name input
             block.querySelector('.rtable-col-input').addEventListener('keydown', e => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -641,13 +711,19 @@
             });
 
             container.appendChild(clone);
+
+            (data?.columns || []).forEach(col => {
+                addTableColumn(block, col.label, col.type, col.key, col.formula);
+            });
         }
 
-        function addTableColumn(tableBlock, colName, colType) {
-            // Append pill to column list
+        function addTableColumn(tableBlock, colName, colType, colKey = null, formula = null) {
             const pillTpl = document.getElementById('tpl-col-pill');
             const pillClone = pillTpl.content.cloneNode(true);
             const pill = pillClone.querySelector('.col-pill');
+            pill.dataset.colKey = colKey || '';
+            pill.dataset.colType = colType;
+            pill.dataset.formula = formula || '';
             pill.querySelector('.col-pill-name').textContent = colName;
             pill.querySelector('.col-pill-type').textContent = fieldTypeLabels[colType] || colType;
 
@@ -658,6 +734,158 @@
 
             tableBlock.querySelector('.rtable-columns').appendChild(pillClone);
             refreshTablePreview(tableBlock);
+        }
+
+        function addLockedField(container, fieldData) {
+            const tpl = document.getElementById('tpl-field-locked');
+            const clone = tpl.content.cloneNode(true);
+            const row = clone.querySelector('.field-row-locked');
+            row.dataset.fieldId = uid();
+            row.dataset.rawField = JSON.stringify(fieldData);
+            row.querySelector('.locked-field-label').textContent = fieldData.label || fieldData.key;
+            row.querySelector('.btn-remove-field').addEventListener('click', () => row.remove());
+            container.appendChild(clone);
+        }
+
+        function slugify(text) {
+            return (text || '').toString().toLowerCase().trim()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '') || 'field';
+        }
+
+        function uniqueKey(base, usedKeys) {
+            let key = base,
+                i = 2;
+            while (usedKeys.has(key)) {
+                key = `${base}_${i}`;
+                i++;
+            }
+            usedKeys.add(key);
+            return key;
+        }
+
+        function loadSchemaIntoBuilder(schema) {
+            (schema.sections || []).forEach(section => addSection(section));
+        }
+
+        function serializeBuilderToSchema() {
+            const productType = document.getElementById('tmpl-product-type').value;
+            const sections = [];
+
+            document.querySelectorAll('.section-block').forEach(sectionEl => {
+                const usedKeys = new Set();
+                const title = sectionEl.querySelector('.section-title').value.trim() || 'Untitled Section';
+                const sectionKey = sectionEl.dataset.sectionId && isNaN(sectionEl.dataset.sectionId) ?
+                    sectionEl.dataset.sectionId :
+                    slugify(title);
+
+                const fields = [];
+                sectionEl.querySelectorAll(':scope > .fields-container > *').forEach(fieldEl => {
+                    fields.push(serializeFieldElement(fieldEl, usedKeys));
+                });
+
+                sections.push({
+                    key: sectionKey,
+                    title,
+                    fields
+                });
+            });
+
+            return {
+                product_type: productType,
+                sections
+            };
+        }
+
+        function serializeFieldElement(el, usedKeys) {
+            if (el.classList.contains('field-row-locked')) {
+                return JSON.parse(el.dataset.rawField);
+            }
+
+            if (el.classList.contains('field-row-rgroup')) {
+                const label = el.querySelector('.rgroup-label').value.trim();
+                const key = el.dataset.fieldKey || uniqueKey(slugify(label), usedKeys);
+                const subfields = [];
+                el.querySelectorAll('.rgroup-subfields > .subfield-row').forEach(sub => {
+                    subfields.push(serializeSimpleLikeField(sub, usedKeys, true));
+                });
+                return {
+                    key,
+                    label,
+                    type: 'repeatable-group',
+                    add_button_label: el.querySelector('.rgroup-btn-label').value.trim() || '+ Add',
+                    subfields,
+                };
+            }
+
+            if (el.classList.contains('field-row-rtable')) {
+                const label = el.querySelector('.rtable-label').value.trim();
+                const key = el.dataset.fieldKey || uniqueKey(slugify(label), usedKeys);
+                const columns = [];
+                el.querySelectorAll('.rtable-columns > .col-pill').forEach(pill => {
+                    const colLabel = pill.querySelector('.col-pill-name').textContent;
+                    const colType = pill.dataset.colType;
+                    const colKey = pill.dataset.colKey || slugify(colLabel);
+                    const col = {
+                        key: colKey,
+                        label: colLabel,
+                        type: colType
+                    };
+                    if (colType === 'calculated' && pill.dataset.formula) col.formula = pill.dataset.formula;
+                    columns.push(col);
+                });
+                return {
+                    key,
+                    label,
+                    type: 'repeatable-table',
+                    add_button_label: el.querySelector('.rtable-btn-label').value.trim() || '+ Add Row',
+                    columns,
+                };
+            }
+
+            if (el.classList.contains('field-row-radio')) {
+                const label = el.querySelector('.field-label-input').value.trim();
+                const key = el.dataset.fieldKey || uniqueKey(slugify(label), usedKeys);
+                const required = el.querySelector('.field-required')?.checked ?? true;
+                const conditionalFields = [];
+                el.querySelectorAll('.cond-fields-container > .cond-field').forEach(cond => {
+                    conditionalFields.push(serializeSimpleLikeField(cond, usedKeys, false, true));
+                });
+                return {
+                    key,
+                    label,
+                    type: 'radio',
+                    required,
+                    options: ['yes', 'no'],
+                    conditional_fields: conditionalFields
+                };
+            }
+
+            return serializeSimpleLikeField(el, usedKeys);
+        }
+
+        function serializeSimpleLikeField(el, usedKeys, isSubfield = false, isCondField = false) {
+            const labelInput = el.querySelector(isSubfield || isCondField ? 'input[type="text"]' : '.field-label-input');
+            const label = labelInput.value.trim() || 'Untitled Field';
+            const key = el.dataset.fieldKey || uniqueKey(slugify(label), usedKeys);
+            const type = el.dataset.fieldType || 'text';
+            const requiredCheckbox = el.querySelector('input[type="checkbox"]');
+            const required = requiredCheckbox ? requiredCheckbox.checked : false;
+
+            const field = {
+                key,
+                label,
+                type,
+                required
+            };
+
+            if (type === 'select') {
+                const optsInput = el.querySelector(isSubfield ? '.subfield-options-row input' : '.field-options-row input');
+                const raw = optsInput?.value.trim() || '';
+                field.options = raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : [];
+            }
+
+            return field;
         }
 
         function refreshTablePreview(tableBlock) {
@@ -702,25 +930,61 @@
 
         // ── Save Draft ─────────────────────────────────────────────
         function saveDraft() {
-            const name = document.getElementById('tmpl-name').value.trim();
-            // Replace with your AJAX / form submission logic
-            alert(name ? `Draft saved: "${name}"` : 'Draft saved (no template name set).');
+            submitTemplate('draft');
         }
 
-        // ── Publish Template ───────────────────────────────────────
         function publishTemplate() {
+            submitTemplate('published');
+        }
+
+        async function submitTemplate(status) {
             const name = document.getElementById('tmpl-name').value.trim();
+            const productType = document.getElementById('tmpl-product-type').value;
+
             if (!name) {
-                alert('Please enter a template name before publishing.');
+                alert('Please enter a template name.');
                 return;
             }
-            const sections = document.querySelectorAll('.section-block');
-            if (!sections.length) {
-                alert('Add at least one section before publishing.');
+            if (!productType) {
+                alert('Please select a product type.');
                 return;
             }
-            // Replace with your actual submission logic
-            alert(`Template "${name}" published with ${sections.length} section(s).`);
+            if (!document.querySelectorAll('.section-block').length) {
+                alert('Add at least one section before saving.');
+                return;
+            }
+
+            const schema = serializeBuilderToSchema();
+            const description = document.getElementById('tmpl-description')?.value || '';
+            const templateId = document.getElementById('tmpl-id')?.value;
+
+            const payload = {
+                product_type: productType,
+                name,
+                description,
+                status,
+                schema
+            };
+            const url = templateId ? `/staff/claim-forms/${templateId}` : '/staff/claim-forms';
+            const method = templateId ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content'),
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                if (!res.ok) throw new Error(await res.text());
+                window.location.href = '{{ route('claim-form') }}';
+            } catch (err) {
+                console.error(err);
+                alert('Could not save the template — check the console for details.');
+            }
         }
     </script>
 </x-layouts.staff>

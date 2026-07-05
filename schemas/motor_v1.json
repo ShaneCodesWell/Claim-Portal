@@ -1,0 +1,138 @@
+{
+  "product_type": "motor",
+  "sections": [
+    {
+      "key": "claimant_info",
+      "title": "CLAIMANT / POLICYHOLDER INFORMATION",
+      "fields": [
+        { "key": "fullname", "label": "Full Name", "type": "text", "required": true, "prefill_source": "customer.name" },
+        { "key": "email", "label": "Email Address", "type": "text", "required": true, "prefill_source": "customer.email" },
+        { "key": "phone", "label": "Phone Number", "type": "text", "required": true, "prefill_source": "customer.phone" },
+        { "key": "occupation", "label": "Occupation", "type": "text", "required": false }
+      ]
+    },
+    {
+      "key": "vehicle_particulars",
+      "title": "PARTICULARS OF MOTOR VEHICLE CONCERNED",
+      "fields": [
+        { "key": "registration_no", "label": "Registration Number", "type": "text", "required": true, "prefill_source": "risk.risk_ref_no" },
+        { "key": "make", "label": "Make", "type": "text", "required": true, "prefill_source": "risk.vehicle_make" },
+        { "key": "model", "label": "Model", "type": "text", "required": true, "prefill_source": "risk.vehicle_model" },
+        { "key": "year_of_make", "label": "Year of Make", "type": "text", "required": true, "prefill_source": "risk.vehicle_yr_manufacture" },
+        { "key": "vehicle_purpose", "label": "State fully the purpose for which the vehicle was being used.", "type": "textarea", "required": true },
+        { "key": "vehicle_consent", "label": "Was the vehicle being used with your consent?", "type": "radio", "required": true, "options": ["yes", "no"] }
+      ]
+    },
+    {
+      "key": "driver_particulars",
+      "title": "PARTICULARS OF PERSON DRIVING AT THE TIME OF ACCIDENT",
+      "fields": [
+        {
+          "key": "driver_type",
+          "label": "Who was driving at the time of accident?",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "value": "self", "label": "Myself" },
+            { "value": "spouse", "label": "Spouse" },
+            { "value": "family_member", "label": "Family Member" },
+            { "value": "employee", "label": "Employee" },
+            { "value": "friend", "label": "Friend" },
+            { "value": "other", "label": "Other Person" }
+          ],
+          "option_branch_map": {
+            "self": "self",
+            "spouse": "not_self",
+            "family_member": "not_self",
+            "employee": "not_self",
+            "friend": "not_self",
+            "other": "not_self"
+          },
+          "branches": {
+            "self": {
+              "mode": "readonly_profile",
+              "fields": [
+                { "key": "driver_profile_name", "label": "Full Name", "prefill_source": "customer.name" },
+                { "key": "driver_profile_address", "label": "Address", "prefill_source": "customer.email" },
+                { "key": "driver_profile_phone", "label": "Telephone", "prefill_source": "customer.phone" }
+              ]
+            },
+            "not_self": {
+              "fields": [
+                { "key": "driver_fullname", "label": "Full Name", "type": "text", "required": true },
+                { "key": "driver_address", "label": "Address", "type": "text", "required": true },
+                { "key": "driver_age", "label": "Age", "type": "number", "required": true },
+                { "key": "driver_occupation", "label": "Occupation", "type": "text", "required": true },
+                { "key": "driver_phone", "label": "Telephone", "type": "text", "required": true },
+                { "key": "driver_license", "label": "Driving License No.", "type": "text", "required": true },
+                { "key": "driver_license_date", "label": "Date of Issue", "type": "date", "required": true }
+              ]
+            }
+          }
+        },
+        {
+          "key": "driver_insurance_details",
+          "label": "State name and address of the insurer of the person driving and number of the motor vehicle policy held by him/her",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "accident_circumstances",
+      "title": "CIRCUMSTANCES OF ACCIDENT",
+      "fields": [
+        { "key": "accident_date", "label": "Date", "type": "date", "required": true },
+        { "key": "exact_location", "label": "Exact location of incident", "type": "text", "required": true },
+        { "key": "people_in_vehicle", "label": "How many people were in your vehicle at the time?", "type": "number", "required": true },
+        { "key": "report_date", "label": "If you were not in the vehicle, when was the accident reported to you?", "type": "text", "required": false },
+        { "key": "accident_description", "label": "Give full description of how the accident happened", "type": "textarea", "required": true },
+        { "key": "fault_person", "label": "Was the accident caused by you? Yes/No", "type": "text", "required": true },
+        { "key": "vehicle_damage", "label": "Describe the damage to your vehicle", "type": "textarea", "required": true },
+        { "key": "damaged_vehicle_location", "label": "State exact current location of the damaged vehicle", "type": "text", "required": true },
+        { "key": "repairer_fullname", "label": "Workshop — Full Name", "type": "text", "required": true },
+        { "key": "repairer_address", "label": "Workshop — Contact", "type": "text", "required": true }
+      ]
+    },
+    {
+      "key": "third_parties",
+      "title": "THIRD PARTIES INVOLVED IN ACCIDENT",
+      "fields": [
+        {
+          "key": "your_vehicle_injured",
+          "label": "Injured Persons in Your Vehicle",
+          "type": "repeatable-group",
+          "add_button_label": "+ Add",
+          "subfields": [
+            { "key": "name", "label": "Full Name", "type": "text" },
+            { "key": "age", "label": "Age", "type": "number" },
+            { "key": "address", "label": "Address", "type": "text" },
+            { "key": "injuries", "label": "Extent of Injuries", "type": "textarea" }
+          ]
+        },
+        {
+          "key": "involved_vehicles",
+          "label": "Details of vehicles involved",
+          "type": "repeatable-group",
+          "add_button_label": "+ Add Vehicle",
+          "subfields": [
+            { "key": "reg", "label": "Registration Number", "type": "text" },
+            { "key": "make", "label": "Make", "type": "text" },
+            { "key": "model", "label": "Model", "type": "text" }
+          ]
+        },
+        { "key": "other_vehicle_damage", "label": "Details of damage to this vehicle", "type": "textarea", "required": true },
+        {
+          "key": "police_report",
+          "label": "Was the accident reported to the police?",
+          "type": "radio",
+          "required": true,
+          "options": ["yes", "no"],
+          "conditional_fields": [
+            { "key": "police_report_details", "label": "State when and where reported", "type": "textarea", "required": true }
+          ]
+        }
+      ]
+    }
+  ]
+}

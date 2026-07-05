@@ -1,0 +1,63 @@
+{
+  "product_type": "fire",
+  "sections": [
+    {
+      "key": "policy_insured_info",
+      "title": "I. Policy & Insured Information",
+      "fields": [
+        { "key": "policy_no", "label": "Policy No.", "type": "text", "required": true, "prefill_source": "policy.external_policy_id" },
+        { "key": "renewal_date", "label": "Renewal Date", "type": "date", "required": true },
+        { "key": "insured_name", "label": "Name of Insured", "type": "text", "required": true, "prefill_source": "customer.name" },
+        { "key": "address", "label": "Address", "type": "text", "required": true },
+        { "key": "nature_of_business", "label": "Nature of Business", "type": "text", "required": true }
+      ]
+    },
+    {
+      "key": "loss_incident_details",
+      "title": "II. Details of Loss/Incident",
+      "fields": [
+        { "key": "incident_datetime", "label": "Date and Time of Accident", "type": "text", "required": true },
+        { "key": "exact_location", "label": "Exact Location", "type": "text", "required": true },
+        { "key": "incident_description", "label": "Description of Incident", "type": "textarea", "required": true },
+        { "key": "damage_nature", "label": "Nature of Damage/Loss to Property", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "key": "particulars_of_claim",
+      "title": "III. Particulars of Claim",
+      "fields": [
+        {
+          "key": "claim_properties",
+          "label": "Property Items",
+          "type": "repeatable-table",
+          "add_button_label": "+ Add Property",
+          "columns": [
+            { "key": "qty", "label": "Qty", "type": "number" },
+            { "key": "desc", "label": "Description", "type": "text" },
+            { "key": "price", "label": "Price Paid", "type": "number" },
+            { "key": "deprec", "label": "Depreciation", "type": "number" },
+            { "key": "claim_amt", "label": "Claim Amt", "type": "calculated", "formula": "price - deprec" }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "reports_witness_info",
+      "title": "IV. Reports & Witness Information",
+      "fields": [
+        { "key": "injured_persons", "label": "Name and address of any person injured", "type": "text", "required": false },
+        {
+          "key": "police_reported",
+          "label": "Was it reported to the Police?",
+          "type": "radio",
+          "required": true,
+          "options": ["yes", "no"],
+          "conditional_fields": [
+            { "key": "police_evidence", "label": "Police Witness/Officer Number & Evidence Details", "type": "textarea", "required": true }
+          ]
+        },
+        { "key": "additional_info", "label": "Other Information Necessary", "type": "textarea", "required": false }
+      ]
+    }
+  ]
+}

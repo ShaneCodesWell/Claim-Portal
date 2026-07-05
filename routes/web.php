@@ -14,12 +14,13 @@ use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\Staff\CommitteeClaimController;
 use App\Http\Controllers\Staff\GlimsSyncController;
+use App\Http\Controllers\FormTemplateController;
 use App\Http\Controllers\Staff\StaffPolicySearchController;
 use App\Http\Controllers\Surveyor\ClaimController as SurveyorClaimController;
-use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Agent\ClaimController as AgentClaimController;
 use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
 use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
+use Illuminate\Support\Facades\Route;
 
 // Auth Routes
 Route::get('/', [AuthController::class, 'showUserSelectForm'])->name('user.select');
@@ -50,6 +51,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Forms - Publicy accessibly by everyone
 Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
+// Route::get('/motor-form-v2', [MotorFormController::class, 'index2'])->name('motor-form.v2');
 Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
 Route::get('/fire-form', [FireController::class, 'index'])->name('fire-form');
 
@@ -77,7 +79,6 @@ Route::middleware('auth.customer')->group(function () {
     Route::post('claims/{claim}/documents', [CustomerClaimController::class, 'uploadDocuments'])->name('customer.claims.documents');
     Route::get('/documents/{document}/preview', [CustomerClaimController::class, 'previewDocument'])->name('customer.documents.preview');
     Route::delete('claims/documents/{document}', [CustomerClaimController::class, 'destroyDocument'])->name('customer.claims.documents.destroy');
-
 });
 
 // Staff routes — accessible by ALL staff including admins
@@ -108,6 +109,11 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
 
     // Claim Forms & Documents
     Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');
+    Route::get('/staff/claim-forms/create', [FormTemplateController::class, 'create'])->name('create-claim-form');
+    Route::get('/staff/claim-forms/{formTemplate}/edit', [FormTemplateController::class, 'edit'])->name('staff.claim-forms.edit');
+    Route::get('/staff/claim-forms/{formTemplate}/preview', [FormTemplateController::class, 'preview'])->name('staff.claim-forms.preview');
+    Route::post('/staff/claim-forms', [FormTemplateController::class, 'store'])->name('staff.claim-forms.store');
+    Route::put('/staff/claim-forms/{formTemplate}', [FormTemplateController::class, 'update'])->name('staff.claim-forms.update');
 
     // Static Views
     Route::get('/staff/claim-forms/view/motor', [StaffController::class, 'claimFormsMotor'])->name('claim-form-motor');

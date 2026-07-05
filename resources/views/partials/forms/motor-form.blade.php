@@ -172,7 +172,7 @@
                     </div>
                 </div>
 
-                <div class="mb-6">
+                {{-- <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Is the vehicle the subject of a hire
                         purchase or loan agreement? <span class="text-red-500">*</span></label>
                     <div class="flex flex-wrap gap-4">
@@ -196,7 +196,7 @@
                         <input type="text" name="finance_company" value="{{ $f['finance_company'] ?? '' }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1">State fully the purpose for which the
@@ -334,12 +334,13 @@
                         <input type="date" name="accident_date" value="{{ $f['accident_date'] ?? '' }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                     </div>
-                    <div>
+                    {{-- Reuested Removal --}}
+                    {{-- <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Time <span
                                 class="text-red-500">*</span></label>
                         <input type="time" name="accident_time" value="{{ $f['accident_time'] ?? '' }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Exact location of incident <span
@@ -365,9 +366,9 @@
                     <textarea name="accident_description" rows="4"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">{{ $f['accident_description'] ?? '' }}</textarea>
                 </div>
+                {{-- Updated Here --}}
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">In your opinion, was the accident
-                        caused by you or the other driver? If not, by whom? <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Was the accident caused by you? Yes/ No<span class="text-red-500">*</span></label>
                     <input type="text" name="fault_person" value="{{ $f['fault_person'] ?? '' }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                 </div>
@@ -542,7 +543,8 @@
                     </div>
                 </div>
 
-                <div class="mb-6">
+                {{-- Requested Removal --}}
+                {{-- <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Owner of Accident Vehicle
                         Information</label>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -563,7 +565,7 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Details of damage to this vehicle <span

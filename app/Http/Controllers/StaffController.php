@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Department;
 use App\Models\Policy;
 use App\Models\User;
+use App\Models\FormTemplate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
@@ -20,24 +21,37 @@ class StaffController extends Controller
      * Display a listing of the resource.
      */
 
-    // public function processClaimMotor()
+    // public function claimForms()
     // {
-    //     return view('staff.process-claim.motor');
-    // }
-
-    // public function processClaimFire()
-    // {
-    //     return view('staff.process-claim.fire');
-    // }
-
-    // public function processClaimGeneralAccident()
-    // {
-    //     return view('staff.process-claim.general-accident');
+    //     return view('staff.claim-forms.index');
     // }
 
     public function claimForms()
     {
-        return view('staff.claim-forms.index');
+        // One card per product — whichever version is currently published.
+        $templates = FormTemplate::where('status', 'published')
+            ->get()
+            ->groupBy('product_type')
+            ->map(fn($versions) => $versions->sortByDesc('version')->first())
+            ->map(function ($template) {
+                $fields = collect($template->schema['sections'] ?? [])
+                    ->flatMap(fn($section) => $section['fields'] ?? []);
+
+                return (object) [
+                    'id' => $template->id,
+                    'product_type' => $template->product_type,
+                    'name' => $template->name,
+                    'version' => $template->version,
+                    'updated_at' => $template->updated_at,
+                    'field_count' => $fields->count(),
+                    'preview_keys' => $fields->pluck('key')->take(3)->all(),
+                    'more_count' => max($fields->count() - 3, 0),
+                    'claims_count' => \App\Models\Claim::where('form_template_id', $template->id)->count(),
+                ];
+            })
+            ->values();
+
+        return view('staff.claim-forms.index', compact('templates'));
     }
 
     public function claimFormsMotor()

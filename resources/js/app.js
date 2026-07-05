@@ -64,6 +64,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") window.closeDocPreview();
     });
+
+    if (window.existingSchema) {
+        loadSchemaIntoBuilder(window.existingSchema);
+    }
 });
 
 

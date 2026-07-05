@@ -6,6 +6,8 @@ use App\Http\Requests\UpdateMotorFormRequest;
 use App\Models\Customer;
 use App\Models\MotorForm;
 use App\Models\Policy;
+use App\Support\FormPrefillResolver;
+use App\Models\FormTemplate;
 use Illuminate\Http\Request;
 
 class MotorFormController extends Controller
@@ -13,37 +15,78 @@ class MotorFormController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // public function index(Request $request)
+    // {
+    //     $policyId = $request->query('policyId');
+    //     $riskId   = $request->query('riskId');
+
+    //     $policy   = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
+    //     $customer = Customer::findOrFail($policy->customer_id);
+
+    //     // Risks are keyed by risk ID — grab the first one
+    //     $risks = $policy->raw_payload['risks'] ?? [];
+    //     $firstRisk = collect($risks)->first() ?? [];
+
+    //     // If riskId is present (fleet), find that specific risk — else use the first
+    //     $risk = ($riskId && isset($risks[$riskId]))
+    //         ? $risks[$riskId]
+    //         : (collect($risks)->first() ?? []);
+
+    //     $formData = [
+    //         'registration_no' => $risk['risk_ref_no'] ?? '',
+    //         'make'            => $risk['vehicle_make'] ?? '',
+    //         'model'           => $risk['vehicle_model'] ?? '',
+    //         'year_of_make'    => $risk['vehicle_yr_manufacture'] ?? '',
+    //         'chassis_no'      => $risk['vehicle_chassis_no'] ?? '',
+    //         'colour'          => $risk['vehicle_colour'] ?? '',
+    //         'body_type'       => $risk['vehicle_body_type'] ?? '',
+    //         'fullname'        => $customer->name ?? '',
+    //         'email'           => $customer->email ?? '',
+    //         'phone'           => $customer->phone ?? '',
+    //     ];
+
+    //     return view('forms.motor_form.index', compact('policy', 'policyId', 'customer', 'formData'));
+    // }
+
+    /**
+     * Parallel-run controller: same route params and lookups as
+     * MotorFormController::index(), but renders through the generic
+     * schema-driven engine instead of the hardcoded motor-form partial.
+     *
+     * Suggested route for comparison, alongside the existing one:
+     *   Route::get('/motor-form-v2', [MotorFormControllerV2::class, 'index2'])->name('motor-form.v2');
+     */
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
-        $riskId   = $request->query('riskId');
-
-        $policy   = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
+        $riskId = $request->query('riskId');
+ 
+        $policy = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
         $customer = Customer::findOrFail($policy->customer_id);
-
-        // Risks are keyed by risk ID — grab the first one
+ 
         $risks = $policy->raw_payload['risks'] ?? [];
-        $firstRisk = collect($risks)->first() ?? [];
-
-        // If riskId is present (fleet), find that specific risk — else use the first
-        $risk = ($riskId && isset($risks[$riskId]))
-            ? $risks[$riskId]
-            : (collect($risks)->first() ?? []);
-
-        $formData = [
-            'registration_no' => $risk['risk_ref_no'] ?? '',
-            'make'            => $risk['vehicle_make'] ?? '',
-            'model'           => $risk['vehicle_model'] ?? '',
-            'year_of_make'    => $risk['vehicle_yr_manufacture'] ?? '',
-            'chassis_no'      => $risk['vehicle_chassis_no'] ?? '',
-            'colour'          => $risk['vehicle_colour'] ?? '',
-            'body_type'       => $risk['vehicle_body_type'] ?? '',
-            'fullname'        => $customer->name ?? '',
-            'email'           => $customer->email ?? '',
-            'phone'           => $customer->phone ?? '',
-        ];
-
-        return view('forms.motor_form.index', compact('policy', 'policyId', 'customer', 'formData'));
+        $risk = ($riskId && isset($risks[$riskId])) ? $risks[$riskId] : (collect($risks)->first() ?? []);
+ 
+        $template = FormTemplate::currentlyPublished('motor');
+ 
+        // Every prefill_source in the schema (customer.name, risk.vehicle_make, ...)
+        // resolves here automatically — no per-field lines to maintain.
+        $values = FormPrefillResolver::resolve($template->schema, [
+            'customer' => $customer,
+            'policy' => $policy,
+            'risk' => $risk,
+        ]);
+ 
+        return view('forms.motor_form_v2.index', [
+            'template' => $template,
+            'values' => $values,
+            'context' => 'customer',
+            'claim' => null,
+            'policy' => $policy,
+            'customer' => $customer,
+            'action' => route('claims.store'),
+            'method' => 'POST',
+        ]);
     }
 
     /**
