@@ -135,11 +135,6 @@ class ClaimController extends Controller
             'motor'            => 'customer.claims.edit.motor',
             'fire'             => 'customer.claims.edit.fire',
             'general_accident' => 'customer.claims.edit.general-accident',
-            // 'marine'           => 'customer.claims.edit.marine',
-            // 'aviation'         => 'customer.claims.edit.aviation',
-            // 'bond'             => 'customer.claims.edit.bond',
-            // 'engineering'      => 'customer.claims.edit.engineering',
-            // 'liability'        => 'customer.claims.edit.liability',
         ];
 
         $view = $viewMap[$claim->claim_type] ?? null;

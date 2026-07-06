@@ -406,12 +406,12 @@ class ClaimController extends Controller
         $isAssignedToOther = $assignee && ! $isAssignedToMe;
 
         $formData = array_merge(
-            $claim->form_data ?? [],
             [
-                'fullname' => $customer->name ?? '',
-                'email'    => $customer->email ?? '',
-                'phone'    => $customer->phone ?? '',
-            ]
+                'fullname' => $claim->customer->name ?? '',
+                'email'    => $claim->customer->email ?? '',
+                'phone'    => $claim->customer->phone ?? '',
+            ],
+            $claim->form_data ?? []
         );
 
         return view($view, compact(
