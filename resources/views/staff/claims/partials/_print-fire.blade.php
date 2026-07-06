@@ -5,21 +5,21 @@
     $customer = $claim->customer;
     $policy = $claim->policy;
 
-    // Particulars of claim rows — stored as array of objects in form_data
-    $particulars = $form['particulars'] ?? [];
-    // Pad to at least 10 rows for the table
-    while (count($particulars) < 10) {
-        $particulars[] = [
-            'quantity' => '',
-            'description' => '',
-            'date_place_purchase' => '',
-            'price_paid' => '',
-            'deduction' => '',
-            'value_before_loss' => '',
-            'value_salvage' => '',
-            'amount_claimed' => '',
-        ];
-    }
+    // Normalize truthy values coming in as strings: "yes", "true", "1", etc.
+    $isYes = fn($val) => in_array(strtolower((string) $val), ['yes', 'true', '1'], true);
+
+    $particulars = collect(json_decode($f('property_items'), true) ?: [])->map(
+        fn($row) => [
+            'quantity' => $row['qty'] ?? '',
+            'description' => $row['description'] ?? '',
+            'date_place_purchase' => $row['date_place_purchase'] ?? '',
+            'price_paid' => $row['price_paid'] ?? '',
+            'deduction' => $row['depreciation'] ?? '',
+            'value_before_loss' => $row['value_before_loss'] ?? '',
+            'value_salvage' => $row['value_salvage'] ?? '',
+            'amount_claimed' => $row['claim_amount'] ?? '',
+        ],
+    );
 
     // Insurances in force rows
     $insurances = $form['insurances_in_force'] ?? [];
@@ -63,9 +63,9 @@
     <tbody>
         <tr>
             <td class="field-label" style="width:20%">Policy No.</td>
-            <td class="field-value" style="width:30%">{{ $policy?->policy_number ?? $f('policy_number') }}</td>
+            <td class="field-value" style="width:30%">{{ $policy?->policy_number ?? $f('policy_no') }}</td>
             <td class="field-label" style="width:20%">Renewal Date</td>
-            <td class="field-value" style="width:30%">{{ $f('renewal_date') }}</td>
+            <td class="field-value" style="width:30%">{{ formatDate($f('renewal_date')) }}</td>
         </tr>
     </tbody>
 </table>
@@ -75,7 +75,7 @@
     <tbody>
         <tr>
             <td class="field-label" style="width:35%">Name of Insured</td>
-            <td class="field-value">{{ $f('name_of_insured') ?: $customer?->full_name ?? '' }}</td>
+            <td class="field-value">{{ $f('fullname') ?: $customer?->name ?? '' }}</td>
         </tr>
         <tr>
             <td class="field-label">Address</td>
@@ -87,11 +87,11 @@
         </tr>
         <tr>
             <td class="field-label">Date and Time of Accident</td>
-            <td class="field-value">{{ $f('date_time_of_accident') }}</td>
+            <td class="field-value">{{ formatDateTime($f('incident_datetime')) }}</td>
         </tr>
         <tr>
             <td class="field-label">Description of Incident</td>
-            <td class="field-value tall" style="min-height:40px;">{{ $f('description_of_incident') }}</td>
+            <td class="field-value tall" style="min-height:40px;">{{ $f('incident_description') }}</td>
         </tr>
         <tr>
             <td class="field-label">State Exact Location</td>
@@ -99,27 +99,27 @@
         </tr>
         <tr>
             <td class="field-label">Nature of Damage / Loss to Property</td>
-            <td class="field-value tall">{{ $f('nature_of_damage') }}</td>
+            <td class="field-value tall">{{ $f('damage_nature') }}</td>
         </tr>
         <tr>
             <td class="field-label">Name and Address of Any Person Injured</td>
-            <td class="field-value tall">{{ $f('injured_person') }}</td>
+            <td class="field-value tall">{{ $f('injured_persons') }}</td>
         </tr>
         <tr class="yn-row">
             <td class="field-label">Was it Reported to the Police?</td>
             <td class="field-value">
-                <span class="yn-box {{ $yn('reported_to_police') ? 'selected' : '' }}">YES</span>
-                <span class="yn-box {{ !$yn('reported_to_police') ? 'selected' : '' }}">NO</span>
+                <span class="yn-box {{ $isYes($f('police_reported')) ? 'selected' : '' }}">YES</span>
+                <span class="yn-box {{ !$isYes($f('police_reported')) ? 'selected' : '' }}">NO</span>
             </td>
         </tr>
         <tr>
             <td class="field-label" style="vertical-align:top;">Names and Addresses of all Witnesses and the Number of
                 the Police who took Evidence</td>
-            <td class="field-value tall" style="min-height:44px;">{{ $f('witnesses') }}</td>
+            <td class="field-value tall" style="min-height:44px;">{{ $f('police_evidence') }}</td>
         </tr>
         <tr>
             <td class="field-label" style="vertical-align:top;">State any Other Information Necessary</td>
-            <td class="field-value tall" style="min-height:44px;">{{ $f('other_information') }}</td>
+            <td class="field-value tall" style="min-height:44px;">{{ $f('additional_info') }}</td>
         </tr>
     </tbody>
 </table>
@@ -129,7 +129,7 @@
     <tbody>
         <tr>
             <td class="field-label" style="width:35%">Name of Insured / Claimant</td>
-            <td class="field-value">{{ $f('claimant_name') ?: $customer?->full_name ?? '' }}</td>
+            <td class="field-value">{{ $f('claimant_name') ?: $customer?->name ?? '' }}</td>
         </tr>
         <tr>
             <td colspan="2" style="padding:4px 6px; font-size:10px;">
@@ -171,18 +171,22 @@
         </tr>
     </thead>
     <tbody>
-        @foreach ($particulars as $row)
+        @forelse ($particulars as $row)
             <tr>
-                <td style="min-height:16px; height:20px;">{{ $row['quantity'] ?? '' }}</td>
-                <td>{{ $row['description'] ?? '' }}</td>
-                <td>{{ $row['date_place_purchase'] ?? '' }}</td>
-                <td>{{ $row['price_paid'] ?? '' }}</td>
-                <td>{{ $row['deduction'] ?? '' }}</td>
-                <td>{{ $row['value_before_loss'] ?? '' }}</td>
-                <td>{{ $row['value_salvage'] ?? '' }}</td>
-                <td>{{ $row['amount_claimed'] ?? '' }}</td>
+                <td style="min-height:16px; height:20px;">{{ $row['quantity'] }}</td>
+                <td>{{ $row['description'] }}</td>
+                <td>{{ $row['date_place_purchase'] }}</td>
+                <td>{{ $row['price_paid'] }}</td>
+                <td>{{ $row['deduction'] }}</td>
+                <td>{{ $row['value_before_loss'] }}</td>
+                <td>{{ $row['value_salvage'] }}</td>
+                <td>{{ $row['amount_claimed'] }}</td>
             </tr>
-        @endforeach
+        @empty
+            <tr>
+                <td colspan="8" style="text-align:center; color:#888;">No items listed.</td>
+            </tr>
+        @endforelse
     </tbody>
 </table>
 
@@ -239,7 +243,7 @@
         </div>
         <div style="flex:0.5">
             <p class="sig-label">DATE</p>
-            <div class="sig-field">{{ $f('declaration_date') }}</div>
+            <div class="sig-field">{{ formatDate($f('declaration_date')) }}</div>
         </div>
     </div>
     <div style="margin-top:14px;">

@@ -16,3 +16,10 @@ if (! function_exists('formatDate')) {
         }
     }
 }
+
+if (! function_exists('formatDateTime')) {
+    function formatDateTime($date, string $format = 'F j, Y g:i A'): string
+    {
+        return formatDate($date, $format);
+    }
+}
