@@ -317,6 +317,7 @@
                         multiple class="hidden">
                 </div>
                 <div id="imagePreviewContainer" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                </div>
             </section>
 
             {{-- Existing documents (edit mode only) --}}
