@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateGeneralAccidentRequest;
 use App\Models\Customer;
 use App\Models\GeneralAccident;
 use App\Models\Policy;
+use App\Models\ClaimDraft;
 use Illuminate\Http\Request;
 
 class GeneralAccidentController extends Controller
@@ -25,6 +26,19 @@ class GeneralAccidentController extends Controller
             'email'           => $customer->email ?? '',
             'phone'           => $customer->phone ?? '',
         ];
+
+        // For Draft Data
+        $customerIds = $customer->resolvedCustomerIds();
+
+        $draft = ClaimDraft::with('documents')
+            ->whereIn('customer_id', $customerIds)
+            ->where('policy_id', $policy->id)
+            ->where('claim_type', 'motor')
+            ->first();
+
+        if ($draft) {
+            $formData = array_merge($formData, $draft->form_data ?? []);
+        }
 
         return view('forms.general_accident_form.index', compact('policy', 'customer', 'policyId', 'formData'));
     }

@@ -215,7 +215,7 @@
 
             <div class="p-6" x-data="loginForm()" x-init="init()">
                 <div class="mb-4 text-center">
-                    <p class="text-gray-600 text-sm">Enter your mobile Number to receive a verification code</p>
+                    <p class="text-gray-600 text-sm">Enter your details to receive a verification code</p>
                     @if ($errors->any())
                         <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                             {{ $errors->first() }}
@@ -224,7 +224,7 @@
                 </div>
 
                 {{-- Login type tabs --}}
-                {{-- <div class="flex bg-gray-100 rounded-xl p-1 gap-1 mb-5">
+                <div class="flex bg-gray-100 rounded-xl p-1 gap-1 mb-5">
                     <template x-for="tab in tabs" :key="tab.value">
                         <button type="button" @click="selectType(tab.value)"
                             :class="[
@@ -237,7 +237,7 @@
                             <span x-text="tab.label"></span>
                         </button>
                     </template>
-                </div> --}}
+                </div>
 
                 {{-- WIP notice (shown for non-phone types) --}}
                 <div x-show="activeConfig.wip" x-transition:enter="transition ease-out duration-200"
@@ -806,9 +806,7 @@
                     handleAuthResponse(await res.json());
                 } catch {
                     stopMessageCycle();
-                    showError(
-                        'We\'re having trouble connecting right now. Please check your internet connection, or contact customer service for assistance.'
-                    );
+                    showError('A network error occurred. Please check your connection and try again.');
                 }
             });
 
@@ -826,9 +824,7 @@
                         break;
                     case 'error':
                     default:
-                        showError(data.message ??
-                            'We were unable to verify your details. Please contact customer service for assistance.'
-                            );
+                        showError(data.message ?? 'Something went wrong. Please try again.');
                         break;
                 }
             }

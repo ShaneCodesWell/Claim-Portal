@@ -79,9 +79,13 @@ Route::middleware('auth.customer')->group(function () {
     Route::delete('claims/documents/{document}', [CustomerClaimController::class, 'destroyDocument'])->name('customer.claims.documents.destroy');
 
     // Save Drafts
+    Route::get('claims/drafts', [CustomerClaimController::class, 'drafts'])->name('claims.draft.index');
     Route::post('claims/draft', [CustomerClaimController::class, 'saveDraft'])->name('claims.draft.save');
     Route::get('claims/draft', [CustomerClaimController::class, 'getDraft'])->name('claims.draft.show');
     Route::delete('claims/draft', [CustomerClaimController::class, 'destroyDraft'])->name('claims.draft.destroy');
+
+    Route::get('claims/draft/{draft}/continue', [CustomerClaimController::class, 'continueDraft'])->name('claims.draft.continue');
+    Route::delete('claims/draft/{draft}/remove', [CustomerClaimController::class, 'destroyDraftById'])->name('claims.draft.destroyById');
 
     // Draft Documents
     Route::get('claims/draft/documents/{document}/preview', [CustomerClaimController::class, 'previewDraftDocument'])->name('customer.claims.draft.documents.preview');

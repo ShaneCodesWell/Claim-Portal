@@ -12,6 +12,7 @@
                     'action' => route('claims.store'),
                     'method' => 'POST',
                     'claim' => null,
+                    'draft' => $draft ?? null,
                     'context' => 'customer',
                 ])
             </div>

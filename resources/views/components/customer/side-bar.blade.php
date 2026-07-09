@@ -9,7 +9,7 @@
         </div>
 
         <!-- Navigation Links -->
-        <nav class="flex-1 px-3 py-6 space-y-1.5">
+        <nav class="flex-1 flex flex-col h-full px-3 py-6 space-y-1.5">
             <a href="{{ route('dashboard') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-clipboard-list w-5"></i>
@@ -24,8 +24,14 @@
                 <span
                     class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['my_claims'] }}</span>
             </a>
-
-            <div class="pt-4 mt-4 border-t border-gray-100">
+            <a href="{{ route('claims.draft.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+                <i class="fas fa-file-signature w-5"></i>
+                <span>Drafts</span>
+                <span
+                    class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['my_drafts'] }}</span>
+            </a>
+            <div class="mt-auto pt-4 border-t border-gray-100">
                 <form action="{{ route('logout') }}" method="POST"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 transition">
                     @csrf

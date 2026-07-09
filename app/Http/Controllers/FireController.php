@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFireRequest;
@@ -6,6 +7,7 @@ use App\Http\Requests\UpdateFireRequest;
 use App\Models\Customer;
 use App\Models\Fire;
 use App\Models\Policy;
+use App\Models\ClaimDraft;
 use Illuminate\Http\Request;
 
 class FireController extends Controller
@@ -24,6 +26,19 @@ class FireController extends Controller
             'email'    => $customer->email ?? '',
             'phone'    => $customer->phone ?? '',
         ];
+
+        // For Draft Data
+        $customerIds = $customer->resolvedCustomerIds();
+
+        $draft = ClaimDraft::with('documents')
+            ->whereIn('customer_id', $customerIds)
+            ->where('policy_id', $policy->id)
+            ->where('claim_type', 'motor')
+            ->first();
+
+        if ($draft) {
+            $formData = array_merge($formData, $draft->form_data ?? []);
+        }
 
         return view('forms.fire_form.index', compact('policy', 'policyId', 'customer', 'formData'));
     }

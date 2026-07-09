@@ -349,6 +349,19 @@ class ClaimController extends Controller
     }
 
     // Claim Drafts
+    public function drafts()
+    {
+        $customer = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
+
+        $drafts = ClaimDraft::with('documents')
+            ->whereIn('customer_id', $customerIds)
+            ->latest()
+            ->paginate(5);
+
+        return view('customer.claims.draft.index', compact('drafts'));
+    }
+
     public function saveDraft(Request $request)
     {
         $validated = $request->validate([
@@ -498,6 +511,56 @@ class ClaimController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function continueDraft(ClaimDraft $draft)
+    {
+        $customer    = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
+
+        if (! in_array($draft->customer_id, $customerIds)) {
+            abort(403);
+        }
+
+        $policy = $draft->policy;
+
+        // Extend this map as more claim-type forms come online.
+        // Mirrors the viewMap comment in ClaimController::edit() — same limitation applies here.
+        $routeMap = [
+            'motor' => 'motor-form',
+            // 'fire'             => 'fire-form',
+            // 'general_accident' => 'general-accident-form',
+        ];
+
+        $routeName = $routeMap[$draft->claim_type] ?? null;
+
+        if (! $routeName) {
+            return redirect()->route('claims.draft.index')
+                ->with('error', 'This claim type doesn\'t have an online form available yet.');
+        }
+
+        return redirect()->route($routeName, [
+            'policyId' => $policy->external_policy_id ?? $policy->id,
+            'riskId'   => $draft->risk_id,
+        ]);
+    }
+
+    public function destroyDraftById(ClaimDraft $draft)
+    {
+        $customer    = Auth::guard('customer')->user();
+        $customerIds = $customer->resolvedCustomerIds();
+
+        if (! in_array($draft->customer_id, $customerIds)) {
+            abort(403);
+        }
+
+        foreach ($draft->documents as $doc) {
+            Storage::disk('local')->delete($doc->file_path);
+        }
+
+        $draft->delete();
+
+        return back()->with('success', 'Draft deleted successfully.');
     }
 
     public function previewDraftDocument(ClaimDraftDocument $document, Request $request)

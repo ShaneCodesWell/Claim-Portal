@@ -589,6 +589,36 @@
                     Supporting Documents
                 </h3>
 
+                {{-- Draft documents (create mode, resuming a saved draft) --}}
+                @if (!$isEdit && ($draft ?? null) && $draft->documents->isNotEmpty())
+                    <div class="mb-4">
+                        <p class="text-sm font-medium text-gray-700 mb-2">From your saved draft:</p>
+                        <div class="space-y-2" id="draftDocumentsList">
+                            @foreach ($draft->documents as $doc)
+                                <div class="flex flex-wrap items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100"
+                                    id="draft-doc-{{ $doc->id }}">
+                                    <div class="flex items-center gap-2">
+                                        <i
+                                            class="fas {{ str_contains($doc->mime_type, 'pdf') ? 'fa-file-pdf text-red-400' : 'fa-image text-blue-400' }} text-sm"></i>
+                                        <span class="text-sm text-gray-700">{{ $doc->original_name }}</span>
+                                        <span
+                                            class="text-xs text-gray-400">{{ number_format($doc->file_size / 1024, 1) }}
+                                            KB</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <button type="button"
+                                            onclick="openDocPreview('{{ route('customer.claims.draft.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
+                                            class="text-xs text-blue-600 hover:underline">View</button>
+                                        <button type="button"
+                                            onclick="deleteDraftDocument({{ $doc->id }}, this)"
+                                            class="text-xs text-red-500 hover:underline">Remove</button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Existing documents (edit mode only) --}}
                 @if ($isEdit && $claim->documents->isNotEmpty())
                     <div class="mb-4">
@@ -713,6 +743,12 @@
             {{-- ── ACTION BUTTONS ── --}}
             <div
                 class="mt-8 pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                @if (!$isStaff && !$isEdit)
+                    <button type="button" id="saveDraftBtn"
+                        class="w-full sm:w-auto px-6 py-2 border border-blue-300 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-clock"></i> <span>Save Draft</span>
+                    </button>
+                @endif
                 <button type="submit"
                     class="w-full sm:w-auto px-6 py-2 {{ $isStaff ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700' }} text-white font-medium rounded-lg transition flex items-center justify-center gap-2">
                     @if (!$isEdit)
@@ -826,6 +862,10 @@
         const isEdit = {{ $isEdit ? 'true' : 'false' }};
         const isStaff = {{ $isStaff ? 'true' : 'false' }};
 
+        // Route template for deleting a draft document — swap 0 for the real ID at call time
+        const draftDocDestroyTemplate =
+            "{{ route('customer.claims.draft.documents.destroy', ['document' => 0]) }}";
+
         // ── Conditional radio toggles ──────────────────────────────────────────
         document.addEventListener('change', function(e) {
             if (!e.target.classList.contains('conditional-radio')) return;
@@ -913,6 +953,24 @@
             }
         };
 
+        function collectInjuredPersons(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            const rows = container.querySelectorAll('.injured-person-row');
+            return Array.from(rows).map(row => {
+                const name = row.querySelector('[name$="[name]"]')?.value || '';
+                const age = row.querySelector('[name$="[age]"]')?.value || '';
+                const address = row.querySelector('[name$="[address]"]')?.value || '';
+                const injuries = row.querySelector('[name$="[injuries]"]')?.value || '';
+                return {
+                    name,
+                    age,
+                    address,
+                    injuries
+                };
+            }).filter(p => p.name || p.age || p.address || p.injuries);
+        }
+
         function collectVehicles(containerId) {
             const container = document.getElementById(containerId);
             if (!container) return [];
@@ -964,7 +1022,7 @@
             }
         };
 
-        // ── Document deletion marking ──────────────────────────────────────────
+        // ── Document deletion marking (real claim edit — deferred to submit) ────
         window.markDocumentForDeletion = function(docId, btn) {
             const input = document.getElementById(`delete-doc-${docId}`);
             const card = btn.closest('.flex.items-center.justify-between');
@@ -986,6 +1044,32 @@
             card?.classList.remove('opacity-40', 'line-through');
             btn.textContent = 'Remove';
             btn.onclick = () => markDocumentForDeletion(docId, btn);
+        };
+
+        // ── Draft document deletion (instant — no defer-to-submit step) ─────────
+        window.deleteDraftDocument = async function(docId, btn) {
+            const row = document.getElementById(`draft-doc-${docId}`);
+            btn.disabled = true;
+
+            try {
+                const url = draftDocDestroyTemplate.replace('/0', `/${docId}`);
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                            .getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await response.json();
+                if (data.success) {
+                    row?.remove();
+                } else {
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                btn.disabled = false;
+            }
         };
 
         // ── File upload ────────────────────────────────────────────────────────
@@ -1090,16 +1174,10 @@
             e.target.value = '';
         });
 
-        // Form submission
-        document.getElementById('motorForm')?.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            // Customer requires declaration checkbox
-            if (!isStaff && !isChecked('declaration_agreement')) {
-                showClaimError('Please read and accept the declaration before submitting.');
-                return;
-            }
-
+        // ── Shared payload builder — used by both Submit and Save Draft ─────────
+        function buildClaimFormData({
+            includeDeleteDocuments = true
+        } = {}) {
             const formData = new FormData();
             if (isEdit) formData.append('_method', 'PUT');
             formData.append('claim_type', 'motor');
@@ -1173,13 +1251,78 @@
                 formData.append(`documents[${index}]`, file, file.name);
             });
 
-            // Documents marked for deletion
-            document.querySelectorAll('[id^="delete-doc-"]:not([disabled])').forEach(input => {
-                formData.append('delete_documents[]', input.value);
-            });
+            if (includeDeleteDocuments) {
+                document.querySelectorAll('[id^="delete-doc-"]:not([disabled])').forEach(input => {
+                    formData.append('delete_documents[]', input.value);
+                });
+            }
 
+            return formData;
+        }
+
+        // ── Form submission (Submit Claim / Save Changes) ───────────────────────
+        document.getElementById('motorForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Customer requires declaration checkbox
+            if (!isStaff && !isChecked('declaration_agreement')) {
+                showClaimError('Please read and accept the declaration before submitting.');
+                return;
+            }
+
+            const formData = buildClaimFormData();
             const action = document.getElementById('motorForm').dataset.action;
             await submitClaimWithFiles('motorForm', formData, action);
+        });
+
+        // ── Save Draft (bypasses declaration validation entirely) ───────────────
+        document.getElementById('saveDraftBtn')?.addEventListener('click', async function() {
+            const btn = this;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Saving...</span>';
+
+            try {
+                const formData = buildClaimFormData({
+                    includeDeleteDocuments: false
+                });
+
+                const response = await fetch('{{ route('claims.draft.save') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    uploadedFiles = []; // already persisted server-side, clear the pending queue
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Progress saved — you can continue later',
+                        showConfirmButton: false,
+                        timer: 2500,
+                        timerProgressBar: true,
+                    }).then(() => {
+                        // Reload so newly uploaded documents get real IDs and preview/remove links
+                        window.location.reload();
+                    });
+                } else {
+                    showClaimError(data.message ??
+                        'Could not save your progress. Please try again.');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            } catch (err) {
+                showClaimError(
+                    'Could not save your progress. Please check your connection and try again.');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         });
     });
 </script>
