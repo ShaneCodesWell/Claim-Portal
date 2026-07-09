@@ -1174,7 +1174,7 @@
             e.target.value = '';
         });
 
-        // ── Shared payload builder — used by both Submit and Save Draft ─────────
+        // Shared payload builder — used by both Submit and Save Draft
         function buildClaimFormData({
             includeDeleteDocuments = true
         } = {}) {

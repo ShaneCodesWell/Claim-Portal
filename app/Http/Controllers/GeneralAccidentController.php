@@ -7,14 +7,16 @@ use App\Http\Requests\UpdateGeneralAccidentRequest;
 use App\Models\Customer;
 use App\Models\GeneralAccident;
 use App\Models\Policy;
-use App\Models\ClaimDraft;
 use Illuminate\Http\Request;
+use App\Traits\MergesClaimDraftData;
 
 class GeneralAccidentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+    use MergesClaimDraftData;
+
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
@@ -22,25 +24,15 @@ class GeneralAccidentController extends Controller
         $customer = Customer::findOrFail($policy->customer_id);
 
         $formData = [
-            'fullname'        => $customer->name ?? '',
-            'email'           => $customer->email ?? '',
-            'phone'           => $customer->phone ?? '',
+            'fullname' => $customer->name ?? '',
+            'email'    => $customer->email ?? '',
+            'phone'    => $customer->phone ?? '',
         ];
 
-        // For Draft Data
-        $customerIds = $customer->resolvedCustomerIds();
+        $draft    = $this->findDraftFor($customer, $policy, 'general_accident');
+        $formData = $draft ? array_merge($formData, $draft->form_data ?? []) : $formData;
 
-        $draft = ClaimDraft::with('documents')
-            ->whereIn('customer_id', $customerIds)
-            ->where('policy_id', $policy->id)
-            ->where('claim_type', 'motor')
-            ->first();
-
-        if ($draft) {
-            $formData = array_merge($formData, $draft->form_data ?? []);
-        }
-
-        return view('forms.general_accident_form.index', compact('policy', 'customer', 'policyId', 'formData'));
+        return view('forms.general_accident_form.index', compact('policy', 'customer', 'policyId', 'formData', 'draft'));
     }
 
     /**

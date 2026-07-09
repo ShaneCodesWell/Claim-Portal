@@ -7,14 +7,16 @@ use App\Http\Requests\UpdateFireRequest;
 use App\Models\Customer;
 use App\Models\Fire;
 use App\Models\Policy;
-use App\Models\ClaimDraft;
 use Illuminate\Http\Request;
+use App\Traits\MergesClaimDraftData;
 
 class FireController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+    use MergesClaimDraftData;
+
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
@@ -27,20 +29,10 @@ class FireController extends Controller
             'phone'    => $customer->phone ?? '',
         ];
 
-        // For Draft Data
-        $customerIds = $customer->resolvedCustomerIds();
+        $draft    = $this->findDraftFor($customer, $policy, 'fire');
+        $formData = $draft ? array_merge($formData, $draft->form_data ?? []) : $formData;
 
-        $draft = ClaimDraft::with('documents')
-            ->whereIn('customer_id', $customerIds)
-            ->where('policy_id', $policy->id)
-            ->where('claim_type', 'motor')
-            ->first();
-
-        if ($draft) {
-            $formData = array_merge($formData, $draft->form_data ?? []);
-        }
-
-        return view('forms.fire_form.index', compact('policy', 'policyId', 'customer', 'formData'));
+        return view('forms.fire_form.index', compact('policy', 'policyId', 'customer', 'formData', 'draft'));
     }
 
     /**

@@ -528,8 +528,8 @@ class ClaimController extends Controller
         // Mirrors the viewMap comment in ClaimController::edit() — same limitation applies here.
         $routeMap = [
             'motor' => 'motor-form',
-            // 'fire'             => 'fire-form',
-            // 'general_accident' => 'general-accident-form',
+            'fire'             => 'fire-form',
+            'general_accident' => 'general-accident-form',
         ];
 
         $routeName = $routeMap[$draft->claim_type] ?? null;

@@ -7,11 +7,12 @@ use App\Http\Requests\UpdateMotorFormRequest;
 use App\Models\Customer;
 use App\Models\MotorForm;
 use App\Models\Policy;
-use App\Models\ClaimDraft;
 use Illuminate\Http\Request;
+use App\Traits\MergesClaimDraftData;
 
 class MotorFormController extends Controller
 {
+    use MergesClaimDraftData;
     /**
      * Display a listing of the resource.
      */
@@ -25,12 +26,7 @@ class MotorFormController extends Controller
 
         // Risks are keyed by risk ID — grab the first one
         $risks = $policy->raw_payload['risks'] ?? [];
-        $firstRisk = collect($risks)->first() ?? [];
-
-        // If riskId is present (fleet), find that specific risk — else use the first
-        $risk = ($riskId && isset($risks[$riskId]))
-            ? $risks[$riskId]
-            : (collect($risks)->first() ?? []);
+        $risk = ($riskId && isset($risks[$riskId])) ? $risks[$riskId] : (collect($risks)->first() ?? []);
 
         $formData = [
             'registration_no' => $risk['risk_ref_no'] ?? '',
@@ -45,20 +41,10 @@ class MotorFormController extends Controller
             'phone'           => $customer->phone ?? '',
         ];
 
-        // For Draft Data
-        $customerIds = $customer->resolvedCustomerIds();
+        $draft    = $this->findDraftFor($customer, $policy, 'motor');
+        $formData = $draft ? array_merge($formData, $draft->form_data ?? []) : $formData;
 
-        $draft = ClaimDraft::with('documents')
-            ->whereIn('customer_id', $customerIds)
-            ->where('policy_id', $policy->id)
-            ->where('claim_type', 'motor')
-            ->first();
-
-        if ($draft) {
-            $formData = array_merge($formData, $draft->form_data ?? []);
-        }
-
-        return view('forms.motor_form.index', compact('policy', 'policyId', 'customer', 'formData'));
+        return view('forms.motor_form.index', compact('policy', 'policyId', 'customer', 'formData', 'draft', 'riskId'));
     }
 
     /**

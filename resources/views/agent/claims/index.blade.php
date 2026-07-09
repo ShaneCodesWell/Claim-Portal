@@ -98,7 +98,7 @@
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Submitted On</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Amount Requested</th>
+                            Sum Insured</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Status</th>
                         <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
