@@ -78,6 +78,14 @@ Route::middleware('auth.customer')->group(function () {
     Route::get('/documents/{document}/preview', [CustomerClaimController::class, 'previewDocument'])->name('customer.documents.preview');
     Route::delete('claims/documents/{document}', [CustomerClaimController::class, 'destroyDocument'])->name('customer.claims.documents.destroy');
 
+    // Save Drafts
+    Route::post('claims/draft', [CustomerClaimController::class, 'saveDraft'])->name('claims.draft.save');
+    Route::get('claims/draft', [CustomerClaimController::class, 'getDraft'])->name('claims.draft.show');
+    Route::delete('claims/draft', [CustomerClaimController::class, 'destroyDraft'])->name('claims.draft.destroy');
+
+    // Draft Documents
+    Route::get('claims/draft/documents/{document}/preview', [CustomerClaimController::class, 'previewDraftDocument'])->name('customer.claims.draft.documents.preview');
+    Route::delete('claims/draft/documents/{document}', [CustomerClaimController::class, 'destroyDraftDocument'])->name('customer.claims.draft.documents.destroy');
 });
 
 // Staff routes — accessible by ALL staff including admins
