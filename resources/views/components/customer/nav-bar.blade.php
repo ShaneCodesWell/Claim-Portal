@@ -45,9 +45,17 @@
                             {{ $customerPhone }}
                         </p>
                     </div>
+                    <a href="{{ route('dashboard') }}"
+                        class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-file-contract w-4 text-gray-400"></i> My Policies
+                    </a>
                     <a href="{{ route('claims.index') }}"
                         class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-user-circle w-4 text-gray-400"></i> My Claims
+                        <i class="fas fa-clipboard-list w-4 text-gray-400"></i> My Claims
+                    </a>
+                    <a href="{{ route('claims.draft.index') }}"
+                        class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-file-alt w-4 text-gray-400"></i> Drafts
                     </a>
                     <hr class="my-1 border-gray-200" />
                     <form action="{{ route('logout') }}" method="POST">
