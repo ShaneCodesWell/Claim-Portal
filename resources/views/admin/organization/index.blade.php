@@ -184,7 +184,9 @@
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 font-medium text-sm  text-gray-700">{{ $branch->name }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->code }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->address }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 max-w-52">
+                                    <span class="line-clamp-2">{{ $branch->address }}</span>
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $branch->phone }}</td>
                                 <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                     style="overflow: visible;">
