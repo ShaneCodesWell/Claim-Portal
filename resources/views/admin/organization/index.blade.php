@@ -220,6 +220,21 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Pagination -->
+            <div
+                class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-users mr-1"></i>
+                    @if ($branches->firstItem())
+                        Showing {{ $branches->lastItem() }} of {{ $branches->total() }} branches
+                    @else
+                        No branches found
+                    @endif
+                </div>
+                <div class="flex gap-2">
+                    {{ $branches->links() }}
+                </div>
+            </div>
         </div>
     </div>
 
