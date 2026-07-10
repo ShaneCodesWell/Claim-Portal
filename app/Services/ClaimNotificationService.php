@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Claim;
@@ -8,14 +9,14 @@ use Illuminate\Support\Facades\Log;
 
 class ClaimNotificationService
 {
-    public function __construct(private ArkeselService $sms)
-    {}
+    public function __construct(private ArkeselService $sms) {}
 
     // Call this after under_review is set — fires once per claim lifetime
     public function notifyUnderReview(Claim $claim): void
     {
         $this->sendOnce($claim, 'under_review', function (string $phone) use ($claim) {
-            $this->sms->sendSms($phone,
+            $this->sms->sendSms(
+                $phone,
                 "Dear {$this->customerName($claim)}, your claim has been received and is currently under review. We will keep you updated. - Vanguard Assurance"
             );
         });
@@ -24,7 +25,8 @@ class ClaimNotificationService
     public function notifyApproved(Claim $claim): void
     {
         $this->sendOnce($claim, 'approved', function (string $phone) use ($claim) {
-            $this->sms->sendSms($phone,
+            $this->sms->sendSms(
+                $phone,
                 "Dear {$this->customerName($claim)}, we are pleased to inform you that your claim has been approved. Our team will be in touch regarding next steps. - Vanguard Assurance"
             );
         });
@@ -33,7 +35,8 @@ class ClaimNotificationService
     public function notifyRejected(Claim $claim): void
     {
         $this->sendOnce($claim, 'rejected', function (string $phone) use ($claim) {
-            $this->sms->sendSms($phone,
+            $this->sms->sendSms(
+                $phone,
                 "Dear {$this->customerName($claim)}, after careful review, your claim could not be approved. Please contact us for more information. - Vanguard Assurance"
             );
         });
@@ -45,6 +48,36 @@ class ClaimNotificationService
             $this->sms->sendSms(
                 $phone,
                 "Dear {$this->customerName($claim)}, we are pleased to inform you that your claim has been finalized and forwarded to our Finance team for payment processing. You will be notified once payment has been completed. Thank you for choosing Vanguard Assurance."
+            );
+        });
+    }
+
+    public function notifySubmitted(Claim $claim): void
+    {
+        $this->sendOnce($claim, 'submitted', function (string $phone) use ($claim) {
+            $this->sms->sendSms(
+                $phone,
+                "Dear {$this->customerName($claim)}, your claim has been submitted successfully and is now being processed. - Vanguard Assurance"
+            );
+        });
+    }
+
+    public function notifySentToSurvey(Claim $claim): void
+    {
+        $this->sendOnce($claim, 'sent_to_survey', function (string $phone) use ($claim) {
+            $this->sms->sendSms(
+                $phone,
+                "Dear {$this->customerName($claim)}, your claim has been sent for survey. A surveyor will be in touch shortly. - Vanguard Assurance"
+            );
+        });
+    }
+
+    public function notifySentToCommittee(Claim $claim): void
+    {
+        $this->sendOnce($claim, 'sent_to_committee', function (string $phone) use ($claim) {
+            $this->sms->sendSms(
+                $phone,
+                "Dear {$this->customerName($claim)}, your claim has been escalated to our Claims Committee for review. - Vanguard Assurance"
             );
         });
     }
@@ -112,7 +145,7 @@ class ClaimNotificationService
         $this->sendOnce($claim, 'staff_initiated', function (string $phone) use ($claim, $staff) {
             $this->sms->sendSms(
                 $phone,
-                "Dear {$this->customerName($claim)}, a claim ({$claim->claim_number}) has been initiated on your behalf by a Vanguard Assurance officer. Our team will be in touch with next steps. - Vanguard Assurance"
+                "Dear {$this->customerName($claim)}, a claim has been initiated on your behalf by a Vanguard Assurance officer. Our team will be in touch with next steps. - Vanguard Assurance"
             );
         });
     }

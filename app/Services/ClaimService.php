@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Enums\ClaimSource;
@@ -17,8 +18,7 @@ class ClaimService
 {
 
     // Add to ClaimService constructor
-    public function __construct(private ClaimNotificationService $notifications)
-    {}
+    public function __construct(private ClaimNotificationService $notifications) {}
 
     // Register a new claim
     public function register(
@@ -49,6 +49,12 @@ class ClaimService
 
             // Auto-assign based on branch
             $this->autoAssign($claim);
+
+            // SMS — only for customer self-submissions.
+            // Staff-initiated claims get notifyStaffInitiated() instead (called in staff ClaimController::store()).
+            if ($source === ClaimSource::CUSTOMER_PORTAL) {
+                $this->notifications->notifySubmitted($claim);
+            }
 
             return $claim;
         });
@@ -297,6 +303,9 @@ class ClaimService
             'surveyed_at' => now(),
         ]);
 
+        // SMS — notify customer
+        $this->notifications->notifySentToSurvey($claim);
+
         $this->logActivity(
             $claim,
             $sentBy,
@@ -351,6 +360,9 @@ class ClaimService
             'status'              => ClaimStatus::COMMITTEE_REVIEW,
             'committee_review_at' => now(),
         ]);
+
+        // SMS — notify customer
+        $this->notifications->notifySentToCommittee($claim);
 
         $this->logActivity(
             $claim,

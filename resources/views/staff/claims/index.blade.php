@@ -91,15 +91,16 @@
                 </thead>
                 <tbody id="claimsTableBody" class="divide-y divide-gray-200">
                     @forelse ($claims as $claim)
-                        <!-- Row 1: John Davis - Low (25,000) -->
                         <tr class="hover:bg-gray-50 transition" data-amount="{{ $claim->amount }}">
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-3">
+                            <td class="px-4 py-4 max-w-52">
+                                <div class="flex items-center gap-3 min-w-0">
                                     <div
-                                        class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
+                                        class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold flex-shrink-0">
                                         {{ strtoupper(substr($claim->customer->name, 0, 1)) }}{{ strtoupper(substr(strrchr($claim->customer->name, ' '), 1, 1)) }}
                                     </div>
-                                    <span class="text-sm font-medium text-gray-900">{{ $claim->customer->name }}</span>
+                                    <span class="text-sm font-medium text-gray-900 truncate">
+                                        {{ $claim->customer->name }}
+                                    </span>
                                 </div>
                             </td>
                             <td class="px-4 py-4 font-mono text-sm text-gray-700">
@@ -119,7 +120,8 @@
                                 <span class="text-xs text-gray-400">to</span>
                                 {{ \Carbon\Carbon::parse($claim->policy->end_date)->format('M d, Y') }}</span>
                             </td> --}}
-                            <td class="px-4 py-4 text-xs font-medium text-gray-900">{{ $claim->policy->product_name }}
+                            <td class="px-4 py-4 text-xs font-medium text-gray-900 max-w-40">
+                                <span class="truncate block">{{ $claim->policy->product_name }}</span>
                             </td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
                                 {{ number_format($claim->amount) }}</td>
