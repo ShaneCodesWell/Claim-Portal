@@ -13,6 +13,7 @@ use App\Models\Customer;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ClaimService
 {
@@ -221,7 +222,32 @@ class ClaimService
     // Resolve branch from policy — fallback to head office
     private function resolveBranch(Policy $policy): int
     {
-        return Branch::where('code', 'ACC-HQ')->first()?->id ?? Branch::first()->id;
+        $branchId = null;
+
+        if ($policy->isFromGlims()) {
+            $branchName = $policy->raw_payload['POLICY_BRANCH_NAME'] ?? null;
+
+            if ($branchName) {
+                $branchId = Branch::whereRaw('LOWER(name) = ?', [strtolower($branchName)])->value('id');
+            }
+        } else {
+            // Genova (and anything else) — code is unique, pull it from the policy number
+            if (preg_match('/^P-(\d+)-/', $policy->policy_number, $matches)) {
+                $branchId = Branch::where('code', $matches[1])->value('id');
+            }
+        }
+
+        if (! $branchId) {
+            Log::warning('resolveBranch: could not resolve branch, falling back to Unresolved', [
+                'policy_id'     => $policy->id,
+                'source'        => $policy->source,
+                'policy_number' => $policy->policy_number,
+            ]);
+
+            $branchId = Branch::where('code', 'UNRESOLVED')->value('id');
+        }
+
+        return $branchId;
     }
 
     /**
