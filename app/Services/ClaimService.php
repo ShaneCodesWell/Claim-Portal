@@ -57,6 +57,9 @@ class ClaimService
                 $this->notifications->notifySubmitted($claim);
             }
 
+            // Email — claims team, fires on BOTH customer and staff-initiated submissions
+            // $this->notifications->notifyClaimsTeam($claim);
+
             return $claim;
         });
     }

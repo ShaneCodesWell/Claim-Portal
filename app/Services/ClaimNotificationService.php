@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Claim;
 use App\Models\ClaimNotification;
 use App\Models\User;
+use App\Mail\ClaimSubmittedNotification;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 class ClaimNotificationService
@@ -148,5 +150,25 @@ class ClaimNotificationService
                 "Dear {$this->customerName($claim)}, a claim has been initiated on your behalf by a Vanguard Assurance officer. Our team will be in touch with next steps. - Vanguard Assurance"
             );
         });
+    }
+
+    public function notifyClaimsTeam(Claim $claim): void
+    {
+        $claim->loadMissing('branch.company');
+        $email = $claim->branch?->company?->claims_email;
+
+        if (! $email) {
+            Log::warning("ClaimNotificationService: no claims_email configured for claim {$claim->claim_number}");
+            return;
+        }
+
+        try {
+            Mail::to($email)->send(new ClaimSubmittedNotification($claim));
+        } catch (\Exception $e) {
+            Log::error('ClaimNotificationService: failed to send claims team email', [
+                'claim_id' => $claim->id,
+                'error'    => $e->getMessage(),
+            ]);
+        }
     }
 }
