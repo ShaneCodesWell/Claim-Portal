@@ -5,6 +5,11 @@
     $customer = $claim->customer;
     $policy = $claim->policy;
 
+    $isSelfDriver = $f('driver_type') === 'self';
+    $driverName = $isSelfDriver ? $f('fullname') : $f('driver_fullname');
+    $driverPhone = $isSelfDriver ? $f('phone') : $f('driver_phone');
+    $driverOccupation = $isSelfDriver ? $f('occupation') : $f('driver_occupation');
+
     // Parse injured persons arrays (stored as JSON strings in the payload)
     $ownInjured = collect(json_decode($f('your_vehicle_injured') ?: '[]', true) ?? []);
     $otherInjured = collect(json_decode($f('other_vehicle_injured') ?: '[]', true) ?? []);
@@ -148,7 +153,7 @@
         </tr>
         <tr>
             <td class="field-label" style="width:15%">Full Name</td>
-            <td class="field-value" style="width:35%">{{ $f('driver_fullname') }}</td>
+            <td class="field-value" style="width:35%">{{ $driverName }}</td>
             <td class="field-label" style="width:15%">Address</td>
             <td class="field-value" style="width:35%">{{ $f('driver_address') }}</td>
         </tr>
@@ -156,12 +161,12 @@
             <td class="field-label" style="width:15%">Age</td>
             <td class="field-value" style="width:35%">
                 {{ $f('driver_age') }}
-                @if ($f('driver_occupation'))
-                    &nbsp;&nbsp; <strong>Occupation:</strong> {{ $f('driver_occupation') }}
+                @if ($driverOccupation)
+                    &nbsp;&nbsp; <strong>Occupation:</strong> {{ $driverOccupation }}
                 @endif
             </td>
             <td class="field-label" style="width:15%">Telephone</td>
-            <td class="field-value" style="width:35%">{{ $f('driver_phone') }}</td>
+            <td class="field-value" style="width:35%">{{ $driverPhone }}</td>
         </tr>
         <tr>
             <td class="field-label" style="width:15%">Driving Licence No.</td>

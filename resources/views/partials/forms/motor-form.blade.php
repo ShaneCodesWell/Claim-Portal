@@ -238,6 +238,30 @@
                                     class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-700">
                             </div>
                         </div>
+
+                        {{-- NEW: editable fields for self-driver --}}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Age <span
+                                        class="text-red-500">*</span></label>
+                                <input type="number" name="driver_self_age" value="{{ $f['driver_age'] ?? '' }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Driving License No. <span
+                                        class="text-red-500">*</span></label>
+                                <input type="text" name="driver_self_license"
+                                    value="{{ $f['driver_license'] ?? '' }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Issue <span
+                                        class="text-red-500">*</span></label>
+                                <input type="date" name="driver_self_license_date"
+                                    value="{{ $f['driver_license_date'] ?? '' }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -904,6 +928,9 @@
                 selfDiv?.classList.remove('hidden');
                 insuranceDiv?.classList.remove('hidden');
                 if (insuranceField) insuranceField.required = true;
+                // NEW: require the self-driver fields
+                selfDiv?.querySelectorAll('input[name^="driver_self_"]').forEach(f => f.required =
+                    true);
             } else if (this.value !== '') {
                 otherDiv?.classList.remove('hidden');
                 insuranceDiv?.classList.remove('hidden');
@@ -1204,11 +1231,13 @@
                 phone: val('phone'),
                 driver_fullname: val('driver_fullname'),
                 driver_address: val('driver_address'),
-                driver_age: val('driver_age'),
                 driver_occupation: val('driver_occupation'),
                 driver_phone: val('driver_phone'),
-                driver_license: val('driver_license'),
-                driver_license_date: val('driver_license_date'),
+                driver_age: driverSelect?.value === 'self' ? val('driver_self_age') : val('driver_age'),
+                driver_license: driverSelect?.value === 'self' ? val('driver_self_license') : val(
+                    'driver_license'),
+                driver_license_date: driverSelect?.value === 'self' ? val('driver_self_license_date') : val(
+                    'driver_license_date'),
                 driver_insurance_details: val('driver_insurance_details'),
                 accident_date: val('accident_date'),
                 exact_location: val('exact_location'),
