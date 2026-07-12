@@ -56,13 +56,16 @@ class ClaimController extends Controller
         }
 
         // Branch filter
+        // if ($request->filled('branch')) {
+        //     $branchCode = $request->branch;
+        //     $query->whereHas(
+        //         'policy',
+        //         fn($q) =>
+        //         $q->where('policy_number', 'like', "P-{$branchCode}-%")
+        //     );
+        // }
         if ($request->filled('branch')) {
-            $branchCode = $request->branch;
-            $query->whereHas(
-                'policy',
-                fn($q) =>
-                $q->where('policy_number', 'like', "P-{$branchCode}-%")
-            );
+            $query->where('branch_id', $request->branch);
         }
 
         $claims = $query->paginate(5)->withQueryString();

@@ -30,8 +30,8 @@
                         class="py-2 pl-3 pr-8 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white text-gray-700">
                         <option value="">All Branches</option>
                         @foreach ($branches as $branch)
-                            <option value="{{ $branch->code }}"
-                                {{ request('branch') === $branch->code ? 'selected' : '' }}>
+                            <option value="{{ $branch->id }}"
+                                {{ (string) request('branch') === (string) $branch->id ? 'selected' : '' }}>
                                 {{ $branch->name }}
                             </option>
                         @endforeach
