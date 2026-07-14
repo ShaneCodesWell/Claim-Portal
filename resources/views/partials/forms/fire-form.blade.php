@@ -647,7 +647,7 @@
 
     // ==================== FILE UPLOAD ====================
     let uploadedFiles = [];
-    const MAX_FILE_SIZE_MB = 5;
+    const MAX_FILE_SIZE_MB = 10;
     const MAX_FILE_COUNT = 10;
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
 
