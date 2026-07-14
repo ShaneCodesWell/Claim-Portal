@@ -502,7 +502,7 @@
                     <i class="fas fa-cloud-upload-alt text-gray-400 text-4xl mb-2"></i>
                     <p class="text-gray-600">Drag & drop files here or <span
                             class="text-blue-600 font-medium">browse</span></p>
-                    <p class="text-xs text-gray-400 mt-1">Supports: JPG, PNG, PDF (max 5MB each)</p>
+                    <p class="text-xs text-gray-400 mt-1">Supports: JPG, PNG, PDF (max 10MB each)</p>
                     <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/gif,application/pdf"
                         multiple class="hidden">
                 </div>
