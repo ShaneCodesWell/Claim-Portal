@@ -3,8 +3,9 @@
 namespace App\Services;
 
 use App\Models\Claim;
-use App\Models\ClaimNotification;
 use App\Models\User;
+use App\Models\Agent;
+use App\Models\ClaimNotification;
 use App\Mail\ClaimSubmittedNotification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -59,7 +60,7 @@ class ClaimNotificationService
         $this->sendOnce($claim, 'submitted', function (string $phone) use ($claim) {
             $this->sms->sendSms(
                 $phone,
-                "Dear {$this->customerName($claim)}, your claim has been submitted successfully and is now being processed. - Vanguard Assurance"
+                "Dear {$this->customerName($claim)}, your application has been received. Our team will review and update you on the next steps. Thank you - Vanguard Assurance"
             );
         });
     }
@@ -69,7 +70,7 @@ class ClaimNotificationService
         $this->sendOnce($claim, 'sent_to_survey', function (string $phone) use ($claim) {
             $this->sms->sendSms(
                 $phone,
-                "Dear {$this->customerName($claim)}, your claim has been sent for survey. A surveyor will be in touch shortly. - Vanguard Assurance"
+                "Dear {$this->customerName($claim)}, your claim for {$claim->policy->policy_number} has been sent to our Survey Team for necessary action to be taken. You will be contacted within 24hrs. - Vanguard Assurance"
             );
         });
     }
@@ -79,7 +80,7 @@ class ClaimNotificationService
         $this->sendOnce($claim, 'sent_to_committee', function (string $phone) use ($claim) {
             $this->sms->sendSms(
                 $phone,
-                "Dear {$this->customerName($claim)}, your claim has been escalated to our Claims Committee for review. - Vanguard Assurance"
+                "Dear {$this->customerName($claim)}, your claim for {$claim->policy->policy_number} has been submitted to our Claims Committee for review. You will receive feedback shortly. - Vanguard Assurance"
             );
         });
     }
@@ -148,6 +149,16 @@ class ClaimNotificationService
             $this->sms->sendSms(
                 $phone,
                 "Dear {$this->customerName($claim)}, a claim has been initiated on your behalf by a Vanguard Assurance officer. Our team will be in touch with next steps. - Vanguard Assurance"
+            );
+        });
+    }
+
+    public function notifyAgentInitiated(Claim $claim, Agent $agent): void
+    {
+        $this->sendOnce($claim, 'agent_initiated', function (string $phone) use ($claim) {
+            $this->sms->sendSms(
+                $phone,
+                "Dear {$this->customerName($claim)}, a claim has been initiated on your behalf by a Vanguard Assurance Intermediary. Our team will be in touch with next steps. - Vanguard Assurance"
             );
         });
     }

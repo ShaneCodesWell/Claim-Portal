@@ -166,15 +166,16 @@ Route::middleware(['staff', 'committee'])->prefix('admin/committee')->name('comm
 // Agent routes — only agents can access
 Route::middleware(['agent'])->prefix('agent')->group(function () {
     // mirrors customer claim routes but with ClaimSource::AGENT_PORTAL
-    Route::get('/agent/dashboard', [AgentController::class, 'index'])->name('agent.dashboard.index');
-    Route::get('/agent/search', [AgentController::class, 'search'])->name('agent.policy.search');
+    Route::get('/dashboard', [AgentController::class, 'index'])->name('agent.dashboard.index');
+    Route::get('/search', [AgentController::class, 'search'])->name('agent.policy.search');
 
     // Claims
-    Route::post('/agent/claims', [AgentClaimController::class, 'store'])->name('agent.claims.store');
-    Route::get('/agent/claims', [AgentClaimController::class, 'index'])->name('agent.claims.index');
-    Route::get('/agent/claims/show/{claim}', [AgentClaimController::class, 'show'])->name('agent.claims.show');
-    Route::get('/agent/claims/edit/{claim}', [AgentClaimController::class, 'edit'])->name('agent.claims.edit');
-    Route::put('/agent/claims/update/{claim}', [AgentClaimController::class, 'update'])->name('agent.claims.update');
+    Route::post('/claims', [AgentClaimController::class, 'store'])->name('agent.claims.store');
+    Route::get('/claims', [AgentClaimController::class, 'index'])->name('agent.claims.index');
+    Route::get('/claims/create', [AgentClaimController::class, 'create'])->name('agent.claims.create');
+    Route::get('/claims/show/{claim}', [AgentClaimController::class, 'show'])->name('agent.claims.show');
+    Route::get('/claims/edit/{claim}', [AgentClaimController::class, 'edit'])->name('agent.claims.edit');
+    Route::put('/claims/update/{claim}', [AgentClaimController::class, 'update'])->name('agent.claims.update');
 
     // Preview Document
     Route::get('/documents/{document}/preview', [AgentClaimController::class, 'previewDocument'])->name('agent.documents.preview');

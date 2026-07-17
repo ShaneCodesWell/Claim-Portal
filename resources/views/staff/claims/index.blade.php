@@ -95,7 +95,7 @@
                             <td class="px-4 py-4 max-w-52">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <div
-                                        class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                                        class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold shrink-0">
                                         {{ strtoupper(substr($claim->customer->name, 0, 1)) }}{{ strtoupper(substr(strrchr($claim->customer->name, ' '), 1, 1)) }}
                                     </div>
                                     <span class="text-sm font-medium text-gray-900 truncate">

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use App\Enums\ClaimStatus;
@@ -38,6 +39,8 @@ class Claim extends Model
         'finalized_at',
         'initiated_by_staff',
         'initiated_by',
+        'initiated_by_agent',
+        'initiated_by_agent_id',
     ];
 
     protected $casts = [
@@ -50,6 +53,7 @@ class Claim extends Model
         'committee_decided_at' => 'datetime',
         'finalized_at'         => 'datetime',
         'initiated_by_staff'   => 'boolean',
+        'initiated_by_agent'   => 'boolean',
     ];
 
     // Relationships
@@ -142,8 +146,8 @@ class Claim extends Model
     public function isFinalizableBy(User $user): bool
     {
         return $user->isAdmin()
-        || $user->isClaimHead()
-        || $this->assigned_to === $user->id;
+            || $user->isClaimHead()
+            || $this->assigned_to === $user->id;
     }
 
     // Other helpers
@@ -164,5 +168,10 @@ class Claim extends Model
     public function initiatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'initiated_by');
+    }
+
+    public function initiatedByAgent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class, 'initiated_by_agent_id');
     }
 }

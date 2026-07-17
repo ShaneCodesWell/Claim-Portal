@@ -5,7 +5,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
                     <p class="text-sm text-gray-500 font-medium mb-1">
-                        Agent Dashboard - <span
+                        Intermediary Dashboard - <span
                             class="font-bold text-blue-500">{{ Auth::guard('agent')->user()?->name ?? 'Intermediary' }}</span>
                     </p>
                     <h2 class="text-xl font-semibold text-gray-900">
@@ -114,8 +114,9 @@
                 @php
                     $policy = $searchResult['local'];
                     $isFleet = count($policy['risks'] ?? []) > 1;
-                    $key = strtolower($policy['business_class_name'] ?? '');
-                    $claimFormUrl = ($claimFormRoutes[$key] ?? '/motor-form') . '?policyId=' . $policy['policy_id'];
+                    $claimFormUrl = route('agent.claims.create', [
+                        'policy_id' => $policy['policy_id'],
+                    ]);
                 @endphp
                 <div class="overflow-x-auto">
                     <table class="min-w-full table-fixed divide-y divide-gray-100">
@@ -176,19 +177,25 @@
                                     <div class="text-xs text-gray-900 font-medium">{{ $policy['renewal_date'] ?? '—' }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-3 text-right">
-                                    <div class="flex justify-end gap-2">
-                                        <a href="{{ route('agent.claims.show', ['claim' => $policy['policy_id']]) }}"
-                                            class="text-gray-700 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition text-xs font-medium">
-                                            <i class="fas fa-eye mr-1"></i> View
-                                        </a>
-                                        @if (!$isFleet && $policy['status'] !== 'expired')
-                                            <a href="{{ $claimFormUrl }}"
-                                                class="text-gray-700 hover:text-green-600 bg-gray-100 hover:bg-green-50 px-3 py-1.5 rounded-lg transition text-xs font-medium">
-                                                <i class="fas fa-file-invoice mr-1"></i> Process Claim
-                                            </a>
-                                        @endif
-                                    </div>
+                                <td class="px-6 py-3 text-right relative" x-data="{ open: false }"
+                                    style="overflow: visible;">
+                                    <button x-ref="actionBtn" @click="open = !open"
+                                        class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <template x-teleport="body">
+                                        <div x-show="open" @click.outside="open = false" x-transition
+                                            x-anchor.bottom-end="$refs.actionBtn"
+                                            class="fixed w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
+                                            @if (!$isFleet && $policy['status'] !== 'expired')
+                                                <a href="{{ $claimFormUrl }}"
+                                                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                                    <i class="fas fa-file-invoice text-xs text-emerald-500"></i>
+                                                    Process Claim
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </template>
                                 </td>
                             </tr>
                         </tbody>

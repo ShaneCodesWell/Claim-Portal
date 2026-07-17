@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Agent;
 
 use App\Enums\ClaimSource;
@@ -8,6 +9,7 @@ use App\Models\Claim;
 use App\Models\ClaimDocument;
 use App\Models\Customer;
 use App\Models\Policy;
+use App\Services\ClaimNotificationService;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,61 +18,87 @@ use Illuminate\Support\Facades\Storage;
 
 class ClaimController extends Controller
 {
-    public function __construct(protected ClaimService $claimService)
-    {}
+    public function __construct(
+        protected ClaimService $claimService,
+        private ClaimNotificationService $notificationService,
+    ) {}
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'policy_id'  => 'required',
-            'claim_type' => 'required|string',
-            'form_data'  => 'required|array',
+            'policy_id'   => 'required',
+            'claim_type'  => 'required|string',
+            'form_data'   => 'required|array',
+            'documents'   => 'nullable|array',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'note'        => 'nullable|string|max:1000',
         ]);
 
-        // Look up by external_policy_id since the URL uses Genova's ID
-        $policy = Policy::where('external_policy_id', $validated['policy_id'])
-            ->orWhere('id', $validated['policy_id'])
-            ->first();
+        $agent = Auth::guard('agent')->user();
+
+        $policy = Policy::where(function ($q) use ($validated) {
+            $q->where('external_policy_id', $validated['policy_id'])
+                ->orWhere('id', $validated['policy_id']);
+        })->first();
 
         if (! $policy) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Policy not found. Please go back and select your policy again.',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Policy not found.'], 404);
         }
 
-        $customer = Customer::where('phone', session('phone_number') ?? session('mobile_no'))
-            ->orWhere('external_customer_code', session('customer_code'))
-            ->first();
+        $customer = Customer::findOrFail($policy->customer_id);
 
-        if (! $customer) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Session expired. Please log in again.',
-            ], 401);
-        }
+        $riskId   = $request->input('risk_id') ? (int) $request->input('risk_id') : null;
+        $formData = $validated['form_data'];
 
-        // Verify policy belongs to this customer
-        if ($policy->customer_id !== $customer->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This policy does not belong to your account.',
-            ], 403);
+        if ($riskId) {
+            $formData['_risk_id'] = $riskId;
         }
 
         $claim = $this->claimService->register(
             customer: $customer,
             policy: $policy,
             claimType: $validated['claim_type'],
-            formData: $validated['form_data'],
-            source: ClaimSource::CUSTOMER_PORTAL,
+            formData: $formData,
+            source: ClaimSource::AGENT_PORTAL,
+            riskId: $riskId,
         );
 
+        // Agent initiation tracking
+        $claim->update([
+            'initiated_by_agent' => true,
+            'initiated_by_agent_id' => $agent->id,
+        ]);
+
+        // Activity log
+        $note = trim($validated['note'] ?? '');
+        $this->claimService->logActivityPublic(
+            claim: $claim,
+            user: $agent,
+            action: 'agent_initiated',
+            note: "Claim initiated by intermediary {$agent->name} on behalf of {$customer->name}."
+                . ($note ? " Agent note: {$note}" : ''),
+            meta: [
+                'on_behalf_of_customer_id' => $customer->id,
+                'initiated_by_agent_id'    => $agent->id,
+            ]
+        );
+
+        if ($request->hasFile('documents')) {
+            $this->claimService->attachDocuments(
+                claim: $claim,
+                files: $request->file('documents'),
+                uploadedBy: $agent,
+                type: 'supporting',
+            );
+        }
+
+        $this->notificationService->notifyAgentInitiated($claim, $agent);
+
         return response()->json([
-            'success'      => true,
-            'message'      => 'Your claim has been submitted successfully.',
+            'success' => true,
+            'message' => "Claim {$claim->claim_number} submitted on behalf of {$customer->name}.",
             'claim_number' => $claim->claim_number,
-            'redirect'     => route('agent.dashboard.index'),
+            'redirect' => route('agent.claims.show', $claim),
         ]);
     }
 
@@ -86,6 +114,52 @@ class ClaimController extends Controller
             ->paginate(5);
 
         return view('agent.claims.index', compact('claims', 'customer'));
+    }
+
+    public function create(Request $request)
+    {
+        $policyId = $request->query('policy_id');
+        $riskId   = $request->query('risk_id');
+
+        $policy = Policy::where(function ($q) use ($policyId) {
+            $q->where('external_policy_id', $policyId)
+                ->orWhere('id', $policyId);
+        })->firstOrFail();
+
+        $customer = Customer::findOrFail($policy->customer_id);
+
+        $claimType = $this->normalizeClaimType($policy->business_class_name ?? '');
+
+        $viewMap = [
+            'motor'            => ['partial' => 'partials.forms.motor-form', 'label' => 'Motor'],
+            'fire'             => ['partial' => 'partials.forms.fire-form', 'label' => 'Fire'],
+            'general_accident' => ['partial' => 'partials.forms.general-accident-form', 'label' => 'General Accident'],
+        ];
+
+        if (! isset($viewMap[$claimType])) {
+            return redirect()
+                ->route('agent.dashboard.index')
+                ->with('error', "No claim form available for policy type: {$policy->business_class}.");
+        }
+
+        return view('agent.claims.create', [
+            'customer' => $customer,
+            'policy'   => $policy,
+            'riskId'   => $riskId,
+            'formView' => $viewMap[$claimType]['partial'],
+            'action'   => route('agent.claims.store'),
+            'method'   => 'POST',
+            'claim'    => null,
+            'context'  => 'agent',
+            'formData' => array_merge(
+                [
+                    'fullname' => $customer->name ?? '',
+                    'email'    => $customer->email ?? '',
+                    'phone'    => $customer->phone ?? '',
+                ],
+                $policy->vehicleFormData($riskId ? (int) $riskId : null)
+            ),
+        ]);
     }
 
     public function show(Claim $claim)
@@ -223,5 +297,10 @@ class ClaimController extends Controller
         );
 
         return back()->with('success', 'Your claim has been reset to Submitted.');
+    }
+
+    private function normalizeClaimType(string $businessClass): string
+    {
+        return str_replace(' ', '_', strtolower(trim($businessClass)));
     }
 }
