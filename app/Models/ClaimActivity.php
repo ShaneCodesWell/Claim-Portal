@@ -12,10 +12,12 @@ class ClaimActivity extends Model
     use HasFactory;
 
     protected $fillable = [
-        'claim_id', 
-        'user_id', 
-        'action', 
-        'note', 
+        'claim_id',
+        'user_id',
+        'customer_id',
+        'agent_id',
+        'action',
+        'note',
         'meta',
     ];
 
@@ -28,8 +30,18 @@ class ClaimActivity extends Model
         return $this->belongsTo(Claim::class);
     }
 
-    public function user(): BelongsTo
+    public function staff(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class);
     }
 }

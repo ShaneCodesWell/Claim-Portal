@@ -88,12 +88,13 @@ class ClaimController extends Controller
                 Storage::disk('local')->move($doc->file_path, $newPath);
 
                 $claim->documents()->create([
-                    'uploaded_by'   => null,
-                    'type'          => $doc->type,
+                    'uploaded_by' => null,
+                    'uploaded_by_customer_id' => $customer->id,
+                    'type' => $doc->type,
                     'original_name' => $doc->original_name,
-                    'file_path'     => $newPath,
-                    'mime_type'     => $doc->mime_type,
-                    'file_size'     => $doc->file_size,
+                    'file_path' => $newPath,
+                    'mime_type' => $doc->mime_type,
+                    'file_size' => $doc->file_size,
                 ]);
             }
             $draft->delete();
@@ -241,7 +242,13 @@ class ClaimController extends Controller
             );
         }
 
-        $this->claimService->logActivityPublic($claim, null, 'form_updated', 'Customer updated claim form data.');
+        $this->claimService->logActivityPublic(
+            claim: $claim,
+            user: null,
+            action: 'form_updated',
+            note: 'Customer updated claim form data.',
+            customer: $customer,
+        );
 
         return response()->json([
             'success'      => true,
@@ -268,7 +275,7 @@ class ClaimController extends Controller
         $this->claimService->attachDocuments(
             claim: $claim,
             files: $request->file('documents'),
-            uploadedBy: Auth::user(),
+            uploadedBy: null,
             type: 'survey_document',
             uploadedByCustomer: $customer,
         );

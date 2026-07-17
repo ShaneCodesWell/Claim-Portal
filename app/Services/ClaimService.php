@@ -47,7 +47,13 @@ class ClaimService
             ]);
 
             // Log submission activity
-            $this->logActivity($claim, null, 'submitted', 'Claim submitted via ' . ClaimSource::labels()[$source]);
+            $this->logActivity(
+                claim: $claim,
+                user: null,
+                action: 'submitted',
+                note: 'Claim submitted via ' . ClaimSource::labels()[$source],
+                customer: $customer,
+            );
 
             // Auto-assign based on branch
             $this->autoAssign($claim);
@@ -206,21 +212,32 @@ class ClaimService
         ?User $user,
         string $action,
         ?string $note = null,
-        array $meta = []
+        array $meta = [],
+        ?Customer $customer = null,
+        ?Agent $agent = null
     ): void {
         ClaimActivity::create([
-            'claim_id' => $claim->id,
-            'user_id'  => $user?->id,
-            'action'   => $action,
-            'note'     => $note,
-            'meta'     => ! empty($meta) ? $meta : null,
+            'claim_id'    => $claim->id,
+            'user_id'     => $user?->id,
+            'customer_id' => $customer?->id,
+            'agent_id'    => $agent?->id,
+            'action'      => $action,
+            'note'        => $note,
+            'meta'        => ! empty($meta) ? $meta : null,
         ]);
     }
 
     // In ClaimService — add this public wrapper
-    public function logActivityPublic(Claim $claim, ?User $user, string $action, ?string $note = null, array $meta = []): void
-    {
-        $this->logActivity($claim, $user, $action, $note, $meta);
+    public function logActivityPublic(
+        Claim $claim,
+        ?User $user,
+        string $action,
+        ?string $note = null,
+        array $meta = [],
+        ?Customer $customer = null,
+        ?Agent $agent = null
+    ): void {
+        $this->logActivity($claim, $user, $action, $note, $meta, $customer, $agent);
     }
 
     // Resolve branch from policy — fallback to head office
@@ -256,7 +273,6 @@ class ClaimService
 
     /**
      * Store uploaded files and record them in claim_documents.
-     * Works for both customer uploads (uploadedBy = null) and staff uploads.
      */
     public function attachDocuments(
         Claim $claim,
@@ -288,15 +304,17 @@ class ClaimService
         }
 
         $this->logActivity(
-            $claim,
-            $uploadedBy,
-            'documents_uploaded',
-            count($files) . ' document(s) uploaded.',
-            ['count' => count($files), 'type' => $type]
+            claim: $claim,
+            user: $uploadedBy,
+            action: 'documents_uploaded',
+            note: count($files) . ' document(s) uploaded.',
+            meta: ['count' => count($files), 'type' => $type],
+            customer: $uploadedByCustomer,
+            agent: $uploadedByAgent,
         );
     }
 
-    public function cancel(Claim $claim, User | Customer $cancelledBy, ?string $note = null): void
+    public function cancel(Claim $claim, User|Customer|Agent $cancelledBy, ?string $note = null): void
     {
         DB::transaction(function () use ($claim, $cancelledBy, $note) {
             $previousAssignee = $claim->assigned_to;
@@ -310,19 +328,25 @@ class ClaimService
             ]);
 
             $actorName = $cancelledBy->name;
-            $actorType = $cancelledBy instanceof Customer ? 'customer' : 'staff';
+            $actorType = match (true) {
+                $cancelledBy instanceof Customer => 'customer',
+                $cancelledBy instanceof Agent    => 'agent',
+                default                          => 'staff',
+            };
 
             $this->logActivity(
-                $claim,
-                $cancelledBy instanceof User ? $cancelledBy : null,
-                'cancelled',
-                $note ?? "Claim reset to Submitted by {$actorName}.",
-                [
+                claim: $claim,
+                user: $cancelledBy instanceof User ? $cancelledBy : null,
+                action: 'cancelled',
+                note: $note ?? "Claim reset to Submitted by {$actorName}.",
+                meta: [
                     'cancelled_by'      => $cancelledBy->id,
                     'actor_type'        => $actorType,
                     'previous_status'   => $previousStatus,
                     'previous_assignee' => $previousAssignee,
-                ]
+                ],
+                customer: $cancelledBy instanceof Customer ? $cancelledBy : null,
+                agent: $cancelledBy instanceof Agent ? $cancelledBy : null,
             );
         });
     }

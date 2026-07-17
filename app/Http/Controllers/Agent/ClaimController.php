@@ -75,7 +75,8 @@ class ClaimController extends Controller
         $note = trim($validated['note'] ?? '');
         $this->claimService->logActivityPublic(
             claim: $claim,
-            user: $agent,
+            user: null,
+            agent: $agent,
             action: 'agent_initiated',
             note: "Claim initiated by intermediary {$agent->name} on behalf of {$customer->name}."
                 . ($note ? " Agent note: {$note}" : ''),
@@ -285,11 +286,12 @@ class ClaimController extends Controller
         }
 
         $this->claimService->logActivityPublic(
-            $claim,
-            $agent,
-            'form_updated',
-            $validated['note'] ?? "Form data updated by intermediary {$agent->name}.",
-            [
+            claim: $claim,
+            user: null,
+            agent: $agent,
+            action: 'form_updated',
+            note: $validated['note'] ?? "Form data updated by intermediary {$agent->name}.",
+            meta: [
                 'updated_by_agent_id' => $agent->id,
             ]
         );
