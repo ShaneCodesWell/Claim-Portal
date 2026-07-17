@@ -1,4 +1,4 @@
-<x-layouts.app>
+<x-layouts.agent>
     <!-- Page Header -->
     <div class="mb-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -79,12 +79,12 @@
                                 <div x-show="open" @click.outside="open = false" x-transition
                                     x-anchor.bottom-end="$el.previousElementSibling"
                                     class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
-                                    <a href="{{ route('claims.draft.continue', $draft->id) }}"
+                                    <a href="{{ route('agent.claims.draft.continue', $draft->id) }}"
                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                         <i class="fas fa-pen text-xs text-blue-500"></i>
                                         Continue Draft
                                     </a>
-                                    <form method="POST" action="{{ route('claims.draft.destroyById', $draft->id) }}"
+                                    <form method="POST" action="{{ route('agent.claims.draft.documents.destroy', $draft->id) }}"
                                         class="delete-draft-form">
                                         @csrf
                                         @method('DELETE')
@@ -201,4 +201,4 @@
             });
         });
     </script>
-</x-layouts.app>
+</x-layouts.agent>

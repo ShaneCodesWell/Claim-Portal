@@ -24,7 +24,7 @@
                 <i class="fas fa-file-alt w-5"></i>
                 <span>My Claims</span>
             </a>
-            <a href="#"
+            <a href="{{ route('agent.claims.draft.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-file-signature w-5"></i>
                 <span>Drafts</span>

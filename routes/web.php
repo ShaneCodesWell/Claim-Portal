@@ -175,9 +175,13 @@ Route::middleware(['agent'])->prefix('agent')->group(function () {
     Route::get('/claims/show/{claim}', [AgentClaimController::class, 'show'])->name('agent.claims.show');
     Route::get('/claims/edit/{claim}', [AgentClaimController::class, 'edit'])->name('agent.claims.edit');
     Route::put('/claims/update/{claim}', [AgentClaimController::class, 'update'])->name('agent.claims.update');
+    Route::post('claims/{claim}/cancel', [AgentClaimController::class, 'cancel'])->name('agent.claims.cancel');
 
     // Preview Document
+     // Documents
+    Route::post('claims/{claim}/documents', [AgentClaimController::class, 'uploadDocuments'])->name('agent.claims.documents');
     Route::get('/documents/{document}/preview', [AgentClaimController::class, 'previewDocument'])->name('agent.documents.preview');
+    Route::delete('claims/documents/{document}', [AgentClaimController::class, 'destroyDocument'])->name('agent.claims.documents.destroy');
 
     // Agent Draft
     Route::get('/claims/drafts', [AgentClaimController::class, 'drafts'])->name('agent.claims.draft.index');

@@ -107,16 +107,14 @@ class ClaimController extends Controller
 
     public function index()
     {
-        $customer = Customer::where('phone', session('phone_number') ?? session('mobile_no'))
-            ->orWhere('external_customer_code', session('customer_code'))
-            ->first();
+        $agent = Auth::guard('agent')->user();
 
-        $claims = Claim::where('customer_id', $customer?->id)
+        $claims = Claim::where('initiated_by_agent_id', $agent?->id)
             ->with(['policy'])
             ->latest()
             ->paginate(5);
 
-        return view('agent.claims.index', compact('claims', 'customer'));
+        return view('agent.claims.index', compact('claims', 'agent'));
     }
 
     public function create(Request $request)
@@ -183,7 +181,7 @@ class ClaimController extends Controller
 
     public function show(Claim $claim)
     {
-        $claim->load(['policy', 'activities.user', 'documents']);
+        $claim->load(['policy', 'activities.agent', 'documents']);
         return view('agent.claims.show', compact('claim'));
     }
 
@@ -304,10 +302,38 @@ class ClaimController extends Controller
         ]);
     }
 
+    public function uploadDocuments(Request $request, Claim $claim)
+    {
+        $agent = Auth::guard('agent')->user();
+
+        if (!$agent) {
+            abort(403);
+        }
+
+        $request->validate([
+            'documents'   => 'required|array',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+        ]);
+
+        $this->claimService->attachDocuments(
+            claim: $claim,
+            files: $request->file('documents'),
+            uploadedBy: null,
+            type: 'document',
+            uploadedByAgent: $agent,
+        );
+
+        return back()->with('success', count($request->file('documents')) . ' document(s) uploaded.');
+    }
+
     public function previewDocument(ClaimDocument $document, Request $request)
     {
-        // Verify the document belongs to a claim owned by this customer
-        // (skip this check on staff routes — add middleware instead)
+        $agent = Auth::guard('agent')->user();
+
+        if (!$agent) {
+            abort(403);
+        }
+
         $path = Storage::disk('local')->path($document->file_path);
 
         if (! file_exists($path)) {
@@ -325,14 +351,34 @@ class ClaimController extends Controller
         ]);
     }
 
+    public function destroyDocument(ClaimDocument $document): \Illuminate\Http\RedirectResponse
+    {
+        $agent = Auth::guard('agent')->user();
+
+        // Ensure the document belongs to a claim owned by this agent
+        if (!$agent) {
+            abort(403);
+        }
+
+        // Only allow deletion if the claim is still editable
+        if (! in_array($document->claim->status, ['submitted', 'pending_info'])) {
+            return back()->with('error', 'Documents can no longer be removed from this claim.');
+        }
+
+        Storage::disk('local')->delete($document->file_path);
+        $document->delete();
+
+        return back()->with('success', 'Document removed successfully.');
+    }
+
     public function cancel(Request $request, Claim $claim)
     {
         $request->validate([
             'note' => 'nullable|string|max:500',
         ]);
 
-        // Ensure the claim belongs to this customer
-        if ($claim->customer_id !== Auth::guard('customer')->user()->id) {
+        // Ensure the claim belongs to this agent
+        if ($claim->initiated_by_agent_id !== Auth::guard('agent')->user()->id) {
             abort(403);
         }
 
@@ -342,11 +388,11 @@ class ClaimController extends Controller
 
         $this->claimService->cancel(
             claim: $claim,
-            cancelledBy: Auth::guard('customer')->user(),
+            cancelledBy: Auth::guard('agent')->user(),
             note: $request->note,
         );
 
-        return back()->with('success', 'Your claim has been reset to Submitted.');
+        return back()->with('success', 'Your claim has been cancelled successfully.');
     }
 
     private function normalizeClaimType(string $businessClass): string
