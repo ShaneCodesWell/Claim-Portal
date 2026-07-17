@@ -10,7 +10,6 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FireController;
 use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
-// use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\Staff\CommitteeClaimController;
 use App\Http\Controllers\Staff\GlimsSyncController;
@@ -179,6 +178,16 @@ Route::middleware(['agent'])->prefix('agent')->group(function () {
 
     // Preview Document
     Route::get('/documents/{document}/preview', [AgentClaimController::class, 'previewDocument'])->name('agent.documents.preview');
+
+    // Agent Draft
+    Route::get('/claims/drafts', [AgentClaimController::class, 'drafts'])->name('agent.claims.draft.index');
+    Route::post('/claims/draft', [AgentClaimController::class, 'saveDraft'])->name('agent.claims.draft.save');
+    Route::get('/claims/draft', [AgentClaimController::class, 'getDraft'])->name('agent.claims.draft.show');
+    Route::delete('/claims/draft', [AgentClaimController::class, 'destroyDraft'])->name('agent.claims.draft.destroy');
+    Route::get('/claims/draft/{draft}/continue', [AgentClaimController::class, 'continueDraft'])->name('agent.claims.draft.continue');
+    Route::delete('/claims/draft/{draft}/remove', [AgentClaimController::class, 'destroyDraftById'])->name('agent.claims.draft.destroyById');
+    Route::get('/claims/draft/documents/{document}/preview', [AgentClaimController::class, 'previewDraftDocument'])->name('agent.claims.draft.documents.preview');
+    Route::delete('/claims/draft/documents/{document}', [AgentClaimController::class, 'destroyDraftDocument'])->name('agent.claims.draft.documents.destroy');
 });
 
 // Admin-only routes — only admins can access

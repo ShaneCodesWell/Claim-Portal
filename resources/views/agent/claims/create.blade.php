@@ -23,6 +23,7 @@
             'action' => $action,
             'method' => $method,
             'claim' => $claim,
+            'draft' => $draft ?? null,
             'context' => 'agent',
         ])
     </div>

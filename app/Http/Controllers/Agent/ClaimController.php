@@ -7,6 +7,8 @@ use App\Enums\ClaimStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
 use App\Models\ClaimDocument;
+use App\Models\ClaimDraft;
+use App\Models\ClaimDraftDocument;
 use App\Models\Customer;
 use App\Models\Policy;
 use App\Services\ClaimNotificationService;
@@ -127,6 +129,7 @@ class ClaimController extends Controller
         })->firstOrFail();
 
         $customer = Customer::findOrFail($policy->customer_id);
+        $agent    = Auth::guard('agent')->user();
 
         $claimType = $this->normalizeClaimType($policy->business_class_name ?? '');
 
@@ -142,6 +145,27 @@ class ClaimController extends Controller
                 ->with('error', "No claim form available for policy type: {$policy->business_class}.");
         }
 
+        // Look for an in-progress draft this agent already started for this policy/claim type
+        $draft = ClaimDraft::where('agent_id', $agent->id)
+            ->where('policy_id', $policy->id)
+            ->where('claim_type', $claimType)
+            ->first();
+
+        $formData = array_merge(
+            [
+                'fullname' => $customer->name ?? '',
+                'email'    => $customer->email ?? '',
+                'phone'    => $customer->phone ?? '',
+            ],
+            $policy->vehicleFormData($riskId ? (int) $riskId : null)
+        );
+
+        // Draft data overrides the freshly-pulled policy/customer defaults
+        if ($draft) {
+            $formData = array_merge($formData, $draft->form_data ?? []);
+            $riskId   = $draft->risk_id ?? $riskId;
+        }
+
         return view('agent.claims.create', [
             'customer' => $customer,
             'policy'   => $policy,
@@ -150,15 +174,9 @@ class ClaimController extends Controller
             'action'   => route('agent.claims.store'),
             'method'   => 'POST',
             'claim'    => null,
+            'draft'    => $draft,
             'context'  => 'agent',
-            'formData' => array_merge(
-                [
-                    'fullname' => $customer->name ?? '',
-                    'email'    => $customer->email ?? '',
-                    'phone'    => $customer->phone ?? '',
-                ],
-                $policy->vehicleFormData($riskId ? (int) $riskId : null)
-            ),
+            'formData' => $formData,
         ]);
     }
 
@@ -302,5 +320,236 @@ class ClaimController extends Controller
     private function normalizeClaimType(string $businessClass): string
     {
         return str_replace(' ', '_', strtolower(trim($businessClass)));
+    }
+
+    // Claim Drafts for Agent
+    public function drafts()
+    {
+        $agent = Auth::guard('agent')->user();
+
+        $drafts = ClaimDraft::with('documents')
+            ->where('agent_id', $agent->id)
+            ->latest()
+            ->paginate(5);
+
+        return view('agent.claims.draft.index', compact('drafts'));
+    }
+
+    public function saveDraft(Request $request)
+    {
+        $validated = $request->validate([
+            'policy_id'   => 'required',
+            'claim_type'  => 'required|string',
+            'form_data'   => 'nullable|array',
+            'documents'   => 'nullable|array',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+        ]);
+
+        $agent = Auth::guard('agent')->user();
+
+        $policy = Policy::where(function ($q) use ($validated) {
+            $q->where('external_policy_id', $validated['policy_id'])
+                ->orWhere('id', $validated['policy_id']);
+        })->first();
+
+        if (! $policy) {
+            return response()->json(['success' => false, 'message' => 'Policy not found.'], 404);
+        }
+
+        $riskId = $request->input('risk_id') ? (int) $request->input('risk_id') : null;
+
+        $draft = ClaimDraft::where('agent_id', $agent->id)
+            ->where('policy_id', $policy->id)
+            ->where('claim_type', $validated['claim_type'])
+            ->first();
+
+        if ($draft) {
+            $draft->update([
+                'risk_id'       => $riskId,
+                'form_data'     => $validated['form_data'] ?? [],
+                'last_saved_at' => now(),
+            ]);
+        } else {
+            $draft = ClaimDraft::create([
+                'customer_id'   => $policy->customer_id,
+                'policy_id'     => $policy->id,
+                'agent_id'      => $agent->id,
+                'claim_type'    => $validated['claim_type'],
+                'risk_id'       => $riskId,
+                'form_data'     => $validated['form_data'] ?? [],
+                'last_saved_at' => now(),
+            ]);
+        }
+
+        if ($request->hasFile('documents')) {
+            foreach ($request->file('documents') as $file) {
+                $path = $file->store('claim-drafts/' . $draft->id, 'local');
+
+                $draft->documents()->create([
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_path'     => $path,
+                    'mime_type'     => $file->getMimeType(),
+                    'file_size'     => $file->getSize(),
+                    'type'          => 'supporting',
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Progress saved. You can continue this claim later.',
+            'draft_id' => $draft->id,
+            'saved_at' => $draft->last_saved_at,
+        ]);
+    }
+
+    public function getDraft(Request $request)
+    {
+        $validated = $request->validate([
+            'policy_id'  => 'required',
+            'claim_type' => 'required|string',
+        ]);
+
+        $agent = Auth::guard('agent')->user();
+
+        $policy = Policy::where(function ($q) use ($validated) {
+            $q->where('external_policy_id', $validated['policy_id'])
+                ->orWhere('id', $validated['policy_id']);
+        })->first();
+
+        if (! $policy) {
+            return response()->json(['success' => false, 'message' => 'Policy not found.'], 404);
+        }
+
+        $draft = ClaimDraft::with('documents')
+            ->where('agent_id', $agent->id)
+            ->where('policy_id', $policy->id)
+            ->where('claim_type', $validated['claim_type'])
+            ->first();
+
+        if (! $draft) {
+            return response()->json(['success' => true, 'draft' => null]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'draft'   => [
+                'id'        => $draft->id,
+                'form_data' => $draft->form_data,
+                'risk_id'   => $draft->risk_id,
+                'saved_at'  => $draft->last_saved_at,
+                'documents' => $draft->documents->map(fn($d) => [
+                    'id'   => $d->id,
+                    'name' => $d->original_name,
+                    'url'  => route('agent.claims.draft.documents.preview', $d),
+                ]),
+            ],
+        ]);
+    }
+
+    public function destroyDraft(Request $request)
+    {
+        $validated = $request->validate([
+            'policy_id'  => 'required',
+            'claim_type' => 'required|string',
+        ]);
+
+        $agent = Auth::guard('agent')->user();
+
+        $policy = Policy::where(function ($q) use ($validated) {
+            $q->where('external_policy_id', $validated['policy_id'])
+                ->orWhere('id', $validated['policy_id']);
+        })->first();
+
+        if (! $policy) {
+            return response()->json(['success' => false, 'message' => 'Policy not found.'], 404);
+        }
+
+        $draft = ClaimDraft::where('agent_id', $agent->id)
+            ->where('policy_id', $policy->id)
+            ->where('claim_type', $validated['claim_type'])
+            ->first();
+
+        if ($draft) {
+            foreach ($draft->documents as $doc) {
+                Storage::disk('local')->delete($doc->file_path);
+            }
+            $draft->delete();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function continueDraft(ClaimDraft $draft)
+    {
+        $agent = Auth::guard('agent')->user();
+
+        if ($draft->agent_id !== $agent->id) {
+            abort(403);
+        }
+
+        $policy = $draft->policy;
+
+        // Agent's create() auto-detects claim type from the policy itself,
+        // so we don't need the routeMap the customer flow uses.
+        return redirect()->route('agent.claims.create', [
+            'policy_id' => $policy->external_policy_id ?? $policy->id,
+            'risk_id'   => $draft->risk_id,
+        ]);
+    }
+
+    public function destroyDraftById(ClaimDraft $draft)
+    {
+        $agent = Auth::guard('agent')->user();
+
+        if ($draft->agent_id !== $agent->id) {
+            abort(403);
+        }
+
+        foreach ($draft->documents as $doc) {
+            Storage::disk('local')->delete($doc->file_path);
+        }
+
+        $draft->delete();
+
+        return back()->with('success', 'Draft deleted successfully.');
+    }
+
+    public function previewDraftDocument(ClaimDraftDocument $document, Request $request)
+    {
+        $agent = Auth::guard('agent')->user();
+
+        if ($document->draft->agent_id !== $agent->id) {
+            abort(403);
+        }
+
+        $path = Storage::disk('local')->path($document->file_path);
+
+        if (! file_exists($path)) {
+            abort(404, 'Document not found.');
+        }
+
+        if ($request->boolean('download')) {
+            return response()->download($path, $document->original_name);
+        }
+
+        return response()->file($path, [
+            'Content-Type'        => $document->mime_type,
+            'Content-Disposition' => 'inline; filename="' . $document->original_name . '"',
+        ]);
+    }
+
+    public function destroyDraftDocument(ClaimDraftDocument $document)
+    {
+        $agent = Auth::guard('agent')->user();
+
+        if ($document->draft->agent_id !== $agent->id) {
+            abort(403);
+        }
+
+        Storage::disk('local')->delete($document->file_path);
+        $document->delete();
+
+        return response()->json(['success' => true]);
     }
 }

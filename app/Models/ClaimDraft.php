@@ -16,6 +16,8 @@ class ClaimDraft extends Model
     protected $fillable = [
         'customer_id',
         'policy_id',
+        'agent_id',
+        'staff_id',
         'risk_id',
         'claim_type',
         'form_data',
@@ -30,6 +32,16 @@ class ClaimDraft extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class);
+    }
+
+    public function staffMember(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_id');
     }
 
     public function policy(): BelongsTo

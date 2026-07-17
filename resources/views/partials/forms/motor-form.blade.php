@@ -1,6 +1,7 @@
 @php
     $f = $formData ?? [];
     $isStaff = ($context ?? 'customer') === 'staff';
+    $isAgent = ($context ?? 'customer') === 'agent';
     $isEdit = !is_null($claim ?? null);
 
     // Array Data
@@ -410,6 +411,11 @@
                             <input type="text" name="repairer_address" value="{{ $f['repairer_address'] ?? '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                         </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Repair Bill Amount</label>
+                            <input type="number" name="repair_estimate_amount"
+                                value="{{ $f['repair_estimate_amount'] ?? '' }}"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        </div>
                     </div>
                 </div>
             </section>
@@ -631,7 +637,7 @@
                                     </div>
                                     <div class="flex items-center gap-3">
                                         <button type="button"
-                                            onclick="openDocPreview('{{ route('customer.claims.draft.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
+                                            onclick="openDocPreview('{{ $isAgent ? route('agent.claims.draft.documents.preview', $doc->id) : route('customer.claims.draft.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
                                             class="text-xs text-blue-600 hover:underline">View</button>
                                         <button type="button"
                                             onclick="deleteDraftDocument({{ $doc->id }}, this)"
@@ -660,8 +666,15 @@
                                             KB</span>
                                     </div>
                                     <div class="flex items-center gap-3">
+                                        @php
+                                            $previewUrl = $isAgent
+                                                ? route('agent.documents.preview', $doc->id)
+                                                : ($isStaff
+                                                    ? route('staff.documents.preview', $doc->id)
+                                                    : route('customer.documents.preview', $doc->id));
+                                        @endphp
                                         <button type="button"
-                                            onclick="openDocPreview('{{ route('staff.documents.preview', $doc->id) }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
+                                            onclick="openDocPreview('{{ $previewUrl }}', '{{ $doc->original_name }}', '{{ $doc->mime_type }}')"
                                             class="text-xs text-blue-600 hover:underline">View</button>
                                         <button type="button"
                                             onclick="markDocumentForDeletion({{ $doc->id }}, this)"
@@ -690,7 +703,7 @@
             </section>
 
             {{-- ── SECTION 6: STAFF NOTE (staff edit only) ── --}}
-            @if ($isStaff)
+            @if ($isStaff || ($isAgent && $isEdit))
                 <section class="mb-8">
                     <h3
                         class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
@@ -708,7 +721,7 @@
             @endif
 
             {{-- ── SECTION 6/7: DECLARATION (customer only) ── --}}
-            @if (!$isStaff)
+            @if (!$isStaff && !$isAgent)
                 <section class="mb-8">
                     <h3
                         class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
@@ -774,7 +787,7 @@
                     </button>
                 @endif
                 <button type="submit"
-                    class="w-full sm:w-auto px-6 py-2 {{ $isStaff ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700' }} text-white font-medium rounded-lg transition flex items-center justify-center gap-2">
+                    class="w-full sm:w-auto px-6 py-2 {{ $isStaff ? 'bg-indigo-600 hover:bg-indigo-700' : ($isAgent ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700') }} text-white font-medium rounded-lg transition flex items-center justify-center gap-2">
                     @if (!$isEdit)
                         <span>Submit Claim</span><i class="fas fa-paper-plane"></i>
                     @else
@@ -782,8 +795,8 @@
                     @endif
                 </button>
                 @if ($isEdit)
-                    <a href="{{ $isStaff ? route('staff.claims.show', $claim) : route('claims.show', $claim) }}"
-                        class="w-full sm:w-auto px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition text-center">
+                    <a
+                        href="{{ $isStaff ? route('staff.claims.show', $claim) : ($isAgent ? route('agent.claims.show', $claim) : route('claims.show', $claim)) }}">
                         Cancel
                     </a>
                 @endif
@@ -885,9 +898,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         const isEdit = {{ $isEdit ? 'true' : 'false' }};
         const isStaff = {{ $isStaff ? 'true' : 'false' }};
+        const isAgent = {{ $isAgent ? 'true' : 'false' }};
 
         // Route template for deleting a draft document — swap 0 for the real ID at call time
-        const draftDocDestroyTemplate =
+        const draftDocDestroyTemplate = isAgent ?
+            "{{ route('agent.claims.draft.documents.destroy', ['document' => 0]) }}" :
             "{{ route('customer.claims.draft.documents.destroy', ['document' => 0]) }}";
 
         // ── Conditional radio toggles ──────────────────────────────────────────
@@ -1250,6 +1265,7 @@
                 damaged_vehicle_location: val('damaged_vehicle_location'),
                 repairer_fullname: val('repairer_fullname'),
                 repairer_address: val('repairer_address'),
+                repair_estimate_amount: val('repair_estimate_amount'),
                 your_vehicle_injured: collectInjuredPersons('yourVehicleInjuredPersons'),
                 other_vehicle_injured: collectInjuredPersons('otherVehicleInjuredPersons'),
                 involved_vehicles: collectVehicles('vehiclesContainer'),
@@ -1270,7 +1286,7 @@
             });
 
             // Staff note
-            if (isStaff) {
+            if (isStaff || isAgent) {
                 const note = val('note');
                 if (note) formData.append('note', note);
             }
@@ -1293,8 +1309,7 @@
         document.getElementById('motorForm')?.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // Customer requires declaration checkbox
-            if (!isStaff && !isChecked('declaration_agreement')) {
+            if (!isStaff && !isAgent && !isChecked('declaration_agreement')) {
                 showClaimError('Please read and accept the declaration before submitting.');
                 return;
             }
@@ -1316,7 +1331,7 @@
                     includeDeleteDocuments: false
                 });
 
-                const response = await fetch('{{ route('claims.draft.save') }}', {
+                const response = await fetch('{{ $isAgent ? route('agent.claims.draft.save') : route('claims.draft.save') }}', {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
