@@ -12,6 +12,7 @@ use App\Models\ClaimDocument;
 use App\Models\Customer;
 use App\Models\Policy;
 use App\Models\User;
+use App\Models\Agent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -262,7 +263,8 @@ class ClaimService
         array $files,
         ?User $uploadedBy = null,
         string $type = 'supporting',
-        ?Customer $uploadedByCustomer = null
+        ?Customer $uploadedByCustomer = null,
+        ?Agent $uploadedByAgent = null
     ): void {
         foreach ($files as $file) {
             // Store under claims/{claim_number}/filename — private disk
@@ -276,6 +278,7 @@ class ClaimService
                 'claim_id'                => $claim->id,
                 'uploaded_by'             => $uploadedBy?->id,
                 'uploaded_by_customer_id' => $uploadedByCustomer?->id,
+                'uploaded_by_agent_id'    => $uploadedByAgent?->id,
                 'type'                    => $type,
                 'original_name'           => $file->getClientOriginalName(),
                 'file_path'               => $path,

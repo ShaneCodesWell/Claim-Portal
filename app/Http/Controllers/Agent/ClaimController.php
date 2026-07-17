@@ -89,7 +89,7 @@ class ClaimController extends Controller
             $this->claimService->attachDocuments(
                 claim: $claim,
                 files: $request->file('documents'),
-                uploadedBy: $agent,
+                uploadedByAgent: $agent,
                 type: 'supporting',
             );
         }
@@ -188,62 +188,84 @@ class ClaimController extends Controller
 
     public function edit(Claim $claim)
     {
-        $claim->load(['policy', 'activities.user', 'documents']);
-        // Only allow editing if claim is still in a state where edits make sense
-        $editableStatuses = ['submitted', 'pending_info'];
+        $claim->load(['policy', 'documents', 'customer']);
 
-        if (! in_array($claim->status, $editableStatuses)) {
-            return redirect()->route('claims.show', $claim)
-                ->with('error', 'This claim can no longer be edited.');
+        // Only claims this agent actually initiated can be edited by them
+        if ($claim->initiated_by_agent_id !== Auth::guard('agent')->id()) {
+            abort(403, 'You do not have access to this claim.');
         }
 
-        $claim->load(['policy', 'documents']);
+        if (! $claim->isEditable()) {
+            abort(403, 'This claim can no longer be edited.');
+        }
 
-        // Map claim_type to the correct edit view — mirrors processClaim() in dashboard JS
+        $policy = $claim->policy;
+        $customer = $claim->customer;
+
         $viewMap = [
-            'motor'            => 'customer.claims.edit.motor',
-            'fire'             => 'customer.claims.edit.fire',
-            'general_accident' => 'customer.claims.edit.general-accident',
+            'motor'            => ['partial' => 'partials.forms.motor-form', 'label' => 'Motor'],
+            'fire'             => ['partial' => 'partials.forms.fire-form', 'label' => 'Fire'],
+            'general_accident' => ['partial' => 'partials.forms.general-accident-form', 'label' => 'General Accident'],
         ];
 
-        $view = $viewMap[$claim->claim_type] ?? null;
-
-        if (! $view) {
-            return redirect()->route('claims.show', $claim)
+        if (! isset($viewMap[$claim->claim_type])) {
+            return redirect()->route('agent.claims.show', $claim)
                 ->with('error', 'No edit form available for this claim type.');
         }
 
-        return view($view, compact('claim'));
+        $formData = array_merge(
+            [
+                'fullname' => $customer->name ?? '',
+                'email'    => $customer->email ?? '',
+                'phone'    => $customer->phone ?? '',
+            ],
+            $claim->form_data ?? []
+        );
+
+        return view('agent.claims.create', [
+            'customer' => $customer,
+            'policy'   => $policy,
+            'riskId'   => $claim->form_data['_risk_id'] ?? null,
+            'formView' => $viewMap[$claim->claim_type]['partial'],
+            'action'   => route('agent.claims.update', $claim),
+            'method'   => 'PUT',
+            'claim'    => $claim,
+            'draft'    => null,
+            'context'  => 'agent',
+            'formData' => $formData,
+        ]);
     }
 
     public function update(Request $request, Claim $claim)
     {
+        $agent = Auth::guard('agent')->user();
+
+        if ($claim->initiated_by_agent_id !== $agent->id) {
+            abort(403, 'You do not have access to this claim.');
+        }
+
         $validated = $request->validate([
-            'claim_type'         => 'required|string',
-            'form_data'          => 'required|array',
-            'documents'          => 'nullable|array',
-            'documents.*'        => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
-            'delete_documents'   => 'nullable|array',
-            'delete_documents.*' => 'integer|exists:claim_documents,id',
+            'claim_type'          => 'required|string',
+            'form_data'           => 'required|array',
+            'documents'           => 'nullable|array',
+            'documents.*'         => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'delete_documents'    => 'nullable|array',
+            'delete_documents.*'  => 'integer|exists:claim_documents,id',
+            'note'                => 'nullable|string|max:500',
         ]);
 
-        $editableStatuses = ['submitted', 'pending_info'];
-        if (! in_array($claim->status, $editableStatuses)) {
+        if (! $claim->isEditable()) {
             return response()->json([
                 'success' => false,
                 'message' => 'This claim can no longer be edited.',
             ], 403);
         }
 
-        // Update form data
-        $claim->update([
-            'form_data' => $validated['form_data'],
-        ]);
+        $claim->update(['form_data' => $validated['form_data']]);
 
-        // Delete marked documents
         if (! empty($validated['delete_documents'])) {
-            $docsToDelete = \App\Models\ClaimDocument::whereIn('id', $validated['delete_documents'])
-                ->where('claim_id', $claim->id) // safety — only delete docs belonging to this claim
+            $docsToDelete = ClaimDocument::whereIn('id', $validated['delete_documents'])
+                ->where('claim_id', $claim->id)
                 ->get();
 
             foreach ($docsToDelete as $doc) {
@@ -257,18 +279,26 @@ class ClaimController extends Controller
             $this->claimService->attachDocuments(
                 claim: $claim,
                 files: $request->file('documents'),
-                uploadedBy: null,
-                type: 'supporting',
+                uploadedByAgent: $agent,
+                type: 'agent_upload',
             );
         }
 
-        $this->claimService->logActivityPublic($claim, null, 'form_updated', 'Customer updated claim form data.');
+        $this->claimService->logActivityPublic(
+            $claim,
+            $agent,
+            'form_updated',
+            $validated['note'] ?? "Form data updated by intermediary {$agent->name}.",
+            [
+                'updated_by_agent_id' => $agent->id,
+            ]
+        );
 
         return response()->json([
             'success'      => true,
-            'message'      => 'Your claim has been updated successfully.',
+            'message'      => 'Claim updated successfully.',
             'claim_number' => $claim->claim_number,
-            'redirect'     => route('claims.show', $claim),
+            'redirect'     => route('agent.claims.show', $claim),
         ]);
     }
 
