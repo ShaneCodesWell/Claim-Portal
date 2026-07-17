@@ -55,15 +55,6 @@ class ClaimController extends Controller
             });
         }
 
-        // Branch filter
-        // if ($request->filled('branch')) {
-        //     $branchCode = $request->branch;
-        //     $query->whereHas(
-        //         'policy',
-        //         fn($q) =>
-        //         $q->where('policy_number', 'like', "P-{$branchCode}-%")
-        //     );
-        // }
         if ($request->filled('branch')) {
             $query->where('branch_id', $request->branch);
         }
@@ -92,7 +83,7 @@ class ClaimController extends Controller
 
     public function show(Claim $claim)
     {
-        $claim->load(['customer', 'policy', 'assignedTo', 'branch', 'activities.user', 'documents', 'surveyor', 'committeeDecidedBy']);
+        $claim->load(['customer', 'policy', 'assignedTo', 'branch', 'activities.staff', 'documents', 'surveyor', 'committeeDecidedBy']);
 
         $staffMembers = User::where('is_active', true)
             ->whereIn('role', UserRole::staffRoles())

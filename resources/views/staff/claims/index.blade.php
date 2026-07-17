@@ -75,12 +75,12 @@
                             Client</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policy Number</th>
-                        {{-- <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy Period</th> --}}
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Product</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Sum Insured</th>
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Repair Bill</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Assigned To</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -125,6 +125,9 @@
                             </td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
                                 {{ number_format($claim->amount) }}</td>
+                            <td class="px-4 py-4 text-sm font-medium text-gray-900">
+                                GH₵ {{ number_format($claim->repair_estimate) }}
+                            </td>
                             <td class="px-4 py-4 text-sm text-gray-700">{{ $claim->assignedTo->name ?? 'Unassigned' }}
                             </td>
                             @php($badge = \App\Enums\ClaimStatus::badge($claim->status))

@@ -58,7 +58,7 @@ class ClaimController extends Controller
             abort(403, 'This claim is not currently under survey.');
         }
 
-        $claim->load(['customer', 'policy', 'branch', 'activities.user', 'documents', 'surveyor']);
+        $claim->load(['customer', 'policy', 'branch', 'activities.staff', 'documents', 'surveyor']);
         $stats = $this->stats();
 
         return view('surveyor.claims.show', compact('claim', 'stats'));

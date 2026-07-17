@@ -33,7 +33,7 @@ class CommitteeClaimController extends Controller
             'customer',
             'policy',
             'branch',
-            'activities.user',
+            'activities.staff',
             'documents',
             'assignedTo',
             'surveyor',

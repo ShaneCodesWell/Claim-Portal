@@ -198,7 +198,7 @@
                                     <p class="text-sm text-gray-600 mt-0.5">{{ $activity->note }}</p>
                                 @endif
                                 <p class="text-xs text-gray-400 mt-1">
-                                    by {{ $activity->user?->name ?? 'System' }}
+                                    by {{ $activity->staff?->name ?? 'System' }}
                                 </p>
                             </div>
                         </div>

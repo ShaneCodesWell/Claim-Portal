@@ -316,9 +316,9 @@
                                 @if ($activity->note)
                                     <p class="text-sm text-gray-600 mt-0.5">{{ $activity->note }}</p>
                                 @endif
-                                @if ($activity->user)
+                                @if ($activity->staff)
                                     <p class="text-xs text-gray-400 mt-1">
-                                        by {{ $activity->user->name }}
+                                        by {{ $activity->staff->name }}
                                     </p>
                                 @else
                                     <p class="text-xs text-gray-400 mt-1">by System</p>

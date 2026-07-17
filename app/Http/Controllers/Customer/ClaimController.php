@@ -131,13 +131,13 @@ class ClaimController extends Controller
             abort(403);
         }
 
-        $claim->load(['policy', 'activities.user', 'documents']);
+        $claim->load(['policy', 'activities.staff', 'documents']);
         return view('customer.claims.show', compact('claim'));
     }
 
     public function edit(Claim $claim)
     {
-        $claim->load(['policy', 'activities.user', 'documents', 'customer']);
+        $claim->load(['policy', 'activities.staff', 'documents', 'customer']);
 
         // Load the customer Data for display
         $customer    = Auth::guard('customer')->user();

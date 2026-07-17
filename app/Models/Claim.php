@@ -174,4 +174,9 @@ class Claim extends Model
     {
         return $this->belongsTo(Agent::class, 'initiated_by_agent_id');
     }
+
+    public function getRepairEstimateAttribute(): float
+    {
+        return (float) ($this->form_data['repair_estimate_amount'] ?? 0);
+    }
 }
