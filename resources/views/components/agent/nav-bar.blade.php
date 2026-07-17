@@ -38,18 +38,17 @@
                             {{ Auth::guard('agent')->user()?->email }}
                         </p>
                     </div>
+                    <a href="{{ route('agent.dashboard.index') }}"
+                        class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-file-contract w-4 text-gray-400"></i> My Policies
+                    </a>
                     <a href="{{ route('agent.claims.index') }}"
                         class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-user-circle w-4 text-gray-400"></i> My
-                        Claims
+                        <i class="fas fa-clipboard-list w-4 text-gray-400"></i> My Claims
                     </a>
-                    {{-- <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-bell w-4 text-gray-400"></i> Notifications
-                        <span class="ml-auto bg-red-100 text-red-600 text-xs px-1.5 rounded-full">3</span>
-                    </a> --}}
-                    <a href="{{ route('settings') }}"
+                    <a href="{{ route('agent.claims.draft.index') }}"
                         class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-cog w-4 text-gray-400"></i> Settings
+                        <i class="fas fa-file-alt w-4 text-gray-400"></i> Drafts
                     </a>
                     <hr class="my-1 border-gray-200" />
                     <form action="{{ route('logout') }}" method="POST"

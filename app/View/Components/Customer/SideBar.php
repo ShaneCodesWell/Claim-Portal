@@ -1,4 +1,5 @@
 <?php
+
 namespace App\View\Components\Customer;
 
 use App\Enums\ClaimStatus;
