@@ -570,4 +570,33 @@ class ClaimController extends Controller
 
         return view('staff.claims.archive', compact('claims'));
     }
+
+    public function tracking(Request $request)
+    {
+        abort_unless(Auth::user()->isAdmin(), 403);
+
+        $query = Claim::with(['customer', 'policy', 'assignedTo', 'surveyor', 'committeeDecidedBy'])
+            ->whereIn('status', [
+                ClaimStatus::UNDER_SURVEY,
+                ClaimStatus::SURVEY_COMPLETED,
+                ClaimStatus::COMMITTEE_REVIEW,
+            ])
+            ->latest();
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('policy', fn($q) => $q->where('policy_number', 'like', "%{$search}%"));
+            });
+        }
+
+        $claims = $query->paginate(15)->withQueryString();
+
+        return view('staff.claims.tracking', compact('claims'));
+    }
 }

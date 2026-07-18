@@ -196,6 +196,9 @@ Route::middleware(['agent'])->prefix('agent')->group(function () {
 // Admin-only routes — only admins can access
 Route::middleware(['admin'])->prefix('admin')->group(function () {
 
+    // Survey
+    Route::get('/claim/tracking', [StaffClaimController::class, 'tracking'])->name('staff.claims.tracking');
+
     // Organization
     Route::get('/organization', [CompanyController::class, 'index'])->name('organization');
 
