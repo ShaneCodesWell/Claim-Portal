@@ -297,6 +297,28 @@ class ClaimController extends Controller
         return view('staff.claims.print', compact('claim'));
     }
 
+    public function process(Claim $claim)
+    {
+        if (! $claim->isEditable()) {
+            abort(403, 'This claim can no longer be processed.');
+        }
+
+        if ($claim->assigned_to) {
+            return back()->with('error', 'This claim is already assigned.');
+        }
+
+        $this->claimService->assign(
+            claim: $claim,
+            assignee: Auth::user(),
+            assignedBy: Auth::user(),
+            note: 'Self-assigned via Process Claim.',
+        );
+
+        return redirect()
+            ->route('staff.claims.show', $claim)
+            ->with('success', 'Claim assigned to you and moved to review.');
+    }
+
     public function assign(Request $request, Claim $claim)
     {
         $request->validate([

@@ -1,4 +1,7 @@
 <x-layouts.staff>
+    @php
+        $canAct = $claim->canBeActedOn();
+    @endphp
 
     {{-- Page Header --}}
     <div class="flex items-center justify-between mb-6">
@@ -31,37 +34,16 @@
             </div>
         </div>
 
-        {{-- Dont update the status here, complete the flow --}}
-        {{-- Quick Status Update --}}
-        {{-- <form action="{{ route('staff.claims.status', $claim) }}" method="POST" class="flex items-center gap-2">
-            @csrf
-            @if ($claim->isEditable())
-                <select name="status"
-                    class="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                    @foreach (\App\Enums\ClaimStatus::labels() as $value => $label)
-                        <option value="{{ $value }}" @selected($claim->status === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-                <button type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition font-medium">
-                    Update Status
-                </button>
-            @else
-                <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
-                    <i class="fas fa-lock"></i> Editing locked
-                </span>
-            @endif
-        </form> --}}
-
         <div class="flex gap-2">
             {{-- Send to Survey --}}
             @if (
-                !in_array(
-                    $claim->status,
-                    array_merge(\App\Enums\ClaimStatus::terminal(), [
-                        \App\Enums\ClaimStatus::UNDER_SURVEY,
-                        \App\Enums\ClaimStatus::COMMITTEE_REVIEW,
-                    ])))
+                $canAct &&
+                    !in_array(
+                        $claim->status,
+                        array_merge(\App\Enums\ClaimStatus::terminal(), [
+                            \App\Enums\ClaimStatus::UNDER_SURVEY,
+                            \App\Enums\ClaimStatus::COMMITTEE_REVIEW,
+                        ])))
                 <div x-data="{ open: false }">
                     <button @click="open = true"
                         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-cyan-700 bg-cyan-50 border border-cyan-300 rounded-lg hover:bg-cyan-100 transition">
@@ -92,9 +74,10 @@
 
             {{-- Send to Committee --}}
             @if (
-                !in_array(
-                    $claim->status,
-                    array_merge(\App\Enums\ClaimStatus::terminal(), [\App\Enums\ClaimStatus::COMMITTEE_REVIEW])))
+                $canAct &&
+                    !in_array(
+                        $claim->status,
+                        array_merge(\App\Enums\ClaimStatus::terminal(), [\App\Enums\ClaimStatus::COMMITTEE_REVIEW])))
                 <div x-data="{ open: false }">
                     <button @click="open = true"
                         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-orange-700 border border-orange-300 bg-orange-50 rounded-lg hover:bg-orange-100 transition">
@@ -123,10 +106,10 @@
                 </div>
             @endif
 
-            <a href="{{ route('staff.claims.index') }}"
+            <button type="button" onclick="window.history.back()"
                 class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
                 <i class="fas fa-arrow-left text-sm"></i> Back
-            </a>
+            </button>
         </div>
 
     </div>
@@ -160,7 +143,32 @@
                                 Assigned {{ $claim->assigned_at?->diffForHumans() }}
                             </p>
                         @else
-                            <p class="text-sm text-gray-400 italic">Not yet assigned</p>
+                            {{-- Unassigned: quick self-assign action --}}
+                            <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
+                                <p class="text-sm text-blue-800 font-medium flex items-center gap-2 mb-1">
+                                    <i class="fas fa-info-circle"></i> This claim hasn't been picked up
+                                </p>
+                                <p class="text-xs text-blue-600 mb-3">
+                                    Starting work will assign this claim to you and move it to review.
+                                </p>
+                                <form action="{{ route('staff.claims.process', $claim) }}" method="POST"
+                                    id="processClaimForm">
+                                    @csrf
+                                    <button type="button"
+                                        onclick="Swal.fire({
+                                title: 'Start processing this claim?',
+                                text: 'This will assign the claim to you and move it to Under Review.',
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonColor: '#4f46e5',
+                                cancelButtonColor: '#6b7280',
+                                confirmButtonText: 'Yes, assign to me'
+                            }).then(result => { if (result.isConfirmed) document.getElementById('processClaimForm').submit(); })"
+                                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
+                                        <i class="fas fa-play text-xs"></i> Start Processing
+                                    </button>
+                                </form>
+                            </div>
                         @endif
 
                         {{-- Reassign Form --}}
@@ -220,7 +228,9 @@
                                     class="text-xs text-blue-600 hover:underline">
                                     View
                                 </button>
-                                @if (in_array($claim->status, ['submitted', 'pending_info']) &&
+                                @if (
+                                    $canAct &&
+                                        in_array($claim->status, ['submitted', 'pending_info']) &&
                                         ($doc->uploaded_by === Auth::id() || Auth::user()->isAdmin()))
                                     <form action="{{ route('staff.claims.documents.destroy', $doc->id) }}"
                                         method="POST" class="delete-doc-form">
@@ -239,26 +249,28 @@
             </div>
 
             {{-- Upload Documents Card --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-upload text-indigo-500"></i> Upload Documents
-                    </h3>
+            @if ($canAct)
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-upload text-indigo-500"></i> Upload Documents
+                        </h3>
+                    </div>
+                    <div class="p-4">
+                        <form action="{{ route('staff.claims.documents', $claim) }}" method="POST"
+                            enctype="multipart/form-data" class="space-y-3">
+                            @csrf
+                            <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf"
+                                class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
+                            <p class="text-xs text-gray-400">PDF, JPG, PNG up to 5MB each</p>
+                            <button type="submit"
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
+                                <i class="fas fa-upload text-xs"></i> Upload Documents
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="p-4">
-                    <form action="{{ route('staff.claims.documents', $claim) }}" method="POST"
-                        enctype="multipart/form-data" class="space-y-3">
-                        @csrf
-                        <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf"
-                            class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
-                        <p class="text-xs text-gray-400">PDF, JPG, PNG up to 5MB each</p>
-                        <button type="submit"
-                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
-                            <i class="fas fa-upload text-xs"></i> Upload Documents
-                        </button>
-                    </form>
-                </div>
-            </div>
+            @endif
 
             {{-- Activity Timeline --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -349,11 +361,14 @@
                             class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                             <i class="fas fa-eye"></i> Preview Form
                         </button>
-                        @if ($claim->isEditable())
+                        @if ($canAct)
                             <a href="{{ route('staff.claims.edit', $claim) }}"
-                                class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
-                                <i class="fas fa-edit"></i> Edit Form
-                            </a>
+                                class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">Edit
+                                Form</a>
+                        @elseif ($claim->isEditable())
+                            <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
+                                <i class="fas fa-user-clock"></i> Assign claim first
+                            </span>
                         @else
                             <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
                                 <i class="fas fa-lock"></i> Editing locked
@@ -577,6 +592,16 @@
                 </div>
             </div>
 
+            @unless ($canAct)
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+                    <i class="fas fa-user-clock text-amber-500"></i>
+                    <p class="text-sm text-amber-800">
+                        This claim must be assigned before it can be processed further. Use the panel on the left to start
+                        processing.
+                    </p>
+                </div>
+            @endunless
+
             {{-- Survey Findings --}}
             @if ($claim->survey_notes)
                 <div class="bg-white rounded-xl border border-cyan-200 shadow-sm overflow-hidden">
@@ -635,7 +660,7 @@
                 </div>
             @endif
 
-            @if (\App\Enums\ClaimStatus::isEditable($claim->status))
+            @if ($canAct)
                 {{-- Request Additional Info --}}
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">

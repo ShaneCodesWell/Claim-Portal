@@ -49,7 +49,7 @@
             <table class="min-w-full w-full table-fixed">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
                             Client</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policy Number</th>
@@ -81,7 +81,7 @@
                             </td>
                             <td class="px-4 py-4 font-mono text-sm text-gray-700">{{ $claim->policy->policy_number }}
                             </td>
-                            <td class="px-4 py-4 text-xs font-medium text-gray-900">{{ $claim->policy->product_name }}
+                            <td class="px-4 py-4 text-xs truncate font-medium text-gray-900">{{ $claim->policy->product_name }}
                             </td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
                                 {{ number_format($claim->amount) }}</td>

@@ -82,8 +82,6 @@
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Repair Bill</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Assigned To</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Status</th>
                         <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Actions</th>
@@ -108,18 +106,12 @@
                                 @php
                                     $source = strtolower($claim->policy->source);
                                 @endphp
-
                                 <span
                                     class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium
                                     {{ $source === 'genova' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700' }}">
                                     {{ strtoupper($claim->policy->source) }}
                                 </span>
                             </td>
-                            {{-- <td class="px-4 py-4 text-xs text-gray-700">
-                                <div>{{ \Carbon\Carbon::parse($claim->policy->start_date)->format('M d, Y') }}</div>
-                                <span class="text-xs text-gray-400">to</span>
-                                {{ \Carbon\Carbon::parse($claim->policy->end_date)->format('M d, Y') }}</span>
-                            </td> --}}
                             <td class="px-4 py-4 text-xs font-medium text-gray-900 max-w-40">
                                 <span class="truncate block">{{ $claim->policy->product_name }}</span>
                             </td>
@@ -127,8 +119,6 @@
                                 {{ number_format($claim->amount) }}</td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">
                                 GH₵ {{ number_format($claim->repair_estimate) }}
-                            </td>
-                            <td class="px-4 py-4 text-sm text-gray-700">{{ $claim->assignedTo->name ?? 'Unassigned' }}
                             </td>
                             @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
                             <td class="px-4 py-4">

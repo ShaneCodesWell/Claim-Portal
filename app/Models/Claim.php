@@ -150,6 +150,11 @@ class Claim extends Model
             || $this->assigned_to === $user->id;
     }
 
+    public function canBeActedOn(): bool
+    {
+        return $this->isEditable() && ! is_null($this->assigned_to);
+    }
+
     // Other helpers
     public static function generateClaimNumber(): string
     {

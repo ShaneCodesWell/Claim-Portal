@@ -107,6 +107,7 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('claims/{claim}/print', [StaffClaimController::class, 'print'])->name('staff.claims.print');
 
     // Status
+    Route::post('claims/{claim}/process', [StaffClaimController::class, 'process'])->name('staff.claims.process');
     Route::post('claims/{claim}/assign', [StaffClaimController::class, 'assign'])->name('staff.claims.assign');
     Route::post('claims/{claim}/status', [StaffClaimController::class, 'updateStatus'])->name('staff.claims.status');
     Route::post('claims/{claim}/request-info', [StaffClaimController::class, 'requestInfo'])->name('staff.claims.request-info');
