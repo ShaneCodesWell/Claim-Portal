@@ -227,6 +227,10 @@ class ClaimController extends Controller
 
     public function uploadDocuments(Request $request, Claim $claim)
     {
+        if (! $claim->canBeActedOn()) {
+            return $this->denyClaimAction($request, 'This claim must be assigned before documents can be uploaded.');
+        }
+
         $request->validate([
             'documents'   => 'required|array',
             'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
@@ -263,11 +267,14 @@ class ClaimController extends Controller
         ]);
     }
 
-    public function destroyDocument(ClaimDocument $document): RedirectResponse
+    public function destroyDocument(Request $request, ClaimDocument $document): RedirectResponse
     {
         $staff = Auth::user();
 
-        // Admins can delete any document; everyone else can only remove their own uploads
+        if (! $document->claim->canBeActedOn()) {
+            return $this->denyClaimAction($request, 'This claim must be assigned before documents can be removed.');
+        }
+
         if (! $staff->isAdmin() && $document->uploaded_by !== $staff->id) {
             return back()->with('error', 'You can only remove documents you uploaded.');
         }
@@ -297,14 +304,14 @@ class ClaimController extends Controller
         return view('staff.claims.print', compact('claim'));
     }
 
-    public function process(Claim $claim)
+    public function process(Request $request, Claim $claim)
     {
         if (! $claim->isEditable()) {
-            abort(403, 'This claim can no longer be processed.');
+            return $this->denyClaimAction($request, 'This claim can no longer be processed.');
         }
 
         if ($claim->assigned_to) {
-            return back()->with('error', 'This claim is already assigned.');
+            return $this->denyClaimAction($request, 'This claim is already assigned.');
         }
 
         $this->claimService->assign(
@@ -364,6 +371,10 @@ class ClaimController extends Controller
 
     public function requestInfo(Request $request, Claim $claim)
     {
+        if (! $claim->canBeActedOn()) {
+            return $this->denyClaimAction($request, 'This claim must be assigned before requesting info.');
+        }
+
         $request->validate([
             'note' => 'required|string|max:1000',
         ]);
@@ -396,12 +407,10 @@ class ClaimController extends Controller
 
     public function edit(Claim $claim)
     {
+        abort_unless($claim->canBeActedOn(), 403, 'This claim must be assigned before it can be edited.');
+
         $claim->load(['policy', 'documents', 'assignedTo', 'customer']);
         $policy = $claim->policy;
-
-        if (! $claim->isEditable()) {
-            abort(403, 'This claim can no longer be edited.');
-        }
 
         $viewMap = [
             'motor'            => 'staff.claims.edit.motor',
@@ -442,6 +451,10 @@ class ClaimController extends Controller
 
     public function update(Request $request, Claim $claim)
     {
+        if (! $claim->canBeActedOn()) {
+            return $this->denyClaimAction($request, 'This claim must be assigned before it can be edited.');
+        }
+
         $validated = $request->validate([
             'claim_type'         => 'required|string',
             'form_data'          => 'required|array',
@@ -453,10 +466,6 @@ class ClaimController extends Controller
         ]);
 
         $claim->update(['form_data' => $validated['form_data']]);
-
-        if (! $claim->isEditable()) {
-            abort(403, 'This claim can no longer be edited.');
-        }
 
         // Delete marked documents
         if (! empty($validated['delete_documents'])) {
@@ -503,15 +512,19 @@ class ClaimController extends Controller
         ]);
     }
 
-    public function finalize(Claim $claim, ClaimService $claimService): RedirectResponse
+    public function finalize(Request $request, Claim $claim, ClaimService $claimService): RedirectResponse
     {
         $user = Auth::user();
+
+        if (! $claim->canBeActedOn()) {
+            return $this->denyClaimAction($request, 'This claim must be assigned before it can be finalized.');
+        }
 
         if (! $claim->isFinalizableBy($user)) {
             abort(403, 'You do not have permission to finalize this claim.');
         }
 
-        // Add this if the flow changes
+        // Ask if the claims ALWAYS go through the claims Committee to be approved. if so, uncomment this. 
         // if ($claim->status !== ClaimStatus::APPROVED) {
         //     return back()->with('error', 'Only approved claims can be finalized.');
         // }
@@ -545,6 +558,10 @@ class ClaimController extends Controller
 
     public function sendToSurvey(Request $request, Claim $claim)
     {
+        if (! $claim->canBeActedOn()) {
+            return $this->denyClaimAction($request, 'This claim must be assigned before it can be sent to survey.');
+        }
+
         $request->validate(['note' => 'nullable|string|max:500']);
 
         if (in_array($claim->status, ClaimStatus::terminal())) {
@@ -558,6 +575,10 @@ class ClaimController extends Controller
 
     public function sendToCommittee(Request $request, Claim $claim)
     {
+        if (! $claim->canBeActedOn()) {
+            return $this->denyClaimAction($request, 'This claim must be assigned before it can be escalated.');
+        }
+
         $request->validate(['note' => 'nullable|string|max:500']);
 
         if (in_array($claim->status, ClaimStatus::terminal())) {
@@ -620,5 +641,14 @@ class ClaimController extends Controller
         $claims = $query->paginate(15)->withQueryString();
 
         return view('staff.claims.tracking', compact('claims'));
+    }
+
+    private function denyClaimAction(Request $request, string $message)
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['success' => false, 'message' => $message], 403);
+        }
+
+        return back()->with('error', $message);
     }
 }
