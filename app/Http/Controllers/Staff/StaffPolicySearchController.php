@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
@@ -94,6 +95,18 @@ class StaffPolicySearchController extends Controller
             $rows = $this->glims->searchCustomerByCode(
                 $localPolicy->customer->external_customer_code
             );
+
+            if (! empty($rows)) {
+                return [$this->buildResult($rows[0], $policyNumber), null];
+            }
+        }
+
+        // NEW: not in local DB — resolve via policy details → policy_insured (customer_code)
+        $details = $this->glims->getPolicyDetails($policyNumber);
+        $customerCode = $details[0]['policy_insured'] ?? null;
+
+        if ($customerCode) {
+            $rows = $this->glims->searchCustomerByCode((string) $customerCode);
 
             if (! empty($rows)) {
                 return [$this->buildResult($rows[0], $policyNumber), null];

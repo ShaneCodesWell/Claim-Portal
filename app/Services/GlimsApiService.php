@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -178,7 +179,6 @@ class GlimsApiService
             }
 
             return $response->json('results') ?? [];
-
         } catch (\Exception $e) {
             Log::error('GlimsApiService: getPolicyDetails error — ' . $e->getMessage(), [
                 'policy_number' => $policyNumber,
@@ -224,7 +224,6 @@ class GlimsApiService
             }
 
             return $response->json('results') ?? [];
-
         } catch (\Exception $e) {
             Log::error('GlimsApiService: getClaimsByCustomerCode error — ' . $e->getMessage());
             return [];
@@ -247,7 +246,6 @@ class GlimsApiService
             ]);
 
             return $response->status() > 0;
-
         } catch (\Exception $e) {
             Log::debug('GlimsApiService: health check failed — ' . $e->getMessage());
             return false;
@@ -296,7 +294,6 @@ class GlimsApiService
             }
 
             return $response->json('results') ?? [];
-
         } catch (\Exception $e) {
             Log::error('GlimsApiService: customerSearch error — ' . $e->getMessage(), [
                 'search_type'  => $searchType,
@@ -324,7 +321,6 @@ class GlimsApiService
             }
 
             return $response->json('results') ?? [];
-
         } catch (\Exception $e) {
             Log::error('GlimsApiService: policySearch error — ' . $e->getMessage(), [
                 'search_type'  => $searchType,
@@ -484,5 +480,30 @@ class GlimsApiService
             'search_value' => $agentCode,
             'page'         => $page,
         ]);
+    }
+
+    /**
+     * Look up a single policy by its policy number and return it in the
+     * same grouped shape as getPoliciesByClientCode() (includes CUSTOMER_CODE).
+     */
+    public function getPolicyByNumber(string $policyNumber): ?array
+    {
+        $rows = $this->policySearch('policy_number', $policyNumber);
+
+        if (empty($rows)) {
+            return null;
+        }
+
+        $grouped = $this->groupRowsIntoPolicies($rows);
+
+        return $grouped[0] ?? null;
+    }
+
+    /**
+     * Search for a customer by vehicle plate/registration number.
+     */
+    public function searchCustomerByPlate(string $plateNumber): array
+    {
+        return $this->customerSearch('plate_number', $plateNumber);
     }
 }
