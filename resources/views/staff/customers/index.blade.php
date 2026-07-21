@@ -4,17 +4,18 @@
         <div>
             <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <i class="fas fa-users text-blue-500 text-2xl"></i>
-                All Policyholders
+                Available Policyholders
             </h2>
             <p class="text-gray-500 text-sm mt-1">
-                Manage customers, view policies, and track claim history.
+                View and manage existing policyholders, or search external systems for customers not yet available
+                locally.
             </p>
         </div>
         <div class="flex flex-wrap gap-3">
             <div class="flex flex-wrap gap-3">
                 <a href="{{ route('staff.policy-search.index') }}"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center gap-2 transition">
-                    <i class="fas fa-search"></i> Find Policy / Walk-in Claim
+                    <i class="fas fa-search"></i> Search Customer
                 </a>
             </div>
         </div>
@@ -53,7 +54,7 @@
             <div class="flex items-center gap-3">
                 <div class="relative">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                    <input type="text" placeholder="Search client or policy..."
+                    <input type="text" placeholder="Filter client or policy..."
                         class="pl-8 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 w-64 bg-white" />
                 </div>
 

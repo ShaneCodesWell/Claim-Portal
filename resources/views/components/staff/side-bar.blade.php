@@ -49,7 +49,7 @@
             <a href="{{ route('customers.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-users w-5"></i>
-                <span>Customer List</span>
+                <span>Customer Search</span>
             </a>
             <div class="pt-4 mt-4 border-t border-gray-100">
                 @if (Auth::user()->isAdmin())
