@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -63,7 +64,6 @@ class GenovaApiService
         return $this->client()->post($this->baseUrl . '/cia/api/mobile/business-class', [
             'phone_number' => $phoneNumber,
         ]);
-
     }
 
     // Fetch Products by Business Class
@@ -73,7 +73,6 @@ class GenovaApiService
         return $this->client()->post($this->baseUrl . '/cia/api/mobile/products-by-class', [
             'business_class_id' => $businessClassId,
         ]);
-
     }
 
     private function clientWithTimeout(int $seconds = 30)
@@ -105,4 +104,25 @@ class GenovaApiService
         return $this->clientWithTimeout(60) // long timeout fine here — runs in background job
             ->post($this->baseUrl . '/cia/api/mobile/customer-search', $params);
     }
+
+    /**
+     * Fetch all policies for a given agent code, rich data included
+     * (customer + policy + risks nested in each result).
+     */
+    public function getPoliciesByAgentCode(string $agentCode, int $page = 1): Response
+    {
+        Log::info('Calling policy-search by agent_code', [
+            'agent_code' => $agentCode,
+            'page'       => $page,
+        ]);
+
+        return $this->clientWithTimeout(60)
+            ->post($this->baseUrl . '/cia/api/mobile/policy-search', [
+                'agent_code' => $agentCode,
+                'page'       => $page,
+            ]);
+    }
+
+    
+
 }

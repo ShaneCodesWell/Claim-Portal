@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -13,8 +14,7 @@ use Illuminate\Support\Facades\RateLimiter;
 
 class AgentAuthController extends Controller
 {
-    public function __construct(protected OtpService $otp)
-    {}
+    public function __construct(protected OtpService $otp) {}
 
     // Views
 
@@ -180,10 +180,18 @@ class AgentAuthController extends Controller
         ]);
 
         try {
-            SyncAgentPoliciesJob::dispatch($agent);
+            SyncAgentPoliciesJob::dispatch($agent); // no-ops internally if no glims_agent_code
         } catch (\Exception $e) {
-            // Never let a sync failure block the login
-            Log::error('AgentAuthController: sync job dispatch failed', [
+            Log::error('AgentAuthController: GLIMS sync dispatch failed', [
+                'agent_id' => $agent->id,
+                'error'    => $e->getMessage(),
+            ]);
+        }
+
+        try {
+            // SyncAgentPoliciesFromGenovaJob::dispatch($agent); // no-ops internally if no genova_agent_code
+        } catch (\Exception $e) {
+            Log::error('AgentAuthController: Genova sync dispatch failed', [
                 'agent_id' => $agent->id,
                 'error'    => $e->getMessage(),
             ]);

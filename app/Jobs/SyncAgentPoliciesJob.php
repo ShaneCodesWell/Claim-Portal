@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Jobs;
 
 use App\Models\Agent;
@@ -19,15 +20,14 @@ class SyncAgentPoliciesJob implements ShouldQueue
     public int $tries   = 3;
     public int $timeout = 120;
 
-    public function __construct(public Agent $agent)
-    {}
+    public function __construct(public Agent $agent) {}
 
     public function handle(GlimsApiService $glims): void
     {
-        $agentCode = $this->agent->partner_code;
+        $glimsAgentCode = $this->agent->glims_agent_code;
 
-        if (! $agentCode) {
-            Log::warning('SyncAgentPoliciesJob: agent has no partner_code', [
+        if (! $glimsAgentCode) {
+            Log::info('SyncAgentPoliciesJob: agent has no glims_agent_code, skipping', [
                 'agent_id' => $this->agent->id,
             ]);
             return;
@@ -35,7 +35,7 @@ class SyncAgentPoliciesJob implements ShouldQueue
 
         Log::info('SyncAgentPoliciesJob: starting sync', [
             'agent_id'   => $this->agent->id,
-            'agent_code' => $agentCode,
+            'agent_code' => $glimsAgentCode,
         ]);
 
         $page   = 1;
@@ -44,7 +44,7 @@ class SyncAgentPoliciesJob implements ShouldQueue
 
         do {
             try {
-                $response = $glims->getAgentPolicies($agentCode, $page);
+                $response = $glims->getAgentPolicies($glimsAgentCode, $page);
             } catch (\Exception $e) {
                 Log::error('SyncAgentPoliciesJob: API call failed', [
                     'agent_id' => $this->agent->id,
@@ -87,10 +87,9 @@ class SyncAgentPoliciesJob implements ShouldQueue
             // GLIMS returns all results paginated; stop when we've consumed everything
             $fetched = $page * count($results);
             $page++;
-
         } while ($fetched < $count);
 
-        $this->agent->update(['last_synced_at' => now()]);
+        $this->agent->update(['glims_last_synced_at' => now()]);
 
         Log::info('SyncAgentPoliciesJob: completed', [
             'agent_id' => $this->agent->id,
@@ -120,8 +119,8 @@ class SyncAgentPoliciesJob implements ShouldQueue
                 [
                     'name'    => trim(
                         ($item['first_name'] ?? '') . ' ' .
-                        ($item['other_names'] ?? '') . ' ' .
-                        ($item['family_name'] ?? '')
+                            ($item['other_names'] ?? '') . ' ' .
+                            ($item['family_name'] ?? '')
                     ),
                     'phone'   => null,
                     'email'   => null,

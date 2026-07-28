@@ -46,6 +46,7 @@ return [
         'base_url' => env('GENOVA_BASE_URL'),
         'username' => env('GENOVA_USERNAME'),
         'password' => env('GENOVA_PASSWORD'),
+        'reference_phone' => env('GENOVA_REFERENCE_PHONE'),
     ],
 
     // Glims credentials

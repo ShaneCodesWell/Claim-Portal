@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
@@ -91,6 +92,7 @@ class AgentController extends Controller
             ->first();
 
         if (! $localPolicy) {
+            $syncPending = $agent->last_synced_at === null || $agent->last_synced_at->lt(now()->subMinutes(5));
             return view('agent.dashboard.index', [
                 'agent'           => $agent,
                 'policies'        => collect(),
@@ -98,7 +100,9 @@ class AgentController extends Controller
                 'statusCounts'    => collect(),
                 'searchResult'    => null,
                 'searchQuery'     => $policyNumber,
-                'searchError'     => 'No policy found with that number in your portfolio.',
+                'searchError' => $syncPending
+                    ? 'Your policy list is still syncing. Please try again in a moment.'
+                    : 'No policy found with that number in your portfolio.',
             ]);
         }
 

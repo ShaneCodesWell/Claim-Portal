@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,12 +13,15 @@ class Agent extends Authenticatable
     use HasFactory;
 
     protected $fillable = [
-        'partner_code',
+        'glims_agent_code',
+        'genova_agent_code',
         'name',
         'email',
         'phone',
         'password',
-        'last_synced_at',
+        'glims_last_synced_at',
+        'genova_last_synced_at',
+        'sources',
         'local_password',
         'local_password_set_at',
         'user_category',
@@ -34,9 +38,11 @@ class Agent extends Authenticatable
     ];
 
     protected $casts = [
-        'password'              => 'hashed',
-        'last_synced_at'        => 'datetime',
-        'local_password_set_at' => 'datetime',
+        'password'               => 'hashed',
+        'glims_last_synced_at'   => 'datetime',
+        'genova_last_synced_at'  => 'datetime',
+        'local_password_set_at'  => 'datetime',
+        'sources'                => 'array',
     ];
 
     // Relationships

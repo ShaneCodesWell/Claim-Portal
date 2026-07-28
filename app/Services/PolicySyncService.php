@@ -1,8 +1,12 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Customer;
+use App\Models\Agent;
 use App\Models\Policy;
+use App\Models\GenovaBusinessClass;
+use App\Models\GenovaProduct;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -58,6 +62,91 @@ class PolicySyncService
         }
 
         return $syncedPoliciesMap;
+    }
+
+    /**
+     * Sync one policy entry from Genova's agent policy-search response.
+     * Each entry already contains customer + policy + risks — no rich-fetch needed.
+     */
+    public function syncAgentPolicyFromGenova(array $entry, Agent $agent): void
+    {
+        $policyData   = $entry['policy'] ?? [];
+        $customerData = $entry['customer'] ?? [];
+        $risksData    = $entry['risks'] ?? [];
+
+        $policyNo = $policyData['policy_no'] ?? null;
+        if (! $policyNo) {
+            return;
+        }
+
+        // Find-or-create the customer this policy belongs to.
+        // Genova's ins_code is the closest equivalent to GLIMS's customer_code.
+        $customer     = null;
+        $customerCode = $customerData['ins_code'] ?? null;
+
+        if ($customerCode) {
+            $customer = Customer::firstOrCreate(
+                ['external_customer_code' => $customerCode],
+                [
+                    'name'    => $customerData['ins_name'] ?? 'Unknown',
+                    'phone'   => $customerData['cust_phone'] ?? null,
+                    'email'   => $customerData['ins_email'] ?: null,
+                    'sources' => ['genova'],
+                ]
+            );
+        }
+
+        $endDate = $policyData['policy_end'] ?? null;
+        $status  = ($endDate && Carbon::parse($endDate)->isPast()) ? 'expired' : 'active';
+
+        // Business class + product names — resolved from the local cache,
+        // populated by RefreshGenovaProductCacheJob. No extra API calls per policy.
+        $businessClassId = $policyData['esu_main_product_id'] ?? null;
+        $productId        = $policyData['esu_product_id'] ?? null;
+
+        $businessClass = $businessClassId ? GenovaBusinessClass::find($businessClassId) : null;
+        $product       = $productId ? GenovaProduct::find($productId) : null;
+
+        $risks = collect($risksData)->values()->map(function ($risk) {
+            return [
+                'risk_ref_no'            => $risk['risk_ref_no'] ?? null,
+                'vehicle_make'           => $risk['vehicle_make'] ?? null,
+                'vehicle_model'          => $risk['vehicle_model'] ?? null,
+                'vehicle_yr_manufacture' => $risk['vehicle_yr_manufacture'] ?? null,
+                'vehicle_chassis_no'     => $risk['vehicle_chassis_no'] ?? null,
+                'vehicle_colour'         => $risk['vehicle_colour'] ?? null,
+                'vehicle_body_type'      => $risk['vehicle_body_type'] ?? null,
+                'sum_insured'            => $risk['sum_insured'] ?? null,
+                'total_premium'          => $risk['total_premium'] ?? null,
+                '_raw'                   => $risk,
+            ];
+        })->toArray();
+
+        Policy::updateOrCreate(
+            ['source' => 'genova', 'policy_number' => $policyNo],
+            [
+                'customer_id'         => $customer?->id,
+                'agent_id'            => $agent->id,
+                'insured_name'        => $customerData['ins_name'] ?? $policyData['insured_name'] ?? null,
+                'external_policy_id'  => (string) ($policyData['id'] ?? ''),
+                'product_id'          => $productId,
+                'product_name'        => $product->name ?? 'Unknown Product',
+                'business_class_id'   => $businessClassId,
+                'business_class_name' => $businessClass->name ?? 'Unknown Class',
+                'start_date'          => $policyData['policy_start'] ?? null,
+                'end_date'            => $endDate,
+                'renewal_date'        => $policyData['renewal_date'] ?? null,
+                'effective_date'      => $policyData['effective_start_date'] ?? $policyData['policy_start'] ?? null,
+                'status'              => $status,
+                'raw_payload'         => [
+                    'policy'   => $policyData,
+                    'customer' => $customerData,
+                    'risks'    => $risks,
+                    'is_fleet' => count($risks) > 1,
+                ],
+                'last_synced_at'      => now(),
+            ]
+        );
     }
 
     /**
@@ -162,7 +251,6 @@ class PolicySyncService
             }
 
             $customer->update($updates);
-
         } catch (\Exception $e) {
             Log::warning('PolicySyncService: refreshCustomerFromGenova failed', [
                 'customer_id' => $customer->id,
@@ -272,7 +360,6 @@ class PolicySyncService
             }
 
             $customer->update($updates);
-
         } catch (\Exception $e) {
             Log::warning('PolicySyncService: refreshCustomerFromGlimsRow failed', [
                 'customer_id' => $customer->id,

@@ -3,10 +3,12 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use App\Jobs\RefreshGenovaProductCacheJob;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
 // Run every night at midnight
-Schedule::command('glims:sync')->daily();
+// Schedule::command('glims:sync')->daily();
+Schedule::job(new RefreshGenovaProductCacheJob)->daily();
