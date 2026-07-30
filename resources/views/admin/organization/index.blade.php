@@ -485,7 +485,13 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-sm text-gray-700">{{ $agent->partner_code ?? 'N/A' }}</span>
+                                    <span class="text-sm text-gray-700">
+                                        @if ($agent->glims_agent_code || $agent->genova_agent_code)
+                                            {{ collect([$agent->glims_agent_code, $agent->genova_agent_code])->filter()->implode(' / ') }}
+                                        @else
+                                            N/A
+                                        @endif
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="text-sm text-gray-700">{{ $agent->user_category ?? 'N/A' }}</span>

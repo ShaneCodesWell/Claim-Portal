@@ -12,7 +12,8 @@ class Customer extends Authenticatable
 
     protected $fillable = [
         'external_customer_id',
-        'external_customer_code',
+        'genova_customer_code',
+        'glims_customer_code',
         'name',
         'email',
         'phone',

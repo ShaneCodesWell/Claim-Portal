@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -31,11 +32,18 @@ class UpdateAgentRequest extends FormRequest
             ],
             'phone'             => 'nullable|string|max:20',
             'gender'            => 'nullable|in:male,female,other',
-            'partner_code'      => [
+            'glims_agent_code'  => [
                 'nullable',
                 'string',
                 'max:100',
-                Rule::unique('agents', 'partner_code')
+                Rule::unique('agents', 'glims_agent_code')
+                    ->ignore($this->route('agent')),
+            ],
+            'genova_agent_code' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('agents', 'genova_agent_code')
                     ->ignore($this->route('agent')),
             ],
             'date_of_birth'     => 'nullable|date',

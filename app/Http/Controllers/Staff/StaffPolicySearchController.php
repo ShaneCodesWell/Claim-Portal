@@ -176,9 +176,8 @@ class StaffPolicySearchController extends Controller
         $familyName = $glimsRow['family_name'] ?? '';
         $fullName   = trim(implode(' ', array_filter([$firstName, $otherNames, $familyName]))) ?: 'Unknown';
 
-        // Prefer code match, then phone match
         $customer = $customerCode
-            ? Customer::where('external_customer_code', $customerCode)->first()
+            ? Customer::where('glims_customer_code', $customerCode)->first()
             : null;
 
         if (! $customer && $phone) {
@@ -186,20 +185,24 @@ class StaffPolicySearchController extends Controller
         }
 
         if ($customer) {
-            // Refresh existing record with latest GLIMS data
             $this->policySync->refreshCustomerFromGlimsRow($customer, $glimsRow);
+
+            // If this customer already existed (e.g. matched by phone, or from Genova)
+            // but had no GLIMS code yet, backfill it now.
+            if ($customerCode && empty($customer->glims_customer_code)) {
+                $customer->update(['glims_customer_code' => $customerCode]);
+            }
 
             return $customer->fresh();
         }
 
-        // Brand-new customer — record how they entered the system
         return Customer::create([
-            'name'                   => $fullName,
-            'phone'                  => $phone,
-            'email'                  => $email,
-            'external_customer_code' => $customerCode ?: null,
-            'sources'                => ['glims'],
-            'raw_payload'            => [
+            'name'                 => $fullName,
+            'phone'                => $phone,
+            'email'                => $email,
+            'glims_customer_code'  => $customerCode ?: null,
+            'sources'              => ['glims'],
+            'raw_payload'          => [
                 'glims' => array_merge($glimsRow, [
                     '_created_via' => 'staff_policy_search',
                 ]),

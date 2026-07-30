@@ -80,15 +80,6 @@
                             value="{{ old('date_of_birth', optional($agent->date_of_birth)->format('Y-m-d')) }}"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    {{-- Agent Code --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Agent Code
-                        </label>
-                        <input type="text" name="partner_code"
-                            value="{{ old('partner_code', $agent->partner_code) }}" placeholder="Enter Agent Code"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
                     {{-- League --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -110,26 +101,24 @@
                             </option>
                         </select>
                     </div>
-                    {{-- Branch --}}
+                    {{-- GLIMS Agent Code --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Branch
+                            GLIMS Agent Code
                         </label>
-                        <select name="branch_id"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                            <option value="">Select Branch</option>
-                            @foreach ($branches as $branch)
-                                <option value="{{ $branch->id }}"
-                                    {{ old('branch_id', $agent->branch_id) == $branch->id ? 'selected' : '' }}>
-                                    {{ $branch->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('branch_id')
-                            <p class="text-red-500 text-sm mt-1">
-                                {{ $message }}
-                            </p>
-                        @enderror
+                        <input type="text" name="glims_agent_code"
+                            value="{{ old('glims_agent_code', $agent->glims_agent_code) }}" placeholder="e.g. 30004"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    {{-- Genova Agent Code --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Genova Agent Code
+                        </label>
+                        <input type="text" name="genova_agent_code"
+                            value="{{ old('genova_agent_code', $agent->genova_agent_code) }}"
+                            placeholder="e.g. AG-0507"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     {{-- Category --}}
                     <div>
@@ -158,22 +147,27 @@
                             <option value="">Select Sub Category</option>
                         </select>
                     </div>
-                    {{-- Password --}}
-                    {{-- <div>
+                    {{-- Branch --}}
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            New Password
+                            Branch
                         </label>
-                        <input type="password" name="password"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                    </div> --}}
-                    {{-- Confirm Password --}}
-                    {{-- <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Confirm New Password
-                        </label>
-                        <input type="password" name="password_confirmation"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                    </div> --}}
+                        <select name="branch_id"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            <option value="">Select Branch</option>
+                            @foreach ($branches as $branch)
+                                <option value="{{ $branch->id }}"
+                                    {{ old('branch_id', $agent->branch_id) == $branch->id ? 'selected' : '' }}>
+                                    {{ $branch->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('branch_id')
+                            <p class="text-red-500 text-sm mt-1">
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
                 </div>
                 <div class="flex justify-end pt-2 gap-3">
                     <a href="{{ route('organization') }}?tab=tab-agents"

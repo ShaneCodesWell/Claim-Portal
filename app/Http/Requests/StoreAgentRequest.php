@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,7 +26,8 @@ class StoreAgentRequest extends FormRequest
             'email'             => 'required|email|max:255|unique:agents,email',
             'phone'             => 'nullable|string|max:20',
             'gender'            => 'nullable|in:male,female,other',
-            'partner_code'      => 'nullable|string|max:100|unique:agents,partner_code',
+            'glims_agent_code'  => 'nullable|string',
+            'genova_agent_code' => 'nullable|string',
             'date_of_birth'     => 'nullable|date',
             'league'            => 'nullable|string|max:100',
             'branch_id'         => 'required|exists:branches,id',
