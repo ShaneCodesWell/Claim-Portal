@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -14,7 +15,7 @@ class DepartmentSeeder extends Seeder
     public function run(): void
     {
         $company    = Company::first();
-        $headOffice = Branch::where('code', 'ACC-HQ')->first();
+        $headOffice = Branch::where('code', '1000')->first();
 
         $departments = [
             [
