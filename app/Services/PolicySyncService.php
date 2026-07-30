@@ -86,7 +86,7 @@ class PolicySyncService
 
         if ($customerCode) {
             $customer = Customer::firstOrCreate(
-                ['external_customer_code' => $customerCode],
+                ['genova_customer_code' => $customerCode],
                 [
                     'name'    => $customerData['ins_name'] ?? 'Unknown',
                     'phone'   => $customerData['cust_phone'] ?? null,
@@ -414,7 +414,7 @@ class PolicySyncService
             'is_fleet'             => $isFleet,
             'risks'                => $risks,
             'customer_name'        => $customer->name,
-            'customer_code'        => $customer->external_customer_code,
+            'customer_code'        => $customer->glims_customer_code,
             'customer_phone'       => $customer->phone,
             'customer_email'       => $customer->email,
             'source'               => 'glims',
@@ -441,7 +441,7 @@ class PolicySyncService
             'effective_date'      => $policy->effective_date,
             'vehicle_number'      => $rawPolicy['vehicle_number'] ?? null,
             'customer_name'       => $customer->name,
-            'customer_code'       => $customer->external_customer_code,
+            'customer_code'       => $customer->genova_customer_code ?? $customer->glims_customer_code,
             'customer_phone'      => $customer->phone,
             'customer_email'      => $customer->email,
             'source'              => $policy->source,

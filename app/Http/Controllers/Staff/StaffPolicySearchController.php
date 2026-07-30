@@ -91,9 +91,9 @@ class StaffPolicySearchController extends Controller
             ->with('customer')
             ->first();
 
-        if ($localPolicy?->customer?->external_customer_code) {
+        if ($localPolicy?->customer?->glims_customer_code) {
             $rows = $this->glims->searchCustomerByCode(
-                $localPolicy->customer->external_customer_code
+                $localPolicy->customer->glims_customer_code
             );
 
             if (! empty($rows)) {
@@ -126,7 +126,7 @@ class StaffPolicySearchController extends Controller
     private function buildResult(array $glimsRow, ?string $filterPolicyNumber = null): array
     {
         $customer     = $this->findOrCreateCustomer($glimsRow);
-        $customerCode = $glimsRow['customer_code'] ?? $customer->external_customer_code;
+        $customerCode = $glimsRow['customer_code'] ?? $customer->glims_customer_code;
 
         if ($customerCode) {
             $glimsPolicies = $this->glims->getPoliciesByClientCode((string) $customerCode);

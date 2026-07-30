@@ -109,7 +109,7 @@
                             <td class="px-5 py-4 text-sm text-gray-600">
                                 {{ $customer->phone }}
                             </td>
-                            <td class="px-5 py-4 font-mono text-sm">{{ $customer->external_customer_code }}</td>
+                            <td class="px-5 py-4 font-mono text-sm">{{ $customer->genova_customer_code ?? $customer->glims_customer_code ?? '—' }}</td>
                             <td class="px-5 py-4 text-sm text-gray-600">
                                 @if ($customer->sources && count($customer->sources))
                                     <div class="flex flex-wrap gap-2">

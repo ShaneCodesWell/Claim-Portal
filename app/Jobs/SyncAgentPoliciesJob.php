@@ -115,7 +115,7 @@ class SyncAgentPoliciesJob implements ShouldQueue
 
         if ($customerCode) {
             $customer = Customer::firstOrCreate(
-                ['external_customer_code' => $customerCode],
+                ['glims_customer_code' => $customerCode],
                 [
                     'name'    => trim(
                         ($item['first_name'] ?? '') . ' ' .

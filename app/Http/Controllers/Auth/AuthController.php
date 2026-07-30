@@ -518,7 +518,7 @@ class AuthController extends Controller
 
         if ($localCustomer) {
             $profiles[] = [
-                'code'         => $localCustomer->external_customer_code,
+                'code'         => $localCustomer->glims_customer_code,
                 'name'         => $localCustomer->name,
                 'phone'        => $localCustomer->phone,
                 'email'        => $localCustomer->email,
@@ -633,7 +633,7 @@ class AuthController extends Controller
             ]);
 
             $profiles[] = [
-                'code'         => $customer->external_customer_code,
+                'code'         => $customer->genova_customer_code,
                 'name'         => $customer->name,
                 'phone'        => $customer->phone,
                 'email'        => $customer->email,

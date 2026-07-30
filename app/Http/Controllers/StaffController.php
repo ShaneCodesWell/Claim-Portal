@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
@@ -100,7 +101,12 @@ class StaffController extends Controller
         $totalOther  = $grouped->sum(fn($g) => $g['other_count']);
 
         return view('staff.claim-documents.index', compact(
-            'grouped', 'policies', 'totalDocs', 'totalPdfs', 'totalImages', 'totalOther'
+            'grouped',
+            'policies',
+            'totalDocs',
+            'totalPdfs',
+            'totalImages',
+            'totalOther'
         ));
     }
 
@@ -119,7 +125,7 @@ class StaffController extends Controller
         // Remove invisible/non-breaking characters
         $search = trim(preg_replace('/[\x{00A0}\x{FEFF}]+/u', '', trim(request('search') ?? '')));
 
-        $customers = Customer::select(['id', 'name', 'email', 'phone', 'external_customer_code', 'sources', 'created_at'])
+        $customers = Customer::select(['id', 'name', 'email', 'phone', 'genova_customer_code', 'glims_customer_code', 'sources', 'created_at'])
             ->withCount('policies')
             ->when($search, function ($q) use ($search) {
                 $normalizedPhone = preg_replace('/\s+/', '', $search);
@@ -127,7 +133,8 @@ class StaffController extends Controller
                 $q->where(function ($q) use ($search, $normalizedPhone) {
                     $q->where('name', 'ILIKE', "%{$search}%")
                         ->orWhere('email', 'ILIKE', "%{$search}%")
-                        ->orWhere('external_customer_code', 'ILIKE', "%{$search}%")
+                        ->orWhere('genova_customer_code', 'ILIKE', "%{$search}%")
+                        ->orWhere('glims_customer_code', 'ILIKE', "%{$search}%")
                         ->orWhereRaw(
                             "REPLACE(phone, ' ', '') ILIKE ?",
                             ["%{$normalizedPhone}%"]

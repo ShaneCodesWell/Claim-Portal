@@ -143,7 +143,7 @@
                                 </span>
                                 <span class="font-mono">
                                     <i class="fas fa-id-card mr-1 text-gray-400"></i>
-                                    {{ $customer->external_customer_code ?? '—' }}
+                                    {{ $customer->genova_customer_code ?? ($customer->glims_customer_code ?? '—') }}
                                 </span>
                             </div>
                         </div>

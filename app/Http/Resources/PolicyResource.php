@@ -30,7 +30,7 @@ class PolicyResource extends JsonResource
             'end_date'            => optional($this->end_date)?->format('M d, Y'),
             'renewal_date'        => optional($this->renewal_date)?->format('M d, Y'),
             'customer_name'       => $this->customer->name ?? null,
-            'customer_code'       => $this->customer->external_customer_code ?? null,
+            'customer_code'       => $this->customer->genova_customer_code ?? $this->customer->glims_customer_code ?? null,
             'customer_phone'      => $this->customer->phone ?? null,
             'customer_email'      => $this->customer->email ?? null,
             'source'              => $this->source,

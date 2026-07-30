@@ -68,7 +68,7 @@ class GlimsSyncService
 
         // Merge 'glims' into the sources array without overwriting existing sources
         // e.g. a customer already synced from Genova will end up with ["genova", "glims"]
-        $existing = Customer::where('external_customer_code', $clientCode)->first();
+        $existing = Customer::where('glims_customer_code', $clientCode)->first();
         $sources  = $existing ? ($existing->sources ?? []) : [];
 
         if (! in_array('glims', $sources)) {
@@ -76,7 +76,7 @@ class GlimsSyncService
         }
 
         $dbCustomer = Customer::updateOrCreate(
-            ['external_customer_code' => $clientCode],
+            ['glims_customer_code' => $clientCode],
             [
                 'sources'        => $sources,
                 'name'           => trim(
@@ -163,7 +163,7 @@ class GlimsSyncService
                 'source'              => 'glims',
                 'vehicle_number'      => $vehicleNumber,
                 'customer_name'       => $dbCustomer->name,
-                'customer_code'       => $dbCustomer->external_customer_code,
+                'customer_code'       => $dbCustomer->glims_customer_code,
                 'customer_phone'      => $dbCustomer->phone,
                 'customer_email'      => $dbCustomer->email,
             ];

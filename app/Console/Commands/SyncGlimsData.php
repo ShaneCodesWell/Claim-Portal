@@ -93,7 +93,7 @@ class SyncGlimsData extends Command
                         $phone = $first->client_home_mobile ?? $first->client_home_tel ?? null;
                         $email = $first->client_home_email ?? null;
 
-                        $existingCustomer = Customer::where('external_customer_code', $clientCode)
+                        $existingCustomer = Customer::where('glims_customer_code', $clientCode)
                             ->orWhere(function ($q) use ($phone) {
                                 if ($phone) $q->where('phone', $phone);
                             })->first();
@@ -104,7 +104,7 @@ class SyncGlimsData extends Command
                         }
 
                         $dbCustomer = Customer::updateOrCreate(
-                            ['external_customer_code' => $clientCode],
+                            ['glims_customer_code' => $clientCode],
                             [
                                 'sources'        => $sources,
                                 'name'           => $existingCustomer->name ?? $name,

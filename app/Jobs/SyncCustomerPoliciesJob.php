@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Jobs;
 
 use App\Models\Customer;
@@ -21,7 +22,7 @@ class SyncCustomerPoliciesJob implements ShouldQueue
 
     public function __construct(
         public Customer $customer,
-        public ?string $secondaryCode = null// ← GLIMS code when profile was merged
+        public ?string $secondaryCode = null // ← GLIMS code when profile was merged
     ) {}
 
     public function handle(
@@ -42,10 +43,10 @@ class SyncCustomerPoliciesJob implements ShouldQueue
             'secondary_code' => $this->secondaryCode,
         ]);
 
-        $customerCode = $this->customer->external_customer_code;
+        $customerCode = $this->customer->glims_customer_code;
 
         // Prefer the explicit GLIMS code from a merged profile;
-        // fall back to external_customer_code (works when customer is GLIMS-only)
+        // fall back to the customer's own glims_customer_code (works when customer is GLIMS-only)
         $glimsCode = $this->secondaryCode ?? $customerCode;
 
         if ($glimsCode) {
@@ -130,7 +131,6 @@ class SyncCustomerPoliciesJob implements ShouldQueue
                 'customer_id'     => $this->customer->id,
                 'policies_synced' => count($synced),
             ]);
-
         } catch (\Exception $e) {
             // Never let a GLIMS failure block the Genova sync
             Log::error('SyncCustomerPoliciesJob: GLIMS sync failed', [
@@ -167,7 +167,7 @@ class SyncCustomerPoliciesJob implements ShouldQueue
     private function syncGenova(GenovaApiService $api, PolicySyncService $policySync): void
     {
         $phone        = $this->customer->phone;
-        $customerCode = $this->customer->external_customer_code;
+        $customerCode = $this->customer->genova_customer_code;
 
         // Step 1: Build product catalogue
         $allProducts = $this->fetchProductCatalogue($api, $phone);
@@ -240,7 +240,6 @@ class SyncCustomerPoliciesJob implements ShouldQueue
                 }
 
                 $policySync->syncFromGenovaRich($richData, $allProducts, $this->customer);
-
             } catch (\Exception $e) {
                 Log::error('SyncCustomerPoliciesJob: Genova error on policy', [
                     'policy_id' => $policyId,
