@@ -17,6 +17,10 @@ class DepartmentSeeder extends Seeder
         $company    = Company::first();
         $headOffice = Branch::where('code', '1000')->first();
 
+        if (! $company || ! $headOffice) {
+            throw new \RuntimeException('DepartmentSeeder: missing required Company or Head Office Branch — check CompanySeeder/BranchSeeder ran first.');
+        }
+
         $departments = [
             [
                 'name'        => 'Claims',

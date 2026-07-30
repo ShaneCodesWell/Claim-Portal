@@ -10,5 +10,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Run every night at midnight
-// Schedule::command('glims:sync')->daily();
 Schedule::job(new RefreshGenovaProductCacheJob)->daily();
