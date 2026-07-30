@@ -13,31 +13,38 @@ class BranchSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-{
-    $company = Company::first();
+    {
+        $company = Company::first();
 
-    $branches = [
-        [
-            'name'    => 'Head Office',
-            'code'    => 'ACC-HQ',
-            'email'   => 'headoffice@vanguardassurance.com',
-            'phone'   => '030 266 6485',
-            'address' => 'P.O. Box 1868, Accra',
-        ],
-        [
-            'name'    => 'Kumasi Branch',
-            'code'    => 'KSI-001',
-            'email'   => 'kumasi@vanguardassurance.com',
-            'phone'   => '',
-            'address' => '',
-        ],
-    ];
+        $branches = [
+            [
+                'name'    => 'Head Office',
+                'code'    => '1000',
+                'email'   => 'headoffice@vanguardassurance.com',
+                'phone'   => '030 266 6485',
+                'address' => 'P.O. Box 1868, Accra',
+            ],
+            [
+                'name'    => 'Kumasi Branch',
+                'code'    => '1101',
+                'email'   => 'kumasi@vanguardassurance.com',
+                'phone'   => '',
+                'address' => '',
+            ],
+            [
+                'name'    => 'Unresolved',
+                'code'    => 'UNRESOLVED',
+                'email'   => '',
+                'phone'   => '',
+                'address' => '',
+            ],
+        ];
 
-    foreach ($branches as $branch) {
-        Branch::updateOrCreate(
-            ['code' => $branch['code']],
-            array_merge($branch, ['company_id' => $company->id])
-        );
+        foreach ($branches as $branch) {
+            Branch::updateOrCreate(
+                ['code' => $branch['code']],
+                array_merge($branch, ['company_id' => $company->id])
+            );
+        }
     }
-}
 }

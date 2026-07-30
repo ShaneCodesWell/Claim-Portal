@@ -268,6 +268,12 @@ class ClaimService
             $branchId = Branch::where('code', 'UNRESOLVED')->value('id');
         }
 
+        if (! $branchId) {
+            throw new \RuntimeException(
+                "resolveBranch: no Branch row for code 'UNRESOLVED' — seed a fallback branch."
+            );
+        }
+
         return $branchId;
     }
 
