@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SyncAgentPoliciesJob;
+use App\Jobs\SyncAgentPoliciesFromGenovaJob;
 use App\Models\Agent;
 use App\Services\OtpService;
 use Illuminate\Http\JsonResponse;
@@ -189,7 +190,7 @@ class AgentAuthController extends Controller
         }
 
         try {
-            // SyncAgentPoliciesFromGenovaJob::dispatch($agent); // no-ops internally if no genova_agent_code
+            SyncAgentPoliciesFromGenovaJob::dispatch($agent); // no-ops internally if no genova_agent_code
         } catch (\Exception $e) {
             Log::error('AgentAuthController: Genova sync dispatch failed', [
                 'agent_id' => $agent->id,

@@ -92,7 +92,13 @@ class AgentController extends Controller
             ->first();
 
         if (! $localPolicy) {
-            $syncPending = $agent->last_synced_at === null || $agent->last_synced_at->lt(now()->subMinutes(5));
+            $genovaSyncPending = $agent->genova_agent_code
+                && ($agent->genova_last_synced_at === null || $agent->genova_last_synced_at->lt(now()->subMinutes(10)));
+
+            $glimsSyncPending = $agent->glims_agent_code
+                && ($agent->last_synced_at === null || $agent->last_synced_at->lt(now()->subMinutes(5)));
+
+            $syncPending = $genovaSyncPending || $glimsSyncPending;
             return view('agent.dashboard.index', [
                 'agent'           => $agent,
                 'policies'        => collect(),

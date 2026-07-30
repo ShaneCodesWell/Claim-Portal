@@ -37,55 +37,23 @@ class SyncAgentPoliciesFromGenovaJob implements ShouldQueue
             'agent_code' => $agentCode,
         ]);
 
-        $page    = 1;
-        $maxPage = 1;
-        $synced  = 0;
-        $errors  = 0;
+        $policies = $genova->getAllPoliciesByAgentCode($agentCode);
 
-        do {
+        $synced = 0;
+        $errors = 0;
+
+        foreach ($policies as $entry) {
             try {
-                $response = $genova->getPoliciesByAgentCode($agentCode, $page);
+                $policySync->syncAgentPolicyFromGenova($entry, $this->agent);
+                $synced++;
             } catch (\Exception $e) {
-                Log::error('SyncAgentPoliciesFromGenovaJob: API call failed', [
-                    'agent_id' => $this->agent->id,
-                    'page'     => $page,
-                    'error'    => $e->getMessage(),
+                $errors++;
+                Log::warning('SyncAgentPoliciesFromGenovaJob: upsert failed for one policy', [
+                    'policy_no' => $entry['policy']['policy_no'] ?? 'unknown',
+                    'error'     => $e->getMessage(),
                 ]);
-                break;
             }
-
-            if ($response->failed()) {
-                Log::error('SyncAgentPoliciesFromGenovaJob: non-200 response', [
-                    'agent_id' => $this->agent->id,
-                    'page'     => $page,
-                    'status'   => $response->status(),
-                ]);
-                break;
-            }
-
-            $body     = $response->json();
-            $policies = $body['data']['policies'] ?? [];
-            $maxPage  = $body['data']['max_page'] ?? 1;
-
-            if (empty($policies)) {
-                break;
-            }
-
-            foreach ($policies as $entry) {
-                try {
-                    $policySync->syncAgentPolicyFromGenova($entry, $this->agent);
-                    $synced++;
-                } catch (\Exception $e) {
-                    $errors++;
-                    Log::warning('SyncAgentPoliciesFromGenovaJob: upsert failed for one policy', [
-                        'policy_no' => $entry['policy']['policy_no'] ?? 'unknown',
-                        'error'     => $e->getMessage(),
-                    ]);
-                }
-            }
-
-            $page++;
-        } while ($page <= $maxPage);
+        }
 
         $this->agent->update(['genova_last_synced_at' => now()]);
 

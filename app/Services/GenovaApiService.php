@@ -123,6 +123,72 @@ class GenovaApiService
             ]);
     }
 
-    
+    /**
+     * Fetch ALL pages of policies for an agent, concurrently in batches,
+     * instead of one page at a time.
+     */
+    public function getAllPoliciesByAgentCode(string $agentCode, int $concurrency = 10): array
+    {
+        $first = $this->getPoliciesByAgentCode($agentCode, 1);
 
+        if ($first->failed()) {
+            Log::error('GenovaApiService: initial page fetch failed', [
+                'agent_code' => $agentCode,
+                'status'     => $first->status(),
+            ]);
+            return [];
+        }
+
+        $firstBody   = $first->json();
+        $maxPage     = $firstBody['data']['max_page'] ?? 1;
+        $allPolicies = $firstBody['data']['policies'] ?? [];
+
+        Log::info('GenovaApiService: bulk fetch starting', [
+            'agent_code' => $agentCode,
+            'max_page'   => $maxPage,
+        ]);
+
+        if ($maxPage <= 1) {
+            return $allPolicies;
+        }
+
+        $remainingPages = range(2, $maxPage);
+
+        foreach (array_chunk($remainingPages, $concurrency) as $batch) {
+            $responses = Http::pool(function ($pool) use ($agentCode, $batch) {
+                foreach ($batch as $page) {
+                    $pool->as((string) $page)
+                        ->withBasicAuth($this->username, $this->password)
+                        ->withOptions(['verify' => false])
+                        ->timeout(30)
+                        ->asForm()
+                        ->post("{$this->baseUrl}/cia/api/mobile/policy-search", [
+                            'agent_code' => $agentCode,
+                            'page'       => $page,
+                        ]);
+                }
+            });
+
+            foreach ($batch as $page) {
+                $response = $responses[(string) $page] ?? null;
+
+                if (! $response || $response->failed()) {
+                    Log::warning('GenovaApiService: pooled page failed', [
+                        'agent_code' => $agentCode,
+                        'page'       => $page,
+                    ]);
+                    continue;
+                }
+
+                $allPolicies = array_merge($allPolicies, $response->json('data.policies') ?? []);
+            }
+        }
+
+        Log::info('GenovaApiService: bulk fetch complete', [
+            'agent_code' => $agentCode,
+            'total'      => count($allPolicies),
+        ]);
+
+        return $allPolicies;
+    }
 }
