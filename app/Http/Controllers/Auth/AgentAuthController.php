@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SyncAgentPoliciesJob;
-use App\Jobs\SyncAgentPoliciesFromGenovaJob;
+use App\Services\AgentSyncService;
 use App\Models\Agent;
 use App\Services\OtpService;
 use Illuminate\Http\JsonResponse;
@@ -180,23 +179,7 @@ class AgentAuthController extends Controller
             'agent_pending_name',
         ]);
 
-        try {
-            SyncAgentPoliciesJob::dispatch($agent); // no-ops internally if no glims_agent_code
-        } catch (\Exception $e) {
-            Log::error('AgentAuthController: GLIMS sync dispatch failed', [
-                'agent_id' => $agent->id,
-                'error'    => $e->getMessage(),
-            ]);
-        }
-
-        try {
-            SyncAgentPoliciesFromGenovaJob::dispatch($agent); // no-ops internally if no genova_agent_code
-        } catch (\Exception $e) {
-            Log::error('AgentAuthController: Genova sync dispatch failed', [
-                'agent_id' => $agent->id,
-                'error'    => $e->getMessage(),
-            ]);
-        }
+        app(AgentSyncService::class)->dispatchPolicySync($agent);
     }
 
     private function sendOtpAndRespond(string $phone, string $name): JsonResponse

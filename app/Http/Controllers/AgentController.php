@@ -12,6 +12,7 @@ use App\Models\Department;
 use App\Models\Policy;
 use App\Services\GlimsApiService;
 use App\Services\GenovaApiService;
+use App\Services\AgentSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -61,7 +62,7 @@ class AgentController extends Controller
 
         if (! $localPolicy) {
             $glimsSyncPending = $agent->glims_agent_code
-                && ($agent->last_synced_at === null || $agent->last_synced_at->lt(now()->subMinutes(5)));
+                && ($agent->glims_last_synced_at === null || $agent->glims_last_synced_at->lt(now()->subMinutes(5)));
 
             $genovaSyncPending = $agent->genova_agent_code
                 && ($agent->genova_last_synced_at === null || $agent->genova_last_synced_at->lt(now()->subMinutes(10)));
@@ -146,12 +147,11 @@ class AgentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreAgentRequest $request)
+    public function store(StoreAgentRequest $request, AgentSyncService $agentSync)
     {
         $validated = $request->validated();
-        // $validated['password'] = bcrypt($validated['password']);
-
-        Agent::create($validated);
+        $agent = Agent::create($validated);
+        $agentSync->dispatchPolicySync($agent);
 
         return redirect()->route('organization', ['tab' => 'agents'])->with('success', 'Agent added successfully.');
     }

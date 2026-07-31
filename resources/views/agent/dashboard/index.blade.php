@@ -1,4 +1,7 @@
 <x-layouts.agent>
+    @php
+        $neverSynced = is_null($agent->glims_last_synced_at) && is_null($agent->genova_last_synced_at);
+    @endphp
     <!-- Page Header -->
     <div class="mb-6">
         <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
@@ -36,6 +39,23 @@
                     policy.</p>
             </div>
         </div>
+        {{-- Sync status banner — placed right after the header, before the form,
+             so it's the first thing an agent sees before attempting a search --}}
+        {{-- @if ($neverSynced)
+            <div
+                class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg px-4 py-3 mb-4 flex items-center gap-2">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>We're setting up your account and pulling your policies for the first time. This can take a few
+                    minutes for larger portfolios — try searching again shortly.</span>
+            </div>
+        @elseif (
+            ($agent->glims_agent_code && $agent->glims_last_synced_at?->lt(now()->subMinutes(5))) ||
+                ($agent->genova_agent_code && $agent->genova_last_synced_at?->lt(now()->subMinutes(10))))
+            <div class="bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-lg px-4 py-2 mb-4">
+                <i class="fas fa-sync fa-spin mr-1"></i> Your policy list may still be refreshing — if a policy isn't
+                showing up yet, try again in a moment.
+            </div>
+        @endif --}}
 
         <form method="GET" action="{{ route('agent.policy.search') }}" class="flex flex-col sm:flex-row gap-3"
             x-data="{ loading: false }" @submit="loading = true">
