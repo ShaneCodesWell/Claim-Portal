@@ -11,7 +11,9 @@ use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Policy;
 use App\Services\GlimsApiService;
+use App\Services\GenovaApiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class AgentController extends Controller
@@ -19,40 +21,6 @@ class AgentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    // public function index(Request $request)
-    // {
-    //     $agent = Auth::guard('agent')->user();
-
-    //     if (! $agent) {
-    //         return redirect()->route('agent.login')->with('error', 'Session expired. Please login again.');
-    //     }
-
-    //     $policies = Policy::forAgent($agent->id)
-    //         ->with('customer')
-    //         ->search($request->input('search'))
-    //         ->ofType($request->input('type'))
-    //         ->ofStatus($request->input('status'))
-    //         ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
-    //         ->orderBy('last_synced_at', 'desc')
-    //         ->paginate(6)
-    //         ->withQueryString();
-
-    //     $policies->setCollection(
-    //         $policies->getCollection()->map(fn($p) => (new PolicyResource($p))->toArray(request()))
-    //     );
-
-    //     $businessClasses = Policy::forAgent($agent->id)
-    //         ->whereNotNull('business_class_name')
-    //         ->distinct()
-    //         ->pluck('business_class_name');
-
-    //     $statusCounts = Policy::forAgent($agent->id)
-    //         ->selectRaw('status, count(*) as total')
-    //         ->groupBy('status')
-    //         ->pluck('total', 'status');
-
-    //     return view('agent.dashboard.index', compact('agent', 'policies', 'businessClasses', 'statusCounts'));
-    // }
 
     public function index(Request $request)
     {
@@ -72,7 +40,7 @@ class AgentController extends Controller
         ]);
     }
 
-    public function search(Request $request, GlimsApiService $glims)
+    public function search(Request $request, GlimsApiService $glims, GenovaApiService $genova)
     {
         $agent = Auth::guard('agent')->user();
 
@@ -92,13 +60,12 @@ class AgentController extends Controller
             ->first();
 
         if (! $localPolicy) {
-            $genovaSyncPending = $agent->genova_agent_code
-                && ($agent->genova_last_synced_at === null || $agent->genova_last_synced_at->lt(now()->subMinutes(10)));
-
             $glimsSyncPending = $agent->glims_agent_code
                 && ($agent->last_synced_at === null || $agent->last_synced_at->lt(now()->subMinutes(5)));
 
-            $syncPending = $genovaSyncPending || $glimsSyncPending;
+            $genovaSyncPending = $agent->genova_agent_code
+                && ($agent->genova_last_synced_at === null || $agent->genova_last_synced_at->lt(now()->subMinutes(10)));
+
             return view('agent.dashboard.index', [
                 'agent'           => $agent,
                 'policies'        => collect(),
@@ -106,14 +73,17 @@ class AgentController extends Controller
                 'statusCounts'    => collect(),
                 'searchResult'    => null,
                 'searchQuery'     => $policyNumber,
-                'searchError' => $syncPending
+                'searchError'     => ($glimsSyncPending || $genovaSyncPending)
                     ? 'Your policy list is still syncing. Please try again in a moment.'
                     : 'No policy found with that number in your portfolio.',
             ]);
         }
 
-        // Fetch rich details from GLIMS for display
-        $details = $glims->getPolicyDetails($policyNumber);
+        $details = match ($localPolicy->source) {
+            'genova' => $this->getGenovaDetails($localPolicy, $genova),
+            'glims'  => $glims->getPolicyDetails($policyNumber),
+            default  => [],
+        };
 
         return view('agent.dashboard.index', [
             'agent'           => $agent,
@@ -122,11 +92,41 @@ class AgentController extends Controller
             'statusCounts'    => collect(),
             'searchResult'    => [
                 'local'   => (new PolicyResource($localPolicy))->toArray(request()),
-                'details' => $details, // rich vehicle/risk data
+                'details' => $details,
             ],
             'searchQuery'     => $policyNumber,
             'searchError'     => null,
         ]);
+    }
+
+    private function getGenovaDetails(Policy $localPolicy, GenovaApiService $genova): array
+    {
+        if (empty($localPolicy->external_policy_id)) {
+            return $localPolicy->raw_payload ?? [];
+        }
+
+        try {
+            $response = $genova->policySearch($localPolicy->external_policy_id);
+
+            if ($response->successful()) {
+                $policies = $response->json('data.policies') ?? [];
+                if (! empty($policies)) {
+                    return $policies[0]; // live, richer data
+                }
+            }
+
+            Log::warning('PolicyController: Genova live details empty/failed, falling back to raw_payload', [
+                'policy_id' => $localPolicy->external_policy_id,
+                'status'    => $response->status(),
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('PolicyController: Genova live details threw, falling back to raw_payload', [
+                'policy_id' => $localPolicy->external_policy_id,
+                'error'     => $e->getMessage(),
+            ]);
+        }
+
+        return $localPolicy->raw_payload ?? [];
     }
 
     /**
