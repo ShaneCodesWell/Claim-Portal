@@ -180,17 +180,20 @@ class AgentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateAgentRequest $request, Agent $agent)
+    public function update(UpdateAgentRequest $request, Agent $agent, AgentSyncService $agentSync)
     {
         $validated = $request->validated();
 
-        // if (empty($validated['password'])) {
-        //     unset($validated['password']);
-        // } else {
-        //     $validated['password'] = bcrypt($validated['password']);
-        // }
+        $codesChanged = $agent->glims_agent_code !== ($validated['glims_agent_code'] ?? $agent->glims_agent_code)
+            || $agent->genova_agent_code !== ($validated['genova_agent_code'] ?? $agent->genova_agent_code);
+
+        $neverSynced = is_null($agent->glims_last_synced_at) && is_null($agent->genova_last_synced_at);
 
         $agent->update($validated);
+
+        if ($codesChanged || $neverSynced) {
+            $agentSync->dispatchPolicySync($agent->fresh());
+        }
 
         return redirect()->route('organization', ['tab' => 'agents'])->with('success', 'Agent updated successfully.');
     }
