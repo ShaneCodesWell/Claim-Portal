@@ -203,9 +203,9 @@ class AgentController extends Controller
      */
     public function destroy(Agent $agent)
     {
-        if ($agent->id === Auth::id()) {
-            return back()->with('error', 'You cannot delete your own account.');
-        }
+        // if ($agent->id === Auth::id()) {
+        //     return back()->with('error', 'You cannot delete your own account.');
+        // }
 
         if ($agent->role === 'admin') {
             return back()->with('error', 'Admin accounts cannot be deleted.');
