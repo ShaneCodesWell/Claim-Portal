@@ -314,6 +314,66 @@ class PolicySyncService
         return $syncedPoliciesMap;
     }
 
+    public function syncAgentPolicyFromGlims(array $policy, Agent $agent): void
+    {
+        $policyNumber = $policy['POLICY_NUMBER'] ?? null;
+
+        if (! $policyNumber) {
+            return;
+        }
+
+        // Find-or-create the customer this policy belongs to.
+        $customerCode = (string) ($policy['CUSTOMER_CODE'] ?? '');
+        $customer     = null;
+
+        if ($customerCode) {
+            $fullName = trim(implode(' ', array_filter([
+                $policy['CUSTOMER_FIRST_NAME'] ?? null,
+                $policy['CUSTOMER_OTHER_NAMES'] ?? null,
+                $policy['CUSTOMER_FAMILY_NAME'] ?? null,
+            ])));
+
+            $customer = Customer::firstOrCreate(
+                ['glims_customer_code' => $customerCode],
+                [
+                    'name'    => $fullName ?: 'Unknown',
+                    'phone'   => null,
+                    'email'   => null,
+                    'sources' => ['glims'],
+                ]
+            );
+        }
+
+        $status     = $this->resolveStatus($policy);
+        $rawPayload = array_merge($policy, [
+            'source'       => 'glims',
+            'status_label' => $status,
+        ]);
+
+        Policy::updateOrCreate(
+            ['source' => 'glims', 'policy_number' => $policyNumber],
+            [
+                'customer_id'         => $customer?->id,
+                'agent_id'            => $agent->id,
+                'insured_name'        => $customer->name ?? null,
+                'external_policy_id'  => (string) ($policy['POLICY_ID'] ?? $policyNumber),
+                'product_id'          => $policy['POLICY_PRODUCT_CODE'] ?? null,
+                'product_name'        => $policy['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
+                'business_class_id'   => null, // not in middleware — use LOB name instead
+                'business_class_name' => $policy['POLICY_LOB_NAME'] ?? 'Unknown Class',
+                'start_date'          => $policy['POLICY_START_DATE'] ?? null,
+                'end_date'            => $policy['POLICY_EXPIRY_DATE'] ?? null,
+                'effective_date'      => $policy['POLICY_ISSUE_DATE'] ?? null,
+                'renewal_date'        => $policy['POLICY_EXPIRY_DATE']
+                    ? Carbon::parse($policy['POLICY_EXPIRY_DATE'])->addDay()->toDateString()
+                    : null,
+                'status'              => $status,
+                'raw_payload'         => $rawPayload,
+                'last_synced_at'      => now(),
+            ]
+        );
+    }
+
     /**
      * Refresh a Customer record from a raw GLIMS customer search result row.
      * Stored under raw_payload['glims'] — never overwrites raw_payload['genova'].

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\GlimsRiskResolver;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -192,6 +193,12 @@ class GlimsApiService
      * that PolicyResource::extractGlimsRisks() expects.
      * A policy_number may have multiple detail rows (one per vehicle/risk),
      * so this returns an array of risks.
+     *
+     * NOTE: GLIMS sometimes returns multiple rows for the SAME vehicle under one
+     * policy — e.g. an endorsement that re-rates premium appends a new row
+     * rather than updating the existing one. We collapse those down to one
+     * entry per distinct vehicle (see dedupeRisksByVehicle()) so a single-car
+     * policy with an endorsement doesn't get misread as a fleet.
      */
     public function getRisksForPolicy(string $policyNumber): array
     {
@@ -199,7 +206,37 @@ class GlimsApiService
         if (empty($details)) {
             return [];
         }
-        return collect($details)->map(fn($d) => $this->normaliseDetailToRisk($d))->values()->toArray();
+
+        $risks = collect($details)->map(fn($d) => $this->normaliseDetailToRisk($d))->values()->toArray();
+
+        return GlimsRiskResolver::resolve($risks);
+    }
+
+    /**
+     * Collapse duplicate rows referring to the same physical vehicle into one.
+     * "Same vehicle" = same risk_ref_no (plate) + same chassis number.
+     * When duplicates exist, keep whichever row has the latest `created`
+     * timestamp in its _raw payload (i.e. the most recent endorsement/rating).
+     * Falls back to keeping the last row in the array if no created timestamp
+     * is present, since GLIMS appears to return rows in chronological order.
+     */
+    private function dedupeRisksByVehicle(array $risks): array
+    {
+        return collect($risks)
+            ->groupBy(fn($risk) => ($risk['risk_ref_no'] ?? '') . '|' . ($risk['vehicle_chassis_no'] ?? ''))
+            ->map(function ($group) {
+                if ($group->count() === 1) {
+                    return $group->first();
+                }
+
+                // Multiple rows for the same vehicle — keep the most recent one.
+                return $group->sortBy(function ($risk) {
+                    $created = $risk['_raw']['created'] ?? null;
+                    return $created ? strtotime($created) : 0;
+                })->last();
+            })
+            ->values()
+            ->toArray();
     }
 
     // Claims search
@@ -416,6 +453,11 @@ class GlimsApiService
             })
             ->values()
             ->toArray();
+    }
+
+    public function groupPolicyRows(array $rows): array
+    {
+        return $this->groupRowsIntoPolicies($rows);
     }
 
     /**

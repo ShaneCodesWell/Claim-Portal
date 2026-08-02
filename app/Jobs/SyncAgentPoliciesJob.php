@@ -3,12 +3,11 @@
 namespace App\Jobs;
 
 use App\Models\Agent;
-use App\Models\Customer;
-use App\Models\Policy;
 use App\Services\GlimsApiService;
-use Illuminate\Bus\Queueable;
+use App\Services\PolicySyncService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
@@ -18,11 +17,11 @@ class SyncAgentPoliciesJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries   = 3;
-    public int $timeout = 120;
+    public int $timeout = 180; // bumped: now also fetches per-policy risk detail
 
     public function __construct(public Agent $agent) {}
 
-    public function handle(GlimsApiService $glims): void
+    public function handle(GlimsApiService $glims, PolicySyncService $policySync): void
     {
         $glimsAgentCode = $this->agent->glims_agent_code;
 
@@ -38,9 +37,11 @@ class SyncAgentPoliciesJob implements ShouldQueue
             'agent_code' => $glimsAgentCode,
         ]);
 
-        $page   = 1;
-        $synced = 0;
-        $errors = 0;
+        // ── Step 1: collect every raw row across all pages first ────────────
+        // We can't group fleet policies (multiple plate_number rows sharing
+        // a policy_number) until we've seen every page.
+        $allRows = [];
+        $page    = 1;
 
         do {
             try {
@@ -71,23 +72,78 @@ class SyncAgentPoliciesJob implements ShouldQueue
                 break;
             }
 
-            foreach ($results as $item) {
-                try {
-                    $this->upsertPolicy($item);
-                    $synced++;
-                } catch (\Exception $e) {
-                    $errors++;
-                    Log::warning('SyncAgentPoliciesJob: upsert failed for one policy', [
-                        'policy_number' => $item['policy_number'] ?? 'unknown',
-                        'error'         => $e->getMessage(),
-                    ]);
-                }
-            }
+            $allRows = array_merge($allRows, $results);
 
-            // GLIMS returns all results paginated; stop when we've consumed everything
             $fetched = $page * count($results);
             $page++;
         } while ($fetched < $count);
+
+        if (empty($allRows)) {
+            Log::info('SyncAgentPoliciesJob: no policies found', [
+                'agent_id' => $this->agent->id,
+            ]);
+            $this->agent->update(['glims_last_synced_at' => now()]);
+            return;
+        }
+
+        // ── Step 2: group flat rows into one record per policy_number ───────
+        // Same fleet logic as getPoliciesByClientCode()/getPoliciesByAgentCode():
+        // multiple rows sharing a policy_number become one policy with a
+        // 'risks' array of placeholder (plate-number-only) entries.
+        $policies = $glims->groupPolicyRows($allRows);
+
+        Log::info('SyncAgentPoliciesJob: grouped rows into policies', [
+            'agent_id'     => $this->agent->id,
+            'raw_rows'     => count($allRows),
+            'policy_count' => count($policies),
+        ]);
+
+        // ── Step 3: enrich each policy with rich vehicle/risk detail ────────
+        // Mirrors SyncCustomerPoliciesJob::syncGlims() — placeholder risks
+        // (plate number only) get replaced with full detail (make, model,
+        // chassis, year, etc.) fetched per policy_number.
+        $synced = 0;
+        $errors = 0;
+
+        foreach ($policies as &$policy) {
+            $policyNumber = $policy['POLICY_NUMBER'] ?? null;
+            if (! $policyNumber) {
+                continue;
+            }
+
+            try {
+                $richRisks = $glims->getRisksForPolicy($policyNumber);
+
+                if (! empty($richRisks)) {
+                    $policy['risks']    = $richRisks;
+                    $policy['is_fleet'] = count($richRisks) > 1;
+                }
+            } catch (\Exception $e) {
+                // Don't let one failed detail call kill the rest — the
+                // placeholder risk (plate number only) is still better than nothing.
+                Log::warning('SyncAgentPoliciesJob: policy details fetch failed', [
+                    'agent_id'      => $this->agent->id,
+                    'policy_number' => $policyNumber,
+                    'error'         => $e->getMessage(),
+                ]);
+            }
+        }
+        unset($policy); // clean up reference
+
+        // ── Step 4: persist ──────────────────────────────────────────────
+        foreach ($policies as $policy) {
+            try {
+                $policySync->syncAgentPolicyFromGlims($policy, $this->agent);
+                $synced++;
+            } catch (\Exception $e) {
+                $errors++;
+                Log::warning('SyncAgentPoliciesJob: upsert failed for one policy', [
+                    'agent_id'      => $this->agent->id,
+                    'policy_number' => $policy['POLICY_NUMBER'] ?? 'unknown',
+                    'error'         => $e->getMessage(),
+                ]);
+            }
+        }
 
         $this->agent->update(['glims_last_synced_at' => now()]);
 
@@ -96,60 +152,5 @@ class SyncAgentPoliciesJob implements ShouldQueue
             'synced'   => $synced,
             'errors'   => $errors,
         ]);
-    }
-
-    // ── Private helpers ───────────────────────────────────────────────────────
-
-    private function upsertPolicy(array $item): void
-    {
-        $policyNumber = $item['policy_number'] ?? null;
-
-        if (! $policyNumber) {
-            return;
-        }
-
-        // Resolve or lazily create the customer this policy belongs to.
-        // Agents' policies always have a customer_code in the GLIMS response.
-        $customerCode = (string) ($item['customer_code'] ?? '');
-        $customer     = null;
-
-        if ($customerCode) {
-            $customer = Customer::firstOrCreate(
-                ['glims_customer_code' => $customerCode],
-                [
-                    'name'    => trim(
-                        ($item['first_name'] ?? '') . ' ' .
-                            ($item['other_names'] ?? '') . ' ' .
-                            ($item['family_name'] ?? '')
-                    ),
-                    'phone'   => null,
-                    'email'   => null,
-                    'sources' => ['glims'],
-                ]
-            );
-        }
-
-        $startDate  = $item['start_date'] ?? null;
-        $expiryDate = $item['expiry_date'] ?? null;
-
-        Policy::updateOrCreate(
-            [
-                'policy_number' => $policyNumber,
-                'source'        => 'glims',
-            ],
-            [
-                'customer_id'         => $customer?->id,
-                'agent_id'            => $this->agent->id,
-                'external_policy_id'  => (string) ($item['policy_id'] ?? ''),
-                'product_name'        => $item['product'] ?? null,
-                'business_class_name' => $item['lob'] ?? null,
-                'start_date'          => $startDate,
-                'end_date'            => $expiryDate,
-                'effective_date'      => $item['issue_date'] ?? $startDate,
-                'renewal_date'        => $expiryDate,
-                'raw_payload'         => $item,
-                'last_synced_at'      => now(),
-            ]
-        );
     }
 }
