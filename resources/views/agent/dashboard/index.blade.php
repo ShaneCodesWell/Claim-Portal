@@ -86,7 +86,7 @@
             </div>
         @endif
         <p class="text-xs text-gray-400 mt-3">
-            <i class="fas fa-lock text-xs"></i> Access policies that have your polices here.
+            <i class="fas fa-lock text-xs"></i> Access all your active polices here.
         </p>
     </div>
 

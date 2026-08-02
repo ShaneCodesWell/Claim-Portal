@@ -9,5 +9,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Run every night at midnight
-Schedule::job(new RefreshGenovaProductCacheJob)->daily();
+// Refresh the Genova product/class cache nightly, then backfill any
+// policies that were synced with Unknown Class/Product before the
+// cache had their IDs.
+Schedule::job(new RefreshGenovaProductCacheJob)->daily()->at('00:00');
+Schedule::command('genova:backfill-product-names')->daily()->at('00:15');
