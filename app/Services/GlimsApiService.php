@@ -212,6 +212,68 @@ class GlimsApiService
         return GlimsRiskResolver::resolve($risks);
     }
 
+    public function getRisksForPolicies(array $policyNumbers, int $concurrency = 15): array
+    {
+        $resolved = [];
+
+        foreach (array_chunk($policyNumbers, $concurrency) as $batch) {
+            try {
+                $responses = Http::pool(function ($pool) use ($batch) {
+                    return collect($batch)->map(function ($policyNumber) use ($pool) {
+                        return $pool
+                            ->as($policyNumber)
+                            ->withHeaders([
+                                'x-api-key'    => $this->apiKey,
+                                'x-api-secret' => $this->apiSecret,
+                                'Accept'       => 'application/json',
+                            ])
+                            ->timeout(15)
+                            ->when(app()->environment('local'), fn($http) => $http->withoutVerifying())
+                            ->get("{$this->baseUrl}/api/policies/details/", [
+                                'policy_number' => $policyNumber,
+                            ]);
+                    })->all();
+                });
+            } catch (\Exception $e) {
+                Log::error('GlimsApiService: getRisksForPolicies pool failed', [
+                    'batch_size' => count($batch),
+                    'error'      => $e->getMessage(),
+                ]);
+                continue;
+            }
+
+            foreach ($batch as $policyNumber) {
+                $response = $responses[$policyNumber] ?? null;
+
+                if (! $response || $response instanceof \Throwable) {
+                    Log::warning('GlimsApiService: pooled policy details failed', [
+                        'policy_number' => $policyNumber,
+                        'error'         => $response instanceof \Throwable ? $response->getMessage() : 'no response',
+                    ]);
+                    continue;
+                }
+
+                if ($response->failed()) {
+                    Log::warning('GlimsApiService: pooled policy details non-200', [
+                        'policy_number' => $policyNumber,
+                        'status'        => $response->status(),
+                    ]);
+                    continue;
+                }
+
+                $details = $response->json('results') ?? [];
+                if (empty($details)) {
+                    continue;
+                }
+
+                $risks = collect($details)->map(fn($d) => $this->normaliseDetailToRisk($d))->values()->toArray();
+                $resolved[$policyNumber] = GlimsRiskResolver::resolve($risks);
+            }
+        }
+
+        return $resolved;
+    }
+
     /**
      * Collapse duplicate rows referring to the same physical vehicle into one.
      * "Same vehicle" = same risk_ref_no (plate) + same chassis number.

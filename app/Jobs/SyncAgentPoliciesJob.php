@@ -17,7 +17,10 @@ class SyncAgentPoliciesJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries   = 3;
-    public int $timeout = 180; // bumped: now also fetches per-policy risk detail
+    public int $timeout = 600; // large portfolios + concurrent batches; still bounded
+
+    private const RISK_FETCH_CONCURRENCY = 15;
+    private const PERSIST_BATCH_SIZE     = 15; // matches fetch concurrency — persist each batch as it's enriched
 
     public function __construct(public Agent $agent) {}
 
@@ -38,8 +41,6 @@ class SyncAgentPoliciesJob implements ShouldQueue
         ]);
 
         // ── Step 1: collect every raw row across all pages first ────────────
-        // We can't group fleet policies (multiple plate_number rows sharing
-        // a policy_number) until we've seen every page.
         $allRows = [];
         $page    = 1;
 
@@ -87,9 +88,6 @@ class SyncAgentPoliciesJob implements ShouldQueue
         }
 
         // ── Step 2: group flat rows into one record per policy_number ───────
-        // Same fleet logic as getPoliciesByClientCode()/getPoliciesByAgentCode():
-        // multiple rows sharing a policy_number become one policy with a
-        // 'risks' array of placeholder (plate-number-only) entries.
         $policies = $glims->groupPolicyRows($allRows);
 
         Log::info('SyncAgentPoliciesJob: grouped rows into policies', [
@@ -98,52 +96,102 @@ class SyncAgentPoliciesJob implements ShouldQueue
             'policy_count' => count($policies),
         ]);
 
-        // ── Step 3: enrich each policy with rich vehicle/risk detail ────────
-        // Mirrors SyncCustomerPoliciesJob::syncGlims() — placeholder risks
-        // (plate number only) get replaced with full detail (make, model,
-        // chassis, year, etc.) fetched per policy_number.
+        // ── Step 3 & 4: enrich + persist in batches ──────────────────────────
+        // Each batch fetches risk detail concurrently (Http::pool), then
+        // persists immediately — so a failure partway through the run still
+        // leaves earlier batches saved, and progress is visible in the DB
+        // as the job runs rather than all-or-nothing at the very end.
         $synced = 0;
         $errors = 0;
+        $batchNum = 0;
+        $totalBatches = (int) ceil(count($policies) / self::PERSIST_BATCH_SIZE);
+        $failedPolicyNumbers = [];
 
-        foreach ($policies as &$policy) {
-            $policyNumber = $policy['POLICY_NUMBER'] ?? null;
-            if (! $policyNumber) {
-                continue;
-            }
+        foreach (array_chunk($policies, self::PERSIST_BATCH_SIZE) as $batch) {
+            $batchNum++;
 
-            try {
-                $richRisks = $glims->getRisksForPolicy($policyNumber);
+            $policyNumbers = collect($batch)->pluck('POLICY_NUMBER')->filter()->values()->all();
 
-                if (! empty($richRisks)) {
-                    $policy['risks']    = $richRisks;
-                    $policy['is_fleet'] = count($richRisks) > 1;
+            $riskMap = $glims->getRisksForPolicies($policyNumbers, self::RISK_FETCH_CONCURRENCY);
+
+            foreach ($batch as $policy) {
+                $policyNumber = $policy['POLICY_NUMBER'] ?? null;
+                if (! $policyNumber) {
+                    continue;
                 }
-            } catch (\Exception $e) {
-                // Don't let one failed detail call kill the rest — the
-                // placeholder risk (plate number only) is still better than nothing.
-                Log::warning('SyncAgentPoliciesJob: policy details fetch failed', [
-                    'agent_id'      => $this->agent->id,
-                    'policy_number' => $policyNumber,
-                    'error'         => $e->getMessage(),
-                ]);
-            }
-        }
-        unset($policy); // clean up reference
 
-        // ── Step 4: persist ──────────────────────────────────────────────
-        foreach ($policies as $policy) {
-            try {
-                $policySync->syncAgentPolicyFromGlims($policy, $this->agent);
-                $synced++;
-            } catch (\Exception $e) {
-                $errors++;
-                Log::warning('SyncAgentPoliciesJob: upsert failed for one policy', [
-                    'agent_id'      => $this->agent->id,
-                    'policy_number' => $policy['POLICY_NUMBER'] ?? 'unknown',
-                    'error'         => $e->getMessage(),
-                ]);
+                if (! empty($riskMap[$policyNumber])) {
+                    $policy['risks']    = $riskMap[$policyNumber];
+                    $policy['is_fleet'] = count($riskMap[$policyNumber]) > 1;
+                } else {
+                    // Enrichment failed for this one — track it for a retry pass
+                    // rather than leaving it permanently on placeholder data.
+                    $failedPolicyNumbers[] = $policyNumber;
+                }
+
+                try {
+                    $policySync->syncAgentPolicyFromGlims($policy, $this->agent);
+                    $synced++;
+                } catch (\Exception $e) {
+                    $errors++;
+                    Log::warning('SyncAgentPoliciesJob: upsert failed for one policy', [
+                        'agent_id'      => $this->agent->id,
+                        'policy_number' => $policyNumber,
+                        'error'         => $e->getMessage(),
+                    ]);
+                }
             }
+
+            Log::info('SyncAgentPoliciesJob: batch persisted', [
+                'agent_id' => $this->agent->id,
+                'batch'    => "{$batchNum}/{$totalBatches}",
+                'synced_so_far' => $synced,
+            ]);
         }
+
+        // ── Retry pass: one more attempt for anything that failed enrichment ──
+        // Timeouts are often transient — worth one cheap follow-up attempt
+        // rather than leaving these on placeholder data until the next full sync.
+        if (! empty($failedPolicyNumbers)) {
+            Log::info('SyncAgentPoliciesJob: retrying failed enrichments', [
+                'agent_id' => $this->agent->id,
+                'count'    => count($failedPolicyNumbers),
+            ]);
+
+            $retryMap = $glims->getRisksForPolicies($failedPolicyNumbers, self::RISK_FETCH_CONCURRENCY);
+            $retriedOk = 0;
+
+            $policiesByNumber = collect($policies)->keyBy('POLICY_NUMBER');
+
+            foreach ($retryMap as $policyNumber => $risks) {
+                $policy = $policiesByNumber->get($policyNumber);
+                if (! $policy || empty($risks)) {
+                    continue;
+                }
+
+                $policy['risks']    = $risks;
+                $policy['is_fleet'] = count($risks) > 1;
+
+                try {
+                    $policySync->syncAgentPolicyFromGlims($policy, $this->agent);
+                    $retriedOk++;
+                } catch (\Exception $e) {
+                    Log::warning('SyncAgentPoliciesJob: retry upsert failed', [
+                        'agent_id'      => $this->agent->id,
+                        'policy_number' => $policyNumber,
+                        'error'         => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            Log::info('SyncAgentPoliciesJob: retry pass completed', [
+                'agent_id'          => $this->agent->id,
+                'attempted'         => count($failedPolicyNumbers),
+                'recovered'         => $retriedOk,
+                'still_unresolved'  => count($failedPolicyNumbers) - $retriedOk,
+            ]);
+        }
+
 
         $this->agent->update(['glims_last_synced_at' => now()]);
 
