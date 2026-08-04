@@ -94,6 +94,15 @@ class PolicySyncService
                     'sources' => ['genova'],
                 ]
             );
+
+            // The agent sync's embedded customer object already carries rich
+            // detail (dob, occupation, nationality, postal address, id number)
+            // — no extra API call needed, unlike GLIMS. Reshape field names to
+            // match what refreshCustomerFromGenova() expects, then populate
+            // raw_payload['genova'] the same way the customer-login path does.
+            if (! empty($customerData)) {
+                $this->refreshCustomerFromGenova($customer, $this->normaliseAgentGenovaCustomerData($customerData));
+            }
         }
 
         $endDate = $policyData['policy_end'] ?? null;
@@ -147,6 +156,38 @@ class PolicySyncService
                 'last_synced_at'      => now(),
             ]
         );
+    }
+
+    /**
+     * Reshape a Genova agent-sync embedded customer object (ins_* prefixed
+     * fields, from the policy-search response) into the flatter shape
+     * refreshCustomerFromGenova() expects (matching the customer-search
+     * endpoint's field names, e.g. `name`, `email`, `phone_number`, `dob`).
+     *
+     * Two different Genova endpoints describe a customer with two different
+     * field naming conventions — this is the translation layer between them
+     * so both sync paths (customer-login vs agent-sync) can share one
+     * refreshCustomerFromGenova() implementation and store a consistent shape
+     * under Customer::raw_payload['genova'].
+     */
+    private function normaliseAgentGenovaCustomerData(array $customerData): array
+    {
+        return [
+            'code'           => $customerData['ins_code'] ?? null,
+            'name'           => $customerData['ins_name'] ?? null,
+            'email'          => $customerData['ins_email'] ?? null,
+            'phone_number'   => $customerData['cust_phone'] ?? null,
+            'dob'            => $customerData['ins_dob'] ?? null,
+            'address'        => $customerData['ins_postaladdress'] ?? $customerData['ins_address'] ?? null,
+            'occupation'     => $customerData['ins_occupation'] ?? null,
+            'nationality'    => $customerData['ins_nationality'] ?? null,
+            'id_number'      => $customerData['identification_number'] ?? null,
+            'id_type'        => $customerData['identification_type'] ?? null,
+            'gender'         => $customerData['ins_gender'] ?? null,
+            'marital_status' => $customerData['ins_maritalstatus'] ?? null,
+            // Keep the untouched original for anything not mapped above
+            '_raw'           => $customerData,
+        ];
     }
 
     /**
@@ -314,6 +355,14 @@ class PolicySyncService
         return $syncedPoliciesMap;
     }
 
+    /**
+     * Sync one grouped-and-enriched GLIMS policy from the agent sync job.
+     * Expects the same shape produced by GlimsApiService::groupPolicyRows(),
+     * with 'risks' already replaced by rich detail from getRisksForPolicy().
+     *
+     * Mirrors syncFromGlimsRich() but additionally sets agent_id, since these
+     * policies come from an agent's portfolio rather than a logged-in customer.
+     */
     public function syncAgentPolicyFromGlims(array $policy, Agent $agent): void
     {
         $policyNumber = $policy['POLICY_NUMBER'] ?? null;

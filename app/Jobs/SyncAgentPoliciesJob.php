@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Agent;
+use App\Models\Customer;
 use App\Services\GlimsApiService;
 use App\Services\PolicySyncService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -95,6 +96,62 @@ class SyncAgentPoliciesJob implements ShouldQueue
             'raw_rows'     => count($allRows),
             'policy_count' => count($policies),
         ]);
+
+        // ── Step 2b: refresh customer detail (email, dob, gender, id_number) ──
+        // The policy-list rows only carry name + customer_code — the richer
+        // customer profile (what SyncCustomerPoliciesJob populates via
+        // refreshGlimsCustomer() on the login path) is fetched here from the
+        // dedicated customer endpoint, batched by UNIQUE customer_code so we
+        // don't re-fetch the same customer once per policy.
+        $uniqueCustomerCodes = collect($policies)
+            ->pluck('CUSTOMER_CODE')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (! empty($uniqueCustomerCodes)) {
+            Log::info('SyncAgentPoliciesJob: refreshing customer detail', [
+                'agent_id'      => $this->agent->id,
+                'unique_count'  => count($uniqueCustomerCodes),
+            ]);
+
+            // Build a lookup of the basic name fields we already have from
+            // the policy rows, in case a customer doesn't exist yet (first
+            // sync for this agent) — firstOrCreate needs something to seed
+            // the record with before we can refresh it further below.
+            $policiesByCustomerCode = collect($policies)->keyBy('CUSTOMER_CODE');
+
+            $customerRows = $glims->getCustomersByCode($uniqueCustomerCodes, self::RISK_FETCH_CONCURRENCY);
+
+            foreach ($uniqueCustomerCodes as $customerCode) {
+                $policyRow = $policiesByCustomerCode->get($customerCode);
+
+                $fullName = trim(implode(' ', array_filter([
+                    $policyRow['CUSTOMER_FIRST_NAME'] ?? null,
+                    $policyRow['CUSTOMER_OTHER_NAMES'] ?? null,
+                    $policyRow['CUSTOMER_FAMILY_NAME'] ?? null,
+                ])));
+
+                $customer = Customer::firstOrCreate(
+                    ['glims_customer_code' => (string) $customerCode],
+                    [
+                        'name'    => $fullName ?: 'Unknown',
+                        'sources' => ['glims'],
+                    ]
+                );
+
+                if (! empty($customerRows[$customerCode])) {
+                    $policySync->refreshCustomerFromGlimsRow($customer, $customerRows[$customerCode]);
+                }
+            }
+
+            Log::info('SyncAgentPoliciesJob: customer detail refresh completed', [
+                'agent_id' => $this->agent->id,
+                'resolved' => count($customerRows),
+                'requested' => count($uniqueCustomerCodes),
+            ]);
+        }
 
         // ── Step 3 & 4: enrich + persist in batches ──────────────────────────
         // Each batch fetches risk detail concurrently (Http::pool), then

@@ -54,6 +54,72 @@ class GlimsApiService
     }
 
     /**
+     * Fetch customer-detail rows for MANY customer codes concurrently.
+     *
+     * Returns an array keyed by customer_code => raw customer row (same shape
+     * searchCustomerByCode() returns per-row), ready to pass into
+     * PolicySyncService::refreshCustomerFromGlimsRow().
+     *
+     * Codes with no match or a failed/errored request are simply absent from
+     * the returned array.
+     *
+     * @param  array<int, string>  $customerCodes
+     * @param  int  $concurrency
+     * @return array<string, array>
+     */
+    public function getCustomersByCode(array $customerCodes, int $concurrency = 15): array
+    {
+        $resolved = [];
+
+        foreach (array_chunk($customerCodes, $concurrency) as $batch) {
+            try {
+                $responses = Http::pool(function ($pool) use ($batch) {
+                    return collect($batch)->map(function ($customerCode) use ($pool) {
+                        return $pool
+                            ->as($customerCode)
+                            ->withHeaders([
+                                'x-api-key'    => $this->apiKey,
+                                'x-api-secret' => $this->apiSecret,
+                                'Accept'       => 'application/json',
+                            ])
+                            ->timeout(15)
+                            ->when(app()->environment('local'), fn($http) => $http->withoutVerifying())
+                            ->get("{$this->baseUrl}/api/customers/search/", [
+                                'search_type'  => 'customer_code',
+                                'search_value' => $customerCode,
+                            ]);
+                    })->all();
+                });
+            } catch (\Exception $e) {
+                Log::error('GlimsApiService: getCustomersByCode pool failed', [
+                    'batch_size' => count($batch),
+                    'error'      => $e->getMessage(),
+                ]);
+                continue;
+            }
+
+            foreach ($batch as $customerCode) {
+                $response = $responses[$customerCode] ?? null;
+
+                if (! $response || $response instanceof \Throwable || $response->failed()) {
+                    Log::warning('GlimsApiService: pooled customer lookup failed', [
+                        'customer_code' => $customerCode,
+                        'error'         => $response instanceof \Throwable ? $response->getMessage() : ($response->status() ?? 'no response'),
+                    ]);
+                    continue;
+                }
+
+                $results = $response->json('results') ?? [];
+                if (! empty($results[0])) {
+                    $resolved[$customerCode] = $results[0];
+                }
+            }
+        }
+
+        return $resolved;
+    }
+
+    /**
      * Verify a customer exists and return a normalised customer array.
      * Returns null if not found.
      *
