@@ -40,13 +40,47 @@
         }
     </script>
     <style>
-        body {
+        /* ── Fixed Background (consistent with all pages) ── */
+        .bg-fixed-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
             background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
+            background-repeat: no-repeat;
         }
 
+        .bg-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(15, 23, 42, 0.60);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+
+        /* ── Body ── */
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+            z-index: 1;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ── Login card ── */
+        .login-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* ── Auth Modal ── */
         #authModal {
             display: none;
             opacity: 0;
@@ -177,31 +211,212 @@
             border-color: #2563eb;
             background: #eff6ff;
         }
+
+        /* ── Responsive tweaks ── */
+        @media (max-width: 480px) {
+            body {
+                padding: 0.75rem;
+            }
+
+            .nav-container {
+                padding: 1rem 0.75rem !important;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .nav-brand img {
+                height: 32px !important;
+                width: auto !important;
+            }
+
+            .nav-links {
+                font-size: 0.75rem;
+                gap: 0.5rem;
+            }
+
+            .nav-links .divider {
+                display: none;
+            }
+
+            .login-card .p-6 {
+                padding: 1.25rem 1rem !important;
+            }
+
+            .login-card .px-6 {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+
+            .login-card .py-4 {
+                padding-top: 0.75rem !important;
+                padding-bottom: 0.75rem !important;
+            }
+
+            .login-card h2 {
+                font-size: 1.1rem !important;
+            }
+
+            .login-card p.text-xs {
+                font-size: 0.65rem !important;
+            }
+
+            .login-card label {
+                font-size: 0.8rem !important;
+            }
+
+            .login-card input[type="text"] {
+                font-size: 0.85rem !important;
+                padding: 0.6rem 0.75rem 0.6rem 2.5rem !important;
+            }
+
+            .login-card .relative i {
+                font-size: 0.8rem !important;
+            }
+
+            .login-card .text-sm {
+                font-size: 0.8rem !important;
+            }
+
+            .login-card .w-10 {
+                width: 2rem !important;
+                height: 2rem !important;
+            }
+
+            .login-card .w-10 i {
+                font-size: 0.8rem !important;
+            }
+
+            .login-card .py-2\.5 {
+                padding-top: 0.6rem !important;
+                padding-bottom: 0.6rem !important;
+            }
+
+            .login-card .rounded-xl {
+                border-radius: 0.75rem !important;
+            }
+
+            .login-card .bg-gray-50 .flex {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.25rem;
+            }
+
+            .login-card .bg-gray-50 .flex a {
+                font-size: 0.65rem !important;
+            }
+
+            #authModalCard {
+                max-width: 95% !important;
+            }
+
+            .otp-digit {
+                width: 2.5rem !important;
+                height: 3.25rem !important;
+                font-size: 1.25rem !important;
+                padding: 0.5rem 0 !important;
+            }
+
+            #authModal .p-8 {
+                padding: 1.5rem 1rem !important;
+            }
+
+            #authModal .p-6 {
+                padding: 1.25rem 1rem !important;
+            }
+
+            #authModal .px-6 {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+
+            #authModal .py-5 {
+                padding-top: 1rem !important;
+                padding-bottom: 1rem !important;
+            }
+
+            .footer-note {
+                font-size: 0.6rem !important;
+                margin-top: 1.5rem !important;
+            }
+
+            /* Tabs on mobile */
+            .tab-group {
+                gap: 0.25rem !important;
+            }
+
+            .tab-group button {
+                font-size: 0.6rem !important;
+                padding: 0.4rem 0.25rem !important;
+            }
+
+            .tab-group button i {
+                font-size: 0.7rem !important;
+            }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+            .login-card .p-6 {
+                padding: 1.5rem 1.5rem !important;
+            }
+
+            .login-card .px-6 {
+                padding-left: 1.5rem !important;
+                padding-right: 1.5rem !important;
+            }
+
+            .nav-container {
+                padding: 1rem 1.5rem !important;
+            }
+
+            .otp-digit {
+                width: 2.75rem !important;
+                height: 3.5rem !important;
+            }
+        }
     </style>
 </head>
 
-<body class="font-sans antialiased min-h-screen flex items-center justify-center p-4 relative">
-    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]"></div>
+<body>
 
-    <nav class="absolute top-0 left-0 w-full p-6 z-20 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-            <div class="bg-white/10 p-2 rounded-lg border border-white/20 backdrop-blur-sm">
-                <img src="images/Vanguard.png" alt="Vanguard Assurance Logo" class="w-40 h-12 object-contain" />
-            </div>
-        </div>
-        <div class="flex gap-4">
-            <a href="#" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Contact
-                Support</a>
-            <a href="{{ route('staff.login') }}"
-                class="text-white/80 hover:text-white text-sm font-medium transition-colors border-l border-white/30 pl-4 ml-2">
-                <i class="fas fa-user-lock mr-1"></i>Staff Login
+    <!-- ═══ FIXED BACKGROUND ═══ -->
+    <div class="bg-fixed-container" aria-hidden="true">
+        <div class="bg-overlay"></div>
+    </div>
+
+    <!-- ═══ TOP NAVIGATION (consistent with all pages) ═══ -->
+    <nav class="fixed top-0 left-0 w-full z-20 nav-container" style="padding: 1.25rem 2rem;">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+
+            <!-- Brand -->
+            <a href="/">
+                <div class="flex items-center gap-3 shrink-0">
+                    <div class="bg-white/10 p-2 rounded-xl border border-white/20 backdrop-blur-sm nav-brand">
+                        <img src="{{ asset('images/Vanguard.png') }}" alt="Vanguard Assurance Logo"
+                            class="h-10 w-auto object-contain" style="height: 40px;" />
+                    </div>
+                </div>
             </a>
+
+            <!-- Nav Links -->
+            <div class="nav-links flex items-center gap-2 sm:gap-4 text-sm font-medium">
+                <a href="/"
+                    class="text-white/80 hover:text-white transition-colors whitespace-nowrap text-xs sm:text-sm">
+                    <i class="fas fa-arrow-left mr-1"></i>Back to Portal
+                </a>
+                <span class="text-white/20 hidden xs:inline">|</span>
+                <a href="#"
+                    class="text-white/80 hover:text-white transition-colors whitespace-nowrap text-xs sm:text-sm">
+                    <i class="fas fa-headset mr-1"></i>Contact Support
+                </a>
+            </div>
         </div>
     </nav>
 
-    <!-- Login Card -->
-    <div class="max-w-md w-full relative z-10 mt-16 mb-4">
-        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="max-w-md w-full relative z-10 mt-16 mb-4 px-3 sm:px-0">
+
+        <!-- Login Card -->
+        <div class="login-card bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <div class="bg-brand-900 px-6 py-4 text-center">
                 <div class="flex items-center justify-center gap-3 mb-1">
                     <div
@@ -224,7 +439,7 @@
                 </div>
 
                 {{-- Login type tabs --}}
-                {{-- <div class="flex bg-gray-100 rounded-xl p-1 gap-1 mb-5">
+                {{-- <div class="tab-group flex bg-gray-100 rounded-xl p-1 gap-1 mb-5">
                     <template x-for="tab in tabs" :key="tab.value">
                         <button type="button" @click="selectType(tab.value)"
                             :class="[
@@ -291,13 +506,19 @@
                 </form>
             </div>
 
-            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-between text-xs text-gray-400">
+            <div
+                class="bg-gray-50 px-6 py-3 border-t border-gray-100 flex flex-wrap justify-between items-center text-xs text-gray-400 gap-2">
                 <span><i class="fas fa-shield-alt mr-1"></i> 256-bit SSL</span>
                 <div class="flex gap-3">
                     <a href="#" class="hover:text-gray-600">Privacy</a>
                     <a href="#" class="hover:text-gray-600">Terms</a>
                 </div>
             </div>
+        </div>
+
+        <!-- Footer note -->
+        <div class="footer-note text-center mt-6 text-gray-300 text-xs">
+            <p>© 2026 {{ $company->name ?? 'Vanguard Assurance' }}. Secure role-based access.</p>
         </div>
     </div>
 
@@ -828,7 +1049,7 @@
                     default:
                         showError(data.message ??
                             'We were unable to verify your details. Please contact customer service for assistance.'
-                            );
+                        );
                         break;
                 }
             }

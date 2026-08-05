@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\Company;
 use App\Models\Policy;
 use App\Services\GenovaApiService;
 use App\Services\GlimsApiService;
@@ -30,7 +31,8 @@ class AuthController extends Controller
 
     public function showUserSelectForm()
     {
-        return view('auth.user-select');
+        $company = Company::first();
+        return view('auth.user-select', compact('company'));
     }
 
     public function showLoginForm()
