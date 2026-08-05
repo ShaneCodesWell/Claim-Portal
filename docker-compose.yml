@@ -20,6 +20,25 @@ services:
         depends_on:
             - pgsql
 
+    laravel.queue:
+        platform: linux/amd64
+        image: sail-8.3/app
+        build:
+            context: ./docker/8.3
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - pgsql
+        command: php artisan queue:work --tries=3 --sleep=1
+
     pgsql:
         image: postgres:15
         ports:
