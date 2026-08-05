@@ -25,7 +25,7 @@ class UpdateAgentRequest extends FormRequest
         return [
             'name'              => 'required|string|max:255',
             'email'             => [
-                'required',
+                'nullable',
                 'email',
                 Rule::unique('agents', 'email')
                     ->ignore($this->route('agent')),

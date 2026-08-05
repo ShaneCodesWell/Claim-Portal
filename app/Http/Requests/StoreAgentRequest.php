@@ -23,7 +23,7 @@ class StoreAgentRequest extends FormRequest
     {
         return [
             'name'              => 'required|string|max:255',
-            'email'             => 'required|email|max:255|unique:agents,email',
+            'email'             => 'nullable|email|max:255|unique:agents,email',
             'phone'             => 'nullable|string|max:20',
             'gender'            => 'nullable|in:male,female,other',
             'glims_agent_code'  => 'nullable|string',
