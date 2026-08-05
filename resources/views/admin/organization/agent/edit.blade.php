@@ -44,7 +44,7 @@
                     {{-- Email --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                        <input type="email" name="email" value="{{ $agent->email }}" required
+                        <input type="email" name="email" value="{{ $agent->email }}"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     {{-- Phone Number --}}
