@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCompanyRequest;
@@ -18,7 +19,8 @@ class CompanyController extends Controller
     {
         $company = Company::firstOrFail();
 
-        $staffMembers = User::latest()->paginate(5, ['*'], 'staff_page')
+        $staffMembers = User::orderBy('name', 'asc')
+            ->paginate(5, ['*'], 'staff_page')
             ->appends([
                 'tab'         => 'tab-team',
                 'agents_page' => request('agents_page', 1),
@@ -26,15 +28,27 @@ class CompanyController extends Controller
                 'dept_page'   => request('dept_page', 1),
             ]);
 
-        $agents = Agent::latest()->paginate(10, ['*'], 'agents_page')
+        $agentSearch = trim((string) request('agent_search', ''));
+
+        $agents = Agent::when($agentSearch, function ($query) use ($agentSearch) {
+            $query->where(function ($q) use ($agentSearch) {
+                $q->where('name', 'like', "%{$agentSearch}%")
+                    ->orWhere('glims_agent_code', 'like', "%{$agentSearch}%")
+                    ->orWhere('genova_agent_code', 'like', "%{$agentSearch}%");
+            });
+        })
+            ->orderBy('name', 'asc')
+            ->paginate(10, ['*'], 'agents_page')
             ->appends([
-                'tab'         => 'tab-agents',
-                'staff_page'  => request('staff_page', 1),
-                'branch_page' => request('branch_page', 1),
-                'dept_page'   => request('dept_page', 1),
+                'tab'          => 'tab-agents',
+                'agent_search' => $agentSearch,
+                'staff_page'   => request('staff_page', 1),
+                'branch_page'  => request('branch_page', 1),
+                'dept_page'    => request('dept_page', 1),
             ]);
 
-        $branches = Branch::paginate(10, ['*'], 'branch_page')
+        $branches = Branch::orderBy('name', 'asc')
+            ->paginate(10, ['*'], 'branch_page')
             ->appends([
                 'tab'         => 'tab-branches',
                 'staff_page'  => request('staff_page', 1),
@@ -42,7 +56,9 @@ class CompanyController extends Controller
                 'dept_page'   => request('dept_page', 1),
             ]);
 
-        $departments = Department::where('is_active', true)->paginate(10, ['*'], 'dept_page')
+        $departments = Department::where('is_active', true)
+            ->orderBy('name', 'asc')
+            ->paginate(10, ['*'], 'dept_page')
             ->appends([
                 'tab'         => 'tab-departments',
                 'staff_page'  => request('staff_page', 1),
@@ -50,7 +66,7 @@ class CompanyController extends Controller
                 'branch_page' => request('branch_page', 1),
             ]);
 
-        return view('admin.organization.index', compact('company', 'staffMembers', 'departments', 'branches', 'agents'));
+        return view('admin.organization.index', compact('company', 'staffMembers', 'departments', 'branches', 'agents', 'agentSearch'));
     }
 
     /**

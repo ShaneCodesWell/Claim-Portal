@@ -437,7 +437,8 @@
     <!-- Tab Content: Agents -->
     <div id="tab-agents" class="org-section hidden">
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
+            <div
+                class="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
                     <h3 class="font-semibold text-gray-800 flex items-center gap-2">
                         <i class="fas fa-users-cog text-blue-500"></i>
@@ -445,11 +446,35 @@
                     </h3>
                     <p class="text-xs text-gray-500 mt-1">Manage access agents and intermediaries</p>
                 </div>
-                <a href="{{ route('agents.create') }}"
-                    class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg transition">
-                    <i class="fas fa-plus-circle text-xs"></i>
-                    Add Intermediary
-                </a>
+
+                <div class="flex items-center gap-2">
+                    <form method="GET" action="{{ route('organization') }}" class="relative">
+                        <input type="hidden" name="tab" value="tab-agents">
+                        <input type="hidden" name="staff_page" value="{{ request('staff_page', 1) }}">
+                        <input type="hidden" name="branch_page" value="{{ request('branch_page', 1) }}">
+                        <input type="hidden" name="dept_page" value="{{ request('dept_page', 1) }}">
+                        <div class="relative">
+                            <i
+                                class="fas fa-search text-gray-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" name="agent_search" value="{{ $agentSearch ?? '' }}"
+                                placeholder="Search name or code..."
+                                class="pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg w-56 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </form>
+
+                    @if (!empty($agentSearch))
+                        <a href="{{ route('organization', array_merge(request()->except('agent_search', 'agents_page'), ['tab' => 'tab-agents'])) }}"
+                            class="text-xs text-gray-500 hover:text-gray-700">
+                            Clear
+                        </a>
+                    @endif
+
+                    <a href="{{ route('agents.create') }}"
+                        class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-lg transition">
+                        <i class="fas fa-plus-circle text-xs"></i>
+                        Add Intermediary
+                    </a>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full">
@@ -617,6 +642,18 @@
                     document.getElementById('logoInput').click();
                 });
             });
+
+            // Added the Search staff
+            const agentSearchInput = document.querySelector('input[name="agent_search"]');
+            if (agentSearchInput) {
+                let debounceTimer;
+                agentSearchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        this.form.submit();
+                    }, 500);
+                });
+            }
 
             // Delete Staff SweetAlert
             document.querySelectorAll('.delete-staff-form').forEach(form => {

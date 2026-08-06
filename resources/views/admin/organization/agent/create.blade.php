@@ -161,27 +161,33 @@
             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <i class="fas fa-file-excel text-green-600"></i> Bulk Upload (Excel)
             </h3>
-            <div
-                class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-300 transition">
-                <i class="fas fa-cloud-upload-alt text-gray-400 text-4xl mb-3"></i>
-                <p class="text-sm text-gray-600 mb-2">Upload an Excel (.xlsx, .xls) or CSV file</p>
-                <p class="text-xs text-gray-400 mb-4">File must contain columns: name, email, role, department,
-                    password</p>
-                <label
-                    class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition">
-                    <i class="fas fa-upload"></i> Choose File
-                    <input type="file" id="bulkFile" accept=".xlsx, .xls, .csv" class="hidden">
-                </label>
-                <p id="fileNameDisplay" class="text-xs text-gray-500 mt-2 hidden"></p>
-                <button id="uploadBulkBtn"
-                    class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50"
-                    disabled>
-                    <i class="fas fa-upload mr-2"></i>Upload & Process
-                </button>
-            </div>
+            <form action="{{ route('agents.bulk-upload') }}" method="POST" enctype="multipart/form-data"
+                id="bulkUploadForm">
+                @csrf
+                <div
+                    class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-300 transition">
+                    <i class="fas fa-cloud-upload-alt text-gray-400 text-4xl mb-3"></i>
+                    <p class="text-sm text-gray-600 mb-2">Upload an Excel (.xlsx, .xls) or CSV file</p>
+                    <p class="text-xs text-gray-400 mb-4">Columns: name, email, phone, gender, date_of_birth, league,
+                        glims_agent_code, genova_agent_code, branch, user_category, sub_user_category</p>
+                    <label
+                        class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition">
+                        <i class="fas fa-upload"></i> Choose File
+                        <input type="file" name="file" id="bulkFile" accept=".xlsx,.xls,.csv" class="hidden"
+                            required>
+                    </label>
+                    <p id="fileNameDisplay" class="text-xs text-gray-500 mt-2 hidden"></p>
+                    <button type="submit" id="uploadBulkBtn"
+                        class="mt-4 bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                        disabled>
+                        <i class="fas fa-upload mr-2"></i>Upload & Process
+                    </button>
+                </div>
+            </form>
             <div class="mt-4 text-xs text-gray-500">
                 <i class="fas fa-download mr-1"></i>
-                <a href="#" class="text-blue-600 hover:underline">Download sample Excel template</a>
+                <a href="{{ route('agents.template') }}" class="text-blue-600 hover:underline">Download sample Excel
+                    template</a>
             </div>
         </div>
     </div>
@@ -191,6 +197,7 @@
         const fileInput = document.getElementById('bulkFile');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
         const uploadBtn = document.getElementById('uploadBulkBtn');
+        const bulkUploadForm = document.getElementById('bulkUploadForm');
 
         fileInput.addEventListener('change', function(e) {
             if (this.files.length > 0) {
@@ -203,35 +210,44 @@
             }
         });
 
-        uploadBtn.addEventListener('click', function() {
-            if (!fileInput.files.length) return;
-            alert(`Uploading ${fileInput.files[0].name}... (demo - process on server)`);
-            // In real implementation, use FormData and AJAX
-        });
+        // Show a spinner and lock the button once the upload is submitted
+        bulkUploadForm.addEventListener('submit', function(e) {
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                return;
+            }
 
-        // Sample Excel download (just a placeholder)
-        document.querySelector('a[href="#"]').addEventListener('click', function(e) {
-            e.preventDefault();
-            alert('Sample Excel template download would start here.');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = `
+            <svg class="animate-spin h-4 w-4 text-white inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Processing... this may take a moment
+        `;
+            // Form submits normally after this — full page navigation happens on redirect
         });
 
         // Staff search (simple filter)
         const staffSearch = document.getElementById('staffSearch');
-        const tableRows = document.querySelectorAll('#staffTableBody tr');
-        staffSearch.addEventListener('input', function() {
-            const term = this.value.toLowerCase();
-            let visible = 0;
-            tableRows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                if (text.includes(term)) {
-                    row.style.display = '';
-                    visible++;
-                } else {
-                    row.style.display = 'none';
-                }
+        if (staffSearch) {
+            const tableRows = document.querySelectorAll('#staffTableBody tr');
+            staffSearch.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                let visible = 0;
+                tableRows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    if (text.includes(term)) {
+                        row.style.display = '';
+                        visible++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                const countEl = document.getElementById('showingCount');
+                if (countEl) countEl.innerText = visible;
             });
-            document.getElementById('showingCount').innerText = visible;
-        });
+        }
     </script>
     <script src="{{ asset('js/agent-category.js') }}"></script>
 </x-layouts.staff>

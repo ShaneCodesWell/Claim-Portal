@@ -48,7 +48,7 @@ class UpdateAgentRequest extends FormRequest
             ],
             'date_of_birth'     => 'nullable|date',
             'league'            => 'nullable|string|max:100',
-            'branch_id'         => 'required|exists:branches,id',
+            'branch_id'         => 'nullable|exists:branches,id',
             'user_category'     => 'nullable|string|max:255',
             'sub_user_category' => 'nullable|string|max:255',
         ];

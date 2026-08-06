@@ -13,6 +13,9 @@ use App\Models\Policy;
 use App\Services\GlimsApiService;
 use App\Services\GenovaApiService;
 use App\Services\AgentSyncService;
+use App\Imports\AgentsImport;
+use App\Exports\AgentTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -214,5 +217,33 @@ class AgentController extends Controller
         Agent::destroy($agent->id);
 
         return back()->with('success', 'Agent removed.');
+    }
+
+    public function bulkUpload(Request $request, AgentSyncService $agentSync)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        $import = new AgentsImport($agentSync);
+        Excel::import($import, $request->file('file'));
+
+        $failures = $import->failures();
+
+        if ($failures->isNotEmpty()) {
+            return redirect()
+                ->route('organization', ['tab' => 'agents'])
+                ->with('warning', "Import finished with {$failures->count()} row(s) skipped.")
+                ->with('import_failures', $failures);
+        }
+
+        return redirect()
+            ->route('organization', ['tab' => 'agents'])
+            ->with('success', 'Agents imported successfully.');
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new AgentTemplateExport, 'agent_import_template.xlsx');
     }
 }
