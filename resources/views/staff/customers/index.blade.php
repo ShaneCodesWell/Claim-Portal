@@ -185,7 +185,7 @@
     </div>
 
     <script>
-        const input = document.querySelector('input[placeholder="Search client or policy..."]');
+        const input = document.querySelector('input[placeholder="Filter customers"]');
         const params = new URLSearchParams(window.location.search);
 
         // Restore value and focus on page load

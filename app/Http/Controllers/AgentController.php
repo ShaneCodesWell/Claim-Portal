@@ -246,4 +246,24 @@ class AgentController extends Controller
     {
         return Excel::download(new AgentTemplateExport, 'agent_import_template.xlsx');
     }
+
+    public function searchAgent(Request $request)
+    {
+        $agentSearch = trim((string) $request->get('agent_search', ''));
+
+        $agents = Agent::when($agentSearch, function ($query) use ($agentSearch) {
+            $query->where(function ($q) use ($agentSearch) {
+                $q->where('name', 'like', "%{$agentSearch}%")
+                    ->orWhere('glims_agent_code', 'like', "%{$agentSearch}%")
+                    ->orWhere('genova_agent_code', 'like', "%{$agentSearch}%")
+                    ->orWhere('phone', 'like', "%{$agentSearch}%")
+                ;
+            });
+        })
+            ->orderBy('name', 'asc')
+            ->paginate(10, ['*'], 'agents_page')
+            ->appends(['agent_search' => $agentSearch]);
+
+        return view('admin.organization.agent._table', compact('agents', 'agentSearch'));
+    }
 }

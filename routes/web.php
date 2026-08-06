@@ -236,6 +236,7 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::post('/settings/agents-store', [AgentController::class, 'store'])->name('agents.store');
     Route::post('agents/bulk-upload', [AgentController::class, 'bulkUpload'])->name('agents.bulk-upload');
     Route::get('agents/template', [AgentController::class, 'downloadTemplate'])->name('agents.template');
+    Route::get('agents/search', [AgentController::class, 'searchAgent'])->name('agents.search');
     Route::get('/settings/edit-agent/{agent}', [AgentController::class, 'edit'])->name('agents.edit');
     Route::put('/settings/agents-update/{agent}', [AgentController::class, 'update'])->name('agents.update');
     Route::delete('/settings/agents-delete/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
