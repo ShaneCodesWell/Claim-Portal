@@ -436,9 +436,7 @@
 
     <!-- Tab Content: Agents -->
     <div id="tab-agents" class="org-section hidden">
-        <div id="tab-agents" class="org-section hidden">
-            @include('admin.organization.agent._table', compact('agents', 'agentSearch'))
-        </div>
+        @include('admin.organization.agent._table', compact('agents', 'agentSearch'))
     </div>
 
     <script>

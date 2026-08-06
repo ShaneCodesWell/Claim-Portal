@@ -34,7 +34,8 @@ class CompanyController extends Controller
             $query->where(function ($q) use ($agentSearch) {
                 $q->where('name', 'like', "%{$agentSearch}%")
                     ->orWhere('glims_agent_code', 'like', "%{$agentSearch}%")
-                    ->orWhere('genova_agent_code', 'like', "%{$agentSearch}%");
+                    ->orWhere('genova_agent_code', 'like', "%{$agentSearch}%")
+                    ->orWhere('phone', 'like', "%{$agentSearch}%");
             });
         })
             ->orderBy('name', 'asc')
