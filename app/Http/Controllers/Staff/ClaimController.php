@@ -92,6 +92,14 @@ class ClaimController extends Controller
         return view('staff.claims.show', compact('claim', 'staffMembers'));
     }
 
+    public function liabilityGuide(Claim $claim)
+    {
+
+        $claim->load(['customer', 'policy', 'assignedTo', 'branch', 'activities.staff', 'documents', 'surveyor', 'committeeDecidedBy']);
+
+        return view('staff.claims.liability-guide.index', compact('claim'));
+    }
+
     public function create(Request $request, Customer $customer)
     {
         $policyId = $request->query('policy_id');

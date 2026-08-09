@@ -100,6 +100,9 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('claims/archive', [StaffClaimController::class, 'archive'])->name('staff.claims.archive');
     Route::get('claims/{claim}', [StaffClaimController::class, 'show'])->name('staff.claims.show');
 
+    // Liability Guide
+    Route::get('claims/{claim}/liability-guide', [StaffClaimController::class, 'liabilityGuide'])->name('staff.claims.liability-guide');    
+
     // Documents
     Route::post('claims/{claim}/documents', [StaffClaimController::class, 'uploadDocuments'])->name('staff.claims.documents');
     Route::get('/documents/{document}/preview', [StaffClaimController::class, 'previewDocument'])->name('staff.documents.preview');

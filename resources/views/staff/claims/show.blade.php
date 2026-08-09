@@ -627,16 +627,20 @@
                         </h4>
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-4">
                             <p class="text-sm text-gray-700">
-                                The liability guide provides a structured approach to assessing liability in this claim.
-                                It includes questions about fault, witness statements, and other relevant factors.
-                                Please complete the guide to help determine liability.
+                                Please note, it is necessary that great care should be taken in completing this guide
+                                and
+                                the information given therein should be strictly accurate, whether it is in the
+                                insured's
+                                favor or otherwise. Do not make any payment, offer or promise of any payment, or admit
+                                liability in any way, as doing so may prejudice the company's position and make
+                                settlement of the claim difficult.
                             </p>
                             <p class="text-sm text-gray-600 mt-2">
                                 Once completed, the guide will be stored with this claim for future reference.
                             </p>
                         </div>
                         {{-- Replace the href with the actual route when defined --}}
-                        <a href="#"
+                        <a href="{{ route('staff.claims.liability-guide', $claim) }}"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition font-medium">
                             <i class="fas fa-edit"></i> Complete Liability Guide
                         </a>
