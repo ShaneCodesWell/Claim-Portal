@@ -43,13 +43,14 @@ class AgentsImport implements ToCollection, WithHeadingRow, WithValidation, Skip
                 $branchId = $this->branchLookup[Str::lower($data['branch'])] ?? null;
             }
 
-            // Match priority: glims code, then genova code, then email
+            // Match priority: genova code first (drives API policy pulls — must be preserved
+            // even when two records share a glims code), then glims, then email
             $existing = null;
-            if ($data['glims_agent_code']) {
-                $existing = Agent::where('glims_agent_code', $data['glims_agent_code'])->first();
-            }
-            if (!$existing && $data['genova_agent_code']) {
+            if ($data['genova_agent_code']) {
                 $existing = Agent::where('genova_agent_code', $data['genova_agent_code'])->first();
+            }
+            if (!$existing && $data['glims_agent_code']) {
+                $existing = Agent::where('glims_agent_code', $data['glims_agent_code'])->first();
             }
             if (!$existing && $data['email']) {
                 $existing = Agent::where('email', $data['email'])->first();
@@ -62,6 +63,12 @@ class AgentsImport implements ToCollection, WithHeadingRow, WithValidation, Skip
                     if ($data[$field] !== null && $data[$field] !== '') {
                         $updateData[$field] = $data[$field];
                     }
+                }
+
+                // Backfill glims_agent_code only if the existing record doesn't have one yet —
+                // never overwrite an already-set code
+                if (empty($existing->glims_agent_code) && !empty($data['glims_agent_code'])) {
+                    $updateData['glims_agent_code'] = $data['glims_agent_code'];
                 }
 
                 if (!empty($updateData)) {
