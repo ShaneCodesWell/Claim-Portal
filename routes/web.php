@@ -240,11 +240,3 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::put('/settings/agents-update/{agent}', [AgentController::class, 'update'])->name('agents.update');
     Route::delete('/settings/agents-delete/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
 });
-
-// Offline Application
-// Route::prefix('offline')->name('offline.')->group(function () {
-//     Route::get('/dashboard', [OfflineController::class, 'index'])->name('dashboard');
-//     Route::get('/motor-form', [OfflineController::class, 'motorForm'])->name('motor-form');
-//     Route::get('/general-accident-form', [OfflineController::class, 'generalAccidentForm'])->name('general-accident-form');
-//     Route::get('/fire-form', [OfflineController::class, 'fireForm'])->name('fire-form');
-// });

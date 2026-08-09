@@ -420,7 +420,63 @@
                 </div>
             </section>
 
-            {{-- ── SECTION 4: THIRD PARTIES ── --}}
+            {{-- ── SECTION 4: DAMAGE ASSESSMENT ── --}}
+            <section class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
+                    DAMAGE ASSESSMENT
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Type of Damage <span class="text-red-500">*</span>
+                        </label>
+                        <select name="damage_type"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                            <option value="">Select type</option>
+                            @foreach (['collision' => 'Collision/Accident', 'fire' => 'Fire', 'theft' => 'Theft', 'vandalism' => 'Vandalism', 'flood' => 'Flood / Water Damage', 'natural_disaster' => 'Natural Disaster', 'windscreen' => 'Windscreen Damage', 'other' => 'Other'] as $val => $label)
+                                <option value="{{ $val }}"
+                                    {{ ($f['damage_type'] ?? '') === $val ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Damage Severity
+                        </label>
+                        <select name="damage_severity"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                            <option value="">Select severity</option>
+                            @foreach (['minor' => 'Minor', 'moderate' => 'Moderate', 'severe' => 'Severe', 'total_loss' => 'Total Loss'] as $val => $label)
+                                <option value="{{ $val }}"
+                                    {{ ($f['damage_severity'] ?? '') === $val ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Estimated Repair Cost (GHS)
+                        </label>
+                        <input type="number" step="0.01" name="estimated_repair_cost"
+                            value="{{ $f['estimated_repair_cost'] ?? '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+                            placeholder="e.g. 5000.00">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Additional Damage Notes
+                        </label>
+                        <textarea name="damage_notes" rows="2"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+                            placeholder="Any additional details about the damage...">{{ $f['damage_notes'] ?? '' }}</textarea>
+                    </div>
+                </div>
+            </section>
+
+            {{-- ── SECTION 5: THIRD PARTIES ── --}}
             <section class="mb-8">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
                     THIRD PARTIES INVOLVED IN ACCIDENT
@@ -590,30 +646,87 @@
                             @endforelse
                         </div>
                     </div>
-                </div>
 
-                {{-- Police report --}}
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Was the accident reported to the
-                        police? <span class="text-red-500">*</span></label>
-                    <div class="flex flex-wrap gap-4">
-                        <label class="flex items-center"><input type="radio" name="police_report" value="yes"
-                                class="conditional-radio mr-2" data-target="policeReportSection"
-                                {{ ($f['police_report'] ?? '') === 'yes' ? 'checked' : '' }}> Yes</label>
-                        <label class="flex items-center"><input type="radio" name="police_report" value="no"
-                                class="conditional-radio mr-2" data-target="policeReportSection"
-                                {{ ($f['police_report'] ?? '') === 'no' ? 'checked' : '' }}> No</label>
+                    {{-- ── Police Report (now inside thirdPartySection) ── --}}
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Was the accident reported to the
+                            police? <span class="text-red-500">*</span></label>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center"><input type="radio" name="police_report"
+                                    value="yes" class="conditional-radio mr-2" data-target="policeReportSection"
+                                    {{ ($f['police_report'] ?? '') === 'yes' ? 'checked' : '' }}> Yes</label>
+                            <label class="flex items-center"><input type="radio" name="police_report"
+                                    value="no" class="conditional-radio mr-2" data-target="policeReportSection"
+                                    {{ ($f['police_report'] ?? '') === 'no' ? 'checked' : '' }}> No</label>
+                        </div>
+                        <div id="policeReportSection"
+                            class="{{ ($f['police_report'] ?? '') === 'yes' ? '' : 'hidden' }} mt-3 pl-4 border-l-2 border-blue-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">State when and where reported
+                                <span class="text-red-500">*</span></label>
+                            <textarea name="police_report_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['police_report_details'] ?? '' }}</textarea>
+                        </div>
                     </div>
-                    <div id="policeReportSection"
-                        class="{{ ($f['police_report'] ?? '') === 'yes' ? '' : 'hidden' }} mt-3 pl-4 border-l-2 border-blue-200">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">State when and where reported <span
-                                class="text-red-500">*</span></label>
-                        <textarea name="police_report_details" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">{{ $f['police_report_details'] ?? '' }}</textarea>
-                    </div>
+
                 </div>
             </section>
 
-            {{-- ── SECTION 5: DOCUMENTS ── --}}
+            {{-- ── SECTION 6: PAYMENT DETAILS (Clean, with dropdown) ── --}}
+            <section class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
+                    PAYMENT DETAILS
+                </h3>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    {{-- Payment Type – Dropdown --}}
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="paymentType">
+                            Payment Method <span class="text-red-500">*</span>
+                        </label>
+                        <select name="payment_type" id="paymentType"
+                            class="w-full md:w-1/3 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none bg-white transition">
+                            <option value="">Select payment method</option>
+                            @foreach (['bank' => 'Bank Transfer', 'mobile_money' => 'Mobile Money', 'other' => 'Other'] as $val => $label)
+                                <option value="{{ $val }}"
+                                    {{ ($f['payment_type'] ?? '') === $val ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Account & Provider Fields --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- Account Number / Mobile Money Number --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" id="accountLabel">
+                                Account Number <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="payment_account" value="{{ $f['payment_account'] ?? '' }}"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition"
+                                placeholder="Enter account or mobile money number">
+                        </div>
+
+                        {{-- Provider / Bank Name (conditional) --}}
+                        <div id="providerField"
+                            class="{{ in_array($f['payment_type'] ?? '', ['bank', 'mobile_money']) ? '' : 'hidden' }} transition-all duration-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-1" id="providerLabel">
+                                Bank Name / Mobile Network <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="payment_provider" value="{{ $f['payment_provider'] ?? '' }}"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition"
+                                placeholder="e.g. GTBank, MTN, Vodafone">
+                        </div>
+                    </div>
+
+                    {{-- Optional note --}}
+                    <p class="text-xs text-gray-400 mt-4 border-t border-gray-100 pt-3">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Please ensure the payment details are accurate to avoid delays.
+                    </p>
+                </div>
+            </section>
+
+            {{-- ── SECTION 7: DOCUMENTS ── --}}
             <section class="mb-8">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">
                     Supporting Documents
@@ -702,7 +815,7 @@
                 </div>
             </section>
 
-            {{-- ── SECTION 6: STAFF NOTE (staff edit only) ── --}}
+            {{-- ── SECTION 8: STAFF NOTE (staff edit only) ── --}}
             @if ($isStaff || ($isAgent && $isEdit))
                 <section class="mb-8">
                     <h3
@@ -720,7 +833,7 @@
                 </section>
             @endif
 
-            {{-- ── SECTION 6/7: DECLARATION (customer only) ── --}}
+            {{-- ── SECTION 9: DECLARATION (customer only) ── --}}
             @if (!$isStaff && !$isAgent)
                 <section class="mb-8">
                     <h3
@@ -759,7 +872,8 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Date of Declaration <span
                                     class="text-red-500">*</span></label>
-                            <input type="date" name="declaration_date" value="{{ $f['declaration_date'] ?? '' }}"
+                            <input type="date" name="declaration_date"
+                                value="{{ $f['declaration_date'] ?? '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         </div>
                         <div>
@@ -953,6 +1067,43 @@
                 if (insuranceField) insuranceField.required = true;
             }
         });
+
+        // ── Payment type conditional (dropdown) ──────────────────────────
+        const paymentType = document.getElementById('paymentType');
+        const providerField = document.getElementById('providerField');
+        const accountLabel = document.getElementById('accountLabel');
+        const providerLabel = document.getElementById('providerLabel');
+
+        function updatePaymentFields() {
+            const type = paymentType?.value;
+
+            // Show provider field only for bank or mobile money
+            if (type === 'bank' || type === 'mobile_money') {
+                providerField?.classList.remove('hidden');
+                providerField?.querySelectorAll('input').forEach(f => f.required = true);
+                if (providerLabel) {
+                    providerLabel.textContent = type === 'bank' ? 'Bank Name' : 'Mobile Network';
+                }
+            } else {
+                providerField?.classList.add('hidden');
+                providerField?.querySelectorAll('input').forEach(f => {
+                    f.required = false;
+                    f.value = '';
+                });
+            }
+
+            // Update account label
+            if (accountLabel) {
+                let labelText = 'Account Reference';
+                if (type === 'bank') labelText = 'Bank Account Number';
+                else if (type === 'mobile_money') labelText = 'Mobile Money Number';
+                accountLabel.innerHTML = `${labelText} <span class="text-red-500">*</span>`;
+            }
+        }
+
+        paymentType?.addEventListener('change', updatePaymentFields);
+        // Run on page load to set initial state
+        updatePaymentFields();
 
         // ── Injured persons ────────────────────────────────────────────────────
         let yourVehicleCounter = {{ count($yourVehicleInjured) }};
@@ -1271,6 +1422,13 @@
                 involved_vehicles: collectVehicles('vehiclesContainer'),
                 police_report: checked('police_report'),
                 police_report_details: val('police_report_details'),
+                payment_type: val('payment_type'),
+                payment_account: val('payment_account'),
+                payment_provider: val('payment_provider'),
+                damage_type: val('damage_type'),
+                damage_severity: val('damage_severity'),
+                estimated_repair_cost: val('estimated_repair_cost'),
+                damage_notes: val('damage_notes'),
                 declaration_date: val('declaration_date'),
                 digital_signature: val('digital_signature'),
                 declaration_agreement: isChecked('declaration_agreement'),
@@ -1331,13 +1489,14 @@
                     includeDeleteDocuments: false
                 });
 
-                const response = await fetch('{{ $isAgent ? route('agent.claims.draft.save') : route('claims.draft.save') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                    },
-                    body: formData,
-                });
+                const response = await fetch(
+                    '{{ $isAgent ? route('agent.claims.draft.save') : route('claims.draft.save') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        body: formData,
+                    });
 
                 const data = await response.json();
 
