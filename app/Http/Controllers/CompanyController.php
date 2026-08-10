@@ -31,11 +31,13 @@ class CompanyController extends Controller
         $agentSearch = trim((string) request('agent_search', ''));
 
         $agents = Agent::when($agentSearch, function ($query) use ($agentSearch) {
-            $query->where(function ($q) use ($agentSearch) {
-                $q->where('name', 'like', "%{$agentSearch}%")
-                    ->orWhere('glims_agent_code', 'like', "%{$agentSearch}%")
-                    ->orWhere('genova_agent_code', 'like', "%{$agentSearch}%")
-                    ->orWhere('phone', 'like', "%{$agentSearch}%");
+            $search = mb_strtolower($agentSearch);
+
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(glims_agent_code) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(genova_agent_code) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(phone) LIKE ?', ["%{$search}%"]);
             });
         })
             ->orderBy('name', 'asc')
