@@ -19,6 +19,7 @@
 
     <!-- Grid of form templates -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
         <!-- Motor Claim Form -->
         <div
             class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-blue-100 transition group">
@@ -90,5 +91,31 @@
                 </a>
             </div>
         </div>
+
+        <!-- Motor Liability Guide -->
+        <div
+            class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-blue-100 transition group">
+            <div class="p-5 flex items-start gap-4">
+                <div
+                    class="h-11 w-11 shrink-0 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition">
+                    <i class="fas fa-shield-alt text-blue-600 text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="font-bold text-gray-800 truncate">Motor Liability Guide</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        <i class="fas fa-clock mr-1"></i>Last edited Aug 1, 2026
+                    </p>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 px-5 py-3 bg-gray-50/60">
+                <a href="{{ route('claim-form-motor-liability') }}"
+                    class="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition">
+                    <i class="fas fa-eye"></i> View form
+                </a>
+            </div>
+        </div>
+
     </div>
+
 </x-layouts.staff>

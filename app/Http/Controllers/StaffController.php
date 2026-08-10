@@ -56,6 +56,11 @@ class StaffController extends Controller
         return view('staff.claim-forms.view.general_accident');
     }
 
+    public function motorLiabilityGuideTemplate()
+    {
+        return view('staff.claim-forms.liability-guide-forms.motor-liability');
+    }
+
     public function createClaimForms()
     {
         return view('staff.claim-forms.create');
