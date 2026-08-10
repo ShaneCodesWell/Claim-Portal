@@ -201,48 +201,37 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-600">{{ $policy['renewal_date'] ?? '-' }}</td>
-                                <td class="px-4 py-4 text-right relative" style="overflow: visible;">
-                                    @php
+                                <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
+                                    style="overflow: visible;"> @php
                                         $key = strtolower($policy['business_class_name'] ?? '');
-                                        $claimFormUrl =
-                                            ($claimFormRoutes[$key] ?? '/motor-form') .
-                                            '?policyId=' .
-                                            $policy['policy_id'];
+                                        $claimFormUrl = ($claimFormRoutes[$key] ?? '/motor-form') . '?policyId=' . $policy['policy_id'];
                                         $isFleet = count($policy['risks'] ?? []) > 1;
-                                    @endphp
-                                    <div class="relative inline-block">
-                                        <button onclick="toggleDropdown(event, {{ $policy['policy_id'] }})"
-                                            id="dropdown-button-{{ $policy['policy_id'] }}"
-                                            class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50 inline-flex items-center">
-                                            Actions
-                                            <i class="fas fa-chevron-down text-xs ml-1"></i>
-                                        </button>
-                                        <div id="dropdown-{{ $policy['policy_id'] }}"
-                                            class="hidden absolute right-0 mt-1 w-48 rounded-xl shadow-lg bg-white border border-gray-200 py-2 z-30">
-                                            <button onclick="viewDetails({{ $policy['policy_id'] }})"
+                                    @endphp <button x-ref="actionsBtn"
+                                        @click="open = !open"
+                                        class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50 inline-flex items-center">
+                                        Actions <i class="fas fa-chevron-down text-xs ml-1"></i> </button> <template
+                                        x-teleport="body">
+                                        <div x-show="open" @click.outside="open = false" x-transition
+                                            x-anchor.bottom-end="$refs.actionsBtn"
+                                            class="fixed w-48 rounded-xl shadow-lg bg-white border border-gray-200 py-2 z-9999">
+                                            <button @click="viewDetails({{ $policy['policy_id'] }}); open = false"
                                                 class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                                <i class="fas fa-eye text-xs text-blue-500"></i>
-                                                View Details
-                                            </button>
+                                                <i class="fas fa-eye text-xs text-blue-500"></i> View Details </button>
                                             @if (!$isFleet)
                                                 @if ($policy['status'] === 'expired')
-                                                    <button onclick="showExpiredPolicyAlert()"
+                                                    <button @click="showExpiredPolicyAlert(); open = false"
                                                         class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-gray-400 cursor-not-allowed opacity-50">
-                                                        <i class="fas fa-file-invoice text-xs"></i>
-                                                        File a Claim
-                                                        <i class="fas fa-lock ml-auto text-xs"></i>
-                                                    </button>
+                                                        <i class="fas fa-file-invoice text-xs"></i> File a Claim <i
+                                                            class="fas fa-lock ml-auto text-xs"></i> </button>
                                                 @else
-                                                    <a href="{{ $claimFormUrl }}"
+                                                    <a href="{{ $claimFormUrl }}" @click="open = false"
                                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                                        <i class="fas fa-file-invoice text-xs text-green-500"></i>
-                                                        File a Claim
-                                                    </a>
+                                                        <i class="fas fa-file-invoice text-xs text-green-500"></i> File
+                                                        a Claim </a>
                                                 @endif
                                             @endif
                                         </div>
-                                    </div>
-                                </td>
+                                    </template> </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -410,7 +399,7 @@
         }
 
         // ── Build a risk card ─────────────────────────────────────────────────────
-        function buildRiskCard(risk, policy = null, isFleet = false) {
+        function buildRiskCard(risk, policy = null, isFleet = false, riskId = null) {
             const regNo = risk.risk_ref_no || '-';
             const make = risk.vehicle_make || '';
             const model = risk.vehicle_model || '';
@@ -436,18 +425,18 @@
             const subtitle = make ? `${regNo} · ${year}` : regNo;
             const searchData = [make, model, regNo, year, chassis].join(' ').toLowerCase();
 
-            const riskClaimUrl = policy ? `${policy.claim_form_url}&riskId=${risk.id}` : '#';
+            const riskClaimUrl = policy ? `${policy.claim_form_url}&riskId=${riskId}` : '#';
             const isExpired = policy?.status === 'expired';
 
             const claimButton = isFleet ?
                 `<div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
                     ${isExpired
                         ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
-                                                                   <i class="fas fa-file-invoice"></i> File a Claim <i class="fas fa-lock ml-1 text-xs"></i>
-                                                               </button>`
+                                                                           <i class="fas fa-file-invoice"></i> File a Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                                                                       </button>`
                         : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
-                                                                   <i class="fas fa-file-invoice"></i> File a Claim
-                                                               </a>`
+                                                                           <i class="fas fa-file-invoice"></i> File a Claim
+                                                                       </a>`
                     }
                 </div>` : '';
 
@@ -472,10 +461,10 @@
                             <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
                         </div>
                         ${covers.length > 0 ? `
-                                                                <div class="border-t border-gray-200 pt-3">
-                                                                    <p class="text-xs text-gray-500 mb-2">Covers Included</p>
-                                                                    <div class="flex flex-wrap gap-1.5">${coverTags}</div>
-                                                                </div>` : ''}
+                                                                        <div class="border-t border-gray-200 pt-3">
+                                                                            <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                                                                            <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                                                                        </div>` : ''}
                         ${claimButton}
                     </div>
                 </div>`;
@@ -506,14 +495,14 @@
             statusEl.className =
                 `text-xs font-semibold px-2.5 py-1 rounded-full ${statusStyles[policy.status] ?? 'text-gray-600 bg-gray-50'}`;
 
-            const riskEntries = Object.values(policy.risks ?? {});
+            const riskEntries = Object.entries(policy.risks ?? {});
             const isFleet = riskEntries.length > 1;
 
             document.getElementById('modal-risk-count').textContent = riskEntries.length;
 
             const risksList = document.getElementById('modal-risks-list');
             risksList.innerHTML = riskEntries.length ?
-                riskEntries.map(risk => buildRiskCard(risk, policy, isFleet)).join('') :
+                riskEntries.map(([riskId, risk]) => buildRiskCard(risk, policy, isFleet, riskId)).join('') :
                 '<p class="text-sm text-gray-400 text-center py-6">No risk details available yet.</p>';
 
             const fileClaimBtn = document.getElementById('modal-file-claim-btn');
