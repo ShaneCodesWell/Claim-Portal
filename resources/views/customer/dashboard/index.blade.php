@@ -229,14 +229,14 @@
                                                     <button onclick="showExpiredPolicyAlert()"
                                                         class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-gray-400 cursor-not-allowed opacity-50">
                                                         <i class="fas fa-file-invoice text-xs"></i>
-                                                        Process Claim
+                                                        File a Claim
                                                         <i class="fas fa-lock ml-auto text-xs"></i>
                                                     </button>
                                                 @else
                                                     <a href="{{ $claimFormUrl }}"
                                                         class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                                         <i class="fas fa-file-invoice text-xs text-green-500"></i>
-                                                        Process Claim
+                                                        File a Claim
                                                     </a>
                                                 @endif
                                             @endif
@@ -443,10 +443,10 @@
                 `<div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
                     ${isExpired
                         ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
-                                                               <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                                                               <i class="fas fa-file-invoice"></i> File a Claim <i class="fas fa-lock ml-1 text-xs"></i>
                                                            </button>`
                         : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
-                                                               <i class="fas fa-file-invoice"></i> Process Claim
+                                                               <i class="fas fa-file-invoice"></i> File a Claim
                                                            </a>`
                     }
                 </div>` : '';

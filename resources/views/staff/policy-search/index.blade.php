@@ -249,7 +249,7 @@
                                                     <a href="{{ $claimUrl }}"
                                                         class="text-gray-700 hover:text-green-600 bg-gray-100 hover:bg-green-50
                                                                px-3 py-1.5 rounded-lg transition text-xs font-medium">
-                                                        <i class="fas fa-file-invoice mr-1"></i> Process Claim
+                                                        <i class="fas fa-file-invoice mr-1"></i> File a Claim
                                                     </a>
                                                 @else
                                                     <span

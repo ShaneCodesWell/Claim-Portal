@@ -79,7 +79,7 @@
                 {{-- Hidden for fleet — each risk card has its own button in that case --}}
                 <button id="staff-modal-claim-btn"
                     class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-sm">
-                    <i class="fas fa-file-invoice"></i> Process Claim
+                    <i class="fas fa-file-invoice"></i> File a Claim
                 </button>
             </div>
         </div>
