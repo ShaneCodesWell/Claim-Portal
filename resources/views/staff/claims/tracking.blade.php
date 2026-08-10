@@ -30,15 +30,16 @@
     <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-2">
         @foreach ([
         'all' => 'All In Progress',
+        'under_review' => 'Under Review',
         'under_survey' => 'Under Survey',
         'survey_completed' => 'Survey Completed',
         'committee_review' => 'Committee Review',
     ] as $value => $label)
             <a href="{{ route('staff.claims.tracking', array_merge(request()->only('search'), ['status' => $value])) }}"
                 class="px-4 py-2 text-sm font-medium
-                    {{ request('status', 'all') === $value
-                        ? 'text-gray-800 border-b-2 border-gray-800'
-                        : 'text-gray-500 hover:text-gray-700' }}">
+            {{ request('status', 'all') === $value
+                ? 'text-gray-800 border-b-2 border-gray-800'
+                : 'text-gray-500 hover:text-gray-700' }}">
                 {{ $label }}
             </a>
         @endforeach
@@ -49,7 +50,8 @@
             <table class="min-w-full w-full table-fixed">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
+                        <th
+                            class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
                             Client</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policy Number</th>
@@ -63,7 +65,8 @@
                             Stage</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             In Stage Since</th>
-                        <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">
+                        <th
+                            class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">
                             Actions</th>
                     </tr>
                 </thead>
@@ -81,7 +84,8 @@
                             </td>
                             <td class="px-4 py-4 font-mono text-sm text-gray-700">{{ $claim->policy->policy_number }}
                             </td>
-                            <td class="px-4 py-4 text-xs truncate font-medium text-gray-900">{{ $claim->policy->product_name }}
+                            <td class="px-4 py-4 text-xs truncate font-medium text-gray-900">
+                                {{ $claim->policy->product_name }}
                             </td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
                                 {{ number_format($claim->amount) }}</td>

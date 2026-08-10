@@ -628,6 +628,7 @@ class ClaimController extends Controller
 
         $query = Claim::with(['customer', 'policy', 'assignedTo', 'surveyor', 'committeeDecidedBy'])
             ->whereIn('status', [
+                ClaimStatus::UNDER_REVIEW,
                 ClaimStatus::UNDER_SURVEY,
                 ClaimStatus::SURVEY_COMPLETED,
                 ClaimStatus::COMMITTEE_REVIEW,
