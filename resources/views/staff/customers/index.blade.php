@@ -109,7 +109,8 @@
                             <td class="px-5 py-4 text-sm text-gray-600">
                                 {{ $customer->phone }}
                             </td>
-                            <td class="px-5 py-4 font-mono text-sm">{{ $customer->genova_customer_code ?? $customer->glims_customer_code ?? '—' }}</td>
+                            <td class="px-5 py-4 font-mono text-sm">
+                                {{ $customer->genova_customer_code ?? ($customer->glims_customer_code ?? '—') }}</td>
                             <td class="px-5 py-4 text-sm text-gray-600">
                                 @if ($customer->sources && count($customer->sources))
                                     <div class="flex flex-wrap gap-2">
@@ -133,17 +134,22 @@
                             </td>
                             <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                 style="overflow: visible;">
-                                <button @click="open = !open"
-                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
-                                    Actions <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                <button x-ref="actionsBtn" @click="open = !open"
+                                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50 inline-flex items-center">
+                                    Actions
+                                    <i class="fas fa-chevron-down text-xs ml-1"></i>
                                 </button>
-                                <div x-show="open" @click.outside="open = false" x-transition
-                                    class="absolute right-4 top-12 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                                    <a href="{{ route('customers.show', $customer) }}"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-edit text-xs text-blue-500"></i> Manage
-                                    </a>
-                                </div>
+                                <template x-teleport="body">
+                                    <div x-show="open" @click.outside="open = false" x-transition
+                                        x-anchor.bottom-end="$refs.actionsBtn"
+                                        class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
+                                        <a href="{{ route('customers.show', $customer) }}" @click="open = false"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                            <i class="fas fa-edit text-xs text-blue-500"></i>
+                                            Manage
+                                        </a>
+                                    </div>
+                                </template>
                             </td>
                         </tr>
                     @empty

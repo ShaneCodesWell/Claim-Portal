@@ -174,19 +174,25 @@
                                         {{ ucfirst($policy['source']) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right relative" x-data="{ open: false }">
-                                    <button @click="open = !open"
+                                <td class="px-6 py-4 text-right relative" x-data="{ open: false }"
+                                    style="overflow: visible;">
+                                    <button x-ref="actionsBtn" @click="open = !open"
                                         class="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition">
-                                        Actions <i class="fas fa-chevron-down text-[10px]"></i>
+                                        Actions
+                                        <i class="fas fa-chevron-down text-[10px]"></i>
                                     </button>
-                                    <div x-show="open" @click.outside="open = false" x-transition
-                                        class="absolute right-6 top-12 z-50 w-44 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5">
-                                        {{-- Only View Details here — Process Claim is inside the modal --}}
-                                        <button @click="open = false; staffViewDetails({{ $policy['policy_id'] }})"
-                                            class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                            <i class="fas fa-eye text-blue-500 text-xs"></i> View Details
-                                        </button>
-                                    </div>
+                                    <template x-teleport="body">
+                                        <div x-show="open" @click.outside="open = false" x-transition
+                                            x-anchor.bottom-end="$refs.actionsBtn"
+                                            class="fixed w-44 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-9999">
+                                            {{-- Only View Details here — Process Claim is inside the modal --}}
+                                            <button @click="open = false; staffViewDetails({{ $policy['policy_id'] }})"
+                                                class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                <i class="fas fa-eye text-blue-500 text-xs"></i>
+                                                View Details
+                                            </button>
+                                        </div>
+                                    </template>
                                 </td>
                             </tr>
                         @empty
@@ -468,12 +474,12 @@
         <div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
             ${isExpired
                 ? `<button disabled class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
-                                   <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
-                               </button>`
+                                           <i class="fas fa-file-invoice"></i> Process Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                                       </button>`
                 : `<a href="${riskUrl}"
-                                   class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
-                                   <i class="fas fa-file-invoice"></i> Process Claim
-                               </a>`
+                                           class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
+                                           <i class="fas fa-file-invoice"></i> Process Claim
+                                       </a>`
             }
         </div>` : '';
 
@@ -498,10 +504,10 @@
                     <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
                 </div>
                 ${covers.length ? `
-                                <div class="border-t border-gray-200 pt-3">
-                                    <p class="text-xs text-gray-500 mb-2">Covers Included</p>
-                                    <div class="flex flex-wrap gap-1.5">${coverTags}</div>
-                                </div>` : ''}
+                                        <div class="border-t border-gray-200 pt-3">
+                                            <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                                            <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                                        </div>` : ''}
                 ${claimButton}
             </div>
         </div>`;
