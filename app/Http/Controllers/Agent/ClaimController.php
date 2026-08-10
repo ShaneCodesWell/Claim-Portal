@@ -145,9 +145,14 @@ class ClaimController extends Controller
         }
 
         // Look for an in-progress draft this agent already started for this policy/claim type
+        // $draft = ClaimDraft::where('agent_id', $agent->id)
+        //     ->where('policy_id', $policy->id)
+        //     ->where('claim_type', $claimType)
+        //     ->first();
         $draft = ClaimDraft::where('agent_id', $agent->id)
             ->where('policy_id', $policy->id)
             ->where('claim_type', $claimType)
+            ->where('risk_id', $riskId ? (int) $riskId : null)
             ->first();
 
         $formData = array_merge(
@@ -436,9 +441,14 @@ class ClaimController extends Controller
 
         $riskId = $request->input('risk_id') ? (int) $request->input('risk_id') : null;
 
+        // $draft = ClaimDraft::where('agent_id', $agent->id)
+        //     ->where('policy_id', $policy->id)
+        //     ->where('claim_type', $validated['claim_type'])
+        //     ->first();
         $draft = ClaimDraft::where('agent_id', $agent->id)
             ->where('policy_id', $policy->id)
             ->where('claim_type', $validated['claim_type'])
+            ->where('risk_id', $riskId)
             ->first();
 
         if ($draft) {
@@ -486,6 +496,7 @@ class ClaimController extends Controller
         $validated = $request->validate([
             'policy_id'  => 'required',
             'claim_type' => 'required|string',
+            'risk_id'    => 'nullable|integer',
         ]);
 
         $agent = Auth::guard('agent')->user();
@@ -499,10 +510,13 @@ class ClaimController extends Controller
             return response()->json(['success' => false, 'message' => 'Policy not found.'], 404);
         }
 
+        $riskId = $validated['risk_id'] ?? null;
+
         $draft = ClaimDraft::with('documents')
             ->where('agent_id', $agent->id)
             ->where('policy_id', $policy->id)
             ->where('claim_type', $validated['claim_type'])
+            ->where('risk_id', $riskId)
             ->first();
 
         if (! $draft) {
@@ -530,6 +544,7 @@ class ClaimController extends Controller
         $validated = $request->validate([
             'policy_id'  => 'required',
             'claim_type' => 'required|string',
+            'risk_id'    => 'nullable|integer',
         ]);
 
         $agent = Auth::guard('agent')->user();
@@ -543,9 +558,13 @@ class ClaimController extends Controller
             return response()->json(['success' => false, 'message' => 'Policy not found.'], 404);
         }
 
-        $draft = ClaimDraft::where('agent_id', $agent->id)
+        $riskId = $validated['risk_id'] ?? null;
+
+        $draft = ClaimDraft::with('documents')
+            ->where('agent_id', $agent->id)
             ->where('policy_id', $policy->id)
             ->where('claim_type', $validated['claim_type'])
+            ->where('risk_id', $riskId)
             ->first();
 
         if ($draft) {

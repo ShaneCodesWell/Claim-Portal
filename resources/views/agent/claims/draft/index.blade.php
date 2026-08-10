@@ -71,30 +71,34 @@
                             <td class="px-4 py-4 text-sm text-gray-600">{{ $draft->updated_at->diffForHumans() }}</td>
                             <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                 style="overflow: visible;">
-                                <button @click="open = !open"
+                                <button x-ref="claimActionsBtn" @click="open = !open"
                                     class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50 inline-flex items-center">
                                     Details
                                     <i class="fas fa-chevron-down text-xs ml-1"></i>
                                 </button>
-                                <div x-show="open" @click.outside="open = false" x-transition
-                                    x-anchor.bottom-end="$el.previousElementSibling"
-                                    class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
-                                    <a href="{{ route('agent.claims.draft.continue', $draft->id) }}"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-pen text-xs text-blue-500"></i>
-                                        Continue Draft
-                                    </a>
-                                    <form method="POST" action="{{ route('agent.claims.draft.documents.destroy', $draft->id) }}"
-                                        class="delete-draft-form">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                            <i class="fas fa-trash-alt text-xs"></i>
-                                            Delete Draft
-                                        </button>
-                                    </form>
-                                </div>
+                                <template x-teleport="body">
+                                    <div x-show="open" @click.outside="open = false" x-transition
+                                        x-anchor.bottom-end="$refs.claimActionsBtn"
+                                        class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
+                                        <a href="{{ route('agent.claims.draft.continue', $draft->id) }}"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                            <i class="fas fa-pen text-xs text-blue-500"></i>
+                                            Continue Draft
+                                        </a>
+                                        <div class="border-t border-gray-100 my-1"></div>
+                                        <form method="POST"
+                                            action="{{ route('agent.claims.draft.documents.destroy', $draft->id) }}"
+                                            class="delete-draft-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                <i class="fas fa-trash-alt text-xs"></i>
+                                                Delete Draft
+                                            </button>
+                                        </form>
+                                    </div>
+                                </template>
                             </td>
                         </tr>
                     @empty

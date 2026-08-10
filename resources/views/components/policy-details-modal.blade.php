@@ -277,7 +277,7 @@
             <button id="modal-file-claim-btn"
                 class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm hover:shadow">
                 <i class="fas fa-file-invoice"></i>
-                File Claim
+                File a Claim
             </button>
         </div>
     </div>
