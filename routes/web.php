@@ -101,15 +101,17 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('claims/{claim}', [StaffClaimController::class, 'show'])->name('staff.claims.show');
 
     // Liability Guide
-    Route::get('claims/{claim}/liability-guide', [StaffClaimController::class, 'liabilityGuide'])->name('staff.claims.liability-guide');    
+    Route::get('claims/{claim}/liability-guide', [StaffClaimController::class, 'liabilityGuide'])->name('staff.claims.liability-guide');
 
     // Documents
     Route::post('claims/{claim}/documents', [StaffClaimController::class, 'uploadDocuments'])->name('staff.claims.documents');
     Route::get('/documents/{document}/preview', [StaffClaimController::class, 'previewDocument'])->name('staff.documents.preview');
     Route::delete('claims/documents/{document}', [StaffClaimController::class, 'destroyDocument'])->name('staff.claims.documents.destroy');
-    Route::get('claims/{claim}/print', [StaffClaimController::class, 'print'])->name('staff.claims.print');
 
-    // Status
+    Route::get('claims/{claim}/print', [StaffClaimController::class, 'print'])->name('staff.claims.print');
+    Route::get('/claims/{claim}/liability-guide/print', [StaffClaimController::class, 'printLiabilityGuide'])->name('staff.claims.liability-guide.print');
+
+    // Process
     Route::post('claims/{claim}/process', [StaffClaimController::class, 'process'])->name('staff.claims.process');
     Route::post('claims/{claim}/assign', [StaffClaimController::class, 'assign'])->name('staff.claims.assign');
     Route::post('claims/{claim}/status', [StaffClaimController::class, 'updateStatus'])->name('staff.claims.status');

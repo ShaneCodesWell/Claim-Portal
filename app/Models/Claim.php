@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Claim extends Model
 {
@@ -90,6 +91,11 @@ class Claim extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(ClaimDocument::class);
+    }
+
+    public function liabilityGuide(): HasOne
+    {
+        return $this->hasOne(LiabilityGuide::class);
     }
 
     public function surveyor(): BelongsTo

@@ -312,6 +312,17 @@ class ClaimController extends Controller
         return view('staff.claims.print', compact('claim'));
     }
 
+    public function printLiabilityGuide(Claim $claim)
+    {
+        // Eager-load so the partial doesn't trigger extra queries
+        $claim->load('liabilityGuide');
+
+        return view('staff.claims.partials._print-liability-guide', [
+            'claim' => $claim,
+            'guide' => $claim->liabilityGuide,
+        ]);
+    }
+
     public function process(Request $request, Claim $claim)
     {
         if (! $claim->isEditable()) {

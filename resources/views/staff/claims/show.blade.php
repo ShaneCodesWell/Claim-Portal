@@ -622,23 +622,23 @@
 
                     {{-- 3. Liability Guide Tab --}}
                     <div x-show="activeTab === 'liability'">
-                        <div class="flex gap-2">
-                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+                        <div class="flex items-center justify-between w-full mb-4">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                 <i class="fas fa-book text-blue-500"></i> Liability Guide
                             </h4>
-                            <button type="button" onclick="openPrintModal()"
-                                class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
-                                <i class="fas fa-eye"></i> Preview Liability Guide
-                            </button>
+                            @if ($canAct)
+                                <button type="button" onclick="openLiabilityGuideModal()"
+                                    class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                                    <i class="fas fa-eye"></i> Preview Liability Guide
+                                </button>
+                            @endif
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-4">
                             <p class="text-sm text-gray-700">
                                 Please note, it is necessary that great care should be taken in completing this guide
-                                and
-                                the information given therein should be strictly accurate, whether it is in the
-                                insured's
-                                favor or otherwise. Do not make any payment, offer or promise of any payment, or admit
-                                liability in any way, as doing so may prejudice the company's position and make
+                                and the information given therein should be strictly accurate, whether it is in the
+                                insured's favor or otherwise. Do not make any payment, offer or promise of any payment,
+                                or admit liability in any way, as doing so may prejudice the company's position and make
                                 settlement of the claim difficult.
                             </p>
                             <p class="text-sm text-gray-600 mt-2">
@@ -797,6 +797,10 @@
 
     {{-- Print Modal --}}
     <x-claim-form-modal :claim="$claim" />
+
+    {{-- Liability Guide Modal --}}
+    <x-liability-guide-modal :claim="$claim" />
+
 
     {{-- Flash Messages --}}
     @if (session('success') || session('error'))

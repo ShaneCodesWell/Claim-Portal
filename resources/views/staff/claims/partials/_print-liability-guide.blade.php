@@ -1,5 +1,5 @@
 @php
-    $form = $claim->form_data ?? [];
+    $form = $guide?->data ?? [];
     $f = fn($key) => $form[$key] ?? '';
     $yesNo = fn($key) => strtolower($form[$key] ?? '') === 'yes';
 
@@ -22,22 +22,21 @@
 
     // Facultative details
     $facultative = $form['facultative'] ?? [];
-    // Ensure it's an array with numeric keys
-if (!is_array($facultative)) {
-    $facultative = [];
-}
-// Limit to 2 entries
-$facultative = array_slice($facultative, 0, 2);
+    if (!is_array($facultative)) {
+        $facultative = [];
+    }
+    // Limit to 2 entries
+    $facultative = array_slice($facultative, 0, 2);
 
-// Format date helper (reuse if needed)
-if (!function_exists('formatDate')) {
-    function formatDate($date)
-    {
-        if (empty($date)) {
-            return '';
-        }
-        try {
-            return \Carbon\Carbon::parse($date)->format('F j, Y');
+    // Format date helper (reuse if needed)
+    if (!function_exists('formatDate')) {
+        function formatDate($date)
+        {
+            if (empty($date)) {
+                return '';
+            }
+            try {
+                return \Carbon\Carbon::parse($date)->format('F j, Y');
             } catch (\Exception $e) {
                 return $date;
             }
