@@ -15,8 +15,8 @@
         <nav class="flex-1 px-3 py-6 space-y-1.5">
             <a href="{{ route('agent.dashboard.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
-                <i class="fas fa-clipboard-list w-5"></i>
-                <span>My Policies</span>
+                <i class="fas fa-search w-5"></i>
+                <span>Find Policies</span>
                 {{-- <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">3</span> --}}
             </a>
             <a href="{{ route('agent.claims.index') }}"

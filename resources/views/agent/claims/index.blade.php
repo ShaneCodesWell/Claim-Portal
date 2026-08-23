@@ -130,35 +130,38 @@
                             <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                 style="overflow: visible;">
 
-                                <button @click="open = !open"
+                                <button x-ref="claimActionsBtn" @click="open = !open"
                                     class="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-700 hover:bg-gray-50 inline-flex items-center">
                                     Details
                                     <i class="fas fa-chevron-down text-xs ml-1"></i>
                                 </button>
 
-                                <div x-show="open" @click.outside="open = false" x-transition
-                                    x-anchor.bottom-end="$el.previousElementSibling"
-                                    class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
+                                <template x-teleport="body">
+                                    <div x-show="open" @click.outside="open = false" x-transition
+                                        x-anchor.bottom-end="$refs.claimActionsBtn"
+                                        class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
 
-                                    <a href="{{ route('agent.claims.show', $claim->id) }}"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <i class="fas fa-eye text-xs text-blue-500"></i>
-                                        View Full Details
-                                    </a>
+                                        <a href="{{ route('agent.claims.show', $claim->id) }}"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                            <i class="fas fa-eye text-xs text-blue-500"></i>
+                                            View Full Details
+                                        </a>
 
-                                    @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
-                                        <form method="POST" action="{{ route('agent.claims.cancel', $claim->id) }}"
-                                            onsubmit="return confirm('Are you sure you want to cancel this claim? It will be sent back to Submitted.')">
-                                            @csrf
-                                            <button type="submit"
-                                                class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                                <i class="fas fa-undo text-xs"></i>
-                                                Cancel Claim
-                                            </button>
-                                        </form>
-                                    @endif
+                                        @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
+                                            <form method="POST"
+                                                action="{{ route('agent.claims.cancel', $claim->id) }}"
+                                                onsubmit="return confirm('Are you sure you want to cancel this claim? It will be sent back to Submitted.')">
+                                                @csrf
+                                                <button type="submit"
+                                                    class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                    <i class="fas fa-undo text-xs"></i>
+                                                    Cancel Claim
+                                                </button>
+                                            </form>
+                                        @endif
 
-                                </div>
+                                    </div>
+                                </template>
                             </td>
                         </tr>
                     @empty

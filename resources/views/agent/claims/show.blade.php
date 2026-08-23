@@ -32,7 +32,7 @@
 
         {{-- Quick Status Update --}}
         <div class="flex items-center gap-2">
-            <a href="{{ route('claims.index') }}"
+            <a href="{{ route('agent.claims.index') }}"
                 class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
                 <i class="fas fa-arrow-left text-sm"></i> Back
             </a>

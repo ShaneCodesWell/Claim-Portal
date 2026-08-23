@@ -622,9 +622,15 @@
 
                     {{-- 3. Liability Guide Tab --}}
                     <div x-show="activeTab === 'liability'">
-                        <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-                            <i class="fas fa-book text-blue-500"></i> Liability Guide
-                        </h4>
+                        <div class="flex gap-2">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+                                <i class="fas fa-book text-blue-500"></i> Liability Guide
+                            </h4>
+                            <button type="button" onclick="openPrintModal()"
+                                class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                                <i class="fas fa-eye"></i> Preview Liability Guide
+                            </button>
+                        </div>
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-4">
                             <p class="text-sm text-gray-700">
                                 Please note, it is necessary that great care should be taken in completing this guide
@@ -639,11 +645,20 @@
                                 Once completed, the guide will be stored with this claim for future reference.
                             </p>
                         </div>
-                        {{-- Replace the href with the actual route when defined --}}
-                        <a href="{{ route('staff.claims.liability-guide', $claim) }}"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition font-medium">
-                            <i class="fas fa-edit"></i> Complete Liability Guide
-                        </a>
+                        @if ($canAct)
+                            <a href="{{ route('staff.claims.liability-guide', $claim) }}"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition font-medium">
+                                <i class="fas fa-edit"></i> Complete Liability Guide
+                            </a>
+                        @elseif ($claim->isEditable())
+                            <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
+                                <i class="fas fa-user-clock"></i> Assign claim first
+                            </span>
+                        @else
+                            <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
+                                <i class="fas fa-lock"></i> Editing locked
+                            </span>
+                        @endif
                     </div>
 
                     {{-- 4. Finalize Tab (only if canAct) --}}
