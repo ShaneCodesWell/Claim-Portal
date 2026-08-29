@@ -29,8 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'surveyor'  => EnsureSurveyor::class,
             'committee' => EnsureCommitteeMember::class,
         ]);
-    })
-    ->withExceptions(function (Exceptions $exceptions): void {
+
+        $middleware->validateCsrfTokens(except: [
+            'api/client-errors',
+        ]);
+    })->withExceptions(function (Exceptions $exceptions): void {
         //
     })
     ->create();

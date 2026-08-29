@@ -11,6 +11,7 @@ use App\Http\Controllers\FireController;
 use App\Http\Controllers\GeneralAccidentController;
 use App\Http\Controllers\MotorFormController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\ClientErrorLogController;
 use App\Http\Controllers\Staff\CommitteeClaimController;
 use App\Http\Controllers\Staff\GlimsSyncController;
 use App\Http\Controllers\Staff\StaffPolicySearchController;
@@ -46,6 +47,9 @@ Route::post('/login/verify-otp', [AuthController::class, 'verifyOtpAjax'])->name
 Route::post('/login/resend-otp', [AuthController::class, 'resendOtp'])->name('login.resend.otp');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Errors
+Route::post('/api/client-errors', [ClientErrorLogController::class, 'store'])->middleware('throttle:30,1');
 
 // Forms - Publicy accessibly by everyone
 Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
