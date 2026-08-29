@@ -102,6 +102,7 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
 
     // Liability Guide
     Route::get('claims/{claim}/liability-guide', [StaffClaimController::class, 'liabilityGuide'])->name('staff.claims.liability-guide');
+    Route::post('claims/{claim}/liability-guide', [StaffClaimController::class, 'storeLiabilityGuide'])->name('staff.claims.liability-guide.store');
 
     // Documents
     Route::post('claims/{claim}/documents', [StaffClaimController::class, 'uploadDocuments'])->name('staff.claims.documents');
@@ -130,6 +131,8 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('/staff/claim-forms/view/motor', [StaffController::class, 'claimFormsMotor'])->name('claim-form-motor');
     Route::get('/staff/claim-forms/view/fire', [StaffController::class, 'claimFormsFire'])->name('claim-form-fire');
     Route::get('/staff/claim-forms/view/travel', [StaffController::class, 'claimFormsTravel'])->name('claim-form-travel');
+
+    // Liability Guide Forms
     Route::get('/staff/claim-forms/liability-guide/motor-form', [StaffController::class, 'motorLiabilityGuideTemplate'])->name('claim-form-motor-liability');
 
     Route::get('/staff/claim-forms/create', [StaffController::class, 'createClaimForms'])->name('create-claim-form');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Enums\ClaimSource;
 use App\Enums\ClaimStatus;
+use App\Enums\LiabilityGuideStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
@@ -11,6 +12,7 @@ use App\Models\ClaimDocument;
 use App\Models\Customer;
 use App\Models\Policy;
 use App\Models\User;
+use App\Models\LiabilityGuide;
 use App\Services\ClaimNotificationService;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
@@ -94,10 +96,109 @@ class ClaimController extends Controller
 
     public function liabilityGuide(Claim $claim)
     {
+        $claim->load([
+            'customer',
+            'policy',
+            'assignedTo',
+            'branch',
+            'activities.staff',
+            'documents',
+            'surveyor',
+            'committeeDecidedBy',
+            'liabilityGuide',
+        ]);
 
-        $claim->load(['customer', 'policy', 'assignedTo', 'branch', 'activities.staff', 'documents', 'surveyor', 'committeeDecidedBy']);
+        return view('staff.claims.liability-guide.index', [
+            'claim' => $claim,
+            'guide' => $claim->liabilityGuide,
+        ]);
+    }
 
-        return view('staff.claims.liability-guide.index', compact('claim'));
+    public function storeLiabilityGuide(Request $request, Claim $claim)
+    {
+        $saveMode = $request->input('save_mode', 'draft'); // 'draft' | 'complete'
+
+        $validated = $request->validate([
+            'branch_dept'                 => ['nullable', 'string', 'max:255'],
+            'form_date'                   => ['nullable', 'date'],
+            'claim_number'                => ['nullable', 'string', 'max:255'],
+            'vehicle_number'               => ['nullable', 'string', 'max:255'],
+
+            'references'                  => ['nullable', 'array'],
+            'references.*'                => ['string'],
+
+            'insured'                     => ['nullable', 'string', 'max:255'],
+            'insured_name_arf'            => ['nullable', 'string', 'max:255'],
+            'vehicle_owner_name_pr'       => ['nullable', 'string', 'max:255'],
+            'driver_name_arf'             => ['nullable', 'string', 'max:255'],
+            'driver_name_pr'              => ['nullable', 'string', 'max:255'],
+            'license_first_issued'        => ['nullable', 'date'],
+            'driver_age'                  => ['nullable', 'integer', 'min:0', 'max:120'],
+            'period_of_insurance_from'    => ['nullable', 'date'],
+            'period_of_insurance_to'      => ['nullable', 'date', 'after_or_equal:period_of_insurance_from'],
+            'date_of_accident'            => ['nullable', 'date'],
+            'use_clause'                  => ['nullable', 'string', 'max:255'],
+            'premium_payable'             => ['nullable', 'numeric', 'min:0'],
+            'premium_paid'                => ['nullable', 'numeric', 'min:0'],
+
+            'brief_facts'                 => ['nullable', 'string'],
+            'recommendation'              => ['nullable', 'string'],
+            'staff_signature'             => ['nullable', 'string', 'max:255'],
+
+            'comments'                    => ['nullable', 'array'],
+            'comments.*.text'             => ['nullable', 'string'],
+            'comments.*.signature'        => ['nullable', 'string', 'max:255'],
+
+            'reinsurance_recovery'        => ['nullable', 'in:Y,N'],
+            'reinsurance_type'            => ['nullable', 'array'],
+            'reinsurance_type.*'          => ['string'],
+            'reinsurance_notified'        => ['nullable', 'in:Y,N'],
+            'notification_date'           => ['nullable', 'date'],
+
+            'facultative'                 => ['nullable', 'array'],
+            'facultative.*.company'       => ['nullable', 'string', 'max:255'],
+            'facultative.*.percentage'    => ['nullable', 'numeric', 'min:0', 'max:100'],
+
+            'manager_decision'            => ['nullable', 'string', 'max:255'],
+            'manager_signature'           => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $guide = LiabilityGuide::firstOrNew(['claim_id' => $claim->id]);
+        $isNew = ! $guide->exists;
+        $wasReopened = $guide->exists && $guide->status === LiabilityGuideStatus::REOPENED;
+
+        $guide->claim_id = $claim->id;
+        $guide->data = $validated;
+
+        if ($saveMode === 'complete') {
+            // Save first, then run the status transition + activity log together.
+            $guide->save();
+            $guide->complete(Auth::user(), $wasReopened ? 'Resubmitted after reopen' : null);
+
+            $message = 'Liability guide completed successfully.';
+        } else {
+            // Draft save: persist the data but leave status alone.
+            // New guides default to 'draft' via the migration; a guide that was
+            // 'reopened' stays 'reopened' until explicitly completed again —
+            // draft-saving it shouldn't silently mark it done.
+            if ($isNew) {
+                $guide->status = LiabilityGuideStatus::DRAFT;
+            }
+            $guide->save();
+
+            $guide->activities()->create([
+                'staff_id'             => Auth::id(),
+                'action'               => \App\Models\LiabilityGuideActivity::ACTION_UPDATED,
+                'note'                 => 'Draft saved',
+                'claim_status_at_time' => $claim->status,
+            ]);
+
+            $message = 'Draft saved.';
+        }
+
+        return redirect()
+            ->route('staff.claims.show', $claim)
+            ->with('success', $message);
     }
 
     public function create(Request $request, Customer $customer)
