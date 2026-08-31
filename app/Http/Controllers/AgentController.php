@@ -5,12 +5,11 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Http\Requests\StoreAgentRequest;
 use App\Http\Requests\UpdateAgentRequest;
-use App\Http\Resources\PolicyResource;
 use App\Models\Agent;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Policy;
-use App\Services\GlimsApiService;
+use App\Services\AgentPolicySearchService;
 use App\Services\GenovaApiService;
 use App\Services\AgentSyncService;
 use App\Imports\AgentsImport;
@@ -44,7 +43,7 @@ class AgentController extends Controller
         ]);
     }
 
-    public function search(Request $request, GlimsApiService $glims, GenovaApiService $genova)
+    public function search(Request $request, AgentPolicySearchService $policySearch)
     {
         $agent = Auth::guard('agent')->user();
 
@@ -58,12 +57,9 @@ class AgentController extends Controller
             return redirect()->route('agent.dashboard.index');
         }
 
-        // Check local DB first — verifies this policy belongs to this agent
-        $localPolicy = Policy::where('policy_number', $policyNumber)
-            ->where('agent_id', $agent->id)
-            ->first();
+        $result = $policySearch->findForAgent($agent, $policyNumber);
 
-        if (! $localPolicy) {
+        if (! $result) {
             $glimsSyncPending = $agent->glims_agent_code
                 && ($agent->glims_last_synced_at === null || $agent->glims_last_synced_at->lt(now()->subMinutes(5)));
 
@@ -83,20 +79,14 @@ class AgentController extends Controller
             ]);
         }
 
-        $details = match ($localPolicy->source) {
-            'genova' => $this->getGenovaDetails($localPolicy, $genova),
-            'glims'  => $glims->getPolicyDetails($policyNumber),
-            default  => [],
-        };
-
         return view('agent.dashboard.index', [
             'agent'           => $agent,
             'policies'        => collect(),
             'businessClasses' => collect(),
             'statusCounts'    => collect(),
             'searchResult'    => [
-                'local'   => (new PolicyResource($localPolicy))->toArray(request()),
-                'details' => $details,
+                'local'   => $result['policy'],
+                'details' => $result['details'],
             ],
             'searchQuery'     => $policyNumber,
             'searchError'     => null,
@@ -246,5 +236,4 @@ class AgentController extends Controller
     {
         return Excel::download(new AgentTemplateExport, 'agent_import_template.xlsx');
     }
-
 }

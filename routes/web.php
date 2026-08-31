@@ -18,6 +18,7 @@ use App\Http\Controllers\Staff\StaffPolicySearchController;
 use App\Http\Controllers\Surveyor\ClaimController as SurveyorClaimController;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Agent\ClaimController as AgentClaimController;
+use \App\Http\Controllers\Agent\SearchController as AgentSearchController;
 use \App\Http\Controllers\Customer\ClaimController as CustomerClaimController;
 use \App\Http\Controllers\Staff\ClaimController as StaffClaimController;
 
@@ -181,6 +182,8 @@ Route::middleware(['agent'])->prefix('agent')->group(function () {
     // mirrors customer claim routes but with ClaimSource::AGENT_PORTAL
     Route::get('/dashboard', [AgentController::class, 'index'])->name('agent.dashboard.index');
     Route::get('/search', [AgentController::class, 'search'])->name('agent.policy.search');
+    Route::get('/agent/customers/search', [AgentSearchController::class, 'search'])->name('agent.customers.search');
+    Route::get('/agent/policies/{policy}/risks', [AgentSearchController::class, 'risks'])->name('agent.policies.risks');
 
     // Claims
     Route::post('/claims', [AgentClaimController::class, 'store'])->name('agent.claims.store');

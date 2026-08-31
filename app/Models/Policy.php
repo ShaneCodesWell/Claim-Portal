@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -104,7 +105,8 @@ class Policy extends Model
         }
 
         $daysUntilExpiry = now()->startOfDay()->diffInDays(
-            $this->end_date->startOfDay(), false
+            $this->end_date->startOfDay(),
+            false
         );
 
         if ($daysUntilExpiry < 0) {
@@ -128,6 +130,17 @@ class Policy extends Model
     public function scopeForAgent(Builder $query, int $agentId): Builder
     {
         return $query->where('agent_id', $agentId);
+    }
+
+    public function scopeVehicleNumber(Builder $query, string $vehicleNumber): Builder
+    {
+        return $query->whereRaw(
+            "EXISTS (
+            SELECT 1 FROM jsonb_array_elements(COALESCE(raw_payload::jsonb->'risks', '[]'::jsonb)) AS risk
+            WHERE risk->>'risk_ref_no' ILIKE ?
+        )",
+            ["%{$vehicleNumber}%"]
+        );
     }
 
     public function scopeSearch(Builder $query, ?string $search): Builder
