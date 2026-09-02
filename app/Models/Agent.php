@@ -15,6 +15,7 @@ class Agent extends Authenticatable
     protected $fillable = [
         'glims_agent_code',
         'genova_agent_code',
+        'primary_agent_id',
         'name',
         'email',
         'phone',

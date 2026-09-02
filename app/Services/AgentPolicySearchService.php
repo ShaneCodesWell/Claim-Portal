@@ -36,8 +36,10 @@ class AgentPolicySearchService
      */
     public function findForAgent(Agent $agent, string $policyNumber): ?array
     {
+        $portfolioId = $agent->portfolioAgentId();
+
         $local = Policy::where('policy_number', $policyNumber)
-            ->where('agent_id', $agent->id)
+            ->where('agent_id', $portfolioId)
             ->first();
 
         if ($local) {
@@ -80,13 +82,14 @@ class AgentPolicySearchService
         $this->policySync->syncAgentPolicyFromGlims($remote, $agent);
 
         $saved = Policy::where('policy_number', $policyNumber)
-            ->where('agent_id', $agent->id)
+            ->where('agent_id', $portfolioId)
             ->first();
 
         if (! $saved) {
             Log::error('AgentPolicySearchService: sync appeared to succeed but policy not found locally afterward', [
                 'policy_number' => $policyNumber,
                 'agent_id'      => $agent->id,
+                'portfolio_id'  => $portfolioId,
             ]);
             return null;
         }

@@ -435,7 +435,7 @@ class GlimsApiService
             'x-api-secret' => $this->apiSecret,
             'Accept'       => 'application/json',
         ])
-            ->timeout(15)
+            ->timeout(30)
             ->when(app()->environment('local'), function ($http) {
                 return $http->withoutVerifying();
             });

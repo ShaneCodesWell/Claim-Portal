@@ -135,7 +135,7 @@ class PolicySyncService
             ['source' => 'genova', 'policy_number' => $policyNo],
             [
                 'customer_id'         => $customer?->id,
-                'agent_id' => $agent->portfolioAgentId(),
+                'agent_id'            => $agent->portfolioAgentId(),
                 'insured_name'        => $customerData['ins_name'] ?? $policyData['insured_name'] ?? null,
                 'external_policy_id'  => (string) ($policyData['id'] ?? ''),
                 'product_id'          => $productId,
@@ -403,7 +403,7 @@ class PolicySyncService
             ['source' => 'glims', 'policy_number' => $policyNumber],
             [
                 'customer_id'         => $customer?->id,
-                'agent_id' => $agent->portfolioAgentId(),
+                'agent_id'            => $agent->portfolioAgentId(),
                 'insured_name'        => $customer->name ?? null,
                 'external_policy_id'  => (string) ($policy['POLICY_ID'] ?? $policyNumber),
                 'product_id'          => $policy['POLICY_PRODUCT_CODE'] ?? null,
