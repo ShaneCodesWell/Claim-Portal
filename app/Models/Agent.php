@@ -60,4 +60,14 @@ class Agent extends Authenticatable
     {
         return $this->hasMany(Policy::class);
     }
+
+    public function primaryAgent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class, 'primary_agent_id');
+    }
+
+    public function portfolioAgentId(): int
+    {
+        return $this->primary_agent_id ?? $this->id;
+    }
 }
