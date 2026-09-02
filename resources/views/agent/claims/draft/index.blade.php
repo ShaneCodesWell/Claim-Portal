@@ -107,7 +107,7 @@
                                 <div class="flex flex-col items-center justify-center gap-3">
                                     <i class="fas fa-inbox text-4xl text-gray-300"></i>
                                     <p class="text-gray-600">You don't have any saved drafts yet.</p>
-                                    <a href="{{ route('dashboard') }}"
+                                    <a href="{{ route('agent.dashboard.index') }}"
                                         class="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-xl shadow-sm transition">
                                         <i class="fas fa-plus-circle"></i> Start a Claim
                                     </a>
