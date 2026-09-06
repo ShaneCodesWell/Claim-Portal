@@ -34,6 +34,73 @@ class AgentPolicySearchService
      *
      * @return array{policy: array, source: 'local'|'api', details: array}|null  null = not found / not this agent's
      */
+    // public function findForAgent(Agent $agent, string $policyNumber): ?array
+    // {
+    //     $portfolioId = $agent->portfolioAgentId();
+
+    //     $local = Policy::where('policy_number', $policyNumber)
+    //         ->where('agent_id', $portfolioId)
+    //         ->first();
+
+    //     if ($local) {
+    //         return [
+    //             'policy'  => (new PolicyResource($local))->toArray(request()),
+    //             'source'  => 'local',
+    //             'details' => $this->getLiveDetails($local),
+    //         ];
+    //     }
+
+    //     if (! $agent->glims_agent_code) {
+    //         return null;
+    //     }
+
+    //     $remote = $this->glims->getPolicyByNumber($policyNumber);
+
+    //     if (! $remote) {
+    //         return null;
+    //     }
+
+    //     $remoteAgentCode = $remote['POLICY_AGENT_CODE'] ?? null;
+
+    //     if (! $remoteAgentCode || strcasecmp(trim($remoteAgentCode), trim($agent->glims_agent_code)) !== 0) {
+    //         // Exists in GLIMS but belongs to a different agent — treat as
+    //         // "not found" rather than confirming it exists to this agent.
+    //         return null;
+    //     }
+
+    //     // Enrich with full vehicle/risk detail before persisting — getPolicyByNumber()
+    //     // only returns placeholder risks (plate numbers), same as the agent sync job does.
+    //     try {
+    //         $remote['risks'] = $this->glims->getRisksForPolicy($policyNumber);
+    //     } catch (\Exception $e) {
+    //         Log::warning('AgentPolicySearchService: risk enrichment failed, syncing with placeholder risks', [
+    //             'policy_number' => $policyNumber,
+    //             'error'         => $e->getMessage(),
+    //         ]);
+    //     }
+
+    //     $this->policySync->syncAgentPolicyFromGlims($remote, $agent);
+
+    //     $saved = Policy::where('policy_number', $policyNumber)
+    //         ->where('agent_id', $portfolioId)
+    //         ->first();
+
+    //     if (! $saved) {
+    //         Log::error('AgentPolicySearchService: sync appeared to succeed but policy not found locally afterward', [
+    //             'policy_number' => $policyNumber,
+    //             'agent_id'      => $agent->id,
+    //             'portfolio_id'  => $portfolioId,
+    //         ]);
+    //         return null;
+    //     }
+
+    //     return [
+    //         'policy'  => (new PolicyResource($saved))->toArray(request()),
+    //         'source'  => 'api',
+    //         'details' => [], // just synced from GLIMS above — already the freshest data available
+    //     ];
+    // }
+
     public function findForAgent(Agent $agent, string $policyNumber): ?array
     {
         $portfolioId = $agent->portfolioAgentId();
@@ -42,62 +109,14 @@ class AgentPolicySearchService
             ->where('agent_id', $portfolioId)
             ->first();
 
-        if ($local) {
-            return [
-                'policy'  => (new PolicyResource($local))->toArray(request()),
-                'source'  => 'local',
-                'details' => $this->getLiveDetails($local),
-            ];
-        }
-
-        if (! $agent->glims_agent_code) {
-            return null;
-        }
-
-        $remote = $this->glims->getPolicyByNumber($policyNumber);
-
-        if (! $remote) {
-            return null;
-        }
-
-        $remoteAgentCode = $remote['POLICY_AGENT_CODE'] ?? null;
-
-        if (! $remoteAgentCode || strcasecmp(trim($remoteAgentCode), trim($agent->glims_agent_code)) !== 0) {
-            // Exists in GLIMS but belongs to a different agent — treat as
-            // "not found" rather than confirming it exists to this agent.
-            return null;
-        }
-
-        // Enrich with full vehicle/risk detail before persisting — getPolicyByNumber()
-        // only returns placeholder risks (plate numbers), same as the agent sync job does.
-        try {
-            $remote['risks'] = $this->glims->getRisksForPolicy($policyNumber);
-        } catch (\Exception $e) {
-            Log::warning('AgentPolicySearchService: risk enrichment failed, syncing with placeholder risks', [
-                'policy_number' => $policyNumber,
-                'error'         => $e->getMessage(),
-            ]);
-        }
-
-        $this->policySync->syncAgentPolicyFromGlims($remote, $agent);
-
-        $saved = Policy::where('policy_number', $policyNumber)
-            ->where('agent_id', $portfolioId)
-            ->first();
-
-        if (! $saved) {
-            Log::error('AgentPolicySearchService: sync appeared to succeed but policy not found locally afterward', [
-                'policy_number' => $policyNumber,
-                'agent_id'      => $agent->id,
-                'portfolio_id'  => $portfolioId,
-            ]);
+        if (! $local) {
             return null;
         }
 
         return [
-            'policy'  => (new PolicyResource($saved))->toArray(request()),
-            'source'  => 'api',
-            'details' => [], // just synced from GLIMS above — already the freshest data available
+            'policy'  => (new PolicyResource($local))->toArray(request()),
+            'source'  => 'local',
+            'details' => $this->getLiveDetails($local),
         ];
     }
 

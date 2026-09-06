@@ -656,18 +656,18 @@ class GlimsApiService
      * Look up a single policy by its policy number and return it in the
      * same grouped shape as getPoliciesByClientCode() (includes CUSTOMER_CODE).
      */
-    public function getPolicyByNumber(string $policyNumber): ?array
-    {
-        $rows = $this->policySearch('policy_number', $policyNumber);
+    // public function getPolicyByNumber(string $policyNumber): ?array
+    // {
+    //     $rows = $this->policySearch('policy_number', $policyNumber);
 
-        if (empty($rows)) {
-            return null;
-        }
+    //     if (empty($rows)) {
+    //         return null;
+    //     }
 
-        $grouped = $this->groupRowsIntoPolicies($rows);
+    //     $grouped = $this->groupRowsIntoPolicies($rows);
 
-        return $grouped[0] ?? null;
-    }
+    //     return $grouped[0] ?? null;
+    // }
 
     /**
      * Search for a customer by vehicle plate/registration number.

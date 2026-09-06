@@ -401,7 +401,7 @@ class AuthController extends Controller
         // SyncCustomerPoliciesJob skips if synced within last 30 min,
         // so dispatching twice is safe — the job deduplicates itself.
         try {
-            SyncCustomerPoliciesJob::dispatch($customer, $secondaryCode);
+            SyncCustomerPoliciesJob::dispatch($customer, $secondaryCode)->onQueue('high');
         } catch (\Exception $e) {
             // Never let a sync failure block the login
             Log::error('completeLogin: sync job dispatch failed', [
@@ -672,7 +672,7 @@ class AuthController extends Controller
 
             if ($customer) {
                 try {
-                    SyncCustomerPoliciesJob::dispatch($customer);
+                    SyncCustomerPoliciesJob::dispatch($customer)->onQueue('high');
                     Log::info('sendOtpAndRespond: early sync dispatched', [
                         'customer_id' => $customer->id,
                     ]);

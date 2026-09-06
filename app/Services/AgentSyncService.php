@@ -12,7 +12,7 @@ class AgentSyncService
     public function dispatchPolicySync(Agent $agent): void
     {
         try {
-            SyncAgentPoliciesJob::dispatch($agent);
+            SyncAgentPoliciesJob::dispatch($agent)->onQueue('low');
         } catch (\Exception $e) {
             Log::error('AgentSyncService: GLIMS sync dispatch failed', [
                 'agent_id' => $agent->id,
@@ -21,7 +21,7 @@ class AgentSyncService
         }
 
         try {
-            SyncAgentPoliciesFromGenovaJob::dispatch($agent);
+            SyncAgentPoliciesFromGenovaJob::dispatch($agent)->onQueue('low');
         } catch (\Exception $e) {
             Log::error('AgentSyncService: Genova sync dispatch failed', [
                 'agent_id' => $agent->id,
