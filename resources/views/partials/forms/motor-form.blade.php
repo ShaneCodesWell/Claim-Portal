@@ -138,6 +138,29 @@
                         <input type="text" name="occupation" value="{{ $f['occupation'] ?? '' }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                     </div>
+
+                    {{-- Ghana Card (NEW) --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Ghana Card
+                        </label>
+                        <input type="text" name="claimant_ghana_card" value="{{ $f['claimant_ghana_card'] ?? '' }}"
+                            placeholder="e.g. GHA-123456789-0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        <p class="mt-1 text-xs text-gray-500">Enter your Ghana Card number if available.</p>
+                    </div>
+
+                    {{-- TIN (NEW) --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            TIN
+                        </label>
+                        <input type="text" name="claimant_tin" value="{{ $f['claimant_tin'] ?? '' }}"
+                            placeholder="e.g. C00XXXXXXXX / P00XXXXXXXX"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        <p class="mt-1 text-xs text-gray-500">Enter your Tax Identification Number if you
+                            have one.</p>
+                    </div>
                 </div>
             </section>
 
@@ -1395,6 +1418,8 @@
                 occupation: val('occupation'),
                 email: val('email'),
                 phone: val('phone'),
+                claimant_ghana_card: val('claimant_ghana_card'),
+                claimant_tin: val('claimant_tin'),
                 driver_fullname: val('driver_fullname'),
                 driver_address: val('driver_address'),
                 driver_occupation: val('driver_occupation'),

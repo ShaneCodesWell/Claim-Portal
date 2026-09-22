@@ -168,6 +168,28 @@
                                     Address</label><x-input name="email" /></div>
                         </section>
 
+                        {{-- Ghana Card (NEW) --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Ghana Card
+                            </label>
+                            <input type="text" name="claimant_ghana_card" placeholder="e.g. GHA-123456789-0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            <p class="mt-1 text-xs text-gray-500">Enter your Ghana Card number if available.</p>
+                        </div>
+
+                        {{-- TIN (NEW) --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                TIN
+                            </label>
+                            <input type="text" name="claimant_tin"
+                                placeholder="e.g. C00XXXXXXXX / P00XXXXXXXX"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            <p class="mt-1 text-xs text-gray-500">Enter your Tax Identification Number if you
+                                have one.</p>
+                        </div>
+
                         <!-- Conditional Sections: Contacted AAFIYA & Police Report -->
                         <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                             <x-conditional-section question="Did you contact AAFIYA at the time of the occurrence?"

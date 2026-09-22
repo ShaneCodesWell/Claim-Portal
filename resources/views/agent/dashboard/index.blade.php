@@ -3,7 +3,12 @@
         $neverSynced = is_null($agent->glims_last_synced_at) && is_null($agent->genova_last_synced_at);
 
         $policiesMapData = collect();
-        if ($searchQuery && !$searchError && isset($searchResult['local'])) {
+        if (
+            $searchQuery &&
+            !$searchError &&
+            isset($searchResult['local']) &&
+            ($searchResult['local']['policy_id'] ?? null)
+        ) {
             $policy = $searchResult['local'];
             $policiesMapData = collect([
                 $policy['policy_id'] => array_merge($policy, [
@@ -103,7 +108,7 @@
         </div>
 
         <!-- ===================== POLICY NUMBER RESULT ===================== -->
-        <div x-show="activeTab === 'policy' && searched && !loading" x-transition
+        <div x-show="(activeTab === 'policy' || lastSource === 'unlinked') && searched && !loading" x-transition
             class="bg-white rounded-xl border border-gray-200 overflow-hidden mt-6">
             <div class="px-6 py-3 border-b border-gray-200 bg-gray-50/50">
                 <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -141,7 +146,8 @@
                                 <td class="px-6 py-3 text-xs font-mono font-medium text-gray-900"
                                     x-text="policyResult.policy_number"></td>
                                 <td class="px-6 py-3">
-                                    <div class="text-xs font-medium text-gray-900" x-text="policyResult.customer_name">
+                                    <div class="text-xs font-medium text-gray-900"
+                                        x-text="policyResult.customer_name || (lastSource === 'unlinked' ? 'Not available' : '—')">
                                     </div>
                                     <div class="text-xs text-gray-400 mt-0.5" x-text="policyResult.customer_code"></div>
                                 </td>
@@ -155,18 +161,35 @@
                                         x-text="policyResult.status"></span>
                                 </td>
                                 <td class="px-6 py-3 text-right">
-                                    <button @click="viewDetails(policyResult.policy_id)"
-                                        class="text-blue-600 hover:underline text-xs font-medium">
-                                        View Details
-                                    </button>
+                                    <template x-if="lastSource === 'unlinked'">
+                                        <span class="text-xs text-gray-400 italic">Details restricted</span>
+                                    </template>
+                                    <template x-if="lastSource !== 'unlinked'">
+                                        <button @click="viewDetails(policyResult.policy_id)"
+                                            class="text-blue-600 hover:underline text-xs font-medium">
+                                            View Details
+                                        </button>
+                                    </template>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+
+                    <!-- Not-yet-synced banner (existing) -->
                     <p class="text-xs text-gray-400 px-6 py-2 border-t border-gray-100" x-show="lastSource === 'api'">
                         <i class="fas fa-cloud mr-1"></i> Not yet synced locally — retrieved live from the insurer
                         system.
                     </p>
+
+                    <!-- Unlinked-policy banner -->
+                    <div x-show="lastSource === 'unlinked'" x-transition
+                        class="mx-6 mb-4 flex items-start gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+                        <i class="fas fa-triangle-exclamation shrink-0 mt-0.5"></i>
+                        <span>
+                            This policy exists but isn't linked to your portfolio yet. Claim filing is disabled until
+                            this is corrected — please contact the Data team with the policy number above.
+                        </span>
+                    </div>
                 </div>
             </template>
 
@@ -185,7 +208,7 @@
         </div>
 
         <!-- ===================== CUSTOMER SEARCH RESULT ===================== -->
-        <div x-show="activeTab !== 'policy' && searched && !loading" x-transition
+        <div x-show="activeTab !== 'policy' && lastSource !== 'unlinked' && searched && !loading" x-transition
             class="bg-white rounded-xl border border-gray-200 overflow-hidden mt-6">
             <div class="px-6 py-3 border-b border-gray-200 bg-gray-50/50">
                 <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -410,8 +433,13 @@
                                         .policy_id,
                                 };
                             }
+                        } else if (this.activeTab === 'vehicle' && data.source === 'unlinked') {
+                            this.policyResult = data.policy;
+                            this.lastSource = data.source;
+                            this.customerResults = [];
                         } else {
                             this.customerResults = data.customers ?? [];
+                            this.lastSource = null;
                         }
 
                         this.searched = true;
@@ -599,11 +627,11 @@
                 `<div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
             ${isExpired
                 ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
-                                                            <i class="fas fa-file-invoice"></i> File a Claim <i class="fas fa-lock ml-1 text-xs"></i>
-                                                        </button>`
+                                                                                <i class="fas fa-file-invoice"></i> File a Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                                                                            </button>`
                 : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
-                                                            <i class="fas fa-file-invoice"></i> File a Claim
-                                                        </a>`
+                                                                                <i class="fas fa-file-invoice"></i> File a Claim
+                                                                            </a>`
             }
                 </div>` : '';
 
@@ -628,10 +656,10 @@
                             <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
                         </div>
                         ${covers.length > 0 ? `
-                                                                <div class="border-t border-gray-200 pt-3">
-                                                                    <p class="text-xs text-gray-500 mb-2">Covers Included</p>
-                                                                    <div class="flex flex-wrap gap-1.5">${coverTags}</div>
-                                                                </div>` : ''}
+                                                                                    <div class="border-t border-gray-200 pt-3">
+                                                                                        <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                                                                                        <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                                                                                    </div>` : ''}
                         ${claimButton}
                     </div>
                 </div>`;

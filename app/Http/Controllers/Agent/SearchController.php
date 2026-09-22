@@ -95,7 +95,44 @@ class SearchController extends Controller
             return $this->searchByPolicyNumber($agent, $query, $policySearch);
         }
 
+        if ($type === 'vehicle') {
+            return $this->searchByVehicleNumber($agent, $query);
+        }
+
         return $this->searchCustomers($agent->portfolioAgentId(), $type, $query);
+    }
+
+    private function searchByVehicleNumber($agent, string $vehicleNumber)
+    {
+        $customers = $this->byVehicleNumber($agent->portfolioAgentId(), $vehicleNumber);
+
+        if ($customers->isNotEmpty()) {
+            return response()->json([
+                'success'   => true,
+                'customers' => $customers->map(fn(Customer $c) => $this->formatCustomer($c))->values(),
+            ]);
+        }
+
+        // Not in this agent's portfolio — fall back to a GLIMS-wide lookup by
+        // vehicle number, same treatment as the policy-number path: read-only,
+        // flagged unlinked, no customer identity attached.
+        $fallback = app(\App\Services\GlimsPolicyFallbackService::class)->searchByVehicle($vehicleNumber);
+
+        if (! $fallback) {
+            return response()->json([
+                'success'   => true,
+                'customers' => [],
+                'message'   => "No matching customer found. If you're expecting to see this customer, they may not have synced to your portfolio yet — try again shortly, or search by policy number if you have it.",
+            ]);
+        }
+
+        app(\App\Services\GlimsPolicyFallbackService::class)->logUnlinkedView($agent, $fallback['policy_number']);
+
+        return response()->json([
+            'success' => true,
+            'source'  => 'unlinked',
+            'policy'  => $fallback,
+        ]);
     }
 
     private function searchByPolicyNumber($agent, string $policyNumber, AgentPolicySearchService $policySearch)

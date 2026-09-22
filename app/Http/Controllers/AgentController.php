@@ -87,6 +87,7 @@ class AgentController extends Controller
             'searchResult'    => [
                 'local'   => $result['policy'],
                 'details' => $result['details'],
+                'source'  => $result['source'],
             ],
             'searchQuery'     => $policyNumber,
             'searchError'     => null,

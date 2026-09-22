@@ -132,6 +132,28 @@
                         <x-input name="nature_of_business" value="{{ $f['nature_of_business'] ?? '' }}" class="w-full"
                             required />
                     </div>
+                    {{-- Ghana Card (NEW) --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Ghana Card
+                        </label>
+                        <input type="text" name="claimant_ghana_card" value="{{ $f['claimant_ghana_card'] ?? '' }}"
+                            placeholder="e.g. GHA-123456789-0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        <p class="mt-1 text-xs text-gray-500">Enter your Ghana Card number if available.</p>
+                    </div>
+
+                    {{-- TIN (NEW) --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            TIN
+                        </label>
+                        <input type="text" name="claimant_tin" value="{{ $f['claimant_tin'] ?? '' }}"
+                            placeholder="e.g. C00XXXXXXXX / P00XXXXXXXX"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        <p class="mt-1 text-xs text-gray-500">Enter your Tax Identification Number if you
+                            have one.</p>
+                    </div>
                 </div>
             </section>
 
@@ -144,7 +166,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Date and Time of
                             Accident</label><x-input name="incident_datetime"
-                            value="{{ $f['incident_datetime'] ?? '' }}" type="datetime-local" class="w-full" required />
+                            value="{{ $f['incident_datetime'] ?? '' }}" type="datetime-local" class="w-full"
+                            required />
                     </div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Exact
                             Location</label><x-input name="exact_location" value="{{ $f['exact_location'] ?? '' }}"
@@ -813,6 +836,8 @@
                 email: val('email'),
                 address: val('address'),
                 nature_of_business: val('nature_of_business'),
+                claimant_ghana_card: val('claimant_ghana_card'),
+                claimant_tin: val('claimant_tin'),
                 incident_datetime: val('incident_datetime'),
                 exact_location: val('exact_location'),
                 incident_description: val('incident_description'),

@@ -12,94 +12,34 @@ class AgentPolicySearchService
     public function __construct(
         private GlimsApiService $glims,
         private GenovaApiService $genova,
-        private PolicySyncService $policySync,
+        private GlimsPolicyFallbackService $glimsFallback,
     ) {}
 
     /**
-     * Find a policy by number for this agent — local DB first, then GLIMS
-     * if not synced yet. On a remote hit, persists it locally (agent-scoped)
-     * so the next search for the same policy is instant.
+     * Find a policy by number for this agent's own portfolio.
      *
-     * On every hit, also attempts a live-refresh call to the source system
-     * for the fullest/freshest detail (Genova policySearch / GLIMS
-     * policy details), falling back to raw_payload if that call fails —
-     * this is a straight port of the original controller's behavior, not
-     * something new. Skipped when the policy was JUST synced via the API
-     * fallback below, since that already pulled the freshest data available.
+     * Checks the local DB first (agent-scoped). If not found there — meaning
+     * either it hasn't synced yet, or it was never properly tied to this
+     * agent in GLIMS — falls back to a GLIMS-wide policy-details lookup by
+     * policy number, independent of any agent tie-up.
+     *
+     * The GLIMS-wide fallback does NOT persist to the local Policy table:
+     * since the policy isn't confirmed to belong to this agent, we don't
+     * want to write it into their portfolio. It's shown read-only, flagged
+     * as unlinked, and financial fields are stripped (see
+     * GlimsPolicyFallbackService::stripFinancials()) — claim filing stays
+     * blocked until the Data team ties the policy to the correct agent
+     * in GLIMS.
      *
      * NOTE: Genova has no direct policy-number search endpoint (only lookup
      * by internal policy_id, which we don't have until a customer-search has
-     * already run), so the remote fallback only covers GLIMS-sourced policies.
-     * A Genova policy that hasn't synced yet will not be found here.
+     * already run), so this fallback only ever queries GLIMS. A Genova policy
+     * that hasn't synced to this agent yet will not be found by this method
+     * at all — it will return null rather than surface an unlinked result.
      *
-     * @return array{policy: array, source: 'local'|'api', details: array}|null  null = not found / not this agent's
+     * @return array{policy: array, source: 'local'|'unlinked', details: array, linked_to_agent?: bool}|null
+     *         null = not found in this agent's portfolio, and not found in GLIMS either
      */
-    // public function findForAgent(Agent $agent, string $policyNumber): ?array
-    // {
-    //     $portfolioId = $agent->portfolioAgentId();
-
-    //     $local = Policy::where('policy_number', $policyNumber)
-    //         ->where('agent_id', $portfolioId)
-    //         ->first();
-
-    //     if ($local) {
-    //         return [
-    //             'policy'  => (new PolicyResource($local))->toArray(request()),
-    //             'source'  => 'local',
-    //             'details' => $this->getLiveDetails($local),
-    //         ];
-    //     }
-
-    //     if (! $agent->glims_agent_code) {
-    //         return null;
-    //     }
-
-    //     $remote = $this->glims->getPolicyByNumber($policyNumber);
-
-    //     if (! $remote) {
-    //         return null;
-    //     }
-
-    //     $remoteAgentCode = $remote['POLICY_AGENT_CODE'] ?? null;
-
-    //     if (! $remoteAgentCode || strcasecmp(trim($remoteAgentCode), trim($agent->glims_agent_code)) !== 0) {
-    //         // Exists in GLIMS but belongs to a different agent — treat as
-    //         // "not found" rather than confirming it exists to this agent.
-    //         return null;
-    //     }
-
-    //     // Enrich with full vehicle/risk detail before persisting — getPolicyByNumber()
-    //     // only returns placeholder risks (plate numbers), same as the agent sync job does.
-    //     try {
-    //         $remote['risks'] = $this->glims->getRisksForPolicy($policyNumber);
-    //     } catch (\Exception $e) {
-    //         Log::warning('AgentPolicySearchService: risk enrichment failed, syncing with placeholder risks', [
-    //             'policy_number' => $policyNumber,
-    //             'error'         => $e->getMessage(),
-    //         ]);
-    //     }
-
-    //     $this->policySync->syncAgentPolicyFromGlims($remote, $agent);
-
-    //     $saved = Policy::where('policy_number', $policyNumber)
-    //         ->where('agent_id', $portfolioId)
-    //         ->first();
-
-    //     if (! $saved) {
-    //         Log::error('AgentPolicySearchService: sync appeared to succeed but policy not found locally afterward', [
-    //             'policy_number' => $policyNumber,
-    //             'agent_id'      => $agent->id,
-    //             'portfolio_id'  => $portfolioId,
-    //         ]);
-    //         return null;
-    //     }
-
-    //     return [
-    //         'policy'  => (new PolicyResource($saved))->toArray(request()),
-    //         'source'  => 'api',
-    //         'details' => [], // just synced from GLIMS above — already the freshest data available
-    //     ];
-    // }
 
     public function findForAgent(Agent $agent, string $policyNumber): ?array
     {
@@ -109,14 +49,26 @@ class AgentPolicySearchService
             ->where('agent_id', $portfolioId)
             ->first();
 
-        if (! $local) {
+        if ($local) {
+            return [
+                'policy'  => (new PolicyResource($local))->toArray(request()),
+                'source'  => 'local',
+                'details' => $this->getLiveDetails($local),
+            ];
+        }
+
+        $fallback = $this->glimsFallback->search($policyNumber);
+
+        if (! $fallback) {
             return null;
         }
 
+        $this->glimsFallback->logUnlinkedView($agent, $fallback['policy_number']);
+
         return [
-            'policy'  => (new PolicyResource($local))->toArray(request()),
-            'source'  => 'local',
-            'details' => $this->getLiveDetails($local),
+            'policy'  => $fallback,
+            'source'  => 'unlinked',
+            'details' => $fallback['risks'],
         ];
     }
 

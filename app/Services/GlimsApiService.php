@@ -230,17 +230,18 @@ class GlimsApiService
      * Get rich vehicle/risk detail for a specific policy number.
      * This is the GLIMS equivalent of Genova's policySearch() rich endpoint.
      */
-    public function getPolicyDetails(string $policyNumber): array
+    public function getPolicyDetails(string $value, string $type = 'policy_number'): array
     {
         try {
             $response = $this->http()->get("{$this->baseUrl}/api/policies/details/", [
-                'policy_number' => $policyNumber,
+                $type => $value,
             ]);
 
             if ($response->failed()) {
                 Log::warning('GlimsApiService: policy details failed', [
-                    'policy_number' => $policyNumber,
-                    'status'        => $response->status(),
+                    'type'  => $type,
+                    'value' => $value,
+                    'status' => $response->status(),
                 ]);
                 return [];
             }
@@ -248,7 +249,8 @@ class GlimsApiService
             return $response->json('results') ?? [];
         } catch (\Exception $e) {
             Log::error('GlimsApiService: getPolicyDetails error — ' . $e->getMessage(), [
-                'policy_number' => $policyNumber,
+                'type'  => $type,
+                'value' => $value,
             ]);
             return [];
         }
