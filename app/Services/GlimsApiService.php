@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use \Carbon\Carbon;
 use App\Support\GlimsRiskResolver;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -546,13 +547,39 @@ class GlimsApiService
         return collect($rows)
             ->groupBy('policy_number')
             ->map(function ($group) {
+                // A policy_number group can span multiple terms (old term +
+                // renewal) — sub-group by (start_date, expiry_date) and keep
+                // only the most recent term.
+                $termGroups = $group->groupBy(function ($row) {
+                    $row = (array) $row;
+                    return ($row['start_date'] ?? '') . '|' . ($row['expiry_date'] ?? '');
+                });
+
+                $group = $termGroups->sortByDesc(function ($termRows) {
+                    $row = (array) $termRows->first();
+                    try {
+                        return Carbon::parse($row['expiry_date'] ?? null)->timestamp;
+                    } catch (\Exception $e) {
+                        return 0;
+                    }
+                })->first();
+
                 $first = (array) $group->first();
 
-                // Collect plate_number values as placeholder risks.
-                // Full vehicle detail is fetched separately via getPolicyDetails()
-                // during the sync job (same pattern as Genova's rich sync).
+                // Multiple rows can exist for the same vehicle within one term
+                // (e.g. an endorsement row). Premium sums correctly across them
+                // (GLIMS represents the adjustment as a delta), so totals below
+                // use the full $group, unchanged. This step only prevents the
+                // placeholder risks list from showing the same vehicle twice —
+                // matters mainly as a fallback if the richer per-policy risk
+                // fetch later fails and this placeholder data ends up persisted
+                // as-is (see SyncAgentPoliciesJob's failedPolicyNumbers path).
                 $risks = $group
-                    ->filter(fn($row) => ! empty(((array) $row)['plate_number']))
+                    ->unique(function ($row) {
+                        $row = (array) $row;
+                        return $row['plate_number'] ?? $row['vehicle_no'] ?? 'unknown';
+                    })
+                    ->filter(fn($row) => ! empty(((array) $row)['plate_number'] ?? ((array) $row)['vehicle_no'] ?? null))
                     ->map(fn($row) => $this->normalisePlaceholderRisk((array) $row))
                     ->values()
                     ->toArray();

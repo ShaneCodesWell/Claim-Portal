@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use Carbon\Carbon;
 use App\Models\Agent;
 use App\Services\GenovaApiService;
 use App\Services\PolicySyncService;
@@ -39,10 +40,27 @@ class SyncAgentPoliciesFromGenovaJob implements ShouldQueue
 
         $policies = $genova->getAllPoliciesByAgentCode($agentCode);
 
+        // Group by policy number and keep only the most recent term per policy —
+        // Genova can return multiple entries for the same policy_no (e.g. an old
+        // expired term alongside a renewal) with no guaranteed order. Without
+        // this, whichever entry the loop processes last silently wins.
+        $mostRecentPerPolicy = collect($policies)
+            ->filter(fn($entry) => ! empty($entry['policy']['policy_no'] ?? null))
+            ->groupBy('policy.policy_no')
+            ->map(function ($group) {
+                return $group->sortByDesc(function ($entry) {
+                    try {
+                        return Carbon::parse($entry['policy']['policy_end'] ?? null)->timestamp;
+                    } catch (\Exception $e) {
+                        return 0;
+                    }
+                })->first();
+            });
+
         $synced = 0;
         $errors = 0;
 
-        foreach ($policies as $entry) {
+        foreach ($mostRecentPerPolicy as $entry) {
             try {
                 $policySync->syncAgentPolicyFromGenova($entry, $this->agent);
                 $synced++;

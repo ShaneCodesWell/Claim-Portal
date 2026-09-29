@@ -31,13 +31,20 @@ class PolicySyncService
         $groupedByNumber = collect($customerInfo['policies'])->groupBy('policy_number');
 
         foreach ($groupedByNumber as $policyNumber => $subPolicies) {
-            // Skip if already processed in this sync run
-            if (isset($syncedPoliciesMap[$policyNumber])) {
-                continue;
-            }
+            // Pick the most recent term by end date, rather than trusting
+            // whichever row the API happened to list first — same reasoning
+            // as the GLIMS fix above.
+            $firstPolicy = $subPolicies->sortByDesc(function ($p) {
+                try {
+                    return Carbon::parse($p['policy_end_date'] ?? null)->timestamp;
+                } catch (\Exception $e) {
+                    return 0;
+                }
+            })->first();
 
-            $firstPolicy = $subPolicies->first();
-            $productId   = $firstPolicy['product_id'] ?? null;
+            $productId = $firstPolicy['product_id'] ?? null;
+            $endDate = $firstPolicy['policy_end_date'] ?? null;
+            $status  = ($endDate && Carbon::parse($endDate)->isPast()) ? 'expired' : 'active';
 
             $dbPolicy = Policy::updateOrCreate(
                 ['source' => 'genova', 'policy_number' => $policyNumber],
@@ -53,6 +60,7 @@ class PolicySyncService
                     'end_date'            => $firstPolicy['policy_end_date'] ?? null,
                     'effective_date'      => $firstPolicy['effective_date'] ?? null,
                     'renewal_date'        => $firstPolicy['renewal_date'] ?? null,
+                    'status'              => $status,
                     'raw_payload'         => $subPolicies->values()->toArray(),
                     'last_synced_at'      => now(),
                 ]
@@ -312,13 +320,24 @@ class PolicySyncService
     {
         $syncedPoliciesMap = [];
 
-        foreach ($policies as $policy) {
-            $policyNumber = $policy['POLICY_NUMBER'] ?? null;
+        // Group by policy_number first, then keep only the most recent term
+        // per policy — GLIMS can return multiple rows for the same policy_number
+        // (e.g. an old expired term alongside a renewed term) with no guaranteed
+        // ordering. Without this, whichever row appears first in the array wins,
+        // which can silently persist stale/expired data over an active renewal.
 
-            if (! $policyNumber || isset($syncedPoliciesMap[$policyNumber])) {
-                continue;
-            }
+        $mostRecentPerPolicy = collect($policies)
+            ->filter(fn($p) => ! empty($p['POLICY_NUMBER']))
+            ->groupBy('POLICY_NUMBER')
+            ->map(fn($group) => $group->sortByDesc(function ($p) {
+                try {
+                    return Carbon::parse($p['POLICY_EXPIRY_DATE'] ?? null)->timestamp;
+                } catch (\Exception $e) {
+                    return 0;
+                }
+            })->first());
 
+        foreach ($mostRecentPerPolicy as $policyNumber => $policy) {
             $status     = $this->resolveStatus($policy);
             $rawPayload = array_merge($policy, [
                 'source'       => 'glims',
@@ -345,11 +364,7 @@ class PolicySyncService
                 ]
             );
 
-            $syncedPoliciesMap[$policyNumber] = $this->formatGlimsPolicyForResponse(
-                $dbPolicy,
-                $dbCustomer,
-                $policy
-            );
+            $syncedPoliciesMap[$policyNumber] = $this->formatGlimsPolicyForResponse($dbPolicy, $dbCustomer, $policy);
         }
 
         return $syncedPoliciesMap;

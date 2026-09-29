@@ -25,3 +25,13 @@ Schedule::command('agents:sync-policies')
     ->daily()
     ->at('01:00')
     ->withoutOverlapping();
+
+// Weekly cleanup: collapse any GLIMS policies whose stored risks still
+// contain duplicate same-vehicle rows (e.g. from a failed rich-risk fetch
+// during the nightly sync above — see SyncAgentPoliciesJob's retry/failure
+// path). Runs Sunday, after the nightly sync has had all week to run.
+Schedule::command('glims:backfill-risk-duplicates')
+    ->weekly()
+    ->sundays()
+    ->at('02:00')
+    ->withoutOverlapping();
