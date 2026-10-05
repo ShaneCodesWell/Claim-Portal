@@ -44,10 +44,10 @@ class DashboardController extends Controller
         $customerIds = $customer->resolvedCustomerIds();
 
         $policies = Policy::whereIn('customer_id', $customerIds)
+            ->where('status', '!=', 'expired')
             ->with('customer')
             ->search($request->input('search'))
             ->ofType($request->input('type'))
-            ->orderByRaw("CASE WHEN status = 'expired' THEN 1 ELSE 0 END ASC")
             ->orderBy('last_synced_at', 'desc')
             ->paginate(6)
             ->withQueryString();
