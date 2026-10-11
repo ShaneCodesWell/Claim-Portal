@@ -114,9 +114,10 @@
                     <form action="{{ route('surveyor.claims.documents', $claim) }}" method="POST"
                         enctype="multipart/form-data" class="space-y-3">
                         @csrf
-                        <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf"
+                        <input type="file" name="documents[]" multiple
+                            accept=".jpg,.jpeg,.png,.gif,.pdf,.xls,.xlsx,.csv"
                             class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 cursor-pointer" />
-                        <p class="text-xs text-gray-400">PDF, JPG, PNG up to 5MB each</p>
+                        <p class="text-xs text-gray-400">PDF, JPG, PNG, XLS, XLSX, CSV up to 5MB each</p>
                         <button type="submit"
                             class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
                             <i class="fas fa-upload text-xs"></i> Upload Documents
@@ -187,7 +188,7 @@
                                     <p class="text-sm text-gray-600 mt-0.5">{{ $activity->note }}</p>
                                 @endif
                                 <p class="text-xs text-gray-400 mt-1">
-                                    by {{ $activity->staff?->name ?? 'System' }}
+                                    by {{ $activity->actor_name }}
                                 </p>
                             </div>
                         </div>

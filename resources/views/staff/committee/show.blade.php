@@ -105,16 +105,17 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-upload text-orange-500"></i> Upload Survey Documents
+                        <i class="fas fa-upload text-orange-500"></i> Upload Claim Committee Documents
                     </h3>
                 </div>
                 <div class="p-4">
                     <form action="{{ route('committee.claims.documents', $claim) }}" method="POST"
                         enctype="multipart/form-data" class="space-y-3">
                         @csrf
-                        <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf"
+                        <input type="file" name="documents[]" multiple
+                            accept=".jpg,.jpeg,.png,.gif,.pdf,.xls,.xlsx,.csv"
                             class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer" />
-                        <p class="text-xs text-gray-400">PDF, JPG, PNG up to 5MB each</p>
+                        <p class="text-xs text-gray-400">PDF, JPG, PNG, XLS, XLSX, CSV up to 5MB each</p>
                         <button type="submit"
                             class="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
                             <i class="fas fa-upload text-xs"></i> Upload Documents
@@ -198,7 +199,7 @@
                                     <p class="text-sm text-gray-600 mt-0.5">{{ $activity->note }}</p>
                                 @endif
                                 <p class="text-xs text-gray-400 mt-1">
-                                    by {{ $activity->staff?->name ?? 'System' }}
+                                    by {{ $activity->actor_name }}
                                 </p>
                             </div>
                         </div>

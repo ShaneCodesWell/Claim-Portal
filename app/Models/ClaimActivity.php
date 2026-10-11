@@ -30,9 +30,14 @@ class ClaimActivity extends Model
         return $this->belongsTo(Claim::class);
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function staff(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function customer(): BelongsTo
@@ -43,5 +48,17 @@ class ClaimActivity extends Model
     public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class);
+    }
+
+    /**
+     * Display name of whoever performed the action.
+     * Falls back to "System" only when no actor was recorded.
+     */
+    public function getActorNameAttribute(): string
+    {
+        return $this->user?->name
+            ?? $this->customer?->name
+            ?? $this->agent?->name
+            ?? 'System';
     }
 }

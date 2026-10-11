@@ -58,7 +58,7 @@ class ClaimController extends Controller
             abort(403, 'This claim is not currently under survey.');
         }
 
-        $claim->load(['customer', 'policy', 'branch', 'activities.staff', 'documents', 'surveyor']);
+        $claim->load(['customer', 'policy', 'branch', 'activities.user', 'activities.customer', 'activities.agent', 'documents', 'surveyor']);
         $stats = $this->stats();
 
         return view('surveyor.claims.show', compact('claim', 'stats'));
@@ -79,7 +79,7 @@ class ClaimController extends Controller
     {
         $request->validate([
             'documents'   => 'required|array',
-            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf,xls,xlsx,csv',
         ]);
 
         $this->claimService->attachDocuments(

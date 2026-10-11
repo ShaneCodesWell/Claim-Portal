@@ -201,7 +201,7 @@ class ClaimController extends Controller
             'claim_type'         => 'required|string',
             'form_data'          => 'required|array',
             'documents'          => 'nullable|array',
-            'documents.*'        => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'documents.*'        => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf,xls,xlsx,csv',
             'delete_documents'   => 'nullable|array',
             'delete_documents.*' => 'integer|exists:claim_documents,id',
         ]);
@@ -269,7 +269,7 @@ class ClaimController extends Controller
 
         $request->validate([
             'documents'   => 'required|array',
-            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf,xls,xlsx,csv',
         ]);
 
         $this->claimService->attachDocuments(

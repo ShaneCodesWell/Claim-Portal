@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Staff;
 
 use App\Enums\ClaimStatus;
@@ -10,8 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CommitteeClaimController extends Controller
 {
-    public function __construct(protected ClaimService $claimService)
-    {}
+    public function __construct(protected ClaimService $claimService) {}
 
     public function index(Request $request)
     {
@@ -33,7 +33,9 @@ class CommitteeClaimController extends Controller
             'customer',
             'policy',
             'branch',
-            'activities.staff',
+            'activities.user',
+            'activities.customer',
+            'activities.agent',
             'documents',
             'assignedTo',
             'surveyor',
@@ -47,7 +49,7 @@ class CommitteeClaimController extends Controller
     {
         $request->validate([
             'documents'   => 'required|array',
-            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf,xls,xlsx,csv',
         ]);
 
         $this->claimService->attachDocuments(

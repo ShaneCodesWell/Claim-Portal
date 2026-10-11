@@ -85,7 +85,18 @@ class ClaimController extends Controller
 
     public function show(Claim $claim)
     {
-        $claim->load(['customer', 'policy', 'assignedTo', 'branch', 'activities.staff', 'documents', 'surveyor', 'committeeDecidedBy']);
+        $claim->load([
+            'customer',
+            'policy',
+            'assignedTo',
+            'branch',
+            'activities.user',
+            'activities.customer',
+            'activities.agent',
+            'documents',
+            'surveyor',
+            'committeeDecidedBy'
+        ]);
 
         $staffMembers = User::where('is_active', true)
             ->whereIn('role', UserRole::staffRoles())
@@ -101,7 +112,9 @@ class ClaimController extends Controller
             'policy',
             'assignedTo',
             'branch',
-            'activities.staff',
+            'activities.user',
+            'activities.customer',
+            'activities.agent',
             'documents',
             'surveyor',
             'committeeDecidedBy',
@@ -255,7 +268,7 @@ class ClaimController extends Controller
             'claim_type'  => 'required|string',
             'form_data'   => 'required|array',
             'documents'   => 'nullable|array',
-            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf,xls,xlsx,csv',
             'note'        => 'nullable|string|max:1000',
         ]);
 
@@ -342,7 +355,7 @@ class ClaimController extends Controller
 
         $request->validate([
             'documents'   => 'required|array',
-            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf',
+            'documents.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,pdf,xls,xlsx,csv',
         ]);
 
         $this->claimService->attachDocuments(

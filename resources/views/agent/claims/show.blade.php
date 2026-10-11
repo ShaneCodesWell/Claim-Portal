@@ -100,9 +100,9 @@
                     <form action="{{ route('agent.claims.documents', $claim) }}" method="POST"
                         enctype="multipart/form-data" class="space-y-3">
                         @csrf
-                        <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf"
+                        <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.xls,.xlsx,.csv"
                             class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
-                        <p class="text-xs text-gray-400">PDF, JPG, PNG up to 5MB each</p>
+                        <p class="text-xs text-gray-400">PDF, JPG, PNG, XLS, XLSX, CSV up to 5MB each</p>
                         <button type="submit"
                             class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
                             <i class="fas fa-upload text-xs"></i> Upload Documents

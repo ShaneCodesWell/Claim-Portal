@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Agent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ClaimService
 {
@@ -289,10 +290,17 @@ class ClaimService
         ?Agent $uploadedByAgent = null
     ): void {
         foreach ($files as $file) {
-            // Store under claims/{claim_number}/filename — private disk
+            $originalName = $file->getClientOriginalName();
+
+            // Unique stored name so same-named uploads never overwrite each other.
+            // Strip anything odd from the original name, keep the extension intact.
+            $safeName   = preg_replace('/[^A-Za-z0-9._-]/', '_', $originalName);
+            $storedName = Str::uuid() . '-' . $safeName;
+
+            // Store under claims/{claim_number}/{uuid}-filename (private disk)
             $path = $file->storeAs(
                 "claims/{$claim->claim_number}",
-                $file->getClientOriginalName(),
+                $storedName,
                 'local'
             );
 
@@ -302,8 +310,8 @@ class ClaimService
                 'uploaded_by_customer_id' => $uploadedByCustomer?->id,
                 'uploaded_by_agent_id'    => $uploadedByAgent?->id,
                 'type'                    => $type,
-                'original_name'           => $file->getClientOriginalName(),
-                'file_path'               => $path,
+                'original_name'           => $originalName, // unchanged, for display
+                'file_path'               => $path,         // now points to the unique file
                 'mime_type'               => $file->getMimeType(),
                 'file_size'               => $file->getSize(),
             ]);
