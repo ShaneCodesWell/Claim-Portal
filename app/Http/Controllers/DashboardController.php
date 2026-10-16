@@ -8,7 +8,9 @@ use App\Services\GenovaApiService;
 use App\Services\GlimsService;
 use App\Services\GlimsSyncService;
 use App\Services\PolicySyncService;
+use App\Jobs\SyncCustomerPoliciesJob;
 use Illuminate\Http\Request;
+use \Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -43,12 +45,19 @@ class DashboardController extends Controller
         //  from Genova and GLIMS that haven't been merged yet)
         $customerIds = $customer->resolvedCustomerIds();
 
+        // Silent background refresh if data is older than 6 hours.
+        // The job skips itself if synced within 30 minutes, so this is safe.
+        if ($customer->last_synced_at && $customer->last_synced_at->lt(now()->subHours(6))) {
+            SyncCustomerPoliciesJob::dispatch($customer)->onQueue('high');
+        }
+
         $policies = Policy::whereIn('customer_id', $customerIds)
-            ->where('status', '!=', 'expired')
+            ->visible()
             ->with('customer')
             ->search($request->input('search'))
             ->ofType($request->input('type'))
-            ->orderBy('last_synced_at', 'desc')
+            ->orderByRaw('end_date DESC NULLS LAST')   // Postgres: NULLs sort first on DESC otherwise
+            ->orderByDesc('id')                        // tie-breaker so pagination is stable
             ->paginate(6)
             ->withQueryString();
 
@@ -57,21 +66,19 @@ class DashboardController extends Controller
         );
 
         $businessClasses = Policy::whereIn('customer_id', $customerIds)
-            ->where('status', 'active')
+            ->visible()
             ->whereNotNull('business_class_name')
             ->distinct()
             ->pluck('business_class_name');
 
-        $statusCounts = Policy::whereIn('customer_id', $customerIds)
-            ->where('status', 'active')
-            ->selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $statusCounts = collect([
+            'active' => Policy::whereIn('customer_id', $customerIds)->visible()->count(),
+        ]);
 
         return view('customer.dashboard.index', compact('customer', 'policies', 'businessClasses', 'statusCounts'));
     }
 
-    public function pollPolicies(Request $request): \Illuminate\Http\JsonResponse
+    public function pollPolicies(Request $request): JsonResponse
     {
         $customer = Auth::guard('customer')->user();
 
@@ -82,7 +89,7 @@ class DashboardController extends Controller
         $customerIds = $customer->resolvedCustomerIds();
 
         $count = Policy::whereIn('customer_id', $customerIds)
-            ->where('status', 'active')
+            ->visible()
             ->count();
 
         $syncDone = ! is_null($customer->fresh()->last_synced_at); // fresh() to avoid stale cache

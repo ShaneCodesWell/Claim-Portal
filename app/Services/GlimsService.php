@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
@@ -55,7 +56,6 @@ class GlimsService
                 'CLIENT_HOME_EMAIL'  => $customer->client_home_email,
                 'CLIENT_TYPE'        => $customer->client_type,
             ];
-
         } catch (\Exception $e) {
             Log::error('GLIMS customerVerification error: ' . $e->getMessage());
             return null;
@@ -79,15 +79,15 @@ class GlimsService
         try {
             $policies = $this->db()
                 ->table('UW1_POLICY as p')
-            // Product lookup
+                // Product lookup
                 ->leftJoin('UW2_PRODUCT as prod', 'prod.PRODUCT_CODE', '=', 'p.POLICY_PRODUCT')
-            // Line-of-Business (sub-class) lookup
+                // Line-of-Business (sub-class) lookup
                 ->leftJoin('UW2_SUB_CLASS as sc', 'sc.SUB_CLASS_CODE', '=', 'p.POLICY_LOB')
-            // Main class lookup — linked through sub-class via SUB_CLASS_MAIN
+                // Main class lookup — linked through sub-class via SUB_CLASS_MAIN
                 ->leftJoin('UW2_MAIN_CLASS as mc', 'mc.MAIN_CLASS_CODE', '=', 'sc.SUB_CLASS_MAIN')
-            // Branch lookup
+                // Branch lookup
                 ->leftJoin('GN2_BRANCH as br', 'br.BRANCH_CODE', '=', 'p.POLICY_BRANCH')
-            // Agent lookup
+                // Agent lookup
                 ->leftJoin('GN2_AGENT as ag', 'ag.AGENT_CODE', '=', 'p.POLICY_AGENT')
                 ->where('p.POLICY_OWNER', $clientCode)
                 ->select([
@@ -118,7 +118,7 @@ class GlimsService
                     'mc.MAIN_CLASS_DESC    as POLICY_MAIN_CLASS_NAME',
                     'br.BRANCH_DESC        as POLICY_BRANCH_NAME',
                 ])
-            // Agent full name — concatenated in PHP after fetch (Oracle CONCAT is 2-arg only)
+                // Agent full name — concatenated in PHP after fetch (Oracle CONCAT is 2-arg only)
                 ->addSelect(
                     DB::raw("ag.AGENT_FIRST_NAME || ' ' || ag.AGENT_FAMILY_NAME as POLICY_AGENT_NAME"),
                     // Formatted policy number: P-{PRODUCT}-{BRANCH}-{UWY}-{PROPOSAL}
@@ -172,7 +172,6 @@ class GlimsService
                     'POLICY_AGENT_NAME'        => $row->policy_agent_name ?? 'Unknown Agent',
                 ];
             })->toArray();
-
         } catch (\Exception $e) {
             Log::error('GLIMS getPoliciesByClientCode error: ' . $e->getMessage(), [
                 'client_code' => $clientCode,
@@ -223,7 +222,6 @@ class GlimsService
                 ->get();
 
             return $risks->toArray();
-
         } catch (\Exception $e) {
             Log::error('GLIMS getMotorRisks error: ' . $e->getMessage());
             return [];
@@ -250,7 +248,6 @@ class GlimsService
                 ->get();
 
             return $risks->toArray();
-
         } catch (\Exception $e) {
             Log::error('GLIMS getNonMotorRisks error: ' . $e->getMessage());
             return [];
@@ -282,7 +279,6 @@ class GlimsService
                 ->get();
 
             return $claims->toArray();
-
         } catch (\Exception $e) {
             Log::error('GLIMS getClaimsByPolicySequence error: ' . $e->getMessage(), [
                 'policy_sequence' => $policySequence,
@@ -365,12 +361,10 @@ class GlimsService
                     $onChunk($rows);
                     $total += count($rows);
                 });
-
         } catch (\Exception $e) {
             Log::error('GLIMS getAllActivePolicies error: ' . $e->getMessage());
         }
 
         return $total;
     }
-
 }

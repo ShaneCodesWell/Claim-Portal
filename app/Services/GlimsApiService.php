@@ -488,7 +488,20 @@ class GlimsApiService
                 return [];
             }
 
-            return $response->json('results') ?? [];
+            $results  = $response->json('results') ?? [];
+            $reported = $response->json('count');
+
+            if (is_numeric($reported) && (int) $reported !== count($results)) {
+                Log::warning('GlimsApiService: policy search count mismatch (possible pagination)', [
+                    'search_type'  => $searchType,
+                    'search_value' => $searchValue,
+                    'reported'     => (int) $reported,
+                    'returned'     => count($results),
+                ]);
+            }
+
+            return $results;
+            
         } catch (\Exception $e) {
             Log::error('GlimsApiService: policySearch error — ' . $e->getMessage(), [
                 'search_type'  => $searchType,

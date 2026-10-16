@@ -174,6 +174,15 @@ class Policy extends Model
         return $query->where('status', $status);
     }
 
+    // Scope only for Glims Active Policies
+    public function scopeVisible(Builder $query): Builder
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('end_date')
+                ->orWhere('end_date', '>=', today());   // expiry day itself is still covered
+        });
+    }
+
     // Accessors
     public function getVehicleNumberAttribute(): string
     {

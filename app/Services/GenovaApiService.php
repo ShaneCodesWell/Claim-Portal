@@ -129,7 +129,15 @@ class GenovaApiService
      */
     public function getAllPoliciesByAgentCode(string $agentCode, int $concurrency = 10): array
     {
-        $first = $this->getPoliciesByAgentCode($agentCode, 1);
+        try {
+            $first = $this->getPoliciesByAgentCode($agentCode, 1);
+        } catch (\Throwable $e) {
+            Log::error('GenovaApiService: initial page fetch threw', [
+                'agent_code' => $agentCode,
+                'error'      => $e->getMessage(),
+            ]);
+            return [];
+        }
 
         if ($first->failed()) {
             Log::error('GenovaApiService: initial page fetch failed', [
@@ -172,10 +180,12 @@ class GenovaApiService
             foreach ($batch as $page) {
                 $response = $responses[(string) $page] ?? null;
 
-                if (! $response || $response->failed()) {
+                // Pooled results can be a ConnectionException instead of a Response
+                if (! $response instanceof Response || $response->failed()) {
                     Log::warning('GenovaApiService: pooled page failed', [
                         'agent_code' => $agentCode,
                         'page'       => $page,
+                        'reason'     => $response instanceof \Throwable ? $response->getMessage() : 'no response',
                     ]);
                     continue;
                 }

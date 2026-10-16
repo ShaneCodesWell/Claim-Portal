@@ -170,9 +170,12 @@ class AuthController extends Controller
             // Single profile — safe to commit everything now
             $profile = $genovaLocalProfiles[0];
             session([
-                'pending_name'          => $profile['name'],
-                'pending_customer_code' => $profile['code'],
-                'selected_customer_id'  => Customer::where('genova_customer_code', $profile['code'])->value('id'),
+                'pending_name'             => $profile['name'],
+                'pending_customer_code'    => $profile['code'],
+                'pending_customer_source'  => 'genova',
+                'pending_secondary_code'   => null,
+                'pending_secondary_source' => null,
+                'selected_customer_id'     => Customer::where('genova_customer_code', $profile['code'])->value('id'),
             ]);
 
             return $this->sendOtpAndRespond($profile['phone'], $profile['name']);
@@ -207,9 +210,12 @@ class AuthController extends Controller
                 // Single profile — safe to commit everything now
                 $profile = $glimsProfiles[0];
                 session([
-                    'pending_name'          => $profile['name'],
-                    'pending_customer_code' => $profile['code'],
-                    'selected_customer_id'  => Customer::where('glims_customer_code', $profile['code'])->value('id'),
+                    'pending_name'             => $profile['name'],
+                    'pending_customer_code'    => $profile['code'],
+                    'pending_customer_source'  => 'glims',
+                    'pending_secondary_code'   => null,
+                    'pending_secondary_source' => null,
+                    'selected_customer_id'     => Customer::where('glims_customer_code', $profile['code'])->value('id'),
                 ]);
 
                 return $this->sendOtpAndRespond($phone, $profile['name']);
@@ -244,9 +250,9 @@ class AuthController extends Controller
         ]);
 
         $customerCode    = $request->customer_code;
-        $source          = $request->input('source', 'genova');
+        $source          = $this->normaliseSource($request->input('source', 'genova'));
         $secondaryCode   = $request->input('secondary_code');
-        $secondarySource = $request->input('secondary_source');
+        $secondarySource = $secondaryCode ? $this->normaliseSource($request->input('secondary_source')) : null;
 
         session([
             'pending_customer_code'    => $customerCode,
@@ -255,7 +261,7 @@ class AuthController extends Controller
             'pending_secondary_source' => $secondarySource,
         ]);
 
-        $primaryColumn = $source === 'glims' ? 'glims_customer_code' : 'genova_customer_code';
+        $primaryColumn = $this->sourceColumn($source);
 
         // Pin the local DB record if it exists and pull the correct name + phone from it
         $customer = Customer::where($primaryColumn, $customerCode)->first();
@@ -389,17 +395,17 @@ class AuthController extends Controller
             'pending_phone',
             'pending_name',
             'pending_customer_code',
+            'pending_customer_source',    // NEW
             'pending_secondary_code',
+            'pending_secondary_source',   // NEW
             'selected_customer_id',
             'auth_source',
             'login_type',
             'username',
         ]);
 
-        // Fallback dispatch — covers brand-new customers who didn't exist
-        // when sendOtpAndRespond fired the early dispatch.
-        // SyncCustomerPoliciesJob skips if synced within last 30 min,
-        // so dispatching twice is safe — the job deduplicates itself.
+        // Fallback dispatch for brand-new customers.
+        // The job skips itself if synced within the last 30 minutes, so dispatching twice is safe.
         try {
             SyncCustomerPoliciesJob::dispatch($customer, $secondaryCode)->onQueue('high');
         } catch (\Exception $e) {
@@ -516,6 +522,7 @@ class AuthController extends Controller
 
         $localCustomer = Customer::where('phone', $phone)
             ->whereJsonContains('sources', 'glims')
+            ->whereNotNull('glims_customer_code')   // NEW: must have a real GLIMS code
             ->first();
 
         if ($localCustomer) {
@@ -609,9 +616,9 @@ class AuthController extends Controller
                     $policy = Policy::where('source', 'genova')
                         ->whereRaw(
                             "EXISTS (
-                            SELECT 1 FROM jsonb_array_elements(raw_payload::jsonb) elem
-                            WHERE elem->>'vehicle_number' = ?
-                        )",
+                        SELECT 1 FROM jsonb_array_elements(raw_payload::jsonb) elem
+                        WHERE elem->>'vehicle_number' = ?
+                    )",
                             [$identifier]
                         )
                         ->with('customer')
@@ -625,6 +632,14 @@ class AuthController extends Controller
                 Log::info('resolveGenovaLocalProfiles: no local Genova record found', [
                     'identifier' => $identifier,
                     'login_type' => $loginType,
+                ]);
+                return [];
+            }
+
+            // NEW: a customer with no Genova code cannot be logged in as a Genova profile.
+            if (empty($customer->genova_customer_code)) {
+                Log::warning('resolveGenovaLocalProfiles: local customer has no Genova code, skipping', [
+                    'customer_id' => $customer->id,
                 ]);
                 return [];
             }
@@ -663,16 +678,16 @@ class AuthController extends Controller
             ], 500);
         }
 
-        $customerCode   = session('pending_customer_code');
+        $customerCode = session('pending_customer_code');
         $customerSource = session('pending_customer_source', 'genova');
 
         if ($customerCode) {
-            $column   = $customerSource === 'glims' ? 'glims_customer_code' : 'genova_customer_code';
+            $column   = $this->sourceColumn(session('pending_customer_source', 'genova'));
             $customer = Customer::where($column, $customerCode)->first();
 
             if ($customer) {
                 try {
-                    SyncCustomerPoliciesJob::dispatch($customer)->onQueue('high');
+                    SyncCustomerPoliciesJob::dispatch($customer, session('pending_secondary_code'))->onQueue('high');
                     Log::info('sendOtpAndRespond: early sync dispatched', [
                         'customer_id' => $customer->id,
                     ]);
@@ -694,9 +709,11 @@ class AuthController extends Controller
     private function resolveCustomerFromSession(string $phone): ?Customer
     {
         $customerCode    = session('pending_customer_code');
-        $customerSource  = session('pending_customer_source', 'genova');
+        $customerSource  = $this->normaliseSource(session('pending_customer_source', 'genova'));
         $secondaryCode   = session('pending_secondary_code');
-        $secondarySource = session('pending_secondary_source');
+        $secondarySource = $secondaryCode
+            ? $this->normaliseSource(session('pending_secondary_source'))
+            : null;
         $pendingName     = session('pending_name');
 
         if (! $customerCode) {
@@ -704,8 +721,8 @@ class AuthController extends Controller
             return null;
         }
 
-        $primaryColumn   = $customerSource === 'glims' ? 'glims_customer_code' : 'genova_customer_code';
-        $secondaryColumn = $secondarySource === 'glims' ? 'glims_customer_code' : 'genova_customer_code';
+        $primaryColumn   = $this->sourceColumn($customerSource);
+        $secondaryColumn = $secondarySource ? $this->sourceColumn($secondarySource) : null;
 
         $customer = Customer::where($primaryColumn, $customerCode)->first();
 
@@ -718,7 +735,7 @@ class AuthController extends Controller
             if (empty($customer->name) || $customer->name === 'Unknown') {
                 $updates['name'] = $pendingName ?? $customer->name;
             }
-            if ($secondaryCode && empty($customer->{$secondaryColumn})) {
+            if ($secondaryCode && $secondaryColumn && empty($customer->{$secondaryColumn})) {
                 $updates[$secondaryColumn] = $secondaryCode;
             }
 
@@ -729,23 +746,35 @@ class AuthController extends Controller
             return $customer->fresh();
         }
 
-        $sources = array_values(array_filter([$customerSource, $secondarySource]));
+        $attributes = [
+            $primaryColumn => $customerCode,
+            'name'         => $pendingName ?? 'Unknown',
+            'phone'        => $phone,
+            'email'        => null,
+            'sources'      => array_values(array_filter([$customerSource, $secondarySource])),
+        ];
+
+        if ($secondaryCode && $secondaryColumn) {
+            $attributes[$secondaryColumn] = $secondaryCode;
+        }
 
         Log::info('resolveCustomerFromSession: creating new customer record', [
-            'customer_code'   => $customerCode,
-            'secondary_code'  => $secondaryCode,
-            'phone'           => $phone,
-            'sources'         => $sources,
+            'customer_code' => $customerCode,
+            'source'        => $customerSource,
+            'phone'         => $phone,
         ]);
 
-        return Customer::create([
-            $primaryColumn     => $customerCode,
-            $secondaryColumn   => $secondaryCode,
-            'name'             => $pendingName ?? 'Unknown',
-            'phone'            => $phone,
-            'email'            => null,
-            'sources'          => $sources,
-        ]);
+        return Customer::create($attributes);
+    }
+
+    private function normaliseSource(?string $source): string
+    {
+        return str_starts_with((string) $source, 'glims') ? 'glims' : 'genova';
+    }
+
+    private function sourceColumn(?string $source): string
+    {
+        return $this->normaliseSource($source) === 'glims' ? 'glims_customer_code' : 'genova_customer_code';
     }
 
     private function maskPhone(string $phone): string

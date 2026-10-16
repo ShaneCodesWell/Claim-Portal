@@ -320,51 +320,53 @@ class PolicySyncService
     {
         $syncedPoliciesMap = [];
 
-        // Group by policy_number first, then keep only the most recent term
-        // per policy — GLIMS can return multiple rows for the same policy_number
-        // (e.g. an old expired term alongside a renewed term) with no guaranteed
-        // ordering. Without this, whichever row appears first in the array wins,
-        // which can silently persist stale/expired data over an active renewal.
-
+        // Group by policy_number and keep only the most recent term per policy.
+        // GLIMS can return an old expired term next to a renewal, in no guaranteed order.
         $mostRecentPerPolicy = collect($policies)
             ->filter(fn($p) => ! empty($p['POLICY_NUMBER']))
             ->groupBy('POLICY_NUMBER')
-            ->map(fn($group) => $group->sortByDesc(function ($p) {
-                try {
-                    return Carbon::parse($p['POLICY_EXPIRY_DATE'] ?? null)->timestamp;
-                } catch (\Exception $e) {
-                    return 0;
-                }
-            })->first());
+            ->map(fn($group) => $group->sortByDesc(
+                fn($p) => $this->parseGlimsDate($p['POLICY_EXPIRY_DATE'] ?? null)?->timestamp ?? 0
+            )->first());
 
         foreach ($mostRecentPerPolicy as $policyNumber => $policy) {
-            $status     = $this->resolveStatus($policy);
-            $rawPayload = array_merge($policy, [
-                'source'       => 'glims',
-                'status_label' => $status,
-            ]);
+            try {
+                $status     = $this->resolveStatus($policy);
+                $rawPayload = array_merge($policy, [
+                    'source'       => 'glims',
+                    'status_label' => $status,
+                ]);
 
-            $dbPolicy = Policy::updateOrCreate(
-                ['source' => 'glims', 'policy_number' => $policyNumber],
-                [
-                    'customer_id'         => $dbCustomer->id,
-                    'insured_name'        => $dbCustomer->name,
-                    'external_policy_id'  => (string) ($policy['POLICY_ID'] ?? $policyNumber),
-                    'product_id'          => $policy['POLICY_PRODUCT_CODE'] ?? null,
-                    'product_name'        => $policy['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
-                    'business_class_id'   => null, // not in middleware — use LOB name instead
-                    'business_class_name' => $policy['POLICY_LOB_NAME'] ?? 'Unknown Class',
-                    'start_date'          => $policy['POLICY_START_DATE'] ?? null,
-                    'end_date'            => $policy['POLICY_EXPIRY_DATE'] ?? null,
-                    'effective_date'      => $policy['POLICY_ISSUE_DATE'] ?? null,
-                    'renewal_date'        => $policy['POLICY_EXPIRY_DATE'] ? Carbon::parse($policy['POLICY_EXPIRY_DATE'])->addDay()->toDateString() : null,
-                    'status'              => $status,
-                    'raw_payload'         => $rawPayload,
-                    'last_synced_at'      => now(),
-                ]
-            );
+                $dbPolicy = Policy::updateOrCreate(
+                    ['source' => 'glims', 'policy_number' => $policyNumber],
+                    [
+                        'customer_id'         => $dbCustomer->id,
+                        'insured_name'        => $dbCustomer->name,
+                        'external_policy_id'  => (string) ($policy['POLICY_ID'] ?? $policyNumber),
+                        'product_id'          => $policy['POLICY_PRODUCT_CODE'] ?? null,
+                        'product_name'        => $policy['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
+                        'business_class_id'   => null, // not in middleware, use LOB name instead
+                        'business_class_name' => $policy['POLICY_LOB_NAME'] ?? 'Unknown Class',
+                        'start_date'          => $this->parseGlimsDate($policy['POLICY_START_DATE'] ?? null)?->toDateString(),
+                        'end_date'            => $this->parseGlimsDate($policy['POLICY_EXPIRY_DATE'] ?? null)?->toDateString(),
+                        'effective_date'      => $this->parseGlimsDate($policy['POLICY_ISSUE_DATE'] ?? null)?->toDateString(),
+                        'renewal_date'        => $this->parseGlimsDate($policy['POLICY_EXPIRY_DATE'] ?? null)?->addDay()->toDateString(),
+                        'status'              => $status,
+                        'raw_payload'         => $rawPayload,
+                        'last_synced_at'      => now(),
+                    ]
+                );
 
-            $syncedPoliciesMap[$policyNumber] = $this->formatGlimsPolicyForResponse($dbPolicy, $dbCustomer, $policy);
+                $syncedPoliciesMap[$policyNumber] = $this->formatGlimsPolicyForResponse($dbPolicy, $dbCustomer, $policy);
+            } catch (\Throwable $e) {
+                // One bad policy must not stop the others from syncing
+                Log::error('PolicySyncService: GLIMS policy save failed', [
+                    'policy_number' => $policyNumber,
+                    'customer_id'   => $dbCustomer->id,
+                    'error'         => $e->getMessage(),
+                ]);
+                continue;
+            }
         }
 
         return $syncedPoliciesMap;
@@ -386,7 +388,7 @@ class PolicySyncService
             return;
         }
 
-        // Find-or-create the customer this policy belongs to.
+        // Find or create the customer this policy belongs to
         $customerCode = (string) ($policy['CUSTOMER_CODE'] ?? '');
         $customer     = null;
 
@@ -408,34 +410,39 @@ class PolicySyncService
             );
         }
 
-        $status     = $this->resolveStatus($policy);
-        $rawPayload = array_merge($policy, [
-            'source'       => 'glims',
-            'status_label' => $status,
-        ]);
+        try {
+            $status     = $this->resolveStatus($policy);
+            $rawPayload = array_merge($policy, [
+                'source'       => 'glims',
+                'status_label' => $status,
+            ]);
 
-        Policy::updateOrCreate(
-            ['source' => 'glims', 'policy_number' => $policyNumber],
-            [
-                'customer_id'         => $customer?->id,
-                'agent_id'            => $agent->portfolioAgentId(),
-                'insured_name'        => $customer->name ?? null,
-                'external_policy_id'  => (string) ($policy['POLICY_ID'] ?? $policyNumber),
-                'product_id'          => $policy['POLICY_PRODUCT_CODE'] ?? null,
-                'product_name'        => $policy['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
-                'business_class_id'   => null, // not in middleware — use LOB name instead
-                'business_class_name' => $policy['POLICY_LOB_NAME'] ?? 'Unknown Class',
-                'start_date'          => $policy['POLICY_START_DATE'] ?? null,
-                'end_date'            => $policy['POLICY_EXPIRY_DATE'] ?? null,
-                'effective_date'      => $policy['POLICY_ISSUE_DATE'] ?? null,
-                'renewal_date'        => $policy['POLICY_EXPIRY_DATE']
-                    ? Carbon::parse($policy['POLICY_EXPIRY_DATE'])->addDay()->toDateString()
-                    : null,
-                'status'              => $status,
-                'raw_payload'         => $rawPayload,
-                'last_synced_at'      => now(),
-            ]
-        );
+            Policy::updateOrCreate(
+                ['source' => 'glims', 'policy_number' => $policyNumber],
+                [
+                    'customer_id'         => $customer?->id,
+                    'agent_id'            => $agent->portfolioAgentId(),
+                    'insured_name'        => $customer->name ?? null,
+                    'external_policy_id'  => (string) ($policy['POLICY_ID'] ?? $policyNumber),
+                    'product_id'          => $policy['POLICY_PRODUCT_CODE'] ?? null,
+                    'product_name'        => $policy['POLICY_PRODUCT_NAME'] ?? 'Unknown Product',
+                    'business_class_id'   => null, // not in middleware, use LOB name instead
+                    'business_class_name' => $policy['POLICY_LOB_NAME'] ?? 'Unknown Class',
+                    'start_date'          => $this->parseGlimsDate($policy['POLICY_START_DATE'] ?? null)?->toDateString(),
+                    'end_date'            => $this->parseGlimsDate($policy['POLICY_EXPIRY_DATE'] ?? null)?->toDateString(),
+                    'effective_date'      => $this->parseGlimsDate($policy['POLICY_ISSUE_DATE'] ?? null)?->toDateString(),
+                    'renewal_date'        => $this->parseGlimsDate($policy['POLICY_EXPIRY_DATE'] ?? null)?->addDay()->toDateString(),
+                    'status'              => $status,
+                    'raw_payload'         => $rawPayload,
+                    'last_synced_at'      => now(),
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::error('PolicySyncService: GLIMS agent policy save failed', [
+                'policy_number' => $policyNumber,
+                'error'         => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -495,17 +502,11 @@ class PolicySyncService
     // Private helpers
     private function resolveStatus(array $policy): string
     {
-        $expiry = $policy['POLICY_EXPIRY_DATE'] ?? null;
+        $expiry = $this->parseGlimsDate($policy['POLICY_EXPIRY_DATE'] ?? null);
 
-        if ($expiry) {
-            try {
-                return Carbon::parse($expiry)->isPast() ? 'expired' : 'active';
-            } catch (\Exception $e) {
-                // Malformed date — default to active since the API filters for active
-            }
-        }
-
-        return 'active';
+        // Cover runs through the whole expiry day, so only mark it expired once that day has ended.
+        // No expiry date at all is treated as active.
+        return ($expiry && $expiry->copy()->endOfDay()->isPast()) ? 'expired' : 'active';
     }
 
     // Private: Response formatters
@@ -570,5 +571,26 @@ class PolicySyncService
             'customer_email'      => $customer->email,
             'source'              => $policy->source,
         ];
+    }
+
+    private function parseGlimsDate(?string $value): ?Carbon
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        foreach (['Y-m-d\TH:i:s', 'Y-m-d', 'd/m/Y'] as $format) {
+            try {
+                $d = Carbon::createFromFormat($format, $value);
+                if ($d && $d->format($format) === $value) {
+                    return $d->startOfDay();
+                }
+            } catch (\Throwable $e) {
+                // not this format, try the next one
+            }
+        }
+
+        Log::warning('PolicySyncService: unparseable GLIMS date', ['value' => $value]);
+        return null;
     }
 }

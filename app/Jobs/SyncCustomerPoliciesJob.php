@@ -43,24 +43,45 @@ class SyncCustomerPoliciesJob implements ShouldQueue
             'secondary_code' => $this->secondaryCode,
         ]);
 
-        $customerCode = $this->customer->glims_customer_code;
+        // Prefer the explicit GLIMS code from a merged profile,
+        // otherwise the customer's own code (GLIMS-only customers)
+        $glimsCode = $this->secondaryCode ?? $this->customer->glims_customer_code;
 
-        // Prefer the explicit GLIMS code from a merged profile;
-        // fall back to the customer's own glims_customer_code (works when customer is GLIMS-only)
-        $glimsCode = $this->secondaryCode ?? $customerCode;
-
+        $glimsOk = true;
         if ($glimsCode) {
-            $this->syncGlims($glims, $policySync, $glimsCode);
+            $glimsOk = $this->syncGlims($glims, $policySync, $glimsCode);
         }
 
-        // Genova sync
-        $this->syncGenova($api, $policySync);
+        if ($glimsCode && $glimsOk) {
+            $this->customer->update(['last_synced_at' => now()]);   // GLIMS data is saved
+        }
 
-        // Mark as synced
-        $this->customer->update(['last_synced_at' => now()]);
+        // Genova must never block GLIMS. Throwable (not Exception) because
+        // "call to undefined method" is an Error and slips past catch (\Exception).
+        $genovaOk = true;
+        try {
+            $this->syncGenova($api, $policySync);
+        } catch (\Throwable $e) {
+            $genovaOk = false;
+            Log::error('SyncCustomerPoliciesJob: Genova sync failed', [
+                'customer_id' => $this->customer->id,
+                'error'       => $e->getMessage(),
+            ]);
+        }
 
-        Log::info('SyncCustomerPoliciesJob: completed', [
+        // Only mark as synced when the system that applies to this customer succeeded.
+        // GLIMS customers are judged on GLIMS, so a Genova outage can't strand them.
+        $synced = $glimsCode ? $glimsOk : $genovaOk;
+
+        if ($synced) {
+            $this->customer->update(['last_synced_at' => now()]);
+        }
+
+        Log::info('SyncCustomerPoliciesJob: finished', [
             'customer_id' => $this->customer->id,
+            'glims_ok'    => $glimsOk,
+            'genova_ok'   => $genovaOk,
+            'stamped'     => $synced,
         ]);
     }
 
@@ -69,7 +90,7 @@ class SyncCustomerPoliciesJob implements ShouldQueue
         GlimsApiService $glims,
         PolicySyncService $policySync,
         string $customerCode
-    ): void {
+    ): bool {
         Log::info('SyncCustomerPoliciesJob: starting GLIMS sync', [
             'customer_id'   => $this->customer->id,
             'customer_code' => $customerCode,
@@ -87,7 +108,7 @@ class SyncCustomerPoliciesJob implements ShouldQueue
                 Log::info('SyncCustomerPoliciesJob: no GLIMS policies found', [
                     'customer_id' => $this->customer->id,
                 ]);
-                return;
+                return true;   // an empty result is a valid, successful answer
             }
 
             $policyNumbers = collect($policies)->pluck('POLICY_NUMBER')->filter()->unique()->values();
@@ -100,29 +121,17 @@ class SyncCustomerPoliciesJob implements ShouldQueue
             // Step 3: Fetch rich details per policy and merge into the record
             // Mirrors what Genova does with policySearch() — we get vehicle detail
             // (make, model, chassis, year) that isn't on the policy search rows.
+            // One concurrent batch (15 at a time) instead of N sequential calls
+            $risksByPolicy = $glims->getRisksForPolicies($policyNumbers->all());
+
             foreach ($policies as &$policy) {
-                $policyNumber = $policy['POLICY_NUMBER'] ?? null;
-                if (! $policyNumber) {
-                    continue;
-                }
-
-                try {
-                    $richRisks = $glims->getRisksForPolicy($policyNumber);
-
-                    if (! empty($richRisks)) {
-                        // Replace placeholder risks (plate only) with full detail
-                        $policy['risks']    = $richRisks;
-                        $policy['is_fleet'] = count($richRisks) > 1;
-                    }
-                } catch (\Exception $e) {
-                    // Don't let one failed detail call kill the rest
-                    Log::warning('SyncCustomerPoliciesJob: GLIMS policy details failed', [
-                        'policy_number' => $policyNumber,
-                        'error'         => $e->getMessage(),
-                    ]);
+                $risks = $risksByPolicy[$policy['POLICY_NUMBER'] ?? ''] ?? [];
+                if (! empty($risks)) {
+                    $policy['risks']    = $risks;
+                    $policy['is_fleet'] = count($risks) > 1;
                 }
             }
-            unset($policy); // clean up reference
+            unset($policy);
 
             // Step 4: Sync all policies into the DB
             $synced = $policySync->syncFromGlimsRich($policies, $this->customer);
@@ -131,12 +140,15 @@ class SyncCustomerPoliciesJob implements ShouldQueue
                 'customer_id'     => $this->customer->id,
                 'policies_synced' => count($synced),
             ]);
-        } catch (\Exception $e) {
-            // Never let a GLIMS failure block the Genova sync
+
+            return true;
+        } catch (\Throwable $e) {
             Log::error('SyncCustomerPoliciesJob: GLIMS sync failed', [
                 'customer_id' => $this->customer->id,
                 'error'       => $e->getMessage(),
             ]);
+
+            return false;   // caller will not stamp last_synced_at, so the next login retries
         }
     }
 
