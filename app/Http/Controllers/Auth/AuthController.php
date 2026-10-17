@@ -250,9 +250,11 @@ class AuthController extends Controller
         ]);
 
         $customerCode    = $request->customer_code;
-        $source          = $this->normaliseSource($request->input('source', 'genova'));
+        $source          = $this->normaliseSource($request->input('source') ?: session('auth_source', 'genova'));
         $secondaryCode   = $request->input('secondary_code');
-        $secondarySource = $secondaryCode ? $this->normaliseSource($request->input('secondary_source')) : null;
+        $secondarySource = $secondaryCode
+            ? $this->normaliseSource($request->input('secondary_source') ?: ($source === 'glims' ? 'genova' : 'glims'))
+            : null;
 
         session([
             'pending_customer_code'    => $customerCode,

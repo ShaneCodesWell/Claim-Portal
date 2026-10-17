@@ -979,9 +979,18 @@
                         name: profile.name,
                     };
 
-                    // Pass the secondary code if this was a merged cross-system profile
+                    // Tell the server which system this profile came from (genova, glims, glims_local ...)
+                    if (profile.source) {
+                        params.source = profile.source;
+                    }
+
+                    // Merged cross-system profile: send the secondary code AND which system it belongs to
                     if (profile.secondary_code) {
                         params.secondary_code = profile.secondary_code;
+
+                        if (profile.secondary_source) {
+                            params.secondary_source = profile.secondary_source;
+                        }
                     }
 
                     const res = await fetch(SELECT_URL, {

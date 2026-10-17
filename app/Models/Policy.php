@@ -183,15 +183,17 @@ class Policy extends Model
         });
     }
 
-    // Accessors
     public function getVehicleNumberAttribute(): string
     {
         $raw = $this->raw_payload ?? [];
 
         if (! empty($raw['risks'])) {
-            return count($raw['risks']) > 1
+            // Genova keys risks by risk id (e.g. "3011"), so never rely on [0]
+            $risks = array_values($raw['risks']);
+
+            return count($risks) > 1
                 ? 'FLEET'
-                : ($raw['risks'][0]['risk_ref_no'] ?? '');
+                : ($risks[0]['risk_ref_no'] ?? '');
         }
 
         $entry = is_array($raw[0] ?? null) ? $raw[0] : $raw;

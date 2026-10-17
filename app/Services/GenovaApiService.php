@@ -12,6 +12,9 @@ class GenovaApiService
     private $username;
     private $password;
 
+    /** Pages that could not be fetched during the last getAllPoliciesByAgentCode() run. */
+    public array $failedPages = [];
+
     public function __construct()
     {
         $this->baseUrl  = config('services.genova.base_url');
@@ -129,6 +132,9 @@ class GenovaApiService
      */
     public function getAllPoliciesByAgentCode(string $agentCode, int $concurrency = 10): array
     {
+        $startedAt         = microtime(true);
+        $this->failedPages = [];
+
         try {
             $first = $this->getPoliciesByAgentCode($agentCode, 1);
         } catch (\Throwable $e) {
@@ -136,6 +142,7 @@ class GenovaApiService
                 'agent_code' => $agentCode,
                 'error'      => $e->getMessage(),
             ]);
+            $this->failedPages = [1];
             return [];
         }
 
@@ -144,6 +151,7 @@ class GenovaApiService
                 'agent_code' => $agentCode,
                 'status'     => $first->status(),
             ]);
+            $this->failedPages = [1];
             return [];
         }
 
@@ -160,9 +168,9 @@ class GenovaApiService
             return $allPolicies;
         }
 
-        $remainingPages = range(2, $maxPage);
+        $failed = [];
 
-        foreach (array_chunk($remainingPages, $concurrency) as $batch) {
+        foreach (array_chunk(range(2, $maxPage), $concurrency) as $batch) {
             $responses = Http::pool(function ($pool) use ($agentCode, $batch) {
                 foreach ($batch as $page) {
                     $pool->as((string) $page)
@@ -182,7 +190,8 @@ class GenovaApiService
 
                 // Pooled results can be a ConnectionException instead of a Response
                 if (! $response instanceof Response || $response->failed()) {
-                    Log::warning('GenovaApiService: pooled page failed', [
+                    $failed[] = $page;
+                    Log::warning('GenovaApiService: pooled page failed, will retry', [
                         'agent_code' => $agentCode,
                         'page'       => $page,
                         'reason'     => $response instanceof \Throwable ? $response->getMessage() : 'no response',
@@ -194,9 +203,42 @@ class GenovaApiService
             }
         }
 
+        // Retry failed pages one at a time (Genova struggles with many parallel requests).
+        // Stop starting new attempts after 100 seconds so the job never hits its 180 second limit.
+        foreach ($failed as $page) {
+            $recovered = false;
+
+            for ($attempt = 1; $attempt <= 2 && ! $recovered; $attempt++) {
+                if ((microtime(true) - $startedAt) > 100) {
+                    break;
+                }
+
+                try {
+                    $response = $this->getPoliciesByAgentCode($agentCode, $page);
+
+                    if ($response->successful()) {
+                        $allPolicies = array_merge($allPolicies, $response->json('data.policies') ?? []);
+                        $recovered   = true;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('GenovaApiService: page retry failed', [
+                        'agent_code' => $agentCode,
+                        'page'       => $page,
+                        'attempt'    => $attempt,
+                        'error'      => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            if (! $recovered) {
+                $this->failedPages[] = $page;
+            }
+        }
+
         Log::info('GenovaApiService: bulk fetch complete', [
-            'agent_code' => $agentCode,
-            'total'      => count($allPolicies),
+            'agent_code'   => $agentCode,
+            'total'        => count($allPolicies),
+            'failed_pages' => $this->failedPages,
         ]);
 
         return $allPolicies;

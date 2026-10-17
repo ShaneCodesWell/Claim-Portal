@@ -2,27 +2,39 @@
 
 namespace App\Jobs;
 
-use Carbon\Carbon;
 use App\Models\Agent;
 use App\Services\GenovaApiService;
-use App\Services\PolicySyncService;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Coordinator for an agent's Genova policy sync.
+ *
+ * It only fetches page 1 (to learn how many pages exist) and then hands the pages
+ * out to small SyncAgentGenovaPagesJob jobs. A slow or failed page now only
+ * affects its own small job, and everything already saved is kept.
+ */
 class SyncAgentPoliciesFromGenovaJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries   = 3;
-    public int $timeout = 180; // Genova responses run heavier/slower than GLIMS
+    public int $tries = 3;
+    public int $timeout = 90;
+    public array $backoff = [30, 120];
 
-    public function __construct(public Agent $agent) {}
+    /** How many pages each small job handles. */
+    private const PAGES_PER_JOB = 2;
 
-    public function handle(GenovaApiService $genova, PolicySyncService $policySync): void
+    public function __construct(public Agent $agent)
+    {
+        $this->onQueue('low'); // never compete with customer logins on the 'high' queue
+    }
+
+    public function handle(GenovaApiService $genova): void
     {
         $agentCode = $this->agent->genova_agent_code;
 
@@ -38,47 +50,29 @@ class SyncAgentPoliciesFromGenovaJob implements ShouldQueue
             'agent_code' => $agentCode,
         ]);
 
-        $policies = $genova->getAllPoliciesByAgentCode($agentCode);
+        $first = $genova->getPoliciesByAgentCode($agentCode, 1);
 
-        // Group by policy number and keep only the most recent term per policy —
-        // Genova can return multiple entries for the same policy_no (e.g. an old
-        // expired term alongside a renewal) with no guaranteed order. Without
-        // this, whichever entry the loop processes last silently wins.
-        $mostRecentPerPolicy = collect($policies)
-            ->filter(fn($entry) => ! empty($entry['policy']['policy_no'] ?? null))
-            ->groupBy('policy.policy_no')
-            ->map(function ($group) {
-                return $group->sortByDesc(function ($entry) {
-                    try {
-                        return Carbon::parse($entry['policy']['policy_end'] ?? null)->timestamp;
-                    } catch (\Exception $e) {
-                        return 0;
-                    }
-                })->first();
-            });
-
-        $synced = 0;
-        $errors = 0;
-
-        foreach ($mostRecentPerPolicy as $entry) {
-            try {
-                $policySync->syncAgentPolicyFromGenova($entry, $this->agent);
-                $synced++;
-            } catch (\Exception $e) {
-                $errors++;
-                Log::warning('SyncAgentPoliciesFromGenovaJob: upsert failed for one policy', [
-                    'policy_no' => $entry['policy']['policy_no'] ?? 'unknown',
-                    'error'     => $e->getMessage(),
-                ]);
-            }
+        if ($first->failed()) {
+            // Throwing makes Laravel retry this job after the backoff
+            throw new \RuntimeException("Genova page 1 failed for agent {$agentCode} (HTTP {$first->status()})");
         }
 
+        $maxPage = max(1, (int) ($first->json('data.max_page') ?? 1));
+        $jobs    = 0;
+
+        foreach (array_chunk(range(1, $maxPage), self::PAGES_PER_JOB) as $pages) {
+            SyncAgentGenovaPagesJob::dispatch($this->agent, $pages);
+            $jobs++;
+        }
+
+        // From here on, progress is tracked by the page jobs (failed ones appear in queue:failed)
         $this->agent->update(['genova_last_synced_at' => now()]);
 
-        Log::info('SyncAgentPoliciesFromGenovaJob: completed', [
-            'agent_id' => $this->agent->id,
-            'synced'   => $synced,
-            'errors'   => $errors,
+        Log::info('SyncAgentPoliciesFromGenovaJob: page jobs dispatched', [
+            'agent_id'   => $this->agent->id,
+            'agent_code' => $agentCode,
+            'max_page'   => $maxPage,
+            'page_jobs'  => $jobs,
         ]);
     }
 }
