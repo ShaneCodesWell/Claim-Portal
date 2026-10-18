@@ -178,8 +178,11 @@ class SyncAgentPoliciesJob implements ShouldQueue
                 }
 
                 if (! empty($riskMap[$policyNumber])) {
-                    $policy['risks']    = $riskMap[$policyNumber];
-                    $policy['is_fleet'] = count($riskMap[$policyNumber]) > 1;
+                    // Fleet policies: add the vehicles the policy-number lookup left out
+                    $risks = $glims->completeVehicleList($policyNumber, $riskMap[$policyNumber], $policy['risks'] ?? []);
+
+                    $policy['risks']    = $risks;
+                    $policy['is_fleet'] = count($risks) > 1;
                 } else {
                     // Enrichment failed for this one — track it for a retry pass
                     // rather than leaving it permanently on placeholder data.
@@ -225,6 +228,8 @@ class SyncAgentPoliciesJob implements ShouldQueue
                 if (! $policy || empty($risks)) {
                     continue;
                 }
+
+                $risks = $glims->completeVehicleList($policyNumber, $risks, $policy['risks'] ?? []);
 
                 $policy['risks']    = $risks;
                 $policy['is_fleet'] = count($risks) > 1;

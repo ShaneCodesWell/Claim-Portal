@@ -281,6 +281,77 @@ class GlimsApiService
         return GlimsRiskResolver::resolve($risks);
     }
 
+    /**
+     * Fetch the full detail of specific vehicles of ONE policy, using the vehicle_number
+     * lookup. Rows that belong to a different policy are ignored.
+     *
+     * @param  string             $policyNumber
+     * @param  array<int,string>  $plates
+     * @return array<int,array>   Normalised risks (same shape as getRisksForPolicy())
+     */
+    public function getRisksForVehicles(string $policyNumber, array $plates): array
+    {
+        $key = fn($plate) => mb_strtoupper(preg_replace('/[\s\-]+/', '', (string) $plate));
+
+        $risks = [];
+
+        foreach ($plates as $plate) {
+            foreach ($this->getPolicyDetails($plate, 'vehicle_number') as $detail) {
+                $detail = (array) $detail;
+
+                // The lookup can return another vehicle of the same policy, or another policy.
+                // Only keep the row if it really is this vehicle on this policy.
+                if (($detail['policy_number'] ?? null) !== $policyNumber) {
+                    continue;
+                }
+
+                if ($key($detail['vehicle_no'] ?? '') !== $key($plate)) {
+                    continue;
+                }
+
+                $risks[] = $this->normaliseDetailToRisk($detail);
+            }
+        }
+
+        return GlimsRiskResolver::resolve($risks);
+    }
+
+    /**
+     * Complete the vehicle list of a policy.
+     *
+     * $richRisks        = what the policy-number details lookup returned (may be only some vehicles)
+     * $placeholderRisks = the vehicles listed by the policy search
+     *
+     * Vehicles missing from $richRisks are looked up by plate (at most 25 per policy).
+     * Anything still missing keeps its placeholder, with the figures left empty.
+     */
+    public function completeVehicleList(string $policyNumber, array $richRisks, array $placeholderRisks): array
+    {
+        $key = fn($plate) => mb_strtoupper(preg_replace('/[\s\-]+/', '', (string) $plate));
+
+        $have = collect($richRisks)
+            ->map(fn($risk) => $key($risk['risk_ref_no'] ?? ''))
+            ->filter()
+            ->values()
+            ->all();
+
+        $missing = collect($placeholderRisks)
+            ->pluck('risk_ref_no')
+            ->filter()
+            ->reject(fn($plate) => in_array($key($plate), $have, true))
+            ->unique()
+            ->take(25)
+            ->values()
+            ->all();
+
+        if (! empty($missing)) {
+            $richRisks = array_merge($richRisks, $this->getRisksForVehicles($policyNumber, $missing));
+        }
+
+        return GlimsRiskResolver::mergeMissingVehicles($richRisks, $placeholderRisks);
+    }
+
+
     public function getRisksForPolicies(array $policyNumbers, int $concurrency = 15): array
     {
         $resolved = [];
@@ -341,33 +412,6 @@ class GlimsApiService
         }
 
         return $resolved;
-    }
-
-    /**
-     * Collapse duplicate rows referring to the same physical vehicle into one.
-     * "Same vehicle" = same risk_ref_no (plate) + same chassis number.
-     * When duplicates exist, keep whichever row has the latest `created`
-     * timestamp in its _raw payload (i.e. the most recent endorsement/rating).
-     * Falls back to keeping the last row in the array if no created timestamp
-     * is present, since GLIMS appears to return rows in chronological order.
-     */
-    private function dedupeRisksByVehicle(array $risks): array
-    {
-        return collect($risks)
-            ->groupBy(fn($risk) => ($risk['risk_ref_no'] ?? '') . '|' . ($risk['vehicle_chassis_no'] ?? ''))
-            ->map(function ($group) {
-                if ($group->count() === 1) {
-                    return $group->first();
-                }
-
-                // Multiple rows for the same vehicle — keep the most recent one.
-                return $group->sortBy(function ($risk) {
-                    $created = $risk['_raw']['created'] ?? null;
-                    return $created ? strtotime($created) : 0;
-                })->last();
-            })
-            ->values()
-            ->toArray();
     }
 
     // Claims search
@@ -501,7 +545,6 @@ class GlimsApiService
             }
 
             return $results;
-            
         } catch (\Exception $e) {
             Log::error('GlimsApiService: policySearch error — ' . $e->getMessage(), [
                 'search_type'  => $searchType,
@@ -558,42 +601,42 @@ class GlimsApiService
     private function groupRowsIntoPolicies(array $rows): array
     {
         return collect($rows)
+            ->map(fn($row) => (array) $row)
             ->groupBy('policy_number')
             ->map(function ($group) {
-                // A policy_number group can span multiple terms (old term +
-                // renewal) — sub-group by (start_date, expiry_date) and keep
-                // only the most recent term.
-                $termGroups = $group->groupBy(function ($row) {
-                    $row = (array) $row;
-                    return ($row['start_date'] ?? '') . '|' . ($row['expiry_date'] ?? '');
-                });
+                // Newest transaction first: by creation time, then policy_id as a tie-breaker
+                $newestFirst = $group->sort(
+                    fn($a, $b) => [$b['policy_created_at'] ?? '', $b['policy_id'] ?? 0]
+                        <=> [$a['policy_created_at'] ?? '', $a['policy_id'] ?? 0]
+                )->values();
 
-                $group = $termGroups->sortByDesc(function ($termRows) {
-                    $row = (array) $termRows->first();
-                    try {
-                        return Carbon::parse($row['expiry_date'] ?? null)->timestamp;
-                    } catch (\Exception $e) {
-                        return 0;
-                    }
-                })->first();
+                // A policy_number can span several terms (an old term plus its renewal).
+                // Keep only the most recent term. Dates here are ISO (2027-05-29), so
+                // comparing them as text sorts them correctly.
+                $termGroups = $newestFirst->groupBy(
+                    fn($row) => ($row['start_date'] ?? '') . '|' . ($row['expiry_date'] ?? '')
+                );
 
-                $first = (array) $group->first();
+                $group = $termGroups
+                    ->sortByDesc(fn($termRows) => $termRows->first()['expiry_date'] ?? '')
+                    ->first(); // still newest transaction first
 
-                // Multiple rows can exist for the same vehicle within one term
-                // (e.g. an endorsement row). Premium sums correctly across them
-                // (GLIMS represents the adjustment as a delta), so totals below
-                // use the full $group, unchanged. This step only prevents the
-                // placeholder risks list from showing the same vehicle twice —
-                // matters mainly as a fallback if the richer per-policy risk
-                // fetch later fails and this placeholder data ends up persisted
-                // as-is (see SyncAgentPoliciesJob's failedPolicyNumbers path).
-                $risks = $group
-                    ->unique(function ($row) {
-                        $row = (array) $row;
-                        return $row['plate_number'] ?? $row['vehicle_no'] ?? 'unknown';
-                    })
-                    ->filter(fn($row) => ! empty(((array) $row)['plate_number'] ?? ((array) $row)['vehicle_no'] ?? null))
-                    ->map(fn($row) => $this->normalisePlaceholderRisk((array) $row))
+                $first = $group->first(); // newest row of the newest transaction
+
+                // Every row of the newest transaction = the vehicles currently on the policy.
+                // Older transactions (earlier endorsements) are ignored completely.
+                $transactionKey = $first['policy_id'] ?? $first['policy_created_at'] ?? null;
+
+                $currentRows = $group
+                    ->filter(fn($row) => ($row['policy_id'] ?? $row['policy_created_at'] ?? null) === $transactionKey)
+                    ->values();
+
+                // Placeholder risks (plate and figures only). The richer vehicle detail is
+                // filled in later by getRisksForPolicy() during the sync job.
+                $risks = $currentRows
+                    ->unique(fn($row) => $row['plate_number'] ?? $row['vehicle_no'] ?? 'none')
+                    ->filter(fn($row) => ! empty($row['plate_number'] ?? $row['vehicle_no'] ?? null))
+                    ->map(fn($row) => $this->normalisePlaceholderRisk($row))
                     ->values()
                     ->toArray();
 
@@ -611,8 +654,9 @@ class GlimsApiService
                     'POLICY_AGENT_CODE'    => $first['agent_code'] ?? null,
                     'POLICY_AGENT_NAME'    => $first['intermediary_name'] ?? null,
                     'POLICY_CURRENCY'      => $first['currency'] ?? null,
-                    'POLICY_TOTAL_PREMIUM' => $group->sum('premium'),
-                    'POLICY_TOTAL_SI'      => $group->sum('sum_insured'),
+                    // Policy-level totals: taken as they are, NOT added up across vehicles
+                    'POLICY_TOTAL_PREMIUM' => $first['premium'] ?? 0,
+                    'POLICY_TOTAL_SI'      => $first['sum_insured'] ?? 0,
                     'CUSTOMER_CODE'        => (string) ($first['customer_code'] ?? ''),
                     'CUSTOMER_FIRST_NAME'  => $first['first_name'] ?? null,
                     'CUSTOMER_OTHER_NAMES' => $first['other_names'] ?? null,

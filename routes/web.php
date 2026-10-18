@@ -41,8 +41,8 @@ Route::post('/agent-login/resend-otp', [AgentAuthController::class, 'resendOtp']
 Route::post('/agent-logout', [AgentAuthController::class, 'logout'])->name('agent.logout');
 
 // AJAX password setup — called from the modal's password setup - multi-step login
-Route::post('login/ajax', [AuthController::class, 'loginAjax'])->name('login.ajax');
-Route::post('login/select-profile', [AuthController::class, 'selectProfile'])->name('login.select.profile');
+Route::post('login/ajax', [AuthController::class, 'loginAjax'])->name('login.ajax')->middleware('throttle:30,1');
+Route::post('login/select-profile', [AuthController::class, 'selectProfile'])->name('login.select.profile')->middleware('throttle:30,1');
 
 Route::post('/login/verify-otp', [AuthController::class, 'verifyOtpAjax'])->name('login.verify.otp');
 Route::post('/login/resend-otp', [AuthController::class, 'resendOtp'])->name('login.resend.otp');

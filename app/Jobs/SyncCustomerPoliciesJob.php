@@ -137,8 +137,14 @@ class SyncCustomerPoliciesJob implements ShouldQueue
             $risksByPolicy = $glims->getRisksForPolicies($policyNumbers->all());
 
             foreach ($policies as &$policy) {
-                $risks = $risksByPolicy[$policy['POLICY_NUMBER'] ?? ''] ?? [];
+                $policyNumber = $policy['POLICY_NUMBER'] ?? '';
+                $risks        = $risksByPolicy[$policyNumber] ?? [];
+
                 if (! empty($risks)) {
+                    // Fleet policies: the policy-number lookup can return only some of the vehicles.
+                    // Look the missing ones up by plate, and keep a placeholder for any still missing.
+                    $risks = $glims->completeVehicleList($policyNumber, $risks, $policy['risks'] ?? []);
+
                     $policy['risks']    = $risks;
                     $policy['is_fleet'] = count($risks) > 1;
                 }

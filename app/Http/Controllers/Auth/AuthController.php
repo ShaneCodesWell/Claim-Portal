@@ -97,6 +97,7 @@ class AuthController extends Controller
         }
 
         $loginType = $request->input('login_type', 'mobile_no');
+        session()->forget(['pending_profiles', 'otp_verified']);
 
         // STEP 1: Verify with Genova
         $genovaResult = $this->attemptGenovaVerification($identifier, $loginType);
@@ -134,11 +135,7 @@ class AuthController extends Controller
                 return $this->sendOtpAndRespond($phoneNumber, $data['name']);
             }
 
-            return response()->json([
-                'status'   => 'profile_selection',
-                'profiles' => $profiles,
-                'message'  => 'Multiple profiles found. Please select yours.',
-            ]);
+            return $this->askProfileAfterOtp($profiles, $phoneNumber);
         }
 
         // Genova failed — try local Genova DB
@@ -161,11 +158,7 @@ class AuthController extends Controller
 
             if (count($genovaLocalProfiles) > 1) {
                 // Multiple profiles — let the user pick; selectProfile() will set the rest
-                return response()->json([
-                    'status'   => 'profile_selection',
-                    'profiles' => $genovaLocalProfiles,
-                    'source'   => 'genova_local',
-                ]);
+                return $this->askProfileAfterOtp($genovaLocalProfiles, $genovaLocalProfiles[0]['phone']);
             }
 
             // Single profile — safe to commit everything now
@@ -201,11 +194,7 @@ class AuthController extends Controller
 
                 if (count($glimsProfiles) > 1) {
                     // Multiple profiles — let the user pick; selectProfile() will set the rest
-                    return response()->json([
-                        'status'   => 'profile_selection',
-                        'profiles' => $glimsProfiles,
-                        'source'   => 'glims',
-                    ]);
+                    return $this->askProfileAfterOtp($glimsProfiles, $phone);
                 }
 
                 // Single profile — safe to commit everything now
@@ -238,62 +227,43 @@ class AuthController extends Controller
     // STEP 2: Profile selected
     public function selectProfile(Request $request): JsonResponse
     {
-        if (! session('pending_auth')) {
-            return response()->json(['status' => 'error', 'message' => 'Session expired.'], 401);
+        if (! session('pending_auth') || ! session('otp_verified')) {
+            return response()->json(['status' => 'error', 'message' => 'Session expired. Please log in again.'], 401);
         }
 
-        $request->validate([
-            'customer_code'    => 'required|string',
-            'name'             => 'sometimes|string',
-            'source'           => 'sometimes|nullable|string',
-            'secondary_code'   => 'sometimes|nullable|string',
-            'secondary_source' => 'sometimes|nullable|string',
-        ]);
+        $request->validate(['profile_id' => 'required|integer|min:0']);
 
-        $customerCode    = $request->customer_code;
-        $source          = $this->normaliseSource($request->input('source') ?: session('auth_source', 'genova'));
-        $secondaryCode   = $request->input('secondary_code');
-        $secondarySource = $secondaryCode
-            ? $this->normaliseSource($request->input('secondary_source') ?: ($source === 'glims' ? 'genova' : 'glims'))
-            : null;
+        $profiles = session('pending_profiles', []);
+        $profile  = $profiles[(int) $request->input('profile_id')] ?? null;
+
+        if (! $profile) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid selection.'], 422);
+        }
 
         session([
-            'pending_customer_code'    => $customerCode,
-            'pending_customer_source'  => $source,
-            'pending_secondary_code'   => $secondaryCode,
-            'pending_secondary_source' => $secondarySource,
+            'pending_customer_code'    => $profile['code'],
+            'pending_customer_source'  => $this->normaliseSource($profile['source'] ?? 'genova'),
+            'pending_secondary_code'   => $profile['secondary_code'] ?? null,
+            'pending_secondary_source' => $profile['secondary_source'] ?? null,
+            'pending_name'             => $profile['name'] ?? 'there',
         ]);
 
-        $primaryColumn = $this->sourceColumn($source);
+        $phone    = session('pending_phone');
+        $customer = $phone ? $this->resolveCustomerFromSession($phone) : null;
 
-        // Pin the local DB record if it exists and pull the correct name + phone from it
-        $customer = Customer::where($primaryColumn, $customerCode)->first();
-        if ($customer) {
-            session(['selected_customer_id' => $customer->id]);
-
-            if (! session('pending_phone') && $customer->phone) {
-                session(['pending_phone' => $customer->phone]);
-            }
-        }
-
-        $resolvedName = $request->input('name') ?? $customer?->name ?? session('pending_name') ?? 'there';
-
-        if (in_array($resolvedName, ['Unknown', 'there', ''])) {
-            $resolvedName = $request->input('name') ?? 'there';
-        }
-
-        session(['pending_name' => $resolvedName]);
-
-        $phone = session('pending_phone');
-
-        if (! $phone) {
+        if (! $customer) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'No phone number found for this profile. Please contact support.',
-            ], 422);
+                'message' => 'We could not locate your account. Please contact support.',
+            ], 404);
         }
 
-        return $this->sendOtpAndRespond($phone, $resolvedName);
+        $this->completeLogin($customer);
+
+        return response()->json([
+            'status'   => 'success',
+            'redirect' => route('dashboard'),
+        ]);
     }
 
     // New OTP without relying on Genova or Glims
@@ -329,6 +299,19 @@ class AuthController extends Controller
         }
 
         RateLimiter::clear($throttleKey);
+
+        // Several profiles share this phone and none has been chosen yet:
+        // the OTP is now proven, so show the names (and nothing else) and let the customer choose.
+        if (session('pending_profiles') && ! session('pending_customer_code')) {
+            session(['otp_verified' => true]);
+
+            return response()->json([
+                'status'   => 'profile_selection',
+                'profiles' => collect(session('pending_profiles'))
+                    ->map(fn($profile, $index) => ['id' => $index, 'name' => $profile['name'] ?? 'Unknown'])
+                    ->values(),
+            ]);
+        }
 
         $customer = $this->resolveCustomerFromSession($phone);
 
@@ -389,6 +372,9 @@ class AuthController extends Controller
     {
         Auth::guard('customer')->login($customer);
 
+        // New session id after login (prevents session fixation)
+        session()->regenerate();
+
         // Grab secondary code BEFORE wiping the session
         $secondaryCode = session('pending_secondary_code');
 
@@ -398,16 +384,17 @@ class AuthController extends Controller
             'pending_phone',
             'pending_name',
             'pending_customer_code',
-            'pending_customer_source',    // NEW
+            'pending_customer_source',
             'pending_secondary_code',
-            'pending_secondary_source',   // NEW
+            'pending_secondary_source',
+            'pending_profiles',
+            'otp_verified',
             'selected_customer_id',
             'auth_source',
             'login_type',
             'username',
         ]);
 
-        // Fallback dispatch for brand-new customers.
         // The job skips itself if synced within the last 30 minutes, so dispatching twice is safe.
         try {
             SyncCustomerPoliciesJob::dispatch($customer, $secondaryCode)->onQueue('high');
@@ -707,6 +694,18 @@ class AuthController extends Controller
 
     private function sendOtpAndRespond(string $phone, string $name): JsonResponse
     {
+        // At most 5 codes per phone number per 10 minutes
+        $sendKey = 'otp-send:' . $phone;
+
+        if (RateLimiter::tooManyAttempts($sendKey, 5)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Too many codes requested for this number. Please try again in a few minutes.',
+            ], 429);
+        }
+
+        RateLimiter::hit($sendKey, 600);
+
         if (! $this->otp->send($phone)) {
             Log::error('sendOtpAndRespond: Failed to send OTP', ['phone' => $phone]);
             return response()->json([
@@ -850,6 +849,36 @@ class AuthController extends Controller
     private function sourceColumn(?string $source): string
     {
         return $this->normaliseSource($source) === 'glims' ? 'glims_customer_code' : 'genova_customer_code';
+    }
+
+    private function askProfileAfterOtp(array $profiles, ?string $phone): JsonResponse
+    {
+        // Forget anything left over from an earlier attempt in this browser session
+        session()->forget([
+            'pending_customer_code',
+            'pending_customer_source',
+            'pending_secondary_code',
+            'pending_secondary_source',
+            'selected_customer_id',
+            'otp_verified',
+        ]);
+
+        session([
+            'pending_profiles' => collect($profiles)
+                ->map(fn($profile) => [
+                    'code'             => (string) ($profile['code'] ?? ''),
+                    'name'             => $profile['name'] ?? 'Unknown',
+                    'source'           => $profile['source'] ?? 'genova',
+                    'secondary_code'   => $profile['secondary_code'] ?? null,
+                    'secondary_source' => $profile['secondary_source'] ?? null,
+                ])
+                ->filter(fn($profile) => $profile['code'] !== '')
+                ->values()
+                ->all(),
+        ]);
+
+        // No name is known yet, so none is sent to the browser
+        return $this->sendOtpAndRespond((string) $phone, '');
     }
 
     private function maskPhone(string $phone): string

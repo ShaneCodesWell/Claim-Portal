@@ -849,11 +849,12 @@
             // ── OTP stage ─────────────────────────────────────────────────
             function showOtpStage(name, phoneMasked) {
                 // Brief "sent" confirmation (1.5s) then slide into OTP entry
-                document.getElementById('genova-name').textContent = name;
+                document.getElementById('genova-name').textContent = name || 'there';
                 showStage('success-genova');
 
                 setTimeout(() => {
-                    document.getElementById('otp-name-display').textContent = `Welcome, ${name}`;
+                    document.getElementById('otp-name-display').textContent = name ? `Welcome, ${name}` :
+                        'Welcome';
                     document.getElementById('otp-phone-display').textContent = `Code sent to ${phoneMasked}`;
                     clearOtpInputs();
                     showStage('otp-entry');
@@ -943,27 +944,38 @@
             function renderProfiles(profiles) {
                 const list = document.getElementById('profile-list');
                 list.innerHTML = '';
+
                 profiles.forEach(profile => {
                     const card = document.createElement('button');
                     card.type = 'button';
                     card.className =
                         'w-full text-left p-4 border border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition flex items-center gap-3';
 
-                    const initials = profile.name
+                    const initials = String(profile.name || '')
                         .split(' ')
+                        .filter(Boolean)
                         .slice(0, 2)
-                        .map(w => w[0] ?? '')
+                        .map(w => w[0])
                         .join('')
                         .toUpperCase();
 
-                    card.innerHTML = `
-                        <div class="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center text-sm font-semibold shrink-0">${initials}</div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 truncate">${profile.name}</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-400 text-xs shrink-0"></i>
-                    `;
+                    const avatar = document.createElement('div');
+                    avatar.className =
+                        'w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center text-sm font-semibold shrink-0';
+                    avatar.textContent = initials;
 
+                    const body = document.createElement('div');
+                    body.className = 'flex-1 min-w-0';
+
+                    const nameEl = document.createElement('p');
+                    nameEl.className = 'text-sm font-medium text-gray-900 truncate';
+                    nameEl.textContent = profile.name;
+                    body.appendChild(nameEl);
+
+                    const chevron = document.createElement('i');
+                    chevron.className = 'fas fa-chevron-right text-gray-400 text-xs shrink-0';
+
+                    card.append(avatar, body, chevron);
                     card.addEventListener('click', () => selectProfile(profile));
                     list.appendChild(card);
                 });
@@ -974,39 +986,22 @@
                 startMessageCycle();
 
                 try {
-                    const params = {
-                        customer_code: profile.code,
-                        name: profile.name,
-                    };
-
-                    // Tell the server which system this profile came from (genova, glims, glims_local ...)
-                    if (profile.source) {
-                        params.source = profile.source;
-                    }
-
-                    // Merged cross-system profile: send the secondary code AND which system it belongs to
-                    if (profile.secondary_code) {
-                        params.secondary_code = profile.secondary_code;
-
-                        if (profile.secondary_source) {
-                            params.secondary_source = profile.secondary_source;
-                        }
-                    }
-
                     const res = await fetch(SELECT_URL, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': CSRF,
                             'Accept': 'application/json',
                         },
-                        body: new URLSearchParams(params),
+                        body: new URLSearchParams({
+                            profile_id: profile.id
+                        }),
                     });
 
                     stopMessageCycle();
                     const data = await res.json();
 
-                    if (data.status === 'otp_sent') {
-                        showOtpStage(data.name, data.phone_masked);
+                    if (data.status === 'success') {
+                        window.location.href = data.redirect;
                     } else {
                         showError(data.message ?? 'Something went wrong.');
                     }
@@ -1092,11 +1087,20 @@
                             otp
                         }),
                     });
+
                     const data = await res.json();
 
-                    if (data.status === 'success') {
+                    if (data.status === 'profile_selection') {
+                        // OTP verified; customer must choose a profile
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Verify Code';
+                        renderProfiles(data.profiles);
+                        showStage('profile-picker');
+
+                    } else if (data.status === 'success') {
                         submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Verified!';
                         setTimeout(() => window.location.href = data.redirect, 800);
+
                     } else {
                         errorEl.textContent = data.message ?? 'Invalid code. Please try again.';
                         errorEl.classList.remove('hidden');
