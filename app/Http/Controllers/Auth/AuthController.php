@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use \App\Jobs\SyncCustomerPoliciesJob;
+use App\Support\NameMatcher;
 
 class AuthController extends Controller
 {
@@ -426,35 +427,69 @@ class AuthController extends Controller
             return [];
         }
 
-        // Index Genova profiles by normalised name
-        $byName = [];
+        $profiles = [];
+
+        // Genova profiles first
         foreach ($this->resolveGenovaProfiles($phone, $userId) as $profile) {
-            $key                = mb_strtolower(trim($profile['name']));
             $profile['sources'] = [$profile['source']];
-            $byName[$key]       = $profile;
+            $profiles[]         = $profile;
         }
 
-        // Merge GLIMS — same name = same person, absorb silently as secondary
-        $existingCodes = collect($byName)->pluck('code');
         foreach ($this->resolveGlimsProfiles($phone) as $gp) {
-            if ($existingCodes->contains($gp['code'])) {
-                continue; // literally the same record, skip
+            $gpCode = (string) ($gp['code'] ?? '');
+
+            // Skip a record we already hold, either as a main profile or as the partner of one
+            $alreadyKnown = collect($profiles)->contains(
+                fn($p) => (string) ($p['code'] ?? '') === $gpCode
+                    || (string) ($p['secondary_code'] ?? '') === $gpCode
+            );
+
+            if ($gpCode === '' || $alreadyKnown) {
+                continue;
             }
 
-            $key = mb_strtolower(trim($gp['name']));
+            $gpSystem = $this->normaliseSource($gp['source'] ?? '');
 
-            if (array_key_exists($key, $byName)) {
-                // Same person in both systems — merge, don't show twice
-                $byName[$key]['secondary_code']   = $gp['code'];
-                $byName[$key]['secondary_source'] = $gp['source'];
-                $byName[$key]['sources'][]        = $gp['source'];
-            } else {
-                $gp['sources'] = [$gp['source']];
-                $byName[$key]  = $gp;
+            // Existing profiles that look like the same person
+            $same = [];
+
+            foreach ($profiles as $index => $existing) {
+                if (NameMatcher::matches($existing['name'] ?? '', $gp['name'] ?? '')) {
+                    $same[] = $index;
+                }
             }
+
+            if (count($same) === 1) {
+                $i           = $same[0];
+                $existing    = $profiles[$i];
+                $otherSystem = $this->normaliseSource($existing['source'] ?? '') !== $gpSystem;
+
+                if ($otherSystem && empty($existing['secondary_code'])) {
+                    // Same person in both systems: one profile that carries both codes
+                    $profiles[$i]['secondary_code']   = $gp['code'];
+                    $profiles[$i]['secondary_source'] = $gp['source'];
+                    $profiles[$i]['sources'][]        = $gp['source'];
+                }
+                // Otherwise it is the same person registered twice in one system. The sync job
+                // finds their other codes by phone and name, so no second entry is shown.
+
+                continue;
+            }
+
+            if (count($same) > 1) {
+                Log::warning('resolveProfiles: profile matches several existing profiles, keeping it separate', [
+                    'phone'      => $phone,
+                    'code'       => $gpCode,
+                    'candidates' => count($same),
+                ]);
+            }
+
+            // No single safe match: keep it as its own profile so nothing is hidden
+            $gp['sources'] = [$gp['source']];
+            $profiles[]    = $gp;
         }
 
-        return array_values($byName);
+        return array_values($profiles);
     }
 
     // ── PRIVATE: Resolve profiles from Genova only ────────────────────
@@ -710,13 +745,17 @@ class AuthController extends Controller
 
     private function resolveCustomerFromSession(string $phone): ?Customer
     {
-        $customerCode    = session('pending_customer_code');
-        $customerSource  = $this->normaliseSource(session('pending_customer_source', 'genova'));
-        $secondaryCode   = session('pending_secondary_code');
+        $customerCode   = session('pending_customer_code');
+        $customerSource = $this->normaliseSource(session('pending_customer_source', 'genova'));
+        $secondaryCode  = session('pending_secondary_code');
+
+        // A merged profile always pairs the two systems, so if the secondary source was not
+        // sent it is the opposite of the primary one
         $secondarySource = $secondaryCode
-            ? $this->normaliseSource(session('pending_secondary_source'))
+            ? $this->normaliseSource(session('pending_secondary_source') ?: ($customerSource === 'glims' ? 'genova' : 'glims'))
             : null;
-        $pendingName     = session('pending_name');
+
+        $pendingName = session('pending_name');
 
         if (! $customerCode) {
             Log::error('resolveCustomerFromSession: no customer code, cannot create', ['phone' => $phone]);
@@ -726,7 +765,14 @@ class AuthController extends Controller
         $primaryColumn   = $this->sourceColumn($customerSource);
         $secondaryColumn = $secondarySource ? $this->sourceColumn($secondarySource) : null;
 
+        // 1. Look for the customer by the primary code
         $customer = Customer::where($primaryColumn, $customerCode)->first();
+
+        // 2. If not found, look by the secondary code. This stops a second record being
+        //    created for a person who already exists in the other system.
+        if (! $customer && $secondaryCode && $secondaryColumn) {
+            $customer = Customer::where($secondaryColumn, $secondaryCode)->first();
+        }
 
         if ($customer) {
             $updates = [];
@@ -737,8 +783,35 @@ class AuthController extends Controller
             if (empty($customer->name) || $customer->name === 'Unknown') {
                 $updates['name'] = $pendingName ?? $customer->name;
             }
+
+            // Fill in whichever codes this record is missing (never overwrite one that is set)
+            if (empty($customer->{$primaryColumn})) {
+                $updates[$primaryColumn] = $customerCode;
+            } elseif ((string) $customer->{$primaryColumn} !== (string) $customerCode) {
+                Log::warning('resolveCustomerFromSession: customer already has a different primary code', [
+                    'customer_id'  => $customer->id,
+                    'column'       => $primaryColumn,
+                    'stored_code'  => $customer->{$primaryColumn},
+                    'session_code' => $customerCode,
+                ]);
+            }
+
             if ($secondaryCode && $secondaryColumn && empty($customer->{$secondaryColumn})) {
                 $updates[$secondaryColumn] = $secondaryCode;
+            }
+
+            // Keep the sources list in step with the codes
+            $currentSources = $customer->sources ?? [];
+            $sources        = $currentSources;
+
+            foreach (array_filter([$customerSource, $secondarySource]) as $source) {
+                if (! in_array($source, $sources, true)) {
+                    $sources[] = $source;
+                }
+            }
+
+            if ($sources !== $currentSources) {
+                $updates['sources'] = $sources;
             }
 
             if (! empty($updates)) {

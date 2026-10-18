@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Support\NameMatcher;
 
 class Customer extends Authenticatable
 {
@@ -41,6 +42,10 @@ class Customer extends Authenticatable
      * Returns all local Customer IDs that belong to the same real-world person.
      * Same phone + different source system = same person, different record.
      */
+    // Latest Addition: records that share a phone number were combined on the dashboard
+    // without checking names. Now a record is only combined when the names match too, so a
+    // business or a family member on the same phone is no longer mixed in.
+    // =====================================================================================
     public function resolvedCustomerIds(): array
     {
         $ids = [$this->id];
@@ -51,7 +56,8 @@ class Customer extends Authenticatable
 
         $mySources = $this->sources ?? ['genova'];
 
-        $relatedIds = static::where('phone', $this->phone)
+        // Records with the same phone from a different system...
+        $candidates = static::where('phone', $this->phone)
             ->where('id', '!=', $this->id)
             ->where(function ($query) use ($mySources) {
                 foreach ($mySources as $source) {
@@ -61,6 +67,11 @@ class Customer extends Authenticatable
                     });
                 }
             })
+            ->get(['id', 'name']);
+
+        // ...but only the ones that are really the same person
+        $relatedIds = $candidates
+            ->filter(fn($candidate) => NameMatcher::matches($this->name, $candidate->name))
             ->pluck('id')
             ->toArray();
 

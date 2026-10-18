@@ -12,6 +12,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use App\Support\NameMatcher;
 
 class SyncCustomerPoliciesJob implements ShouldQueue
 {
@@ -97,12 +98,26 @@ class SyncCustomerPoliciesJob implements ShouldQueue
         ]);
 
         try {
-            // Step 1: Refresh customer record from dedicated customer endpoint
-            // This gives us phone, email, DOB, gender — not available on policy rows.
+            // Step 1: Refresh the customer record from the main GLIMS code
             $this->refreshGlimsCustomer($glims, $policySync, $customerCode);
 
-            // Step 2: Get flat policy list grouped by policy_number
-            $policies = $glims->getPoliciesByClientCode($customerCode);
+            // Step 2: The same person can be registered under more than one GLIMS code.
+            // Find the other codes (same phone, matching name) and fetch policies for all of them.
+            $siblingCodes = $this->findSiblingGlimsCodes($glims, $customerCode);
+
+            if (! empty($siblingCodes)) {
+                Log::info('SyncCustomerPoliciesJob: also syncing other GLIMS codes for this person', [
+                    'customer_id'   => $this->customer->id,
+                    'main_code'     => $customerCode,
+                    'sibling_codes' => $siblingCodes,
+                ]);
+            }
+
+            $policies = [];
+
+            foreach (array_merge([$customerCode], $siblingCodes) as $code) {
+                $policies = array_merge($policies, $glims->getPoliciesByClientCode($code));
+            }
 
             if (empty($policies)) {
                 Log::info('SyncCustomerPoliciesJob: no GLIMS policies found', [
@@ -118,10 +133,7 @@ class SyncCustomerPoliciesJob implements ShouldQueue
                 'policy_count' => $policyNumbers->count(),
             ]);
 
-            // Step 3: Fetch rich details per policy and merge into the record
-            // Mirrors what Genova does with policySearch() — we get vehicle detail
-            // (make, model, chassis, year) that isn't on the policy search rows.
-            // One concurrent batch (15 at a time) instead of N sequential calls
+            // Step 3: Fetch rich vehicle detail for all policies in concurrent batches
             $risksByPolicy = $glims->getRisksForPolicies($policyNumbers->all());
 
             foreach ($policies as &$policy) {
@@ -150,6 +162,41 @@ class SyncCustomerPoliciesJob implements ShouldQueue
 
             return false;   // caller will not stamp last_synced_at, so the next login retries
         }
+    }
+
+    /**
+     * Other GLIMS codes that belong to the same person: same phone number AND a matching name.
+     * The name check keeps other people who share the phone (family, colleagues) out.
+     */
+    private function findSiblingGlimsCodes(GlimsApiService $glims, string $mainCode): array
+    {
+        $phone = $this->customer->phone;
+
+        if (blank($phone) || blank($this->customer->name)) {
+            return [];
+        }
+
+        try {
+            $profiles = $glims->resolveProfilesByPhone($phone);
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        $codes = [];
+
+        foreach ($profiles as $profile) {
+            $code = (string) ($profile['code'] ?? '');
+
+            if ($code === '' || $code === (string) $mainCode) {
+                continue;
+            }
+
+            if (NameMatcher::matches($this->customer->name, $profile['name'] ?? '')) {
+                $codes[] = $code;
+            }
+        }
+
+        return array_values(array_unique($codes));
     }
 
     /**
@@ -204,9 +251,26 @@ class SyncCustomerPoliciesJob implements ShouldQueue
 
         if (empty($policies) && $phone) {
             $response = $api->getPolicies($phone, 'phone_number');
+
             if ($response->successful()) {
-                $content  = $response->json('data.content') ?? [];
-                $policies = $content[0]['policies'] ?? [];
+                $content = $response->json('data.content') ?? [];
+
+                // Several people can share one phone number, so only use the profile
+                // whose name matches this customer
+                $matches = array_values(array_filter(
+                    $content,
+                    fn($entry) => NameMatcher::matches($this->customer->name, $entry['name'] ?? '')
+                ));
+
+                if (count($matches) === 1) {
+                    $policies = $matches[0]['policies'] ?? [];
+                } elseif (count($matches) > 1) {
+                    Log::warning('SyncCustomerPoliciesJob: several Genova profiles match this customer, skipping phone lookup', [
+                        'customer_id' => $this->customer->id,
+                        'matches'     => count($matches),
+                    ]);
+                }
+                // No match means no Genova policies are attached
             }
         }
 
