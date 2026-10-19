@@ -27,7 +27,6 @@ Route::get('/', [AuthController::class, 'showUserSelectForm'])->name('user.selec
 
 // Customer Auth
 Route::get('/login-user', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 
 // Staff Auth
 Route::get('/staff-login', [AuthController::class, 'staffLoginForm'])->name('staff.login');

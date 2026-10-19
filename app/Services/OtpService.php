@@ -39,19 +39,17 @@ class OtpService
 
     public function verify(string $phoneLocal, string $code): bool
     {
-        $otp = Otp::where('phone', $phoneLocal)
+        $updated = Otp::where('phone', $phoneLocal)
             ->where('code', $code)
             ->where('used', false)
             ->where('expires_at', '>', Carbon::now())
-            ->first();
-
-        if (! $otp) {
+            ->update(['used' => true]);
+ 
+        if ($updated < 1) {
             Log::warning('OTP: verification failed', ['phone' => $phoneLocal]);
             return false;
         }
-
-        $otp->update(['used' => true]);
-
+ 
         Log::info('OTP: verified successfully', ['phone' => $phoneLocal]);
         return true;
     }

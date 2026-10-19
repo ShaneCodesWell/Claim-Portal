@@ -55,26 +55,45 @@ class AuthController extends Controller
 
         $remember = $request->boolean('remember');
 
+        // 5 failed attempts per email and IP address, then a 5 minute pause
+        $throttleKey = 'staff-login:' . mb_strtolower($credentials['email']) . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            return back()->withErrors([
+                'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
+            ])->onlyInput('email');
+        }
+
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
 
-            // Make sure it's actually a staff/admin user
-            if (! $user->is_admin && $user->role === null) {
+            // Only these roles (or an admin) may use the staff area.
+            // ADD any other genuine staff role to this list.
+            $staffRoles = ['admin', 'staff', 'surveyor'];
+            $role       = mb_strtolower((string) $user->role);
+
+            if (! $user->is_admin && ! in_array($role, $staffRoles, true)) {
                 Auth::logout();
+                RateLimiter::hit($throttleKey, 300);
+
                 return back()->withErrors([
                     'email' => 'You do not have staff access.',
                 ])->onlyInput('email');
             }
 
+            RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
 
             // Redirect based on role
-            return match ($user->role) {
-                'Admin'    => redirect()->route('staff.claims.index'),
+            return match ($role) {
                 'surveyor' => redirect()->route('surveyor.claims.index'),
-                default    => redirect()->route('staff.claims.index'),
+                default    => redirect()->route('staff.claims.index'),   // admin, staff
             };
         }
+
+        RateLimiter::hit($throttleKey, 300);
 
         return back()->withErrors([
             'email' => 'These credentials do not match our records.',
@@ -270,28 +289,49 @@ class AuthController extends Controller
     public function verifyOtpAjax(Request $request): JsonResponse
     {
         if (! session('pending_auth')) {
-            return response()->json(['status' => 'error', 'message' => 'Session expired. Please log in again.'], 401);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Session expired. Please log in again.',
+            ], 401);
         }
 
         $request->validate(['otp' => 'required|digits:6']);
 
         $phone = session('pending_phone');
+
         if (! $phone) {
-            return response()->json(['status' => 'error', 'message' => 'Session expired. Please log in again.'], 401);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Session expired. Please log in again.',
+            ], 401);
         }
 
         // Rate limit: 5 attempts per IP per minute
         $throttleKey = 'otp-verify:' . $request->ip();
+
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
+
             return response()->json([
                 'status'  => 'error',
                 'message' => "Too many attempts. Please try again in {$seconds} seconds.",
             ], 429);
         }
 
+        // Rate limit: 5 wrong codes per phone per 10 minutes
+        $phoneKey = 'otp-verify-phone:' . $phone;
+
+        if (RateLimiter::tooManyAttempts($phoneKey, 5)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Too many wrong codes. Please try again in a few minutes.',
+            ], 429);
+        }
+
         if (! $this->otp->verify($phone, $request->otp)) {
             RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($phoneKey, 600);
+
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Invalid or expired code. Please try again.',
@@ -299,6 +339,7 @@ class AuthController extends Controller
         }
 
         RateLimiter::clear($throttleKey);
+        RateLimiter::clear($phoneKey);
 
         // Several profiles share this phone and none has been chosen yet:
         // the OTP is now proven, so show the names (and nothing else) and let the customer choose.
@@ -308,7 +349,10 @@ class AuthController extends Controller
             return response()->json([
                 'status'   => 'profile_selection',
                 'profiles' => collect(session('pending_profiles'))
-                    ->map(fn($profile, $index) => ['id' => $index, 'name' => $profile['name'] ?? 'Unknown'])
+                    ->map(fn($profile, $index) => [
+                        'id'   => $index,
+                        'name' => $profile['name'] ?? 'Unknown',
+                    ])
                     ->values(),
             ]);
         }
@@ -737,7 +781,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status'       => 'otp_sent',
-            'name'         => $name,
+            'name'         => '',   // never reveal a name before the OTP is verified
             'phone_masked' => $this->maskPhone($phone),
         ]);
     }

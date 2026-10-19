@@ -466,7 +466,7 @@
                     <span x-text="activeConfig.wipText"></span>
                 </div>
 
-                <form action="{{ route('login.submit') }}" method="POST" class="space-y-4" id="verificationForm">
+                <form action="#" method="POST" class="space-y-4" id="verificationForm">
                     @csrf
 
                     {{-- Hidden field carries the actual login_type value --}}

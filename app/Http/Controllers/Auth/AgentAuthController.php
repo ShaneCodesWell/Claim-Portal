@@ -34,7 +34,8 @@ class AgentAuthController extends Controller
             preg_replace('/[\x{00A0}\x{FEFF}]+/u', '', trim($request->phone))
         );
 
-        // Throttle: 5 attempts per IP per minute
+        // Throttle: 5 attempts per IP per minute. Every attempt counts, whether or not the
+        // number exists, so the limit cannot be reset by trying a valid number in between.
         $throttleKey = 'agent-login:' . $request->ip();
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
@@ -44,11 +45,11 @@ class AgentAuthController extends Controller
             ], 429);
         }
 
+        RateLimiter::hit($throttleKey, 60);
+
         $agent = Agent::where('phone', $phone)->first();
 
         if (! $agent) {
-            RateLimiter::hit($throttleKey, 60);
-
             Log::warning('AgentAuthController@loginAjax: phone not found', ['phone' => $phone]);
 
             // Intentionally vague — don't reveal whether the number exists
@@ -58,7 +59,16 @@ class AgentAuthController extends Controller
             ], 422);
         }
 
-        RateLimiter::clear($throttleKey);
+        // At most 5 codes per phone number per 10 minutes (stops text-message flooding)
+        $sendKey = 'agent-otp-send:' . $phone;
+        if (RateLimiter::tooManyAttempts($sendKey, 5)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Too many codes requested for this number. Please try again in a few minutes.',
+            ], 429);
+        }
+
+        RateLimiter::hit($sendKey, 600);
 
         session([
             'agent_pending_auth'  => true,
@@ -94,8 +104,18 @@ class AgentAuthController extends Controller
             ], 429);
         }
 
+        // Rate limit: 5 wrong codes per phone per 10 minutes, whatever the IP address
+        $phoneKey = 'agent-otp-verify-phone:' . $phone;
+        if (RateLimiter::tooManyAttempts($phoneKey, 5)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Too many wrong codes. Please try again in a few minutes.',
+            ], 429);
+        }
+
         if (! $this->otp->verify($phone, $request->otp)) {
             RateLimiter::hit($throttleKey, 60);
+            RateLimiter::hit($phoneKey, 600);
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Invalid or expired code. Please try again.',
@@ -103,6 +123,7 @@ class AgentAuthController extends Controller
         }
 
         RateLimiter::clear($throttleKey);
+        RateLimiter::clear($phoneKey);
 
         $agent = Agent::find(session('agent_pending_id'));
 
@@ -162,7 +183,8 @@ class AgentAuthController extends Controller
     public function logout(Request $request)
     {
         Auth::guard('agent')->logout();
-        $request->session()->flush();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('agent.login')->with('success', 'Logged out successfully.');
     }
@@ -171,6 +193,9 @@ class AgentAuthController extends Controller
     private function completeLogin(Agent $agent): void
     {
         Auth::guard('agent')->login($agent);
+
+        // New session id after login (prevents session fixation)
+        session()->regenerate();
 
         session()->forget([
             'agent_pending_auth',
