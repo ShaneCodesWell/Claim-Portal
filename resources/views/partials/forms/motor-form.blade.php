@@ -857,7 +857,7 @@
             @endif
 
             {{-- ── SECTION 9: DECLARATION (customer only) ── --}}
-            @if (!$isStaff && !$isAgent)
+            @if (!$isStaff)
                 <section class="mb-8">
                     <h3
                         class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
