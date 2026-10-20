@@ -32,15 +32,15 @@
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-amber-400"></span>
-            <span class="text-sm text-gray-600">Pending Review</span>
-            <span class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'pending')->count() }}</span>
+            <span class="text-sm text-gray-600">Pending Info</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'pending_info')->count() }}</span>
         </div>
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-blue-400"></span>
             <span class="text-sm text-gray-600">In Progress</span>
             <span
-                class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'in_progress')->count() }}</span>
+                class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'under_review')->count() }}</span>
         </div>
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
@@ -49,11 +49,11 @@
             <span class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'approved')->count() }}</span>
         </div>
 
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+        {{-- <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-rose-400"></span>
             <span class="text-sm text-gray-600">Declined</span>
             <span class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'declined')->count() }}</span>
-        </div>
+        </div> --}}
     </div>
 
     <!-- Claims Table / List -->
