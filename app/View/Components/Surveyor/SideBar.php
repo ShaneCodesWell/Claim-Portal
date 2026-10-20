@@ -17,8 +17,8 @@ class SideBar extends Component
     public function __construct()
     {
         $this->stats = [
-            'all_survey_count' => Claim::where('status', 'under_survey')->count(),
-            'my_queue_count'   => Claim::where('status', ClaimStatus::UNDER_SURVEY)->where('surveyed_by', Auth::id())->count(),
+            'all_survey_count' => Claim::where('status', ClaimStatus::UNDER_SURVEY)->whereNull('surveyed_by')->count(),
+            'my_queue_count' => Claim::where('status',ClaimStatus::UNDER_SURVEY)->where('surveyed_by', Auth::id())->count(),
         ];
     }
 

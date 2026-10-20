@@ -29,8 +29,8 @@
     <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-2">
         @foreach ([
         'all' => 'All Claims',
-        'low' => 'Same Day (≤ 30k)',
-        'medium' => 'Medium (30k – 100k)',
+        'low' => 'Low Repair Bill (≤ 30k)',
+        'medium' => 'Medium (30k-100k)',
         'high' => 'High (> 100k)',
     ] as $value => $label)
             <a href="{{ route('surveyor.claims.index', array_merge(request()->only('search'), ['filter' => $value])) }}"
@@ -55,9 +55,13 @@
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Product</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Claim Amount</th>
+                            Sum Insured
+                        </th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Sent to Survey</th>
+                            Repair Bill
+                        </th>
+                        {{-- <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Sent to Survey</th> --}}
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Status</th>
                         <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -89,8 +93,15 @@
                             </td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
                                 {{ number_format($claim->amount) }}</td>
-                            <td class="px-4 py-4 text-xs text-gray-700">
-                                {{ $claim->surveyed_at?->format('M d, Y') ?? '—' }}</td>
+                            <td class="px-4 py-4 text-sm font-medium text-gray-900">
+                                @if ($claim->repair_bill !== null)
+                                    GH₵ {{ number_format((float) $claim->repair_bill, 2) }}
+                                @else
+                                    <span class="text-gray-400">Not provided</span>
+                                @endif
+                            </td>
+                            {{-- <td class="px-4 py-4 text-xs text-gray-700">
+                                {{ $claim->surveyed_at?->format('M d, Y') ?? '—' }}</td> --}}
                             @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
                             <td class="px-4 py-4">
                                 <span
@@ -107,7 +118,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-10 text-center">
+                            <td colspan="8" class="px-6 py-10 text-center">
                                 <div class="flex flex-col items-center justify-center gap-3 text-gray-500">
                                     <div class="h-14 w-14 flex items-center justify-center rounded-full bg-gray-100">
                                         <i class="fas fa-search-location text-xl text-gray-400"></i>

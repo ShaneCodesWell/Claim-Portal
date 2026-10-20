@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Surveyor;
 
 use App\Enums\ClaimStatus;
@@ -10,23 +11,23 @@ use Illuminate\Support\Facades\Auth;
 
 class ClaimController extends Controller
 {
-    public function __construct(protected ClaimService $claimService)
-    {}
+    public function __construct(protected ClaimService $claimService) {}
 
     public function index(Request $request)
     {
-        $query = Claim::where('status', ClaimStatus::UNDER_SURVEY)
+        $query = Claim::where('status', ClaimStatus::UNDER_SURVEY)->whereNull('surveyed_by')
             ->with(['customer', 'policy', 'branch', 'surveyor']);
 
         match ($request->filter) {
-            'low'    => $query->where('amount', '<=', 30000),
-            'medium' => $query->whereBetween('amount', [30001, 100000]),
-            'high'   => $query->where('amount', '>', 100000),
+            'low'    => $query->where('repair_bill', '<=', 30000),
+            'medium' => $query->where('repair_bill', '>', 30000)->where('repair_bill', '<=', 100000),
+            'high'   => $query->where('repair_bill', '>', 100000),
             default  => null,
         };
 
         if ($request->filled('search')) {
             $search = $request->search;
+
             $query->where(function ($q) use ($search) {
                 $q->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$search}%"))
                     ->orWhereHas('policy', fn($q) => $q->where('policy_number', 'like', "%{$search}%"));
@@ -112,8 +113,11 @@ class ClaimController extends Controller
     private function stats(): array
     {
         return [
-            'all_survey_count' => Claim::where('status', ClaimStatus::UNDER_SURVEY)->count(),
-            'my_queue_count'   => Claim::where('status', ClaimStatus::UNDER_SURVEY)
+            'all_survey_count' => Claim::where('status', ClaimStatus::UNDER_SURVEY)
+                ->whereNull('surveyed_by')
+                ->count(),
+
+            'my_queue_count' => Claim::where('status', ClaimStatus::UNDER_SURVEY)
                 ->where('surveyed_by', Auth::id())
                 ->count(),
         ];

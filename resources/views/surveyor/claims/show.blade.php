@@ -347,31 +347,78 @@
             </div>
 
             {{-- Survey Completion --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-clipboard-check text-teal-500"></i> Submit Survey Findings
-                    </h3>
-                </div>
-                <div class="p-5">
-                    <form action="{{ route('surveyor.claims.complete', $claim) }}" method="POST" class="space-y-3"
-                        id="surveyCompleteForm"
-                        data-unassigned="{{ is_null($claim->surveyed_by) ? 'true' : 'false' }}">
-                        @csrf
-                        <textarea name="survey_notes" rows="5" required maxlength="2000"
-                            placeholder="Describe your findings, observations, estimated damage, and recommendation..."
-                            class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-400 outline-none resize-none">{{ old('survey_notes') }}</textarea>
-                        @error('survey_notes')
-                            <p class="text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                        <button type="submit"
-                            class="bg-teal-600 hover:bg-teal-700 text-white text-sm px-5 py-2.5 rounded-lg transition font-medium flex items-center gap-2">
-                            <i class="fas fa-paper-plane text-xs"></i> Submit Findings
-                        </button>
-                    </form>
-                </div>
-            </div>
+            @if (is_null($claim->surveyed_by))
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="h-1 bg-cyan-500"></div>
 
+                    <div class="p-5 sm:p-6">
+                        <div class="flex items-start gap-4">
+                            <div
+                                class="h-11 w-11 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center shrink-0">
+                                <i class="fas fa-user-clock text-lg"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <h3 class="text-sm font-semibold text-gray-900">
+                                        Awaiting Surveyor Assignment
+                                    </h3>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full
+                                     bg-amber-50 text-amber-700 border border-amber-200
+                                     text-[10px] font-semibold uppercase tracking-wide">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                        Unassigned
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    This claim has not been assigned to a surveyor yet.
+                                    You can take ownership of the claim to begin your inspection
+                                    and document your findings.
+                                </p>
+                                <div class="mt-5 flex justify-end">
+                                    <form action="{{ route('surveyor.claims.assign-to-me', $claim) }}"
+                                        method="POST">
+                                        @csrf
+
+                                        <button type="submit"
+                                            class="inline-flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-700
+                                       text-white text-sm font-medium px-4 py-2.5 rounded-lg transition
+                                       focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
+                                            <i class="fas fa-user-check text-xs"></i>
+                                            Assign to Me
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fas fa-clipboard-check text-teal-500"></i> Submit Survey Findings
+                        </h3>
+                    </div>
+                    <div class="p-5">
+                        <form action="{{ route('surveyor.claims.complete', $claim) }}" method="POST"
+                            class="space-y-3" id="surveyCompleteForm"
+                            data-unassigned="{{ is_null($claim->surveyed_by) ? 'true' : 'false' }}">
+                            @csrf
+                            <textarea name="survey_notes" rows="5" required maxlength="2000"
+                                placeholder="Describe your findings, observations, estimated damage, and recommendation..."
+                                class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-400 outline-none resize-none">{{ old('survey_notes') }}</textarea>
+                            @error('survey_notes')
+                                <p class="text-xs text-red-500">{{ $message }}</p>
+                            @enderror
+                            <button type="submit"
+                                class="bg-teal-600 hover:bg-teal-700 text-white text-sm px-5 py-2.5 rounded-lg transition font-medium flex items-center gap-2">
+                                <i class="fas fa-paper-plane text-xs"></i> Submit Findings
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 

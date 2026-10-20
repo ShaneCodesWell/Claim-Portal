@@ -130,7 +130,7 @@
                         </a>
                     @else
                         <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
-                            <i class="fas fa-lock"></i> Editing locked
+                            <i class="fas fa-lock"></i> Claim In Process
                         </span>
                     @endif
                 </div>

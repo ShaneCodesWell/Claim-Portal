@@ -645,18 +645,18 @@
                                 Once completed, the guide will be stored with this claim for future reference.
                             </p>
                         </div>
-                        @if ($canAct)
+                        @if (\App\Enums\ClaimStatus::canEditLiabilityGuide($claim->status))
                             <a href="{{ route('staff.claims.liability-guide', $claim) }}"
                                 class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition font-medium">
                                 <i class="fas fa-edit"></i> Complete Liability Guide
                             </a>
-                        @elseif ($claim->isEditable())
+                        @elseif (is_null($claim->assigned_to))
                             <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
                                 <i class="fas fa-user-clock"></i> Assign claim first
                             </span>
                         @else
                             <span class="text-xs text-gray-400 italic flex items-center gap-1 px-4 py-2">
-                                <i class="fas fa-lock"></i> Editing locked
+                                <i class="fas fa-lock"></i> Available after survey completion
                             </span>
                         @endif
                     </div>

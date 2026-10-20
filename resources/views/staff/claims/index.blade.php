@@ -52,7 +52,7 @@
         @foreach ([
         'all' => 'All Claims',
         'low' => 'Same Day (≤ 30k)',
-        'medium' => 'Medium (30k - 100k)',
+        'medium' => 'Medium (30k-100k)',
         'high' => 'High (> 100k)',
     ] as $value => $label)
             <a href="{{ route('staff.claims.index', array_merge(request()->only('search', 'branch'), ['filter' => $value])) }}"
@@ -89,7 +89,7 @@
                 </thead>
                 <tbody id="claimsTableBody" class="divide-y divide-gray-200">
                     @forelse ($claims as $claim)
-                        <tr class="hover:bg-gray-50 transition" data-amount="{{ $claim->amount }}">
+                        <tr class="hover:bg-gray-50 transition" data-repair-bill="{{ $claim->repair_bill }}">
                             <td class="px-4 py-4 max-w-52">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <div
@@ -118,7 +118,11 @@
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
                                 {{ number_format($claim->amount) }}</td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">
-                                GH₵ {{ number_format($claim->repair_estimate) }}
+                                @if ($claim->repair_bill !== null)
+                                    GH₵ {{ number_format((float) $claim->repair_bill) }}
+                                @else
+                                    <span class="text-gray-400">Not provided</span>
+                                @endif
                             </td>
                             @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
                             <td class="px-4 py-4">
@@ -149,7 +153,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-6 py-10 text-center">
+                            <td colspan="7" class="px-6 py-10 text-center">
                                 <div class="flex flex-col items-center justify-center gap-3 text-gray-500">
                                     <div class="h-14 w-14 flex items-center justify-center rounded-full bg-gray-100">
                                         <i class="fas fa-file-alt text-xl text-gray-400"></i>

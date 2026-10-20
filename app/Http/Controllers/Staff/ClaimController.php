@@ -12,6 +12,7 @@ use App\Models\ClaimDocument;
 use App\Models\Customer;
 use App\Models\Policy;
 use App\Models\User;
+use App\Models\Branch;
 use App\Models\LiabilityGuide;
 use App\Services\ClaimNotificationService;
 use App\Services\ClaimService;
@@ -30,7 +31,7 @@ class ClaimController extends Controller
 
     public function index(Request $request)
     {
-        $branches = \App\Models\Branch::where('is_active', true)
+        $branches = Branch::where('is_active', true)
             ->orderBy('name')
             ->get();
 
@@ -42,9 +43,9 @@ class ClaimController extends Controller
             ->latest();
 
         match ($request->filter) {
-            'low'    => $query->where('amount', '<=', 30000),
-            'medium' => $query->whereBetween('amount', [30001, 100000]),
-            'high'   => $query->where('amount', '>', 100000),
+            'low'    => $query->where('repair_bill', '<=', 30000),
+            'medium' => $query->where('repair_bill', '>', 30000)->where('repair_bill', '<=', 100000),
+            'high'   => $query->where('repair_bill', '>', 100000),
             default  => null,
         };
 

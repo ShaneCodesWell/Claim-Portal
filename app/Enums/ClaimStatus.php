@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Enums;
 
-enum ClaimStatus: string {
+enum ClaimStatus: string
+{
     const SUBMITTED        = 'submitted';
     const UNDER_REVIEW     = 'under_review';
     const PENDING_INFO     = 'pending_info';
@@ -42,7 +44,8 @@ enum ClaimStatus: string {
             self::SUBMITTED        => 'Submitted',
             self::UNDER_REVIEW     => 'Under Review',
             self::PENDING_INFO     => 'Pending Info',
-            self::IN_PROGRESS      => 'In Progress', self::UNDER_SURVEY => 'Under Survey',
+            self::IN_PROGRESS      => 'In Progress',
+            self::UNDER_SURVEY => 'Under Survey',
             self::SURVEY_COMPLETED => 'Survey Completed',
             self::COMMITTEE_REVIEW => 'Committee Review',
             self::APPROVED         => 'Approved',
@@ -117,6 +120,9 @@ enum ClaimStatus: string {
             self::IN_PROGRESS,
             self::UNDER_REVIEW,
             self::PENDING_INFO,
+            self::SURVEY_COMPLETED,
+            self::APPROVED,
+            self::REJECTED,
         ];
     }
 
@@ -147,5 +153,14 @@ enum ClaimStatus: string {
     public static function committeeStages(): array
     {
         return [self::COMMITTEE_REVIEW];
+    }
+
+    public static function canEditLiabilityGuide(string $status): bool
+    {
+        return in_array($status, [
+            self::SURVEY_COMPLETED,
+            self::COMMITTEE_REVIEW,
+            self::APPROVED,
+        ], true);
     }
 }
