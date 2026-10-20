@@ -15,14 +15,14 @@
             <div class="flex flex-wrap gap-3">
                 <a href="{{ route('staff.policy-search.index') }}"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center gap-2 transition">
-                    <i class="fas fa-search"></i>API Lookup
+                    <i class="fas fa-search"></i>Direct API Lookup
                 </a>
             </div>
         </div>
     </div>
 
     <!-- Compact Neutral Stat Pills -->
-    <div class="flex flex-wrap gap-3 mb-6">
+    {{-- <div class="flex flex-wrap gap-3 mb-6">
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
             <span class="text-sm text-gray-600">Total Customers</span>
@@ -34,7 +34,7 @@
             <span class="text-sm text-gray-600">Active Policies</span>
             <span class="text-sm font-semibold text-gray-900">{{ number_format($stats['active_policies']) }}</span>
         </div>
-    </div>
+    </div> --}}
 
     <!-- Policyholders Table -->
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">

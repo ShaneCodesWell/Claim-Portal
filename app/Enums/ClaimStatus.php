@@ -147,12 +147,28 @@ enum ClaimStatus: string
     // Convenience groupings
     public static function surveyStages(): array
     {
-        return [self::UNDER_SURVEY, self::SURVEY_COMPLETED];
+        return [
+            self::UNDER_SURVEY,
+            self::SURVEY_COMPLETED
+        ];
     }
 
     public static function committeeStages(): array
     {
         return [self::COMMITTEE_REVIEW];
+    }
+
+    public static function customerEditable(): array
+    {
+        return [
+            self::SUBMITTED,
+            self::PENDING_INFO,
+        ];
+    }
+
+    public static function isCustomerEditable(string $status): bool
+    {
+        return in_array($status, self::customerEditable(), true);
     }
 
     public static function canEditLiabilityGuide(string $status): bool

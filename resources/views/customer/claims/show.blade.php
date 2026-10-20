@@ -72,7 +72,7 @@
                                     class="text-xs text-blue-600 hover:underline">
                                     View
                                 </button>
-                                @if (in_array($claim->status, ['submitted', 'pending_info']))
+                                @if (\App\Enums\ClaimStatus::isCustomerEditable($claim->status))
                                     <form action="{{ route('customer.claims.documents.destroy', $doc->id) }}"
                                         method="POST" class="delete-doc-form">
                                         @csrf
@@ -98,17 +98,32 @@
                     </h3>
                 </div>
                 <div class="p-4">
-                    <form action="{{ route('customer.claims.documents', $claim) }}" method="POST"
-                        enctype="multipart/form-data" class="space-y-3">
-                        @csrf
-                        <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.xls,.xlsx,.csv"
-                            class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
-                        <p class="text-xs text-gray-400">PDF, JPG, PNG, XLS, XLSX, CSV up to 5MB each</p>
-                        <button type="submit"
-                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
-                            <i class="fas fa-upload text-xs"></i> Upload Documents
-                        </button>
-                    </form>
+                    @if (\App\Enums\ClaimStatus::isCustomerEditable($claim->status))
+                        <form action="{{ route('customer.claims.documents', $claim) }}" method="POST"
+                            enctype="multipart/form-data" class="space-y-3">
+                            @csrf
+                            <input type="file" name="documents[]" multiple
+                                accept=".jpg,.jpeg,.png,.gif,.pdf,.xls,.xlsx,.csv"
+                                class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
+
+                            <p class="text-xs text-gray-400">
+                                PDF, JPG, PNG, XLS, XLSX, CSV up to 5MB each
+                            </p>
+                            <button type="submit"
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 rounded-lg transition font-medium flex items-center justify-center gap-2">
+                                <i class="fas fa-upload text-xs"></i> Upload Documents
+                            </button>
+                        </form>
+                    @else
+                        <div class="flex items-start gap-3 rounded-lg bg-gray-50 border border-gray-100 p-3">
+                            <i class="fas fa-lock text-gray-400 mt-0.5"></i>
+
+                            <p class="text-xs text-gray-500 leading-relaxed">
+                                Document uploads are unavailable at this stage.
+                                You can still view your existing documents.
+                            </p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -123,7 +138,7 @@
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <i class="fas fa-file-alt text-blue-500"></i> Claim Summary
                     </h3>
-                    @if (\App\Enums\ClaimStatus::isEditable($claim->status))
+                    @if (\App\Enums\ClaimStatus::isCustomerEditable($claim->status))
                         <a href="{{ route('claims.edit', $claim) }}"
                             class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                             <i class="fas fa-edit"></i> Edit Form
