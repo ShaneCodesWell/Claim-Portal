@@ -388,7 +388,7 @@
                             <ol class="mt-4 text-xs text-amber-800 space-y-1 list-decimal list-inside">
                                 <li>Upload any requested documents using
                                     <a href="#upload-documents" class="font-medium underline">Upload Documents</a>
-                                    or update your claim form.
+                                    section on your left update your claim form.
                                 </li>
                                 <li>Add a short note below (optional).</li>
                                 <li>Click <span class="font-medium">Submit Response</span> so we know you're done.</li>
