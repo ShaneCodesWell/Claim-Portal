@@ -756,9 +756,17 @@ class ClaimController extends Controller
     {
         abort_unless(Auth::user()->isAdmin(), 403);
 
-        $query = Claim::with(['customer', 'policy', 'assignedTo', 'surveyor', 'committeeDecidedBy'])
+        $query = Claim::with([
+            'customer',
+            'policy',
+            'assignedTo',
+            'surveyor',
+            'committeeDecidedBy',
+            'pendingInfoRequest.requester',
+        ])
             ->whereIn('status', [
                 ClaimStatus::UNDER_REVIEW,
+                ClaimStatus::PENDING_INFO,
                 ClaimStatus::UNDER_SURVEY,
                 ClaimStatus::SURVEY_COMPLETED,
                 ClaimStatus::COMMITTEE_REVIEW,

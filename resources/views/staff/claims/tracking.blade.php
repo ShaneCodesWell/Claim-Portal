@@ -31,6 +31,7 @@
         @foreach ([
         'all' => 'All In Progress',
         'under_review' => 'Under Review',
+        'pending_info' => 'Pending Info',
         'under_survey' => 'Under Survey',
         'survey_completed' => 'Survey Completed',
         'committee_review' => 'Committee Review',
@@ -72,6 +73,14 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse($claims as $claim)
+                        @php
+                            $badge = \App\Enums\ClaimStatus::badge($claim->status);
+                            $pendingReq =
+                                $claim->status === \App\Enums\ClaimStatus::PENDING_INFO
+                                    ? $claim->pendingInfoRequest
+                                    : null;
+                            $since = $pendingReq?->created_at ?? $claim->updated_at;
+                        @endphp
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-4 py-4">
                                 <div class="flex items-center gap-3">
@@ -92,16 +101,27 @@
                             <td class="px-4 py-4 text-sm text-gray-700">
                                 {{ $claim->assignedTo?->name ?? 'Unassigned' }}
                             </td>
-                            @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
                             <td class="px-4 py-4">
                                 <span
                                     class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border {{ $badge['class'] }}">
                                     {{ $badge['label'] }}
                                 </span>
+
+                                @if ($claim->status === \App\Enums\ClaimStatus::PENDING_INFO)
+                                    <div class="mt-1 text-xs text-gray-500">
+                                        Waiting on customer
+                                        @if ($claim->pendingInfoRequest?->sms_status === 'failed')
+                                            <span class="text-red-600"
+                                                title="{{ $claim->pendingInfoRequest->sms_error }}">
+                                                &middot; <i class="fas fa-exclamation-circle"></i> SMS failed
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
                             </td>
                             <td class="px-4 py-4 text-xs text-gray-500">
-                                {{ $claim->updated_at->format('d M Y') }}
-                                <span class="text-gray-400">({{ $claim->updated_at->diffForHumans() }})</span>
+                                {{ $since->format('d M Y') }}
+                                <span class="text-gray-400">({{ $since->diffForHumans() }})</span>
                             </td>
                             <td class="px-4 py-4 text-right">
                                 <a href="{{ route('staff.claims.show', $claim->id) }}"
