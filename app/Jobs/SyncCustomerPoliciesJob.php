@@ -53,9 +53,9 @@ class SyncCustomerPoliciesJob implements ShouldQueue
             $glimsOk = $this->syncGlims($glims, $policySync, $glimsCode);
         }
 
-        if ($glimsCode && $glimsOk) {
-            $this->customer->update(['last_synced_at' => now()]);   // GLIMS data is saved
-        }
+        // if ($glimsCode && $glimsOk) {
+        //     $this->customer->update(['last_synced_at' => now()]);   // GLIMS data is saved
+        // }
 
         // Genova must never block GLIMS. Throwable (not Exception) because
         // "call to undefined method" is an Error and slips past catch (\Exception).

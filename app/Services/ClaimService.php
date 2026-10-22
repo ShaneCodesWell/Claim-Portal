@@ -13,6 +13,8 @@ use App\Models\Customer;
 use App\Models\Policy;
 use App\Models\User;
 use App\Models\Agent;
+use App\Jobs\SendInfoRequestSms;
+use App\Models\ClaimInfoRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -178,17 +180,76 @@ class ClaimService
     }
 
     // Request additional information from customer
-    public function requestInfo(Claim $claim, User $requestedBy, string $note): void
+    public function requestInfo(Claim $claim, User $requestedBy, string $note): ClaimInfoRequest
     {
-        $claim->update(['status' => ClaimStatus::PENDING_INFO]);
+        $infoRequest = DB::transaction(function () use ($claim, $requestedBy, $note) {
+            // Lock the claim row so two quick clicks can't create two requests.
+            $claim = Claim::whereKey($claim->id)->lockForUpdate()->firstOrFail();
 
-        $this->logActivity(
-            $claim,
-            $requestedBy,
-            'info_requested',
-            $note,
-            ['requested_by' => $requestedBy->id]
-        );
+            if ($claim->infoRequests()->pending()->exists()) {
+                throw new \DomainException('An information request is already open for this claim.');
+            }
+
+            $infoRequest = $claim->infoRequests()->create([
+                'requested_by'    => $requestedBy->id,
+                'note'            => $note,
+                'previous_status' => $claim->status,
+                'status'          => ClaimInfoRequest::PENDING,
+                'sms_status'      => ClaimInfoRequest::SMS_QUEUED,
+            ]);
+
+            $claim->update(['status' => ClaimStatus::PENDING_INFO]);
+
+            $this->logActivity(
+                $claim,
+                $requestedBy,
+                'info_requested',
+                $note,
+                ['requested_by' => $requestedBy->id, 'info_request_id' => $infoRequest->id]
+            );
+
+            return $infoRequest;
+        });
+
+        // Runs only after the transaction commits, so the row is guaranteed to exist.
+        SendInfoRequestSms::dispatch($infoRequest)->afterCommit();
+
+        return $infoRequest;
+    }
+
+    public function respondToInfoRequest(Claim $claim, Customer $customer, ?string $note = null): void
+    {
+        DB::transaction(function () use ($claim, $customer, $note) {
+            $claim = Claim::whereKey($claim->id)->lockForUpdate()->firstOrFail();
+
+            $infoRequest = $claim->infoRequests()->pending()->first();
+
+            if (! $infoRequest) {
+                throw new \DomainException('There is no open information request on this claim.');
+            }
+
+            $infoRequest->update([
+                'status'        => ClaimInfoRequest::RESPONDED,
+                'response_note' => $note,
+                'responded_at'  => now(),
+            ]);
+
+            // Only restore if staff haven't moved the claim on in the meantime.
+            if ($claim->status === ClaimStatus::PENDING_INFO) {
+                $claim->update([
+                    'status' => $infoRequest->previous_status ?: ClaimStatus::UNDER_REVIEW,
+                ]);
+            }
+
+            $this->logActivity(
+                $claim,
+                null,   // no staff user: the actor is the customer
+                'info_provided',
+                $note ?: 'Customer marked the requested information as provided.',
+                ['info_request_id' => $infoRequest->id],
+                $customer
+            );
+        });
     }
 
     // Update form data (staff completing missing fields)

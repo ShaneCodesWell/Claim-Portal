@@ -80,6 +80,9 @@ Route::middleware('auth.customer')->group(function () {
     Route::post('claims/{claim}/documents', [CustomerClaimController::class, 'uploadDocuments'])->name('customer.claims.documents');
     Route::get('/documents/{document}/preview', [CustomerClaimController::class, 'previewDocument'])->name('customer.documents.preview');
     Route::delete('claims/documents/{document}', [CustomerClaimController::class, 'destroyDocument'])->name('customer.claims.documents.destroy');
+    
+    // Request Info
+    Route::post('claims/{claim}/respond-info', [CustomerClaimController::class, 'respondToInfoRequest'])->name('customer.claims.respond-info');
 
     // Save Drafts
     Route::get('claims/drafts', [CustomerClaimController::class, 'drafts'])->name('claims.draft.index');

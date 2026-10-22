@@ -768,24 +768,86 @@
 
             {{-- Request Additional Info (only if canAct) --}}
             @if ($canAct)
+                @php $pendingInfo = $claim->pendingInfoRequest; @endphp
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
                         <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                             <i class="fas fa-question-circle text-amber-500"></i> Request Additional Information
                         </h3>
                     </div>
-                    <div class="p-5">
-                        <form action="{{ route('staff.claims.request-info', $claim) }}" method="POST"
-                            class="space-y-3">
-                            @csrf
-                            <textarea name="note" rows="3" required
-                                placeholder="Describe what additional information or documents you need from the customer..."
-                                class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 outline-none resize-none"></textarea>
-                            <button type="submit"
-                                class="bg-amber-500 hover:bg-amber-600 text-white text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
-                                <i class="fas fa-paper-plane text-xs"></i> Send Request
-                            </button>
-                        </form>
+                    <div class="p-5 space-y-5">
+                        @if ($pendingInfo)
+                            <div
+                                class="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 flex items-start gap-2">
+                                <i class="fas fa-hourglass-half mt-0.5"></i>
+                                <span>A request is open and waiting for the customer's response. A new one can be sent
+                                    once they respond.</span>
+                            </div>
+                        @else
+                            <form action="{{ route('staff.claims.request-info', $claim) }}" method="POST"
+                                class="space-y-3">
+                                @csrf
+                                <textarea name="note" rows="3" required maxlength="1000"
+                                    placeholder="Describe what additional information or documents you need from the customer..."
+                                    class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 outline-none resize-none"></textarea>
+                                <button type="submit"
+                                    class="bg-amber-500 hover:bg-amber-600 text-white text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                                    <i class="fas fa-paper-plane text-xs"></i> Send Request
+                                </button>
+                            </form>
+                        @endif
+                        {{-- History --}}
+                        @php $history = $claim->infoRequests()->with('requester')->get(); @endphp
+                        @if ($history->isNotEmpty())
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">History
+                                </h4>
+                                <div class="space-y-3">
+                                    @foreach ($history as $req)
+                                        @php
+                                            $smsClass = match ($req->sms_status) {
+                                                'sent' => 'bg-green-50 text-green-700 border-green-100',
+                                                'failed' => 'bg-red-50 text-red-700 border-red-100',
+                                                default => 'bg-gray-50 text-gray-600 border-gray-100',
+                                            };
+                                            $reqClass = match ($req->status) {
+                                                'responded' => 'bg-green-50 text-green-700 border-green-100',
+                                                'cancelled' => 'bg-gray-50 text-gray-600 border-gray-100',
+                                                default => 'bg-amber-50 text-amber-700 border-amber-100',
+                                            };
+                                        @endphp
+                                        <div class="border border-gray-100 rounded-lg p-3 text-xs">
+                                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                                <span class="text-gray-500">
+                                                    {{ $req->requester?->name }} &middot;
+                                                    {{ $req->created_at->diffForHumans() }}
+                                                </span>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="px-2 py-0.5 rounded-full border {{ $smsClass }}"
+                                                        @if ($req->sms_error) title="{{ $req->sms_error }}" @endif>
+                                                        <i class="fas fa-sms"></i> {{ ucfirst($req->sms_status) }}
+                                                    </span>
+                                                    <span class="px-2 py-0.5 rounded-full border {{ $reqClass }}">
+                                                        {{ ucfirst($req->status) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <p class="mt-2 text-gray-700 whitespace-pre-line">{{ $req->note }}</p>
+                                            @if ($req->status === 'responded')
+                                                <div class="mt-2 pt-2 border-t border-gray-100">
+                                                    <span class="text-gray-400">Customer responded
+                                                        {{ $req->responded_at->diffForHumans() }}</span>
+                                                    @if ($req->response_note)
+                                                        <p class="mt-1 text-gray-700 whitespace-pre-line">
+                                                            {{ $req->response_note }}</p>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif

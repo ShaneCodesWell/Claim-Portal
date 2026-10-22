@@ -108,6 +108,18 @@ class Claim extends Model
         return $this->belongsTo(User::class, 'committee_decided_by');
     }
 
+    public function infoRequests()
+    {
+        return $this->hasMany(ClaimInfoRequest::class)->latest();
+    }
+
+    public function pendingInfoRequest()
+    {
+        return $this->hasOne(ClaimInfoRequest::class)
+            ->where('status', ClaimInfoRequest::PENDING)
+            ->latest('id');
+    }
+
     // Status helpers
     public function isTerminal(): bool
     {

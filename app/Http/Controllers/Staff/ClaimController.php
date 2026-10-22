@@ -513,13 +513,17 @@ class ClaimController extends Controller
             'note' => 'required|string|max:1000',
         ]);
 
-        $this->claimService->requestInfo(
-            claim: $claim,
-            requestedBy: Auth::user(),
-            note: $request->note,
-        );
+        try {
+            $this->claimService->requestInfo(
+                claim: $claim,
+                requestedBy: Auth::user(),
+                note: $request->note,
+            );
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
-        return back()->with('success', 'Information request sent.');
+        return back()->with('success', 'Information request saved. The customer is being notified by SMS.');
     }
 
     public function updateFormData(Request $request, Claim $claim)

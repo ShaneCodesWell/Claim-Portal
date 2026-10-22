@@ -36,11 +36,6 @@
                         class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">{{ $stats['claim_committee_claims'] }}</span>
                 </a>
             @endif
-            <a href="{{ route('claim-form') }}"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
-                <i class="fas fa-file-alt w-5"></i>
-                <span>Claim Forms</span>
-            </a>
             <a href="{{ route('claim-documents') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-folder-open w-5"></i>
@@ -50,6 +45,11 @@
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
                 <i class="fas fa-users w-5"></i>
                 <span>Customer Search</span>
+            </a>
+            <a href="{{ route('claim-form') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+                <i class="fas fa-file-alt w-5"></i>
+                <span>Claim Forms</span>
             </a>
             <div class="pt-4 mt-4 border-t border-gray-100">
                 @if (Auth::user()->isAdmin())

@@ -91,7 +91,7 @@
             </div>
 
             {{-- Upload Documents Card --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div id="upload-documents" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                     <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <i class="fas fa-upload text-indigo-500"></i> Upload Documents
@@ -364,26 +364,51 @@
                 </div>
             </div>
 
-            {{-- Request Additional Info --}}
-            {{-- <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-question-circle text-amber-500"></i> Request Additional Information
-                    </h3>
+            {{-- Information Request Banner --}}
+            @php $pendingInfo = $claim->pendingInfoRequest; @endphp
+            @if ($pendingInfo)
+                <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 shadow-sm overflow-hidden">
+                    <div class="flex items-start gap-4 p-5">
+                        <div class="shrink-0 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                            <i class="fas fa-exclamation-circle text-amber-600"></i>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-sm font-semibold text-amber-900">
+                                Action needed: the claims team has requested more information
+                            </h3>
+                            <p class="text-xs text-amber-700 mt-0.5">
+                                Requested {{ $pendingInfo->created_at->diffForHumans() }}
+                            </p>
+
+                            <blockquote
+                                class="mt-3 text-sm text-gray-800 bg-white border border-amber-100 rounded-lg p-3 whitespace-pre-line">
+                                {{ $pendingInfo->note }}</blockquote>
+
+                            <ol class="mt-4 text-xs text-amber-800 space-y-1 list-decimal list-inside">
+                                <li>Upload any requested documents using
+                                    <a href="#upload-documents" class="font-medium underline">Upload Documents</a>
+                                    or update your claim form.
+                                </li>
+                                <li>Add a short note below (optional).</li>
+                                <li>Click <span class="font-medium">Submit Response</span> so we know you're done.</li>
+                            </ol>
+
+                            <form action="{{ route('customer.claims.respond-info', $claim) }}" method="POST"
+                                class="mt-4 space-y-3">
+                                @csrf
+                                <textarea name="response_note" rows="2" maxlength="1000"
+                                    placeholder="Anything you'd like to tell us about what you've provided (optional)"
+                                    class="w-full text-sm border border-amber-200 bg-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 outline-none resize-none">{{ old('response_note') }}</textarea>
+                                <button type="submit"
+                                    class="bg-amber-500 hover:bg-amber-600 text-white text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                                    <i class="fas fa-paper-plane text-xs"></i> Submit Response
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-5">
-                    <form action="{{ route('staff.claims.request-info', $claim) }}" method="POST" class="space-y-3">
-                        @csrf
-                        <textarea name="note" rows="3" required
-                            placeholder="Describe what additional information or documents you need from the customer..."
-                            class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 outline-none resize-none"></textarea>
-                        <button type="submit"
-                            class="bg-amber-500 hover:bg-amber-600 text-white text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
-                            <i class="fas fa-paper-plane text-xs"></i> Send Request
-                        </button>
-                    </form>
-                </div>
-            </div> --}}
+            @endif
         </div>
     </div>
 

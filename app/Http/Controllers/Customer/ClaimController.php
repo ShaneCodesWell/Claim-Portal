@@ -283,6 +283,24 @@ class ClaimController extends Controller
         return back()->with('success', count($request->file('documents')) . ' document(s) uploaded.');
     }
 
+    public function respondToInfoRequest(Request $request, Claim $claim)
+    {
+        $customer = Auth::guard('customer')->user();
+        abort_unless($customer && $claim->customer_id === $customer->id, 403);
+
+        $data = $request->validate([
+            'response_note' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $this->claimService->respondToInfoRequest($claim, $customer, $data['response_note'] ?? null);
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Thank you. Your response has been sent to the claims team.');
+    }
+
     public function previewDocument(ClaimDocument $document, Request $request)
     {
         $customer    = Auth::guard('customer')->user();

@@ -204,7 +204,10 @@
                                 <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
                                     style="overflow: visible;"> @php
                                         $key = strtolower($policy['business_class_name'] ?? '');
-                                        $claimFormUrl = ($claimFormRoutes[$key] ?? '/motor-form') . '?policyId=' . $policy['policy_id'];
+                                        $claimFormUrl =
+                                            ($claimFormRoutes[$key] ?? '/motor-form') .
+                                            '?policyId=' .
+                                            $policy['policy_id'];
                                         $isFleet = count($policy['risks'] ?? []) > 1;
                                     @endphp <button x-ref="actionsBtn"
                                         @click="open = !open"
@@ -290,7 +293,7 @@
 
                 let attempt = 0;
                 let msgIndex = 0;
-                let maxAttempts = 20;
+                let maxAttempts = 40;
 
                 const msgTimer = setInterval(() => {
                     msgIndex = (msgIndex + 1) % messages.length;
@@ -329,6 +332,23 @@
                                 }
                             } else if (attempt >= maxAttempts) {
                                 clearInterval(msgTimer);
+                                // Some policies are already saved: offer them now instead of waiting for the rest
+                                if (data.count > 0) {
+                                    const foundEl = document.getElementById('syncing-state');
+                                    if (foundEl) {
+                                        foundEl.innerHTML = `
+                                            <div class="flex flex-col items-center justify-center gap-3">
+                                                <i class="fas fa-check-circle text-green-500 text-4xl"></i>
+                                                <p class="text-gray-600 font-medium">Your policies are ready</p>
+                                                <p class="text-sm text-gray-500">The rest are still loading and will appear when you refresh.</p>
+                                                <button onclick="location.reload()"
+                                                    class="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-xl shadow-sm transition">
+                                                    <i class="fas fa-sync-alt"></i> Show my policies
+                                                </button>
+                                            </div>`;
+                                    }
+                                    return;
+                                }
                                 const syncingEl = document.getElementById('syncing-state');
                                 if (syncingEl) {
                                     syncingEl.innerHTML = `
@@ -432,11 +452,11 @@
                 `<div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
                     ${isExpired
                         ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
-                                                                           <i class="fas fa-file-invoice"></i> File a Claim <i class="fas fa-lock ml-1 text-xs"></i>
-                                                                       </button>`
+                                                                               <i class="fas fa-file-invoice"></i> File a Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                                                                           </button>`
                         : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
-                                                                           <i class="fas fa-file-invoice"></i> File a Claim
-                                                                       </a>`
+                                                                               <i class="fas fa-file-invoice"></i> File a Claim
+                                                                           </a>`
                     }
                 </div>` : '';
 
@@ -461,10 +481,10 @@
                             <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
                         </div>
                         ${covers.length > 0 ? `
-                                                                        <div class="border-t border-gray-200 pt-3">
-                                                                            <p class="text-xs text-gray-500 mb-2">Covers Included</p>
-                                                                            <div class="flex flex-wrap gap-1.5">${coverTags}</div>
-                                                                        </div>` : ''}
+                                                                            <div class="border-t border-gray-200 pt-3">
+                                                                                <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                                                                                <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                                                                            </div>` : ''}
                         ${claimButton}
                     </div>
                 </div>`;
