@@ -43,9 +43,9 @@ class ClaimController extends Controller
             ->latest();
 
         match ($request->filter) {
-            'low'    => $query->where('repair_bill', '<=', 30000),
-            'medium' => $query->where('repair_bill', '>', 30000)->where('repair_bill', '<=', 100000),
-            'high'   => $query->where('repair_bill', '>', 100000),
+            'low'    => $query->where('estimated_repair_cost', '<=', 30000),
+            'medium' => $query->where('estimated_repair_cost', '>', 30000)->where('estimated_repair_cost', '<=', 100000),
+            'high'   => $query->where('estimated_repair_cost', '>', 100000),
             default  => null,
         };
 

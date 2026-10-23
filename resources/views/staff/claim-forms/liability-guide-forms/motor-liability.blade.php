@@ -305,11 +305,11 @@
 
                             <div class="space-y-4">
                                 @foreach ([
-        'claims_unit' => 'Claims Unit',
-        'survey' => 'Survey',
-        'supervisor' => 'Supervisor',
-        'survey_team' => 'Survey Team',
-    ] as $key => $label)
+                                    'claims_unit' => 'Claims Unit',
+                                    'survey' => 'Survey',
+                                    'supervisor' => 'Supervisor',
+                                    'survey_team' => 'Survey Team',
+                                ] as $key => $label)
                                     <div class="grid grid-cols-1 sm:grid-cols-[130px_1fr_180px] gap-3 items-start">
                                         <div class="text-xs font-medium text-gray-500 pt-2.5">{{ $label }}</div>
                                         <textarea name="comments[{{ $key }}][text]" rows="2" placeholder="Comment from {{ $label }}"

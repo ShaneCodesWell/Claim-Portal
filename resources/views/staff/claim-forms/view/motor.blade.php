@@ -479,12 +479,7 @@
                                             value="{{ $f['repairer_address'] ?? '' }}"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                                     </div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Repair Bill
-                                            Amount</label>
-                                        <input type="number" name="repair_estimate_amount"
-                                            value="{{ $f['repair_estimate_amount'] ?? '' }}"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-                                    </div>
+                                    
                                 </div>
                             </div>
                         </section>
@@ -1180,7 +1175,6 @@
                     damaged_vehicle_location: val('damaged_vehicle_location'),
                     repairer_fullname: val('repairer_fullname'),
                     repairer_address: val('repairer_address'),
-                    repair_estimate_amount: val('repair_estimate_amount'),
                     your_vehicle_injured: collectInjuredPersons('yourVehicleInjuredPersons'),
                     other_vehicle_injured: collectInjuredPersons('otherVehicleInjuredPersons'),
                     involved_vehicles: collectVehicles('vehiclesContainer'),

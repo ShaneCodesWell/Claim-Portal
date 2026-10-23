@@ -58,7 +58,7 @@
                             Sum Insured
                         </th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Repair Bill
+                            Est. Repair Cost
                         </th>
                         {{-- <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Sent to Survey</th> --}}
@@ -94,8 +94,8 @@
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
                                 {{ number_format($claim->amount) }}</td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">
-                                @if ($claim->repair_bill !== null)
-                                    GH₵ {{ number_format((float) $claim->repair_bill, 2) }}
+                                @if ($claim->estimated_repair_cost !== null)
+                                    GH₵ {{ number_format((float) $claim->estimated_repair_cost, 2) }}
                                 @else
                                     <span class="text-gray-400">Not provided</span>
                                 @endif

@@ -343,21 +343,28 @@ $defaultDriver = $claimForm['driver_fullname'] ?? $defaultInsured;
 
                             <div class="space-y-4">
                                 @foreach ([
-        'claims_unit' => 'Claims Unit',
-        'survey' => 'Survey',
-        'supervisor' => 'Supervisor',
-        'survey_team' => 'Survey Team',
-    ] as $key => $label)
+                                    'claims_unit' => 'Claims Unit',
+                                    'survey' => 'Survey',
+                                    'supervisor' => 'Supervisor',
+                                    'survey_team' => 'Survey Team',
+                                ] as $key => $label)
                                     <div class="grid grid-cols-1 sm:grid-cols-[130px_1fr_180px] gap-3 items-start">
                                         <div class="text-xs font-medium text-gray-500 pt-2.5">{{ $label }}
                                         </div>
                                         <textarea name="comments[{{ $key }}][text]" rows="2" placeholder="Comment from {{ $label }}"
                                             class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0b529d]/20 focus:border-[#0b529d] transition-colors">{{ $val("comments.$key.text") }}</textarea>
-                                        <input type="text" name="comments[{{ $key }}][signature]"
-                                            value="{{ $val("comments.$key.signature") }}"
-                                            placeholder="Signature / Username"
-                                            style="font-family: 'Brush Script MT', cursive;"
-                                            class="w-full rounded-lg border border-gray-200 px-3 py-2 text-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0b529d]/20 focus:border-[#0b529d] transition-colors">
+
+                                        {{-- Signature field ONLY for Supervisor --}}
+                                        @if ($key === 'supervisor')
+                                            <input type="text" name="comments[{{ $key }}][signature]"
+                                                value="{{ $val("comments.$key.signature") }}"
+                                                placeholder="Signature / Username"
+                                                style="font-family: 'Brush Script MT', cursive;"
+                                                class="w-full rounded-lg border border-gray-200 px-3 py-2 text-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0b529d]/20 focus:border-[#0b529d] transition-colors">
+                                        @else
+                                            {{-- Empty cell keeps the grid aligned --}}
+                                            <div></div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>

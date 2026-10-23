@@ -80,7 +80,7 @@
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Sum Insured</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Repair Bill</th>
+                            Est. Repair Cost</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Status</th>
                         <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -89,7 +89,7 @@
                 </thead>
                 <tbody id="claimsTableBody" class="divide-y divide-gray-200">
                     @forelse ($claims as $claim)
-                        <tr class="hover:bg-gray-50 transition" data-repair-bill="{{ $claim->repair_bill }}">
+                        <tr class="hover:bg-gray-50 transition" data-repair-bill="{{ $claim->estimated_repair_cost }}">
                             <td class="px-4 py-4 max-w-52">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <div
@@ -118,8 +118,8 @@
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">GH₵
                                 {{ number_format($claim->amount) }}</td>
                             <td class="px-4 py-4 text-sm font-medium text-gray-900">
-                                @if ($claim->repair_bill !== null)
-                                    GH₵ {{ number_format((float) $claim->repair_bill) }}
+                                @if ($claim->estimated_repair_cost !== null)
+                                    GH₵ {{ number_format((float) $claim->estimated_repair_cost) }}
                                 @else
                                     <span class="text-gray-400">Not provided</span>
                                 @endif

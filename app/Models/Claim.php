@@ -200,6 +200,35 @@ class Claim extends Model
 
     public function getRepairEstimateAttribute(): float
     {
-        return (float) ($this->form_data['repair_estimate_amount'] ?? 0);
+        return (float) ($this->estimated_repair_cost
+            ?? $this->form_data['estimated_repair_cost']
+            ?? $this->form_data['repair_estimate_amount']
+            ?? 0);
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Claim $claim) {
+            // Only recompute when form_data is new or changed.
+            if ($claim->exists && ! $claim->isDirty('form_data')) {
+                return;
+            }
+
+            $data = $claim->form_data;
+            if (is_string($data)) $data = json_decode($data, true);
+            $data = is_array($data) ? $data : [];
+
+            $value = null;
+            foreach (['estimated_repair_cost', 'repair_estimate_amount'] as $key) {
+                $v = $data[$key] ?? null;
+                if (is_string($v)) $v = trim($v);
+                if ($v !== null && $v !== '' && is_numeric($v)) {
+                    $value = $v;
+                    break;
+                }
+            }
+
+            $claim->estimated_repair_cost = $value;
+        });
     }
 }
