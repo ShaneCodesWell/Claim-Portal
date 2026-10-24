@@ -456,7 +456,7 @@
         </div>
     </div>
 
-    {{-- AUTH MODAL — Stages: loading | success | otp-entry | error --}}
+    {{-- AUTH MODAL — Stages: loading | success | profile-picker | otp-entry | error --}}
     <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
         style="background: rgba(15,23,42,0.75); backdrop-filter: blur(6px);">
 
@@ -587,6 +587,23 @@
                 </div>
             </div>
 
+            {{-- STAGE: PROFILE PICKER --}}
+            <div id="stage-profile-picker" class="modal-stage">
+                <div class="bg-brand-900 px-6 py-5 text-center">
+                    <div class="flex items-center justify-center mb-3">
+                        <div
+                            class="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
+                            <i class="fas fa-users text-white text-lg"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-display text-xl text-white mb-1">Select your account</h3>
+                    <p class="text-blue-200 text-xs">Multiple accounts found for this number</p>
+                </div>
+                <div class="p-6">
+                    <div id="profile-list" class="space-y-3 max-h-72 overflow-y-auto"></div>
+                </div>
+            </div>
+
             {{-- STAGE: ERROR --}}
             <div id="stage-error" class="modal-stage p-8 text-center">
                 <div class="flex items-center justify-center mb-5">
@@ -610,6 +627,7 @@
             const AJAX_URL = '{{ route('agent.login.ajax') }}';
             const VERIFY_OTP_URL = '{{ route('agent.login.verify.otp') }}';
             const RESEND_OTP_URL = '{{ route('agent.login.resend.otp') }}';
+            const SELECT_URL = '{{ route('agent.login.select.profile') }}';
             const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
             const LOAD_MESSAGES = [
@@ -673,17 +691,97 @@
 
             // ── OTP stage ───────────────────────────────────────────────────────
             function showOtpStage(name, phoneMasked) {
-                document.getElementById('success-name').textContent = name;
+                // No name is known before the code is verified, so the screens show a plain message
+                document.getElementById('success-name').textContent = name || '';
                 showStage('success');
 
                 setTimeout(() => {
-                    document.getElementById('otp-name-display').textContent = `Welcome, ${name}`;
+                    document.getElementById('otp-name-display').textContent = name ? `Welcome, ${name}` :
+                        'Welcome';
                     document.getElementById('otp-phone-display').textContent = `Code sent to ${phoneMasked}`;
                     clearOtpInputs();
                     showStage('otp-entry');
                     startResendCountdown();
                     otpDigits[0]?.focus();
                 }, 1500);
+            }
+
+            // ── Account picker (shown after the code is verified, when several agents share the phone) ──
+            function renderProfiles(profiles) {
+                const list = document.getElementById('profile-list');
+                list.innerHTML = '';
+
+                profiles.forEach(profile => {
+                    const card = document.createElement('button');
+                    card.type = 'button';
+                    card.className =
+                        'w-full text-left p-4 border border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition flex items-center gap-3';
+
+                    const initials = String(profile.name || '')
+                        .split(' ')
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map(w => w[0])
+                        .join('')
+                        .toUpperCase();
+
+                    const avatar = document.createElement('div');
+                    avatar.className =
+                        'w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center text-sm font-semibold shrink-0';
+                    avatar.textContent = initials;
+
+                    const body = document.createElement('div');
+                    body.className = 'flex-1 min-w-0';
+
+                    const nameEl = document.createElement('p');
+                    nameEl.className = 'text-sm font-medium text-gray-900 truncate';
+                    nameEl.textContent = profile.name;
+                    body.appendChild(nameEl);
+
+                    if (profile.code) {
+                        const codeEl = document.createElement('p');
+                        codeEl.className = 'text-xs text-gray-400 truncate';
+                        codeEl.textContent = profile.code;
+                        body.appendChild(codeEl);
+                    }
+
+                    const chevron = document.createElement('i');
+                    chevron.className = 'fas fa-chevron-right text-gray-400 text-xs shrink-0';
+
+                    card.append(avatar, body, chevron);
+                    card.addEventListener('click', () => selectProfile(profile));
+                    list.appendChild(card);
+                });
+            }
+
+            async function selectProfile(profile) {
+                showStage('loading');
+                startMessageCycle();
+
+                try {
+                    const res = await fetch(SELECT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': CSRF,
+                            'Accept': 'application/json'
+                        },
+                        body: new URLSearchParams({
+                            profile_id: profile.id
+                        }),
+                    });
+
+                    stopMessageCycle();
+                    const data = await res.json();
+
+                    if (data.status === 'success') {
+                        window.location.href = data.redirect;
+                    } else {
+                        showError(data.message ?? 'Something went wrong.');
+                    }
+                } catch {
+                    stopMessageCycle();
+                    showError('A network error occurred. Please try again.');
+                }
             }
 
             // ── OTP digit inputs ────────────────────────────────────────────────
@@ -823,7 +921,13 @@
                     });
                     const data = await res.json();
 
-                    if (data.status === 'success') {
+                    if (data.status === 'profile_selection') {
+                        // Code verified and several agents share this phone: let them choose
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Verify Code';
+                        renderProfiles(data.profiles);
+                        showStage('profile-picker');
+                    } else if (data.status === 'success') {
                         submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Verified!';
                         setTimeout(() => window.location.href = data.redirect, 800);
                     } else {

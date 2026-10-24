@@ -47,9 +47,14 @@ class AgentAuthController extends Controller
 
         RateLimiter::hit($throttleKey, 60);
 
-        $agent = Agent::where('phone', $phone)->first();
+        // Forget anything left over from an earlier attempt in this browser session
+        session()->forget(['agent_pending_id', 'agent_pending_name', 'agent_pending_profiles', 'agent_otp_verified']);
 
-        if (! $agent) {
+        $agents = Agent::where('phone', $phone)
+            ->orderBy('name')
+            ->get(['id', 'name', 'glims_agent_code', 'genova_agent_code']);
+
+        if ($agents->isEmpty()) {
             Log::warning('AgentAuthController@loginAjax: phone not found', ['phone' => $phone]);
 
             // Intentionally vague — don't reveal whether the number exists
@@ -72,15 +77,33 @@ class AgentAuthController extends Controller
 
         session([
             'agent_pending_auth'  => true,
-            'agent_pending_id'    => $agent->id,
             'agent_pending_phone' => $phone,
-            'agent_pending_name'  => $agent->name,
         ]);
 
-        return $this->sendOtpAndRespond($phone, $agent->name);
+        if ($agents->count() === 1) {
+            $agent = $agents->first();
+
+            session([
+                'agent_pending_id'   => $agent->id,
+                'agent_pending_name' => $agent->name,
+            ]);
+        } else {
+            // Several agents share this phone. The server remembers them; the browser gets
+            // names only after the code is verified (see verifyOtp).
+            session([
+                'agent_pending_profiles' => $agents->map(fn($agent) => [
+                    'id'   => $agent->id,
+                    'name' => $agent->name,
+                    'code' => $agent->genova_agent_code ?: $agent->glims_agent_code,
+                ])->values()->all(),
+            ]);
+        }
+
+        // No name is sent before the code is verified
+        return $this->sendOtpAndRespond($phone, '');
     }
 
-    // STEP 2: Verify OTP → log in
+    // STEP 2: Verify OTP → log in (or show the picker when several agents share the phone)
     public function verifyOtp(Request $request): JsonResponse
     {
         if (! session('agent_pending_auth')) {
@@ -125,6 +148,23 @@ class AgentAuthController extends Controller
         RateLimiter::clear($throttleKey);
         RateLimiter::clear($phoneKey);
 
+        // Several agents share this phone and none has been chosen yet:
+        // the code is now proven, so show the names (and agent codes) and let them choose.
+        if (session('agent_pending_profiles') && ! session('agent_pending_id')) {
+            session(['agent_otp_verified' => true]);
+
+            return response()->json([
+                'status'   => 'profile_selection',
+                'profiles' => collect(session('agent_pending_profiles'))
+                    ->map(fn($profile, $index) => [
+                        'id'   => $index,
+                        'name' => $profile['name'] ?? 'Unknown',
+                        'code' => $profile['code'] ?? '',
+                    ])
+                    ->values(),
+            ]);
+        }
+
         $agent = Agent::find(session('agent_pending_id'));
 
         if (! $agent) {
@@ -142,7 +182,34 @@ class AgentAuthController extends Controller
         ]);
     }
 
-    // STEP 2b: Resend OTP
+    // Agent chosen. Only possible AFTER the code was verified, and only among the
+    // agents the server itself found for this phone (chosen by number, never by agent id).
+    public function selectProfile(Request $request): JsonResponse
+    {
+        if (! session('agent_pending_auth') || ! session('agent_otp_verified')) {
+            return response()->json(['status' => 'error', 'message' => 'Session expired. Please log in again.'], 401);
+        }
+
+        $request->validate(['profile_id' => 'required|integer|min:0']);
+
+        $profiles = session('agent_pending_profiles', []);
+        $profile  = $profiles[(int) $request->input('profile_id')] ?? null;
+
+        $agent = $profile ? Agent::find($profile['id']) : null;
+
+        if (! $agent || $agent->phone !== session('agent_pending_phone')) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid selection.'], 422);
+        }
+
+        $this->completeLogin($agent);
+
+        return response()->json([
+            'status'   => 'success',
+            'redirect' => route('agent.dashboard.index'),
+        ]);
+    }
+
+    // Resend OTP
     public function resendOtp(Request $request): JsonResponse
     {
         if (! session('agent_pending_auth')) {
@@ -202,6 +269,8 @@ class AgentAuthController extends Controller
             'agent_pending_id',
             'agent_pending_phone',
             'agent_pending_name',
+            'agent_pending_profiles',
+            'agent_otp_verified',
         ]);
 
         app(AgentSyncService::class)->dispatchPolicySync($agent);
@@ -219,7 +288,7 @@ class AgentAuthController extends Controller
 
         return response()->json([
             'status'       => 'otp_sent',
-            'name'         => $name,
+            'name'         => '',   // never reveal a name before the code is verified
             'phone_masked' => $this->maskPhone($phone),
         ]);
     }

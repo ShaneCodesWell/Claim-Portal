@@ -36,6 +36,7 @@ Route::post('/staff-login', [AuthController::class, 'staffLogin'])->name('staff.
 Route::get('/agent-login', [AgentAuthController::class, 'showLoginForm'])->name('agent.login');
 Route::post('/agent-login/ajax', [AgentAuthController::class, 'loginAjax'])->name('agent.login.ajax');
 Route::post('/agent-login/verify-otp', [AgentAuthController::class, 'verifyOtp'])->name('agent.login.verify.otp');
+Route::post('/agent-login/select-profile', [AgentAuthController::class, 'selectProfile'])->name('agent.login.select.profile')->middleware('throttle:30,1');
 Route::post('/agent-login/resend-otp', [AgentAuthController::class, 'resendOtp'])->name('agent.login.resend.otp');
 Route::post('/agent-logout', [AgentAuthController::class, 'logout'])->name('agent.logout');
 
