@@ -76,30 +76,7 @@
             })
             .then(res => res.text())
             .then(html => {
-                document.getElementById('liabilityGuideModalContent').innerHTML = `
-            <style>
-                #liabilityGuideModalContent table { width:100%; border-collapse:collapse; margin-bottom:10px; }
-                #liabilityGuideModalContent th, #liabilityGuideModalContent td { border:1px solid #000; padding:4px 6px; font-size:10px; vertical-align:top; }
-                #liabilityGuideModalContent th { font-weight:bold; background:#f0f0f0; text-transform:uppercase; font-size:9px; }
-                #liabilityGuideModalContent .field-label { font-weight:bold; text-transform:uppercase; background:#fafafa; }
-                #liabilityGuideModalContent .field-value { min-height:18px; }
-                #liabilityGuideModalContent .field-value.tall { min-height:36px; }
-                #liabilityGuideModalContent .yn-box { display:inline-block; border:1px solid #000; padding:2px 8px; font-size:10px; font-weight:bold; margin-left:4px; }
-                #liabilityGuideModalContent .yn-box.selected { background:#000; color:#fff; }
-                #liabilityGuideModalContent .section-heading { font-weight:bold; font-size:11px; margin:14px 0 6px; text-transform:uppercase; }
-                #liabilityGuideModalContent .form-title { text-align:center; font-size:14px; font-weight:bold; text-decoration:underline; text-transform:uppercase; margin:12px 0 14px; }
-                #liabilityGuideModalContent .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
-                #liabilityGuideModalContent .declaration-block { border:1px solid #000; padding:10px; margin-top:14px; }
-                #liabilityGuideModalContent .footer { margin-top:20px; border-top:2px solid #000; padding-top:8px; text-align:center; font-weight:bold; font-size:10px; }
-                #liabilityGuideModalContent .signature-line { display:flex; justify-content:space-between; margin-top:16px; gap:20px; }
-                #liabilityGuideModalContent .sig-field { flex:1; border-bottom:1px solid #000; padding-bottom:2px; font-size:10px; }
-                #liabilityGuideModalContent .sig-label { font-size:9px; color:#555; margin-bottom:14px; }
-                #liabilityGuideModalContent img { height:48px; object-fit:contain; }
-                #liabilityGuideModalContent * { font-family: Arial, sans-serif; font-size:11px; }
-                #liabilityGuideModalContent .no-print { display:none !important; }
-            </style>
-            ${html}
-        `;
+                document.getElementById('liabilityGuideModalContent').innerHTML = html;
                 liabilityGuideContentLoaded = true;
             })
             .catch(() => {
@@ -124,10 +101,11 @@
 
     function printLiabilityGuideFromModal() {
         const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
+        iframe.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0;';
         iframe.src = '{{ route('staff.claims.liability-guide.print', $claim) }}';
         document.body.appendChild(iframe);
         iframe.onload = function() {
+            iframe.contentWindow.focus();
             iframe.contentWindow.print();
             setTimeout(() => iframe.remove(), 2000);
         };
@@ -139,7 +117,7 @@
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && !document.getElementById('liabilityGuideModal')?.classList.contains(
-            'hidden')) {
+                'hidden')) {
             closeLiabilityGuideModal();
         }
     });

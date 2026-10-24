@@ -311,6 +311,9 @@
 
 <br>
 
+{{-- Placed here currently due to how the document is displayed at the print, if they ask to shift, you can revert back to the one before the sketch --}}
+<div style="page-break-before:always; padding-top:20px;">
+
 {{-- ══════════ DECLARATION ══════════ --}}
 <div class="declaration-block">
     <p style="font-weight:bold; text-transform:uppercase; margin-bottom:6px;">Declaration:</p>
