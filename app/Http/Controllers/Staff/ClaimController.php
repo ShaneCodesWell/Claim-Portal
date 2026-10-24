@@ -785,7 +785,7 @@ class ClaimController extends Controller
             });
         }
 
-        $claims = $query->paginate(15)->withQueryString();
+        $claims = $query->paginate(10)->withQueryString();
 
         return view('staff.claims.tracking', compact('claims'));
     }
