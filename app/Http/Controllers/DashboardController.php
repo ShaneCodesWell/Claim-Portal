@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\PolicyResource;
+use App\Models\Claim;
+use App\Enums\ClaimStatus;
 use App\Models\Policy;
 use App\Services\GenovaApiService;
 use App\Services\GlimsService;
 use App\Services\GlimsSyncService;
 use App\Services\PolicySyncService;
 use App\Jobs\SyncCustomerPoliciesJob;
+use App\Http\Resources\PolicyResource;
 use Illuminate\Http\Request;
 use \Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -75,7 +77,16 @@ class DashboardController extends Controller
             'active' => Policy::whereIn('customer_id', $customerIds)->visible()->count(),
         ]);
 
-        return view('customer.dashboard.index', compact('customer', 'policies', 'businessClasses', 'statusCounts'));
+        // Claims where staff are waiting on the customer
+        $infoRequests = Claim::whereIn('customer_id', $customerIds)
+            ->whereNotIn('status', ClaimStatus::notActive())
+            ->whereHas('pendingInfoRequest')
+            ->with(['policy', 'pendingInfoRequest'])
+            ->get()
+            ->sortByDesc(fn($claim) => $claim->pendingInfoRequest->created_at)
+            ->values();
+
+        return view('customer.dashboard.index', compact('customer', 'policies', 'businessClasses', 'statusCounts', 'infoRequests'));
     }
 
     public function pollPolicies(Request $request): JsonResponse

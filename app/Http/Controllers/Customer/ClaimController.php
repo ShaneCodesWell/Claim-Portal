@@ -286,7 +286,7 @@ class ClaimController extends Controller
     public function respondToInfoRequest(Request $request, Claim $claim)
     {
         $customer = Auth::guard('customer')->user();
-        abort_unless($customer && $claim->customer_id === $customer->id, 403);
+        abort_unless($customer && in_array($claim->customer_id, $customer->resolvedCustomerIds()), 403);
 
         $data = $request->validate([
             'response_note' => 'nullable|string|max:1000',

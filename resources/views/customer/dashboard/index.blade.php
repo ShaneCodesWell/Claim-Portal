@@ -50,6 +50,64 @@
                     Manage your insurance policies and submit new claim requests.
                 </p>
             </div>
+            @if ($infoRequests->isNotEmpty())
+                <div x-data="{ current: 0, total: {{ $infoRequests->count() }} }"
+                    class="w-full lg:w-96 lg:shrink-0 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 shadow-sm">
+
+                    {{-- Row 1: title + pager --}}
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
+                            <i class="fas fa-bell text-amber-600"></i>
+                            Action required
+                            @if ($infoRequests->count() === 1)
+                                <span class="font-normal text-amber-700">· more info needed</span>
+                            @endif
+                        </p>
+
+                        @if ($infoRequests->count() > 1)
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" @click="current = (current - 1 + total) % total"
+                                    aria-label="Previous claim"
+                                    class="w-6 h-6 rounded-full bg-white border border-amber-200 text-amber-700 hover:bg-amber-100 transition flex items-center justify-center">
+                                    <i class="fas fa-chevron-left text-[9px]"></i>
+                                </button>
+                                <span class="text-[11px] font-medium text-amber-800 tabular-nums w-9 text-center">
+                                    <span x-text="current + 1"></span> / {{ $infoRequests->count() }}
+                                </span>
+                                <button type="button" @click="current = (current + 1) % total" aria-label="Next claim"
+                                    class="w-6 h-6 rounded-full bg-white border border-amber-200 text-amber-700 hover:bg-amber-100 transition flex items-center justify-center">
+                                    <i class="fas fa-chevron-right text-[9px]"></i>
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Row 2: one claim at a time (whole row is the link) --}}
+                    <div class="mt-2">
+                        @foreach ($infoRequests as $claim)
+                            <a x-show="current === {{ $loop->index }}" @if (!$loop->first) x-cloak @endif
+                                href="{{ route('claims.show', $claim) }}"
+                                class="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-lg hover:bg-amber-100 transition">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-semibold text-gray-900 truncate">
+                                        {{ $claim->claim_number }}
+                                        <span class="font-normal text-gray-400">
+                                            ·
+                                            {{ $claim->pendingInfoRequest->created_at->diffForHumans(null, true, true) }}
+                                        </span>
+                                    </p>
+                                    <p class="text-xs text-gray-600 truncate">
+                                        {{ $claim->pendingInfoRequest->note }}
+                                    </p>
+                                </div>
+                                <span class="shrink-0 text-xs font-medium text-amber-700 whitespace-nowrap">
+                                    Respond <i class="fas fa-arrow-right text-[10px] ml-0.5"></i>
+                                </span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             {{-- <button onclick="window.location.reload()"
                     class="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition shadow-sm flex items-center gap-2">
@@ -100,7 +158,8 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <form method="GET" action="{{ route('dashboard') }}" id="filter-form" class="flex items-center gap-3">
+                <form method="GET" action="{{ route('dashboard') }}" id="filter-form"
+                    class="flex items-center gap-3">
                     <div class="relative">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                         <input type="text" name="search" id="search-input" value="{{ request('search') }}"
@@ -184,7 +243,8 @@
                                         class="font-mono text-sm font-medium text-gray-900">{{ $policy['policy_number'] }}</span>
                                 </td>
                                 <td class="px-4 py-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $policy['business_class_name'] }}
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ $policy['business_class_name'] }}
                                     </div>
                                     <div class="text-xs text-gray-500">{{ $policy['vehicle_number'] ?? ' ' }}</div>
                                 </td>
@@ -452,11 +512,11 @@
                 `<div class="border-t border-gray-200 pt-3 mt-3 flex justify-end">
                     ${isExpired
                         ? `<button onclick="showExpiredPolicyAlert()" class="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60">
-                                                                               <i class="fas fa-file-invoice"></i> File a Claim <i class="fas fa-lock ml-1 text-xs"></i>
-                                                                           </button>`
+                                                                                               <i class="fas fa-file-invoice"></i> File a Claim <i class="fas fa-lock ml-1 text-xs"></i>
+                                                                                           </button>`
                         : `<a href="${riskClaimUrl}" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
-                                                                               <i class="fas fa-file-invoice"></i> File a Claim
-                                                                           </a>`
+                                                                                               <i class="fas fa-file-invoice"></i> File a Claim
+                                                                                           </a>`
                     }
                 </div>` : '';
 
@@ -481,10 +541,10 @@
                             <div><p class="text-xs text-gray-500 mb-0.5">Premium</p><p class="text-sm font-semibold text-gray-900">${premium}</p></div>
                         </div>
                         ${covers.length > 0 ? `
-                                                                            <div class="border-t border-gray-200 pt-3">
-                                                                                <p class="text-xs text-gray-500 mb-2">Covers Included</p>
-                                                                                <div class="flex flex-wrap gap-1.5">${coverTags}</div>
-                                                                            </div>` : ''}
+                                                                                            <div class="border-t border-gray-200 pt-3">
+                                                                                                <p class="text-xs text-gray-500 mb-2">Covers Included</p>
+                                                                                                <div class="flex flex-wrap gap-1.5">${coverTags}</div>
+                                                                                            </div>` : ''}
                         ${claimButton}
                     </div>
                 </div>`;
