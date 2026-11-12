@@ -144,6 +144,14 @@ enum ClaimStatus: string
         return in_array($status, self::notActive());
     }
 
+    public static function decided(): array
+    {
+        return [
+            self::APPROVED,
+            self::REJECTED
+        ];
+    }
+
     // Convenience groupings
     public static function surveyStages(): array
     {

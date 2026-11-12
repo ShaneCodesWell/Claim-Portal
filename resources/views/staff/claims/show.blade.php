@@ -1,6 +1,7 @@
 <x-layouts.staff>
     @php
         $canAct = $claim->canBeActedOn();
+        $isRejected = $claim->status === \App\Enums\ClaimStatus::REJECTED;
     @endphp
 
     {{-- Page Header --}}
@@ -9,22 +10,9 @@
             <div>
                 <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                     {{ $claim->claim_number }}
-                    @php
-                        $statusColors = [
-                            'submitted' => 'bg-blue-100 text-blue-700',
-                            'under_review' => 'bg-indigo-100 text-indigo-700',
-                            'pending_info' => 'bg-amber-100 text-amber-700',
-                            'in_progress' => 'bg-purple-100 text-purple-700',
-                            'approved' => 'bg-green-100 text-green-700',
-                            'rejected' => 'bg-red-100 text-red-700',
-                            'closed' => 'bg-gray-100 text-gray-600',
-                        ];
-                        $statusLabels = \App\Enums\ClaimStatus::labels();
-                        $color = $statusColors[$claim->status] ?? 'bg-gray-100 text-gray-600';
-                    @endphp
-                    <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ $color }}">
-                        {{ $statusLabels[$claim->status] ?? $claim->status }}
-                    </span>
+                    @php $badge = \App\Enums\ClaimStatus::badge($claim->status); @endphp
+                    <span
+                        class="text-xs font-medium px-2.5 py-1 rounded-full border {{ $badge['class'] }}">{{ $badge['label'] }}</span>
                 </h1>
                 <p class="text-sm text-gray-500 mt-0.5">
                     Submitted {{ $claim->submitted_at?->diffForHumans() }} &middot;
@@ -202,75 +190,7 @@
             </div>
 
             {{-- Activity Timeline --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-history text-blue-500"></i> Activity Timeline
-                    </h3>
-                </div>
-                {{-- Scrollable container – add max height and overflow --}}
-                <div class="p-5 max-h-96 overflow-y-auto">
-                    @forelse($claim->activities as $activity)
-                        @php
-                            $activityIcons = [
-                                'submitted' => ['icon' => 'fa-file-alt', 'color' => 'bg-blue-100 text-blue-600'],
-                                'assigned' => ['icon' => 'fa-user-check', 'color' => 'bg-indigo-100 text-indigo-600'],
-                                'reassigned' => [
-                                    'icon' => 'fa-exchange-alt',
-                                    'color' => 'bg-purple-100 text-purple-600',
-                                ],
-                                'status_changed' => ['icon' => 'fa-sync-alt', 'color' => 'bg-gray-100 text-gray-600'],
-                                'info_requested' => [
-                                    'icon' => 'fa-question-circle',
-                                    'color' => 'bg-amber-100 text-amber-600',
-                                ],
-                                'form_updated' => ['icon' => 'fa-edit', 'color' => 'bg-green-100 text-green-600'],
-                                'note_added' => [
-                                    'icon' => 'fa-sticky-note',
-                                    'color' => 'bg-yellow-100 text-yellow-600',
-                                ],
-                            ];
-                            $meta = $activityIcons[$activity->action] ?? [
-                                'icon' => 'fa-circle',
-                                'color' => 'bg-gray-100 text-gray-500',
-                            ];
-                        @endphp
-                        <div class="flex gap-3 pb-5 last:pb-0 relative">
-                            {{-- Connecting line --}}
-                            @if (!$loop->last)
-                                <div class="absolute left-4 top-8 bottom-0 w-px bg-gray-100"></div>
-                            @endif
-
-                            <div
-                                class="shrink-0 w-8 h-8 rounded-full {{ $meta['color'] }} flex items-center justify-center z-10">
-                                <i class="fas {{ $meta['icon'] }} text-xs"></i>
-                            </div>
-                            <div class="flex-1 min-w-0 pt-0.5">
-                                <div class="flex items-center justify-between gap-2">
-                                    <p class="text-sm font-medium text-gray-800">
-                                        {{ ucfirst(str_replace('_', ' ', $activity->action)) }}
-                                    </p>
-                                    <span class="text-xs text-gray-400 whitespace-nowrap">
-                                        {{ $activity->created_at->diffForHumans() }}
-                                    </span>
-                                </div>
-                                @if ($activity->note)
-                                    <p class="text-sm text-gray-600 mt-0.5">{{ $activity->note }}</p>
-                                @endif
-                                @if ($activity->staff)
-                                    <p class="text-xs text-gray-400 mt-1">
-                                        by {{ $activity->actor_name }}
-                                    </p>
-                                @else
-                                    <p class="text-xs text-gray-400 mt-1">by System</p>
-                                @endif
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-sm text-gray-400 italic">No activity recorded yet.</p>
-                    @endforelse
-                </div>
-            </div>
+            <x-claim-timeline :activities="$claim->activities" icon-class="text-blue-500" />
 
         </div>
 
@@ -301,7 +221,7 @@
                             <button @click="activeTab = 'finalize'"
                                 :class="{ 'bg-white border-b-2 border-blue-500 text-blue-600': activeTab === 'finalize' }"
                                 class="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors hover:bg-gray-100 focus:outline-none">
-                                Finalize
+                                {{ $isRejected ? 'Close Claim' : 'Finalize' }}
                             </button>
                         @endif
                     </div>
@@ -665,30 +585,53 @@
                     @if ($canAct)
                         <div x-show="activeTab === 'finalize'">
                             <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
-                                <i class="fas fa-check-double text-green-500"></i> Finalize Claim
+                                <i
+                                    class="fas {{ $isRejected ? 'fa-folder-minus text-gray-500' : 'fa-check-double text-green-500' }}"></i>
+                                {{ $isRejected ? 'Close Claim' : 'Finalize Claim' }}
                             </h4>
+
                             <p class="text-sm text-gray-500 mb-4">
-                                If all documents have been provided and claim has been approved. Finalize to mark
-                                processing
-                                as complete and notify the customer.
+                                @if ($isRejected)
+                                    The committee has rejected this claim and the customer has already been notified.
+                                    Closing it removes it from your queue and records the outcome. No further SMS is
+                                    sent.
+                                @else
+                                    If all documents have been provided and the claim has been approved, finalize to
+                                    mark
+                                    processing as complete and notify the customer.
+                                @endif
                             </p>
+
+                            @php
+                                $finalizeTitle = $isRejected ? 'Close this rejected claim?' : 'Finalize this claim?';
+                                $finalizeText = $isRejected
+                                    ? 'This will close the claim. The customer will not receive another SMS.'
+                                    : 'This will mark the claim as fully processed and notify the customer via SMS.';
+                                $finalizeConfirm = $isRejected ? 'Yes, close it' : 'Yes, finalize it';
+                                $finalizeHint = $isRejected
+                                    ? 'Optional note (e.g. customer informed of the decision in person)...'
+                                    : 'Optional note (e.g. forwarded to Finance team on 28 Jun)...';
+                            @endphp
+
                             <form action="{{ route('staff.claims.finalize', $claim) }}" method="POST"
                                 id="finalizeForm">
                                 @csrf
-                                <textarea name="note" rows="2" placeholder="Optional note (e.g. forwarded to Finance team on 28 Jun)..."
+                                <textarea name="note" rows="2" placeholder="{{ $finalizeHint }}"
                                     class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400 outline-none resize-none mb-3"></textarea>
                                 <button type="button"
                                     onclick="Swal.fire({
-                                        title: 'Finalize this claim?',
-                                        text: 'This will mark the claim as fully processed and notify the customer via SMS.',
-                                        icon: 'question',
-                                        showCancelButton: true,
-                                        confirmButtonColor: '#16a34a',
-                                        cancelButtonColor: '#6b7280',
-                                        confirmButtonText: 'Yes, finalize it'
-                                    }).then(result => { if (result.isConfirmed) document.getElementById('finalizeForm').submit(); })"
-                                    class="bg-green-600 hover:bg-green-700 text-white text-sm px-5 py-2 rounded-lg transition font-medium flex items-center gap-2">
-                                    <i class="fas fa-check-double text-xs"></i> Finalize Claim
+                    title: '{{ $finalizeTitle }}',
+                    text: '{{ $finalizeText }}',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '{{ $isRejected ? '#4b5563' : '#16a34a' }}',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: '{{ $finalizeConfirm }}'
+                }).then(result => { if (result.isConfirmed) document.getElementById('finalizeForm').submit(); })"
+                                    class="{{ $isRejected ? 'bg-gray-700 hover:bg-gray-800' : 'bg-green-600 hover:bg-green-700' }} text-white text-sm px-5 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                                    <i
+                                        class="fas {{ $isRejected ? 'fa-folder-minus' : 'fa-check-double' }} text-xs"></i>
+                                    {{ $isRejected ? 'Close Claim' : 'Finalize Claim' }}
                                 </button>
                             </form>
                         </div>

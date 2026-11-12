@@ -5,22 +5,9 @@
             <div>
                 <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                     {{ $claim->claim_number }}
-                    @php
-                        $statusColors = [
-                            'submitted' => 'bg-blue-100 text-blue-700',
-                            'under_review' => 'bg-indigo-100 text-indigo-700',
-                            'pending_info' => 'bg-amber-100 text-amber-700',
-                            'in_progress' => 'bg-purple-100 text-purple-700',
-                            'approved' => 'bg-green-100 text-green-700',
-                            'rejected' => 'bg-red-100 text-red-700',
-                            'closed' => 'bg-gray-100 text-gray-600',
-                        ];
-                        $statusLabels = \App\Enums\ClaimStatus::labels();
-                        $color = $statusColors[$claim->status] ?? 'bg-gray-100 text-gray-600';
-                    @endphp
-                    <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ $color }}">
-                        {{ $statusLabels[$claim->status] ?? $claim->status }}
-                    </span>
+                    @php $badge = \App\Enums\ClaimStatus::badge($claim->status); @endphp
+                    <span
+                        class="text-xs font-medium px-2.5 py-1 rounded-full border {{ $badge['class'] }}">{{ $badge['label'] }}</span>
                 </h1>
                 <p class="text-sm text-gray-500 mt-0.5">
                     Submitted {{ $claim->submitted_at?->diffForHumans() }} &middot;
@@ -100,7 +87,8 @@
                     <form action="{{ route('agent.claims.documents', $claim) }}" method="POST"
                         enctype="multipart/form-data" class="space-y-3">
                         @csrf
-                        <input type="file" name="documents[]" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.xls,.xlsx,.csv"
+                        <input type="file" name="documents[]" multiple
+                            accept=".jpg,.jpeg,.png,.gif,.pdf,.xls,.xlsx,.csv"
                             class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
                         <p class="text-xs text-gray-400">PDF, JPG, PNG, XLS, XLSX, CSV up to 5MB each</p>
                         <button type="submit"

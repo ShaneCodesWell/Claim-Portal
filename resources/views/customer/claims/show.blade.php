@@ -6,22 +6,9 @@
             <div>
                 <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                     {{ $claim->claim_number }}
-                    @php
-                        $statusColors = [
-                            'submitted' => 'bg-blue-100 text-blue-700',
-                            'under_review' => 'bg-indigo-100 text-indigo-700',
-                            'pending_info' => 'bg-amber-100 text-amber-700',
-                            'in_progress' => 'bg-purple-100 text-purple-700',
-                            'approved' => 'bg-green-100 text-green-700',
-                            'rejected' => 'bg-red-100 text-red-700',
-                            'closed' => 'bg-gray-100 text-gray-600',
-                        ];
-                        $statusLabels = \App\Enums\ClaimStatus::labels();
-                        $color = $statusColors[$claim->status] ?? 'bg-gray-100 text-gray-600';
-                    @endphp
-                    <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ $color }}">
-                        {{ $statusLabels[$claim->status] ?? $claim->status }}
-                    </span>
+                    @php $badge = \App\Enums\ClaimStatus::badge($claim->status); @endphp
+                    <span
+                        class="text-xs font-medium px-2.5 py-1 rounded-full border {{ $badge['class'] }}">{{ $badge['label'] }}</span>
                 </h1>
                 <p class="text-sm text-gray-500 mt-0.5">
                     Submitted {{ $claim->submitted_at?->diffForHumans() }} &middot;
@@ -382,8 +369,9 @@
                             </p>
 
                             <blockquote
-                                class="mt-3 text-sm text-gray-800 bg-white border border-amber-100 rounded-lg p-3 whitespace-pre-line">
-                                {{ $pendingInfo->note }}</blockquote>
+                                class="mt-3 text-sm text-gray-800 bg-white border border-amber-100 rounded-lg p-3">
+                                {!! nl2br(e(trim($pendingInfo->note))) !!}
+                            </blockquote>
 
                             <ol class="mt-4 text-xs text-amber-800 space-y-1 list-decimal list-inside">
                                 <li>Upload any requested documents using

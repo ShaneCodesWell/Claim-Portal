@@ -36,11 +36,11 @@
             <span class="text-sm font-semibold text-gray-900">{{ $stats['under_review'] }}</span>
         </div>
 
-        {{-- <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
-            <span class="h-2 w-2 rounded-full bg-blue-400"></span>
-            <span class="text-sm text-gray-600">Submitted</span>
-            <span class="text-sm font-semibold text-gray-900">{{ $stats['submitted_claims'] }}</span>
-        </div> --}}
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-orange-400"></span>
+            <span class="text-sm text-gray-600">Awaiting Finalization</span>
+            <span class="text-sm font-semibold text-gray-900">{{ $stats['awaiting_finalization'] ?? 0 }}</span>
+        </div>
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
@@ -149,7 +149,13 @@
                                         class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
                                         <a href="{{ route('staff.claims.show', $claim->id) }}"
                                             class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                            <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
+                                            @if (in_array($claim->status, \App\Enums\ClaimStatus::decided()))
+                                                <i class="fas fa-flag-checkered text-xs text-orange-500"></i>
+                                                {{ $claim->status === \App\Enums\ClaimStatus::REJECTED ? 'Close Claim' : 'Finalize Claim' }}
+                                            @else
+                                                <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process
+                                                Claim
+                                            @endif
                                         </a>
                                         <div class="border-t border-gray-100 my-1"></div>
                                         @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))

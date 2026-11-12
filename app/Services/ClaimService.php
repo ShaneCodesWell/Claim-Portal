@@ -535,10 +535,7 @@ class ClaimService
 
     public function finalize(Claim $claim, User $finalizedBy, ?string $note = null): void
     {
-        // Guard — only finalize approved claims when the flow changes
-        // if ($claim->status !== ClaimStatus::APPROVED) {
-        //     throw new \LogicException("Only approved claims can be finalized.");
-        // }
+        $wasRejected = $claim->status === ClaimStatus::REJECTED;
 
         $claim->update([
             'status'       => ClaimStatus::CLOSED,
@@ -550,10 +547,16 @@ class ClaimService
             $claim,
             $finalizedBy,
             'finalized',
-            $note ?? "Claim processing completed by {$finalizedBy->name}.",
-            ['finalized_by' => $finalizedBy->id]
+            $note ?? ($wasRejected
+                ? "Rejected claim closed by {$finalizedBy->name}."
+                : "Claim processing completed by {$finalizedBy->name}."),
+            ['finalized_by' => $finalizedBy->id, 'outcome' => $wasRejected ? 'rejected' : 'approved']
         );
 
-        $this->notifications->notifyFinalized($claim);
+        // Rejected customers were already told at decision time, and the
+        // "forwarded to Finance for payment" text doesn't apply to them.
+        if (! $wasRejected) {
+            $this->notifications->notifyFinalized($claim);
+        }
     }
 }

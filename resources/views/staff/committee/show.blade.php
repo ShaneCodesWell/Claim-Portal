@@ -5,25 +5,9 @@
         <div>
             <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                 {{ $claim->claim_number }}
-                @php
-                    $statusColors = [
-                        'submitted' => 'bg-blue-100 text-blue-700',
-                        'under_review' => 'bg-indigo-100 text-indigo-700',
-                        'pending_info' => 'bg-amber-100 text-amber-700',
-                        'in_progress' => 'bg-purple-100 text-purple-700',
-                        'under_survey' => 'bg-cyan-100 text-cyan-700',
-                        'survey_completed' => 'bg-teal-100 text-teal-700',
-                        'committee_review' => 'bg-orange-100 text-orange-700',
-                        'approved' => 'bg-green-100 text-green-700',
-                        'rejected' => 'bg-red-100 text-red-700',
-                        'closed' => 'bg-gray-100 text-gray-600',
-                    ];
-                    $statusLabels = \App\Enums\ClaimStatus::labels();
-                    $color = $statusColors[$claim->status] ?? 'bg-gray-100 text-gray-600';
-                @endphp
-                <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ $color }}">
-                    {{ $statusLabels[$claim->status] ?? $claim->status }}
-                </span>
+                @php $badge = \App\Enums\ClaimStatus::badge($claim->status); @endphp
+                <span
+                    class="text-xs font-medium px-2.5 py-1 rounded-full border {{ $badge['class'] }}">{{ $badge['label'] }}</span>
             </h1>
             <p class="text-sm text-gray-500 mt-0.5">
                 Submitted {{ $claim->submitted_at?->diffForHumans() }} &middot;
@@ -126,88 +110,7 @@
 
 
             {{-- Activity Timeline --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-history text-orange-500"></i> Activity Timeline
-                    </h3>
-                </div>
-                <div class="p-5 max-h-96 overflow-y-auto">
-                    @forelse($claim->activities as $activity)
-                        @php
-                            $activityIcons = [
-                                'submitted' => ['icon' => 'fa-file-alt', 'color' => 'bg-blue-100 text-blue-600'],
-                                'assigned' => ['icon' => 'fa-user-check', 'color' => 'bg-indigo-100 text-indigo-600'],
-                                'reassigned' => [
-                                    'icon' => 'fa-exchange-alt',
-                                    'color' => 'bg-purple-100 text-purple-600',
-                                ],
-                                'status_changed' => ['icon' => 'fa-sync-alt', 'color' => 'bg-gray-100 text-gray-600'],
-                                'sent_to_survey' => [
-                                    'icon' => 'fa-search-location',
-                                    'color' => 'bg-cyan-100 text-cyan-600',
-                                ],
-                                'surveyor_assigned' => [
-                                    'icon' => 'fa-user-check',
-                                    'color' => 'bg-cyan-100 text-cyan-600',
-                                ],
-                                'survey_completed' => [
-                                    'icon' => 'fa-check-circle',
-                                    'color' => 'bg-teal-100 text-teal-600',
-                                ],
-                                'sent_to_committee' => [
-                                    'icon' => 'fa-gavel',
-                                    'color' => 'bg-orange-100 text-orange-600',
-                                ],
-                                'committee_decision' => [
-                                    'icon' => 'fa-balance-scale',
-                                    'color' => 'bg-orange-100 text-orange-600',
-                                ],
-                                'documents_uploaded' => [
-                                    'icon' => 'fa-paperclip',
-                                    'color' => 'bg-blue-100 text-blue-600',
-                                ],
-                                'form_updated' => ['icon' => 'fa-edit', 'color' => 'bg-green-100 text-green-600'],
-                                'info_requested' => [
-                                    'icon' => 'fa-question-circle',
-                                    'color' => 'bg-amber-100 text-amber-600',
-                                ],
-                            ];
-                            $meta = $activityIcons[$activity->action] ?? [
-                                'icon' => 'fa-circle',
-                                'color' => 'bg-gray-100 text-gray-500',
-                            ];
-                        @endphp
-                        <div class="flex gap-3 pb-5 last:pb-0 relative">
-                            @if (!$loop->last)
-                                <div class="absolute left-4 top-8 bottom-0 w-px bg-gray-100"></div>
-                            @endif
-                            <div
-                                class="shrink-0 w-8 h-8 rounded-full {{ $meta['color'] }} flex items-center justify-center z-10">
-                                <i class="fas {{ $meta['icon'] }} text-xs"></i>
-                            </div>
-                            <div class="flex-1 min-w-0 pt-0.5">
-                                <div class="flex items-center justify-between gap-2">
-                                    <p class="text-sm font-medium text-gray-800">
-                                        {{ ucfirst(str_replace('_', ' ', $activity->action)) }}
-                                    </p>
-                                    <span class="text-xs text-gray-400 whitespace-nowrap">
-                                        {{ $activity->created_at->diffForHumans() }}
-                                    </span>
-                                </div>
-                                @if ($activity->note)
-                                    <p class="text-sm text-gray-600 mt-0.5">{{ $activity->note }}</p>
-                                @endif
-                                <p class="text-xs text-gray-400 mt-1">
-                                    by {{ $activity->actor_name }}
-                                </p>
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-sm text-gray-400 italic">No activity recorded yet.</p>
-                    @endforelse
-                </div>
-            </div>
+            <x-claim-timeline :activities="$claim->activities" icon-class="text-orange-500" />
 
         </div>
 

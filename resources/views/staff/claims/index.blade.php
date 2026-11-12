@@ -144,7 +144,7 @@
                                         class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
                                         <a href="{{ route('staff.claims.show', $claim->id) }}"
                                             class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                            <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process Claim
+                                            <i class="fas fa-eye text-xs text-gray-500"></i> View Details
                                         </a>
                                         <div class="border-t border-gray-100 my-1"></div>
                                     </div>

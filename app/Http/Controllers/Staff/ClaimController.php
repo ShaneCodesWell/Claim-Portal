@@ -36,10 +36,16 @@ class ClaimController extends Controller
             ->get();
 
         $query = Claim::with(['customer', 'policy', 'assignedTo', 'branch'])
-            ->whereIn('status', [
-                ClaimStatus::SUBMITTED,
-                ClaimStatus::SURVEY_COMPLETED,
-            ])
+            ->where(function ($q) {
+                $q->where('status', ClaimStatus::SUBMITTED)
+                    ->orWhere(function ($q) {
+                        $q->where('status', ClaimStatus::SURVEY_COMPLETED)
+                            ->where(function ($q) {
+                                $q->whereNull('assigned_to')
+                                    ->orWhereHas('assignedTo', fn($u) => $u->where('is_active', false));
+                            });
+                    });
+            })
             ->latest();
 
         match ($request->filter) {
@@ -69,16 +75,19 @@ class ClaimController extends Controller
 
     public function myQueue()
     {
-        $claims = Claim::where('assigned_to', Auth::user()->id)
-            ->whereNotIn('status', ClaimStatus::terminal())
+        $userId = Auth::id();
+
+        $claims = Claim::where('assigned_to', $userId)
+            ->whereNotIn('status', ClaimStatus::notActive())
             ->with(['customer', 'policy'])
             ->latest()
             ->paginate(15);
 
         $stats = [
-            'total_claims'  => Claim::where('assigned_to', Auth::user()->id)->where('status', '!=', 'closed')->count(),
-            'under_review'  => Claim::where('assigned_to', Auth::user()->id)->where('status', 'under_review')->count(),
-            'closed_claims' => Claim::where('assigned_to', Auth::user()->id)->where('status', 'closed')->count(),
+            'total_claims'          => Claim::where('assigned_to', $userId)->where('status', '!=', 'closed')->count(),
+            'under_review'          => Claim::where('assigned_to', $userId)->where('status', 'under_review')->count(),
+            'awaiting_finalization' => Claim::where('assigned_to', $userId)->whereIn('status', ClaimStatus::decided())->count(),
+            'closed_claims'         => Claim::where('assigned_to', $userId)->where('status', 'closed')->count(),
         ];
 
         return view('staff.claims.my-queue', compact('claims', 'stats'));
@@ -667,11 +676,15 @@ class ClaimController extends Controller
         //     return back()->with('error', 'Only approved claims can be finalized.');
         // }
 
+        $wasRejected = $claim->status === ClaimStatus::REJECTED;
+
         $claimService->finalize($claim, $user);
 
         return redirect()
             ->route('staff.claims.show', $claim)
-            ->with('success', 'Claim has been finalized and processing is complete.');
+            ->with('success', $wasRejected
+                ? 'Claim has been closed.'
+                : 'Claim has been finalized and processing is complete.');
     }
 
     public function cancel(Request $request, Claim $claim)
