@@ -667,7 +667,7 @@
                     </div>
                     <div class="p-5">
                         <p
-                            class="text-sm text-gray-700 bg-cyan-50/30 rounded-lg p-4 border border-cyan-100 whitespace-pre-line leading-relaxed">
+                            class="text-sm text-gray-700 bg-cyan-50/30 rounded-lg p-4 border border-cyan-100 leading-relaxed">
                             {{ $claim->survey_notes }}
                         </p>
                     </div>
@@ -727,12 +727,56 @@
                                     once they respond.</span>
                             </div>
                         @else
+                            @php
+                                $fixedLength = mb_strlen(\App\Models\ClaimInfoRequest::smsMessage($claim, ''));
+                                $firstName   = \App\Models\ClaimInfoRequest::smsFirstName($claim->customer?->name);
+                                $noteMax     = \App\Models\ClaimInfoRequest::NOTE_MAX;
+                            @endphp
                             <form action="{{ route('staff.claims.request-info', $claim) }}" method="POST"
-                                class="space-y-3">
+                                class="space-y-3" x-data="{
+                                    note: '',
+                                    fixed: {{ $fixedLength }},
+                                    get parts() {
+                                        const total = this.fixed + this.note.length;
+                                        return total <= 160 ? 1 : Math.ceil(total / 153);
+                                    },
+                                    get unusual() {
+                                        return /[^\x00-\x7F\u2018\u2019\u201C\u201D\u2013\u2014\u2026\u00A0]/.test(this.note);
+                                    }
+                                }">
                                 @csrf
-                                <textarea name="note" rows="3" required maxlength="1000"
-                                    placeholder="Describe what additional information or documents you need from the customer..."
-                                    class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 outline-none resize-none"></textarea>
+
+                                <div
+                                    class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500 space-y-2">
+                                    <p>Hi {{ $firstName }}, we need more info on claim {{ $claim->claim_number }}:
+                                    </p>
+
+                                    <textarea name="note" rows="3" required x-model="note" maxlength="{{ $noteMax }}"
+                                        placeholder="What do you need? e.g. Please send the repair receipt."
+                                        class="w-full text-sm text-gray-800 border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-amber-400 outline-none resize-none"></textarea>
+
+                                    <p>{{ \App\Models\ClaimInfoRequest::SMS_FOOTER }}</p>
+                                </div>
+
+                                <div class="flex items-center justify-between gap-3 text-xs">
+                                    <span class="text-gray-400">
+                                        Sent to the customer by SMS. Keep it short and avoid sensitive details.
+                                    </span>
+                                    <span class="whitespace-nowrap"
+                                        :class="note.length >= {{ $noteMax }} ? 'text-amber-600 font-medium' :
+                                            'text-gray-400'">
+                                        <span x-text="note.length"></span>/{{ $noteMax }} &middot;
+                                        ~<span x-text="parts"></span> SMS
+                                    </span>
+                                </div>
+
+                                <p x-show="unusual" x-cloak
+                                    class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                                    This note has special characters (accents, symbols or emoji). The SMS may be split
+                                    into
+                                    many more parts, so please use plain letters and numbers if you can.
+                                </p>
+
                                 <button type="submit"
                                     class="bg-amber-500 hover:bg-amber-600 text-white text-sm px-4 py-2 rounded-lg transition font-medium flex items-center gap-2">
                                     <i class="fas fa-paper-plane text-xs"></i> Send Request

@@ -44,13 +44,13 @@ class ClaimController extends Controller
     {
         $claims = Claim::where('status', ClaimStatus::UNDER_SURVEY)
             ->where('surveyed_by', Auth::id())
-            ->with(['customer', 'policy', 'branch'])
+            ->with(['customer', 'policy', 'branch', 'assignedTo'])
             ->latest('surveyed_at')
             ->paginate(15);
 
-        $stats = $this->stats();
+        // $stats = $this->stats();
 
-        return view('surveyor.claims.my-queue', compact('claims', 'stats'));
+        return view('surveyor.claims.my-queue', compact('claims'));
     }
 
     public function show(Claim $claim)

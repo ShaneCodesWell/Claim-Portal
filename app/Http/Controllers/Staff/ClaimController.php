@@ -14,6 +14,7 @@ use App\Models\Policy;
 use App\Models\User;
 use App\Models\Branch;
 use App\Models\LiabilityGuide;
+use App\Models\ClaimInfoRequest;
 use App\Services\ClaimNotificationService;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
@@ -73,15 +74,24 @@ class ClaimController extends Controller
         return view('staff.claims.index', compact('claims', 'branches'));
     }
 
-    public function myQueue()
+    public function myQueue(Request $request)
     {
         $userId = Auth::id();
 
         $claims = Claim::where('assigned_to', $userId)
             ->whereNotIn('status', ClaimStatus::notActive())
-            ->with(['customer', 'policy'])
+            ->search($request->input('search'))
+            ->with(['customer', 'policy', 'assignedBy'])   // assignedBy was being lazy-loaded per row
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
+
+        // AJAX: return only the table + footer
+        if ($request->ajax()) {
+            return response()
+                ->view('staff.claims.partials.my-queue-results', compact('claims'))
+                ->header('Vary', 'X-Requested-With');
+        }
 
         $stats = [
             'total_claims'          => Claim::where('assigned_to', $userId)->where('status', '!=', 'closed')->count(),
@@ -518,8 +528,12 @@ class ClaimController extends Controller
             return $this->denyClaimAction($request, 'This claim must be assigned before requesting info.');
         }
 
+        $request->merge([
+            'note' => preg_replace('/\s+/u', ' ', trim((string) $request->input('note'))),
+        ]);
+
         $request->validate([
-            'note' => 'required|string|max:1000',
+            'note' => 'required|string|max:' . ClaimInfoRequest::NOTE_MAX,
         ]);
 
         try {

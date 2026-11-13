@@ -66,173 +66,21 @@
             <div class="flex items-center gap-3">
                 <div class="relative">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                    <input type="text" placeholder="Search client or policy..."
+                    <input type="search" id="queue-search" name="search" value="{{ request('search') }}"
+                        placeholder="Search client, policy or claim no..." autocomplete="off"
                         class="pl-8 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 w-64 bg-white" />
                 </div>
 
-                <button
-                    class="bg-white border border-gray-300 hover:bg-gray-50 px-3 py-2 rounded-xl text-sm font-medium text-gray-700 transition flex items-center gap-2">
-                    <i class="fas fa-filter text-xs"></i>
-                    Filter
-                </button>
+                {{-- Filter: hidden until the team asks for it
+                    <button class="...">Filter</button> --}}
             </div>
         </div>
 
         <!-- Table -->
-        <div class="overflow-x-auto custom-scroll">
-            <table class="min-w-262.5 md:min-w-full w-full">
-                <thead class="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Client</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy Number</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Product</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Policy Period</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Assigned By</th>
-                        <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Status</th>
-                        <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @forelse ($claims as $claim)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-4 py-4 truncate max-w-52">
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="h-9 w-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold">
-                                        {{ strtoupper(substr($claim->customer->name, 0, 1)) }}{{ strtoupper(substr(strrchr($claim->customer->name, ' '), 1, 1)) }}
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-900">{{ $claim->customer->name }}</span>
-                                </div>
-                            </td>
-                            <td class="px-4 py-4 font-mono text-sm text-gray-700">
-                                <div>{{ $claim->policy->policy_number }}</div>
-                                @php
-                                    $source = strtolower($claim->policy->source);
-                                @endphp
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-medium
-                                    {{ $source === 'genova' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700' }}">
-                                    {{ strtoupper($claim->policy->source) }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-4 text-sm font-medium text-gray-900 truncate max-w-42">
-                                {{ $claim->policy->product_name }}
-                            </td>
-                            <td class="px-4 py-4 text-xs text-gray-600">
-                                {{ \Carbon\Carbon::parse($claim->policy->start_date)->format('M d, Y') }} -
-                                {{ \Carbon\Carbon::parse($claim->policy->end_date)->format('M d, Y') }}</td>
-                            <td class="px-4 py-4 text-sm text-gray-600">{{ $claim->assignedBy->name ?? 'Unassigned' }}
-                            </td>
-                            @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
-                            <td class="px-4 py-4">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border {{ $badge['class'] }}">
-                                    {{ $badge['label'] }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-4 text-right relative" x-data="{ open: false }"
-                                style="overflow: visible;">
-                                <button x-ref="claimActionsBtn" @click="open = !open"
-                                    class="h-9 w-9 rounded-lg hover:bg-gray-100 text-gray-500 transition inline-flex items-center justify-center">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <template x-teleport="body">
-                                    <div x-show="open" @click.outside="open = false" x-transition
-                                        x-anchor.bottom-end="$refs.claimActionsBtn"
-                                        class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
-                                        <a href="{{ route('staff.claims.show', $claim->id) }}"
-                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                            @if (in_array($claim->status, \App\Enums\ClaimStatus::decided()))
-                                                <i class="fas fa-flag-checkered text-xs text-orange-500"></i>
-                                                {{ $claim->status === \App\Enums\ClaimStatus::REJECTED ? 'Close Claim' : 'Finalize Claim' }}
-                                            @else
-                                                <i class="fas fa-check-circle text-xs text-emerald-500"></i> Process
-                                                Claim
-                                            @endif
-                                        </a>
-                                        <div class="border-t border-gray-100 my-1"></div>
-                                        @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
-                                            <form method="POST"
-                                                action="{{ route('staff.claims.cancel', $claim->id) }}"
-                                                onsubmit="return confirm('Reset this claim back to Submitted? It will be unassigned.')">
-                                                @csrf
-                                                <input type="hidden" name="note"
-                                                    value="Cancelled by {{ Auth::user()->name }} from queue.">
-                                                <button type="submit"
-                                                    class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                                    <i class="fas fa-undo text-xs"></i> Cancel Claim
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </template>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center justify-center gap-3 text-gray-500">
-
-                                    <!-- Icon -->
-                                    <div class="h-14 w-14 flex items-center justify-center rounded-full bg-green-100">
-                                        <i class="fas fa-check text-xl text-green-600"></i>
-                                    </div>
-
-                                    <!-- Title -->
-                                    <div class="text-sm font-semibold text-gray-800">
-                                        You're all caught up 🎉
-                                    </div>
-
-                                    <!-- Description -->
-                                    <div class="text-xs text-gray-400 max-w-xs">
-                                        There are currently no active claims assigned to you. New assignments will
-                                        appear here automatically.
-                                    </div>
-
-                                    <!-- Optional Actions -->
-                                    <div class="flex items-center gap-2 mt-2">
-                                        <a href="{{ route('staff.claims.index') }}"
-                                            class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-700 transition">
-                                            <i class="fas fa-list text-xs"></i>
-                                            View All Claims
-                                        </a>
-
-                                        {{-- <a href="{{ route('staff.claims.index') }}"
-                                            class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
-                                            <i class="fas fa-home text-xs"></i>
-                                            Go to Dashboard
-                                        </a> --}}
-                                    </div>
-
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+        <div id="queue-results" class="transition-opacity">
+            @include('staff.claims.partials.my-queue-results')
         </div>
 
-        <!-- Footer -->
-        <div class="bg-gray-50 px-6 py-3 border-t border-gray-300 flex justify-between items-center flex-wrap gap-3">
-            <div class="text-sm text-gray-500">
-                @if ($claims->firstItem())
-                    Showing {{ $claims->lastItem() }} of {{ $claims->total() }}
-                    assigned claims
-                @else
-                    No assigned claims found
-                @endif
-            </div>
-            <div class="flex gap-2">
-                {{ $claims->links() }}
-            </div>
-        </div>
     </div>
 
     <!-- Workspace Tip -->
@@ -244,4 +92,65 @@
             Keep pending claims at the top of your workflow. Resolve them first before moving to in-progress items.
         </p>
     </div> --}}
+    <script>
+        (function() {
+            const input = document.getElementById('queue-search');
+            const results = document.getElementById('queue-results');
+            const baseUrl = @json(url()->current());
+
+            let timer = null;
+            let controller = null;
+
+            async function load(url) {
+                controller?.abort(); // drop any stale in-flight request
+                const current = controller = new AbortController();
+                results.classList.add('opacity-50');
+
+                try {
+                    const res = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/html'
+                        },
+                        signal: current.signal,
+                    });
+
+                    if (res.status === 401 || res.status === 419) { // session expired
+                        window.location.reload();
+                        return;
+                    }
+                    if (!res.ok) throw new Error('Request failed: ' + res.status);
+
+                    results.innerHTML = await res.text();
+                    history.replaceState(null, '', url); // keep the URL shareable / refresh-safe
+                } catch (e) {
+                    if (e.name !== 'AbortError') {
+                        results.innerHTML = '<div class="px-6 py-12 text-center text-sm text-red-500">' +
+                            'Could not load claims. Please try again.</div>';
+                    }
+                } finally {
+                    if (controller === current) results.classList.remove('opacity-50');
+                }
+            }
+
+            input.addEventListener('input', () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    const term = input.value.trim();
+                    const url = new URL(baseUrl);
+                    if (term) url.searchParams.set('search',
+                    term); // new search always starts on page 1
+                    load(url.toString());
+                }, 300);
+            });
+
+            // Pagination links load via AJAX too, keeping the search term
+            results.addEventListener('click', (e) => {
+                const link = e.target.closest('nav a[href]');
+                if (!link) return;
+                e.preventDefault();
+                load(link.href);
+            });
+        })();
+    </script>
 </x-layouts.staff>

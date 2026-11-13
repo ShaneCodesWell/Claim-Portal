@@ -86,7 +86,7 @@
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Policy Period</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Assigned By</th>
+                            Assigned To</th>
                         <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             Status</th>
                         <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -123,7 +123,7 @@
                             <td class="px-4 py-4 text-xs text-gray-600">
                                 {{ \Carbon\Carbon::parse($claim->policy->start_date)->format('M d, Y') }} -
                                 {{ \Carbon\Carbon::parse($claim->policy->end_date)->format('M d, Y') }}</td>
-                            <td class="px-4 py-4 text-sm text-gray-600">{{ $claim->assignedBy->name ?? 'Unassigned' }}
+                            <td class="px-4 py-4 text-sm text-gray-600">{{ $claim->assignedTo->name ?? 'Unassigned' }}
                             </td>
                             @php($badge = \App\Enums\ClaimStatus::badge($claim->status))
                             <td class="px-4 py-4">
@@ -174,17 +174,17 @@
 
                                     <!-- Optional Actions -->
                                     <div class="flex items-center gap-2 mt-2">
-                                        <a href="{{ route('staff.claims.index') }}"
+                                        {{-- <a href="{{ route('surveyor.claims.index') }}"
                                             class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-700 transition">
                                             <i class="fas fa-list text-xs"></i>
                                             View All Claims
-                                        </a>
+                                        </a> --}}
 
-                                        {{-- <a href="{{ route('staff.claims.index') }}"
+                                        <a href="{{ route('surveyor.claims.index') }}"
                                             class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
                                             <i class="fas fa-home text-xs"></i>
                                             Go to Dashboard
-                                        </a> --}}
+                                        </a>
                                     </div>
 
                                 </div>

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Builder;
 
 class Claim extends Model
 {
@@ -229,6 +230,24 @@ class Claim extends Model
             }
 
             $claim->estimated_repair_cost = $value;
+        });
+    }
+
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        $term = trim((string) $term);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        // Escape LIKE wildcards the user may type, and make it case-insensitive (Postgres LIKE is case-sensitive).
+        $like = '%' . addcslashes(mb_strtolower($term), '\%_') . '%';
+
+        return $query->where(function ($q) use ($like) {
+            $q->whereRaw('LOWER(claim_number) LIKE ?', [$like])
+                ->orWhereHas('customer', fn($c) => $c->whereRaw('LOWER(name) LIKE ?', [$like]))
+                ->orWhereHas('policy', fn($p) => $p->whereRaw('LOWER(policy_number) LIKE ?', [$like]));
         });
     }
 }

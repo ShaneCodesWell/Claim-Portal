@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 
 class SendInfoRequestSms implements ShouldQueue
@@ -38,10 +39,9 @@ class SendInfoRequestSms implements ShouldQueue
             return;
         }
 
-        // Deliberately does NOT include the staff note: details stay behind the login.
-        $firstName = explode(' ', trim($claim->customer->name ?? 'Customer'))[0];
-        $message   = "Hi {$firstName}, we need more information on claim {$claim->claim_number}. "
-            . 'Please log in to view and respond: ' . route('claims.show', $claim);
+        // Safety net for notes saved before the cap existed
+        $note    = Str::limit($this->smsSafe($this->infoRequest->note), ClaimInfoRequest::NOTE_MAX, '...');
+        $message = ClaimInfoRequest::smsMessage($claim, $note);
 
         try {
             $ok = $sms->sendSms($phone, $message);
@@ -95,5 +95,22 @@ class SendInfoRequestSms implements ShouldQueue
     private function mask(string $phone): string
     {
         return substr($phone, 0, 5) . '****' . substr($phone, -3);
+    }
+
+    /** Flatten whitespace and swap "smart" punctuation for plain characters. */
+    private function smsSafe(?string $text): string
+    {
+        $text = strtr((string) $text, [
+            "\u{2018}" => "'",
+            "\u{2019}" => "'",
+            "\u{201C}" => '"',
+            "\u{201D}" => '"',
+            "\u{2013}" => '-',
+            "\u{2014}" => '-',
+            "\u{2026}" => '...',
+            "\u{00A0}" => ' ',
+        ]);
+
+        return trim(preg_replace('/\s+/u', ' ', $text));
     }
 }
