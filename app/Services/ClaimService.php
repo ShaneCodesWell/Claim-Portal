@@ -212,7 +212,7 @@ class ClaimService
         });
 
         // Runs only after the transaction commits, so the row is guaranteed to exist.
-        SendInfoRequestSms::dispatch($infoRequest)->afterCommit();
+        SendInfoRequestSms::dispatch($infoRequest)->onQueue('high')->afterCommit();
 
         return $infoRequest;
     }
