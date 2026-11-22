@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -12,21 +13,21 @@ class ArkeselService
 
     public function __construct()
     {
-        $this->apiKey   = config('services.arkesel.api_key');
-        $this->senderId = config('services.arkesel.sender_id');
+        $this->apiKey   = (string) config('services.arkesel.api_key');
+        $this->senderId = (string) config('services.arkesel.sender_id');
     }
 
     public function sendSms(string $phone, string $message): bool
     {
-        // Skip actual send in local — log instead
-        if (app()->environment('local')) {
-            Log::info('Arkesel: SMS skipped (local)', [
+        // Local, or the sandbox "log" driver: log instead of sending
+        if (app()->environment('local') || config('services.arkesel.driver') === 'log') {
+            Log::info('Arkesel: SMS not sent (log mode)', [
                 'phone'   => $phone,
                 'message' => $message,
             ]);
             return true;
         }
-        
+
         try {
             $response = Http::withHeaders([
                 'api-key' => $this->apiKey,
@@ -49,7 +50,6 @@ class ArkeselService
             ]);
 
             return false;
-
         } catch (\Exception $e) {
             Log::error('Arkesel: Exception', [
                 'phone'   => $phone,

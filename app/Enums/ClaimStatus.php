@@ -187,4 +187,17 @@ enum ClaimStatus: string
             self::APPROVED,
         ], true);
     }
+
+    public static function customerCancellable(): array
+    {
+        return [self::SUBMITTED];
+    }
+    public static function staffCancellable(): array
+    {
+        return [self::UNDER_REVIEW, self::IN_PROGRESS, self::PENDING_INFO];
+    }
+    public static function adminCancellable(): array
+    {
+        return [self::SUBMITTED, self::UNDER_SURVEY, self::COMMITTEE_REVIEW];
+    }
 }

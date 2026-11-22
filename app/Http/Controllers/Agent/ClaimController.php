@@ -387,7 +387,7 @@ class ClaimController extends Controller
             abort(403);
         }
 
-        if (! in_array($claim->status, ClaimStatus::cancellable())) {
+        if (! in_array($claim->status, ClaimStatus::customerCancellable())) {
             return back()->with('error', 'This claim cannot be cancelled in its current status.');
         }
 

@@ -23,6 +23,16 @@
         </div>
 
         <div class="flex gap-2">
+            {{-- Reopen Claim --}}
+            @if (Auth::user()->isAdmin() && $claim->status === \App\Enums\ClaimStatus::CANCELLED)
+                <form action="{{ route('staff.claims.reopen', $claim) }}" method="POST" class="flex gap-2">
+                    @csrf
+                    <input type="text" name="note" required maxlength="500" placeholder="Reason for reopening"
+                        class="text-sm border border-gray-300 rounded-lg px-3 py-2">
+                    <button
+                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Reopen</button>
+                </form>
+            @endif
             {{-- Send to Survey --}}
             @if (
                 $canAct &&
@@ -729,8 +739,8 @@
                         @else
                             @php
                                 $fixedLength = mb_strlen(\App\Models\ClaimInfoRequest::smsMessage($claim, ''));
-                                $firstName   = \App\Models\ClaimInfoRequest::smsFirstName($claim->customer?->name);
-                                $noteMax     = \App\Models\ClaimInfoRequest::NOTE_MAX;
+                                $firstName = \App\Models\ClaimInfoRequest::smsFirstName($claim->customer?->name);
+                                $noteMax = \App\Models\ClaimInfoRequest::NOTE_MAX;
                             @endphp
                             <form action="{{ route('staff.claims.request-info', $claim) }}" method="POST"
                                 class="space-y-3" x-data="{

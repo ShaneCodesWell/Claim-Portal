@@ -144,7 +144,7 @@
                                         View Full Details
                                     </a>
 
-                                    @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
+                                    @if (in_array($claim->status, \App\Enums\ClaimStatus::customerCancellable()))
                                         <form method="POST" action="{{ route('claims.cancel', $claim->id) }}"
                                             class="cancel-claim-form">
                                             @csrf

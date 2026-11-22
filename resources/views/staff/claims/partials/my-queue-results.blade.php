@@ -65,7 +65,7 @@
                                     @endif
                                 </a>
                                 <div class="border-t border-gray-100 my-1"></div>
-                                @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
+                                @if (in_array($claim->status, \App\Enums\ClaimStatus::staffCancellable()))
                                     <form method="POST" action="{{ route('staff.claims.cancel', $claim->id) }}"
                                         onsubmit="return confirm('Reset this claim back to Submitted? It will be unassigned.')">
                                         @csrf

@@ -35,3 +35,6 @@ Schedule::command('glims:backfill-risk-duplicates')
     ->sundays()
     ->at('02:00')
     ->withoutOverlapping();
+
+// Api token Cleanup: prune expired tokens every 24 hours, so the database doesn't grow too large.
+Schedule::command('sanctum:prune-expired --hours=24')->daily();

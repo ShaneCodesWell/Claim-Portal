@@ -392,17 +392,13 @@ class ClaimService
     public function cancel(Claim $claim, User|Customer|Agent $cancelledBy, ?string $note = null): void
     {
         DB::transaction(function () use ($claim, $cancelledBy, $note) {
-            $previousAssignee = $claim->assigned_to;
-            $previousStatus   = $claim->status;
+            $previousStatus = $claim->status;
 
-            $claim->update([
-                'status'      => ClaimStatus::CANCELLED,
-                'assigned_to' => null,
-                'assigned_by' => null,
-                'assigned_at' => null,
-            ]);
+            $claim->update(['status' => ClaimStatus::CANCELLED]);
 
-            $actorName = $cancelledBy->name;
+            ClaimInfoRequest::where('claim_id', $claim->id)->pending()
+                ->update(['status' => ClaimInfoRequest::CANCELLED]);
+
             $actorType = match (true) {
                 $cancelledBy instanceof Customer => 'customer',
                 $cancelledBy instanceof Agent    => 'agent',
@@ -413,16 +409,31 @@ class ClaimService
                 claim: $claim,
                 user: $cancelledBy instanceof User ? $cancelledBy : null,
                 action: 'cancelled',
-                note: $note ?? "Claim reset to Submitted by {$actorName}.",
+                note: $note ?? "Claim cancelled by {$cancelledBy->name}.",
                 meta: [
-                    'cancelled_by'      => $cancelledBy->id,
-                    'actor_type'        => $actorType,
-                    'previous_status'   => $previousStatus,
-                    'previous_assignee' => $previousAssignee,
+                    'cancelled_by'    => $cancelledBy->id,
+                    'actor_type'      => $actorType,
+                    'previous_status' => $previousStatus,
+                    'assigned_to'     => $claim->assigned_to,
                 ],
                 customer: $cancelledBy instanceof Customer ? $cancelledBy : null,
                 agent: $cancelledBy instanceof Agent ? $cancelledBy : null,
             );
+        });
+    }
+
+    // Admin only: a cancelled claim goes back to the incoming list
+    public function reopen(Claim $claim, User $admin, string $note): void
+    {
+        DB::transaction(function () use ($claim, $admin, $note) {
+            $claim->update([
+                'status'      => ClaimStatus::SUBMITTED,
+                'assigned_to' => null,
+                'assigned_by' => null,
+                'assigned_at' => null,
+            ]);
+
+            $this->logActivity($claim, $admin, 'reopened', $note, ['reopened_by' => $admin->id]);
         });
     }
 

@@ -231,7 +231,7 @@
                         <div>
                             <p class="font-medium">Genova Insure</p>
                             <p class="text-xs text-gray-500">
-                                Connected to Genova Insure
+                                Connected via API
                             </p>
                         </div>
                     </div>
@@ -248,7 +248,7 @@
                         <div>
                             <p class="font-medium">GLIMS</p>
                             <p class="text-xs text-gray-500">
-                                Connected to GLIMS
+                                Connected via Middleware API
                             </p>
                         </div>
                     </div>

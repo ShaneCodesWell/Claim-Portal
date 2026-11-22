@@ -703,22 +703,37 @@ class ClaimController extends Controller
 
     public function cancel(Request $request, Claim $claim)
     {
-        $request->validate([
-            'note' => 'nullable|string|max:500',
-        ]);
+        $user = Auth::user();
+        $data = $request->validate(['note' => 'required|string|max:500']);
 
-        // Guard: only cancellable statuses
-        if (! in_array($claim->status, ClaimStatus::cancellable())) {
-            return back()->with('error', 'This claim cannot be cancelled in at this point.');
+        $allowed = match (true) {
+            $user->isAdmin()                                           => array_merge(ClaimStatus::staffCancellable(), ClaimStatus::adminCancellable()),
+            $claim->assigned_to === $user->id || $user->isClaimHead()  => ClaimStatus::staffCancellable(),
+            default                                                    => [],
+        };
+
+        if (! in_array($claim->status, $allowed, true)) {
+            return back()->with('error', 'You cannot cancel this claim at its current status.');
         }
 
-        $this->claimService->cancel(
-            claim: $claim,
-            cancelledBy: Auth::user(),
-            note: $request->note,
-        );
+        $this->claimService->cancel($claim, $user, $data['note']);
 
-        return back()->with('success', 'Claim has been reset to Submitted.');
+        return back()->with('success', 'Claim has been cancelled.');
+    }
+
+    public function reopen(Request $request, Claim $claim)
+    {
+        abort_unless(Auth::user()->isAdmin(), 403);
+
+        if ($claim->status !== ClaimStatus::CANCELLED) {
+            return back()->with('error', 'Only cancelled claims can be reopened.');
+        }
+
+        $data = $request->validate(['note' => 'required|string|max:500']);
+
+        $this->claimService->reopen($claim, Auth::user(), $data['note']);
+
+        return back()->with('success', 'Claim reopened and returned to the incoming list.');
     }
 
     public function sendToSurvey(Request $request, Claim $claim)
@@ -797,6 +812,7 @@ class ClaimController extends Controller
                 ClaimStatus::UNDER_SURVEY,
                 ClaimStatus::SURVEY_COMPLETED,
                 ClaimStatus::COMMITTEE_REVIEW,
+                ClaimStatus::CANCELLED,
             ])
             ->latest();
 

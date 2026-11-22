@@ -53,9 +53,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/api/client-errors', [ClientErrorLogController::class, 'store'])->middleware('throttle:30,1');
 
 // Forms - Publicy accessibly by everyone
-Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
-Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
-Route::get('/fire-form', [FireController::class, 'index'])->name('fire-form');
+Route::middleware('portal.user')->group(function () {
+    Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
+    Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
+    Route::get('/fire-form', [FireController::class, 'index'])->name('fire-form');
+});
 
 Route::prefix('glims')->name('staff.glims.')->group(function () {
     Route::post('sync/trigger', [GlimsSyncController::class, 'trigger'])->name('sync.trigger');
@@ -131,6 +133,7 @@ Route::middleware(['staff'])->prefix('admin')->group(function () {
     Route::get('claims/{claim}/edit', [StaffClaimController::class, 'edit'])->name('staff.claims.edit');
     Route::put('claims/{claim}/edit', [StaffClaimController::class, 'update'])->name('staff.claims.update');
     Route::post('claims/{claim}/cancel', [StaffClaimController::class, 'cancel'])->name('staff.claims.cancel');
+    Route::post('claims/{claim}/reopen', [StaffClaimController::class, 'reopen'])->name('staff.claims.reopen');
 
     // Claim Forms & Documents
     Route::get('/staff/claim-forms', [StaffController::class, 'claimForms'])->name('claim-form');

@@ -39,6 +39,7 @@ return [
     'arkesel'  => [
         'api_key'   => env('ARKESEL_API_KEY'),
         'sender_id' => env('ARKESEL_SENDER_ID'),
+        'driver' => env('SMS_DRIVER', 'live'),   // 'log' on the test server
     ],
 
     // Genova credentials

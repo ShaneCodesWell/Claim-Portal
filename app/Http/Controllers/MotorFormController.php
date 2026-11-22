@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\LoadsAuthorisedPolicy;
 use App\Http\Requests\StoreMotorFormRequest;
 use App\Http\Requests\UpdateMotorFormRequest;
 use App\Models\Customer;
@@ -12,17 +13,17 @@ use App\Traits\MergesClaimDraftData;
 
 class MotorFormController extends Controller
 {
-    use MergesClaimDraftData;
+    use MergesClaimDraftData, LoadsAuthorisedPolicy;
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         $policyId = $request->query('policyId');
-        $riskId   = $request->query('riskId');
-
-        $policy   = Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail();
+        $policy   = $this->authorisedPolicy($request);          // was: Policy::where('external_policy_id', $policyId)->orWhere('id', $policyId)->firstOrFail()
         $customer = Customer::findOrFail($policy->customer_id);
+
+        $riskId   = $request->query('riskId');
 
         // Risks are keyed by risk ID — grab the first one
         $risks = $policy->raw_payload['risks'] ?? [];

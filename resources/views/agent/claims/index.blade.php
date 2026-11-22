@@ -147,7 +147,7 @@
                                             View Full Details
                                         </a>
 
-                                        @if (in_array($claim->status, \App\Enums\ClaimStatus::cancellable()))
+                                        @if (in_array($claim->status, \App\Enums\ClaimStatus::customerCancellable()))
                                             <form method="POST"
                                                 action="{{ route('agent.claims.cancel', $claim->id) }}"
                                                 onsubmit="return confirm('Are you sure you want to cancel this claim? It will be sent back to Submitted.')">
