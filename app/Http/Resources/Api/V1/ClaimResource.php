@@ -25,6 +25,7 @@ class ClaimResource extends JsonResource
         'committee_decision' => 'Decision made',
         'finalized'          => 'Claim closed',
         'cancelled'          => 'Claim cancelled',
+        'reopened'           => 'Claim reopened',
     ];
 
     private const NOTE_VISIBLE = ['info_requested', 'info_provided'];
@@ -42,7 +43,7 @@ class ClaimResource extends JsonResource
             'can_cancel' => in_array($this->status, ClaimStatus::customerCancellable(), true),
             'claim_type'           => $this->claim_type,
             'amount'               => $this->amount,   // sum insured at submission, not an approved amount
-            'risk_id'              => $form['_risk_id'] ?? null,
+            'risk_id'              => isset($form['_risk_id']) ? ($form['registration_no'] ?? null) : null,
             'submitted_at'         => $this->submitted_at?->toIso8601String(),
             'updated_at'           => $this->updated_at?->toIso8601String(),
             'policy'               => $this->whenLoaded('policy', fn() => $this->policy ? [
@@ -64,7 +65,6 @@ class ClaimResource extends JsonResource
                     'event' => $a->action,
                     'label' => self::TIMELINE[$a->action],
                     'note'  => in_array($a->action, self::NOTE_VISIBLE, true) ? $a->note : null,
-                    'reopened' => 'Claim reopened',
                     'at'    => $a->created_at?->toIso8601String(),
                 ], fn($v) => $v !== null))
                 ->values()),

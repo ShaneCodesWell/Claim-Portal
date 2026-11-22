@@ -293,6 +293,10 @@ class ClaimController extends Controller
             $this->fail('not_handler', 'You cannot finalize this claim.', 403);
         }
 
+        if (! in_array($claim->status, ClaimStatus::decided(), true)) {
+            $this->fail('not_decided', 'Only approved or rejected claims can be finalized.', 409);
+        }
+
         $this->claims->finalize($claim, $request->user(), $data['note'] ?? null);
 
         return $this->detail($claim);

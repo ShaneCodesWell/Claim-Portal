@@ -11,6 +11,7 @@ use App\Models\ClaimDraft;
 use App\Models\ClaimDraftDocument;
 use App\Models\Customer;
 use App\Models\Policy;
+use App\Models\Agent;
 use App\Services\ClaimNotificationService;
 use App\Services\ClaimService;
 use Illuminate\Http\Request;
@@ -186,6 +187,8 @@ class ClaimController extends Controller
 
     public function show(Claim $claim)
     {
+        $this->authoriseClaim($claim);
+
         $claim->load(['policy', 'activities.agent', 'documents']);
         return view('agent.claims.show', compact('claim'));
     }
@@ -309,11 +312,7 @@ class ClaimController extends Controller
 
     public function uploadDocuments(Request $request, Claim $claim)
     {
-        $agent = Auth::guard('agent')->user();
-
-        if (!$agent) {
-            abort(403);
-        }
+        $agent = $this->authoriseClaim($claim);
 
         $request->validate([
             'documents'   => 'required|array',
@@ -333,11 +332,7 @@ class ClaimController extends Controller
 
     public function previewDocument(ClaimDocument $document, Request $request)
     {
-        $agent = Auth::guard('agent')->user();
-
-        if (!$agent) {
-            abort(403);
-        }
+        $this->authoriseClaim($document->claim);
 
         $path = Storage::disk('local')->path($document->file_path);
 
@@ -358,12 +353,7 @@ class ClaimController extends Controller
 
     public function destroyDocument(ClaimDocument $document): \Illuminate\Http\RedirectResponse
     {
-        $agent = Auth::guard('agent')->user();
-
-        // Ensure the document belongs to a claim owned by this agent
-        if (!$agent) {
-            abort(403);
-        }
+        $this->authoriseClaim($document->claim);
 
         // Only allow deletion if the claim is still editable
         if (! in_array($document->claim->status, ['submitted', 'pending_info'])) {
@@ -398,6 +388,21 @@ class ClaimController extends Controller
         );
 
         return back()->with('success', 'Your claim has been cancelled successfully.');
+    }
+
+    // A claim is the agent's only if they initiated it. Same rule edit(), update() and cancel() use.
+    private function authoriseClaim(?Claim $claim): Agent
+    {
+        $agent = Auth::guard('agent')->user();
+        abort_unless($agent, 403);
+
+        abort_unless(
+            $claim && (int) $claim->initiated_by_agent_id === (int) $agent->id,
+            403,
+            'You do not have access to this claim.'
+        );
+
+        return $agent;
     }
 
     private function normalizeClaimType(string $businessClass): string
