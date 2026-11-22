@@ -14,12 +14,13 @@ use App\Support\ClaimFormSchema;
 use App\Support\PolicyRisks;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Dedoc\Scramble\Attributes\Group;
 
+#[Group('Customer - Claims', weight: 12)]
 class ClaimController extends Controller
 {
     use ResolvesOwnedResources;

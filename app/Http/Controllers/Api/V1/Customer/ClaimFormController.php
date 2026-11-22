@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\V1\Customer;
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
 use App\Support\ClaimFormSchema;
+use Dedoc\Scramble\Attributes\Group;
 
+#[Group('Customer - Claim forms', weight: 11)]
 class ClaimFormController extends Controller
 {
     public function index()

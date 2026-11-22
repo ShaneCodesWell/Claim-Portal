@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Dedoc\Scramble\Attributes\Group;
 
+#[Group('Authentication', weight: 1)]
 class CustomerAuthController extends Controller
 {
     private const TTL = 600; // challenge lifetime, seconds

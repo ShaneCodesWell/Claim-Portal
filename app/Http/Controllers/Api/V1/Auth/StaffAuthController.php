@@ -11,7 +11,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Dedoc\Scramble\Attributes\Group;
 
+#[Group('Authentication', weight: 1)]
 class StaffAuthController extends Controller
 {
     public function login(Request $request): JsonResponse

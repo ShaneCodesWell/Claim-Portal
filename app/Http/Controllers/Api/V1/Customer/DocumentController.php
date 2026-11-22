@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Dedoc\Scramble\Attributes\Group;
 
+#[Group('Customer - Documents', weight: 13)]
 class DocumentController extends Controller
 {
     use ResolvesOwnedResources;

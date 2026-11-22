@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\PolicyResource;
 use App\Models\Policy;
 use Illuminate\Http\Request;
+use Dedoc\Scramble\Attributes\Group;
 
+#[Group('Customer - Policies', weight: 10)]
 class PolicyController extends Controller
 {
     use ResolvesOwnedResources;

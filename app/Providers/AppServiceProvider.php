@@ -8,6 +8,11 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Support\ApiDocs;
+use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\SecurityScheme;
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +46,17 @@ class AppServiceProvider extends ServiceProvider
             $user = $request->user();
 
             return Limit::perMinute(20)->by($user ? get_class($user) . ':' . $user->getAuthIdentifier() : $request->ip());
+        });
+
+        // The API docs page is open only where the sandbox flag is on (the test server), never on live
+        Gate::define('viewApiDocs', fn(?\App\Models\User $user = null) => (bool) config('app.sandbox'));
+
+        Scramble::configure()->withDocumentTransformers(function (OpenApi $openApi) {
+            $openApi->info->title       = 'Vanguard eClaim API';
+            $openApi->info->version     = '1.0.0';
+            $openApi->info->description = ApiDocs::description();
+
+            $openApi->secure(SecurityScheme::http('bearer'));
         });
     }
 }

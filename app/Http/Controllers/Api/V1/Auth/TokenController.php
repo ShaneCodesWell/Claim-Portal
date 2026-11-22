@@ -8,7 +8,9 @@ use App\Http\Resources\Api\V1\StaffResource;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
+use Dedoc\Scramble\Attributes\Group;
 
+#[Group('Authentication', weight: 1)]
 class TokenController extends Controller
 {
     public function me(Request $request)

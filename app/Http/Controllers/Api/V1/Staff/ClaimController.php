@@ -20,7 +20,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Dedoc\Scramble\Attributes\Group;
 
+#[Group('Staff - Claims', weight: 20)]
 class ClaimController extends Controller
 {
     private const DETAIL = [
