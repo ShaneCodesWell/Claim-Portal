@@ -37,13 +37,14 @@ class ClaimFormSchema
         return ! $policy->end_date || $policy->end_date->gte(today());
     }
 
-    public static function rules(string $type): array
+    // 1. rules(): add a $partial flag (for edits, required fields only apply when sent)
+    public static function rules(string $type, bool $partial = false): array
     {
         $rules = ['form_data' => ['required', 'array']];
 
         foreach (self::definition($type)['fields'] as $name => $f) {
             $head = $f['required']
-                ? ['required']
+                ? ($partial ? ['sometimes', 'required'] : ['required'])
                 : (isset($f['conditional']) ? [$f['conditional'], 'nullable'] : ['nullable']);
 
             $rules["form_data.$name"] = array_merge($head, $f['rules']);
@@ -54,6 +55,22 @@ class ClaimFormSchema
         }
 
         return $rules;
+    }
+
+    // 2. New: decode the stored JSON lists for API output
+    public static function present(?string $type, array $formData): array
+    {
+        if (! self::has($type)) {
+            return $formData;
+        }
+
+        foreach (self::definition($type)['fields'] as $name => $f) {
+            if (($f['type'] ?? '') === 'list' && is_string($formData[$name] ?? null)) {
+                $formData[$name] = json_decode($formData[$name], true) ?: [];
+            }
+        }
+
+        return $formData;
     }
 
     /** Keys the client sent that this form neither defines nor fills from the server. */
@@ -127,7 +144,7 @@ class ClaimFormSchema
     }
 
     /** The event must fall inside the policy period (and inside the optional reporting window). */
-    public static function periodError(Policy $policy, Carbon $event): ?string
+    public static function periodError(Policy $policy, Carbon $event, bool $applyWindow = true): ?string
     {
         $day = $event->copy()->startOfDay();
 
@@ -141,7 +158,7 @@ class ClaimFormSchema
 
         $limit = config('api.report_window_days');
 
-        if ($limit !== null && abs($day->diffInDays(today())) > $limit) {
+        if ($applyWindow && $limit !== null && $limit > 0 && abs($day->diffInDays(today())) > $limit) {
             return "Claims must be reported within {$limit} days of the event.";
         }
 

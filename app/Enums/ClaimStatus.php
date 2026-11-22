@@ -200,4 +200,17 @@ enum ClaimStatus: string
     {
         return [self::SUBMITTED, self::UNDER_SURVEY, self::COMMITTEE_REVIEW];
     }
+
+    // Statuses where reassigning is safe. assign() resets the status to under_review,
+    // so it must never run on a decided or in-survey/committee claim.
+    public static function assignable(): array
+    {
+        return [self::SUBMITTED, self::UNDER_REVIEW, self::IN_PROGRESS, self::PENDING_INFO];
+    }
+
+    // Statuses a handler may route onwards from
+    public static function routable(): array
+    {
+        return [self::UNDER_REVIEW, self::IN_PROGRESS, self::SURVEY_COMPLETED];
+    }
 }

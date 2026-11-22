@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Company;
@@ -71,7 +72,7 @@ class AuthController extends Controller
 
             // Only these roles (or an admin) may use the staff area.
             // ADD any other genuine staff role to this list.
-            $staffRoles = ['admin', 'staff', 'surveyor', 'claims_adjuster'];
+            $staffRoles = UserRole::staffRoles();
             $role       = mb_strtolower((string) $user->role);
 
             if (! $user->is_admin && ! in_array($role, $staffRoles, true)) {

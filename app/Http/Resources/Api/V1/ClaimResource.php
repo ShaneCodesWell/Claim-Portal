@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Enums\ClaimStatus;
+use App\Support\ClaimFormSchema;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Arr;
@@ -55,7 +56,7 @@ class ClaimResource extends JsonResource
                 'note'         => $this->pendingInfoRequest->note,
                 'requested_at' => $this->pendingInfoRequest->created_at?->toIso8601String(),
             ] : null),
-            'form_data'            => $this->when($request->routeIs('api.v1.claims.show', 'api.v1.claims.store'), fn() => Arr::except($form, ['_risk_id'])),
+            'form_data'            => ClaimFormSchema::present($this->claim_type, Arr::except($form, ['_risk_id'])),
             'documents'            => ClaimDocumentResource::collection($this->whenLoaded('documents')),
             'timeline'             => $this->whenLoaded('activities', fn() => $this->activities
                 ->filter(fn($a) => isset(self::TIMELINE[$a->action]))
