@@ -6,7 +6,6 @@ use App\Http\Middleware\CustomerAuth;
 use App\Http\Middleware\EnsureApiActor;
 use App\Http\Middleware\EnsureCommitteeMember;
 use App\Http\Middleware\EnsureSurveyor;
-use App\Http\Middleware\EnsurePortalUser;
 use App\Http\Middleware\StaffMiddleware;
 use App\Support\ApiResponse;
 use Illuminate\Auth\AuthenticationException;
@@ -33,7 +32,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'surveyor'      => EnsureSurveyor::class,
             'committee'     => EnsureCommitteeMember::class,
             'api.actor'     => EnsureApiActor::class,
-            'portal.user'   => EnsurePortalUser::class
         ]);
 
         $middleware->validateCsrfTokens(except: [

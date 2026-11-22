@@ -10,24 +10,19 @@ trait LoadsAuthorisedPolicy
 {
     protected function authorisedPolicy(Request $request): Policy
     {
+        $customer = Auth::guard('customer')->user();
+        abort_unless($customer, 403);
+
         $id = (string) $request->query('policyId');
 
-        $query = Policy::where(function ($q) use ($id) {
-            $q->where('external_policy_id', $id);
+        return Policy::whereIn('customer_id', $customer->resolvedCustomerIds())
+            ->where(function ($q) use ($id) {
+                $q->where('external_policy_id', $id);
 
-            if (ctype_digit($id)) {
-                $q->orWhere('id', (int) $id);
-            }
-        });
-
-        if ($customer = Auth::guard('customer')->user()) {
-            $query->whereIn('customer_id', $customer->resolvedCustomerIds());
-        } elseif ($agent = Auth::guard('agent')->user()) {
-            $query->where('agent_id', $agent->id);
-        } else {
-            abort(403);
-        }
-
-        return $query->firstOrFail();   // 404 when it isn't theirs
+                if (ctype_digit($id)) {
+                    $q->orWhere('id', (int) $id);
+                }
+            })
+            ->firstOrFail();
     }
 }

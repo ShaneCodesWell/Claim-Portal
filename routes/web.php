@@ -52,8 +52,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Errors
 Route::post('/api/client-errors', [ClientErrorLogController::class, 'store'])->middleware('throttle:30,1');
 
-// Forms - Publicy accessibly by everyone
-Route::middleware('portal.user')->group(function () {
+// Claim forms: logged-in customers only. Staff and agents use their own create/edit routes.
+Route::middleware('auth.customer')->group(function () {
     Route::get('/motor-form', [MotorFormController::class, 'index'])->name('motor-form');
     Route::get('/general-accident-form', [GeneralAccidentController::class, 'index'])->name('general-accident-form');
     Route::get('/fire-form', [FireController::class, 'index'])->name('fire-form');
@@ -83,7 +83,7 @@ Route::middleware('auth.customer')->group(function () {
     Route::post('claims/{claim}/documents', [CustomerClaimController::class, 'uploadDocuments'])->name('customer.claims.documents');
     Route::get('/documents/{document}/preview', [CustomerClaimController::class, 'previewDocument'])->name('customer.documents.preview');
     Route::delete('claims/documents/{document}', [CustomerClaimController::class, 'destroyDocument'])->name('customer.claims.documents.destroy');
-    
+
     // Request Info
     Route::post('claims/{claim}/respond-info', [CustomerClaimController::class, 'respondToInfoRequest'])->name('customer.claims.respond-info');
 
