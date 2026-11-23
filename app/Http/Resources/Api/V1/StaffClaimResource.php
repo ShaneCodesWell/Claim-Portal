@@ -72,7 +72,6 @@ class StaffClaimResource extends JsonResource
                 'decided_at' => $this->committee_decided_at?->toIso8601String(),
             ]),
 
-            /** @var array<string, mixed> */
             'form_data' => $this->when($detail, fn() => ClaimFormSchema::present($this->claim_type, $this->form_data ?? [])),
 
             /** @var array<int, array{id: int, name: string, mime_type: string|null, size_bytes: int|null, type: string|null, uploaded_by: string|null, uploaded_at: string|null, url: string}> */

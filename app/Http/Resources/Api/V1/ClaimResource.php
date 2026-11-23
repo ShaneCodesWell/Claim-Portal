@@ -60,7 +60,6 @@ class ClaimResource extends JsonResource
                 'note'         => $this->pendingInfoRequest->note,
                 'requested_at' => $this->pendingInfoRequest->created_at?->toIso8601String(),
             ] : null),
-            /** @var array<string, mixed> */
             'form_data' => $this->when($request->routeIs('api.v1.claims.show', 'api.v1.claims.store'), fn() => ClaimFormSchema::present($this->claim_type, Arr::except($form, ['_risk_id']))),
             'documents'            => ClaimDocumentResource::collection($this->whenLoaded('documents')),
             /** @var array<int, array{event: string, label: string, note?: string, at: string|null}> */
