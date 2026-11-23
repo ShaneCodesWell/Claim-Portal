@@ -17,6 +17,11 @@ class ClaimFormController extends Controller
             ->values()]);
     }
 
+    /**
+     * Fields of one claim form
+     *
+     * @response array{data: array{type: string, label: string, event_field: string, server_fields: string[], fields: array<int, array{name: string, label: string, type: string, required: bool, required_when: array{field: string, in: string[]}|null, options: string[]|null, item_fields: string[]|null}>, documents: array{accepted: string[], max_size_kb: int, max_files: int}, notes: string|null}}
+     */
     public function show(string $type)
     {
         if (! ClaimFormSchema::has($type)) {
@@ -28,8 +33,16 @@ class ClaimFormController extends Controller
         return response()->json(['data' => [
             'type'          => $type,
             'label'         => $def['label'],
-            'event_field'   => $def['event_field'],      // must fall inside the policy period
-            'server_fields' => $def['server_fields'],    // ignored if sent; taken from the policy
+            /**
+             * must fall inside the policy period
+             * @var string
+             */
+            'event_field'   => $def['event_field'],
+            /**
+             *ignored if sent; taken from the policy
+             * @var array
+             */
+            'server_fields' => $def['server_fields'],
             'fields'        => collect($def['fields'])->map(function ($f, $name) {
                 $when = null;
 

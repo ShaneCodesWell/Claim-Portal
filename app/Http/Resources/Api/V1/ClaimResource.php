@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Arr;
 
+/** @mixin \App\Models\Claim */
 class ClaimResource extends JsonResource
 {
     // Only these events are shown to customers, and only these keep their note.
@@ -42,7 +43,9 @@ class ClaimResource extends JsonResource
             'action_required'      => $this->status === ClaimStatus::PENDING_INFO,
             'can_cancel' => in_array($this->status, ClaimStatus::customerCancellable(), true),
             'claim_type'           => $this->claim_type,
-            'amount'               => $this->amount,   // sum insured at submission, not an approved amount
+            /** Sum insured at submission. This is not an approved amount. */
+            'amount'               => $this->amount,
+            /** Registration number of the vehicle the claim is for, when filed on a fleet policy. */
             'risk_id'              => isset($form['_risk_id']) ? ($form['registration_no'] ?? null) : null,
             'submitted_at'         => $this->submitted_at?->toIso8601String(),
             'updated_at'           => $this->updated_at?->toIso8601String(),
@@ -57,8 +60,10 @@ class ClaimResource extends JsonResource
                 'note'         => $this->pendingInfoRequest->note,
                 'requested_at' => $this->pendingInfoRequest->created_at?->toIso8601String(),
             ] : null),
-            'form_data'            => ClaimFormSchema::present($this->claim_type, Arr::except($form, ['_risk_id'])),
+            /** @var array<string, mixed> */
+            'form_data' => $this->when($request->routeIs('api.v1.claims.show', 'api.v1.claims.store'), fn() => ClaimFormSchema::present($this->claim_type, Arr::except($form, ['_risk_id']))),
             'documents'            => ClaimDocumentResource::collection($this->whenLoaded('documents')),
+            /** @var array<int, array{event: string, label: string, note?: string, at: string|null}> */
             'timeline'             => $this->whenLoaded('activities', fn() => $this->activities
                 ->filter(fn($a) => isset(self::TIMELINE[$a->action]))
                 ->map(fn($a) => array_filter([

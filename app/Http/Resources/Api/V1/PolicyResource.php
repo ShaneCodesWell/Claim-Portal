@@ -8,6 +8,7 @@ use App\Support\PolicyRisks;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Models\Policy */
 class PolicyResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -41,7 +42,8 @@ class PolicyResource extends JsonResource
         }
 
         return collect($risks)->map(fn($r) => [
-            'id'              => ($r['risk_ref_no'] ?? null) ?: null,   // send this as risk_id when claiming
+            /** Send this as `risk_id` when filing a motor claim on a fleet policy. */
+            'id'              => ($r['risk_ref_no'] ?? null) ?: null,
             'registration_no' => $r['risk_ref_no'] ?? null,
             'make'            => $r['vehicle_make'] ?? null,
             'model'           => $r['vehicle_model'] ?? null,

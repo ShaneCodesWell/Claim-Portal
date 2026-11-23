@@ -27,7 +27,11 @@ class CustomerAuthController extends Controller
         private OtpService $otp,
     ) {}
 
-    // Step 1: find the customer and send an OTP
+    /**
+     * Request a one-time code
+     *
+     * @unauthenticated
+     */
     public function requestOtp(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -71,7 +75,11 @@ class CustomerAuthController extends Controller
         ]]);
     }
 
-    // Step 2: verify the OTP. One profile -> token. Several -> choose one.
+    /**
+     * Verify the one-time code
+     *
+     * @unauthenticated
+     */
     public function verifyOtp(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -122,7 +130,11 @@ class CustomerAuthController extends Controller
         ]]);
     }
 
-    // Step 3 (only when step 2 asked for it)
+    /**
+     * Choose a profile
+     *
+     * @unauthenticated
+     */
     public function selectProfile(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -173,7 +185,7 @@ class CustomerAuthController extends Controller
             'token_type'   => 'Bearer',
             'access_token' => $token->plainTextToken,
             'expires_at'   => $expires->toIso8601String(),
-            'customer'     => (new CustomerResource($customer))->resolve(),
+            'customer'     => new CustomerResource($customer),
         ]]);
     }
 

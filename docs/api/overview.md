@@ -28,26 +28,26 @@ Customer tokens last **60 minutes** and staff tokens **8 hours**. After that, lo
 
 1. **Request a code.** `POST /auth/customer/request-otp`
 
-   ```json
-   { "identifier": "0241234567", "login_type": "mobile_no" }
-   ```
+    ```json
+    { "identifier": "0241234567", "login_type": "mobile_no" }
+    ```
 
-   `login_type` is optional: `mobile_no` (default), `policy_number` or `vehicle_number`. The response contains a `challenge_id`, valid for 10 minutes, and a masked phone number.
+    `login_type` is optional: `mobile_no` (default), `policy_number` or `vehicle_number`. The response contains a `challenge_id`, valid for 10 minutes, and a masked phone number.
 
 2. **Verify the code.** `POST /auth/customer/verify-otp`
 
-   ```json
-   { "challenge_id": "<from step 1>", "otp": "123456" }
-   ```
+    ```json
+    { "challenge_id": "<from step 1>", "otp": "123456" }
+    ```
 
-   - One matching customer profile: the response contains `access_token`.
-   - Several profiles share the phone number: the response has `status: "profile_selection"` and a list of `profiles` (`id`, `name`). Continue with step 3.
+    - One matching customer profile: the response contains `access_token`.
+    - Several profiles share the phone number: the response has `status: "profile_selection"` and a list of `profiles` (`id`, `name`). Continue with step 3.
 
 3. **Choose a profile (only when asked).** `POST /auth/customer/select-profile`
 
-   ```json
-   { "challenge_id": "<from step 2>", "profile_id": 0 }
-   ```
+    ```json
+    { "challenge_id": "<from step 2>", "profile_id": 0 }
+    ```
 
 After login, the customer's policies are loaded from Genova and GLIMS in the background. `GET /policies` returns `sync.synced: true` once that finishes. If it is `false`, wait a few seconds and call again.
 
@@ -79,6 +79,7 @@ After login, the customer's policies are loaded from Genova and GLIMS in the bac
 - Fields in `server_fields` are filled from the policy. They are ignored if you send them.
 - Unknown `form_data` fields are rejected with `unknown_fields`.
 - The declaration must be accepted (`declaration_agreement: true`) and a `digital_signature` given.
+- **Documents with the claim:** the simplest way is to file the claim as JSON, then upload documents with `POST /claims/{id}/documents`. To send files in the same request, use `multipart/form-data` and write fields with brackets: `form_data[accident_date]=2026-11-17`, and list items as `form_data[your_vehicle_injured][0][name]=Kofi`. Booleans can be `true`, `1` or `yes`.
 
 ### Safe retries
 
@@ -95,10 +96,10 @@ Claim values are stored as text, exactly as the web forms store them. In respons
 3. `GET /staff/claims/{id}`: full detail. `permissions` says what you can do right now.
 4. `POST /staff/claims/{id}/process` takes an unassigned claim (assigns it to you and moves it to `under_review`).
 5. Work on it:
-   - `PUT /staff/claims/{id}/form-data`: change fields. Send only the fields to change.
-   - `POST /staff/claims/{id}/documents`: add documents.
-   - `POST /staff/claims/{id}/request-info`: ask the customer for more information (note up to 480 characters). The customer is notified by SMS and the claim moves to `pending_info`.
-   - `POST /staff/claims/{id}/send-to-survey` or `/send-to-committee`.
+    - `PUT /staff/claims/{id}/form-data`: change fields. Send only the fields to change.
+    - `POST /staff/claims/{id}/documents`: add documents.
+    - `POST /staff/claims/{id}/request-info`: ask the customer for more information (note up to 480 characters). The customer is notified by SMS and the claim moves to `pending_info`.
+    - `POST /staff/claims/{id}/send-to-survey` or `/send-to-committee`.
 6. `POST /staff/claims/{id}/finalize` closes an **approved or rejected** claim.
 7. `POST /staff/claims/{id}/cancel` (a reason is required) and `POST /staff/claims/{id}/reopen` (admin only).
 
@@ -118,24 +119,31 @@ These steps happen in the eClaim web portal only: the surveyor's work (accepting
 Every error has the same shape:
 
 ```json
-{ "error": { "code": "event_outside_cover", "message": "The event date is before this policy started (30 May 2026)." } }
+{
+    "error": {
+        "code": "event_outside_cover",
+        "message": "The event date is before this policy started (30 May 2026)."
+    }
+}
 ```
 
 Validation errors (HTTP 422, code `validation_failed`) also contain `details`, keyed by field.
 
-| HTTP | Code | Meaning |
-|---|---|---|
-| 401 | `unauthenticated` | Missing, invalid or expired token |
-| 401 | `invalid_credentials` | Wrong staff email or password |
-| 403 | `forbidden` | The token's role cannot use this endpoint |
-| 403 | `not_staff`, `forbidden_role`, `not_handler`, `cannot_assign_others`, `account_inactive` | Staff permission problems |
-| 404 | `not_found` | Does not exist, or belongs to someone else |
-| 409 | `claim_closed`, `not_cancellable`, `no_open_request`, `request_already_open`, `already_assigned`, `not_assignable`, `invalid_status`, `not_decided`, `not_cancelled`, `claim_not_actionable`, `request_in_progress` | The claim is not in a state that allows this |
-| 422 | `validation_failed` | Invalid input, with `details` |
-| 422 | `unknown_fields`, `claim_type_mismatch`, `event_outside_cover`, `risk_required`, `invalid_risk`, `invalid_idempotency_key`, `invalid_assignee`, `no_form` | A business rule was not met (the message says which) |
-| 422 | `identity_not_found`, `invalid_otp`, `challenge_expired`, `invalid_profile`, `otp_required` | Customer login problems |
-| 429 | `too_many_requests`, `too_many_attempts` | Rate limit reached |
-| 500 | `server_error` | Something went wrong on our side |
+| HTTP | Code                                                                                                                                                                                                                | Meaning                                              |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 401  | `unauthenticated`                                                                                                                                                                                                   | Missing, invalid or expired token                    |
+| 401  | `invalid_credentials`                                                                                                                                                                                               | Wrong staff email or password                        |
+| 403  | `forbidden`                                                                                                                                                                                                         | The token's role cannot use this endpoint            |
+| 403  | `not_staff`, `forbidden_role`, `not_handler`, `cannot_assign_others`, `account_inactive`                                                                                                                            | Staff permission problems                            |
+| 404  | `not_found`                                                                                                                                                                                                         | Does not exist, or belongs to someone else           |
+| 409  | `claim_closed`, `not_cancellable`, `no_open_request`, `request_already_open`, `already_assigned`, `not_assignable`, `invalid_status`, `not_decided`, `not_cancelled`, `claim_not_actionable`, `request_in_progress` | The claim is not in a state that allows this         |
+| 422  | `validation_failed`                                                                                                                                                                                                 | Invalid input, with `details`                        |
+| 422  | `unknown_fields`, `claim_type_mismatch`, `event_outside_cover`, `risk_required`, `invalid_risk`, `invalid_idempotency_key`, `invalid_assignee`, `no_form`                                                           | A business rule was not met (the message says which) |
+| 422  | `identity_not_found`, `invalid_otp`, `challenge_expired`, `invalid_profile`, `otp_required`                                                                                                                         | Customer login problems                              |
+| 429  | `too_many_requests`, `too_many_attempts`                                                                                                                                                                            | Rate limit reached                                   |
+| 500  | `server_error`                                                                                                                                                                                                      | Something went wrong on our side                     |
+
+The example response schemas shown on individual endpoints for 401, 404, 422 and 429 follow Laravel's default format. The real body of every error is the `{ "error": { "code", "message", "details" } }` shape above.
 
 ## Rate limits
 

@@ -191,6 +191,11 @@ class ClaimController extends Controller
         }
 
         $data = $request->validate([
+            /**
+             * Only the fields to change. Fields you leave out keep their value.
+             *
+             * @var array<string, mixed>
+             */
             'form_data' => ['required', 'array', 'min:1'],
             'note'      => ['nullable', 'string', 'max:500'],
         ]);

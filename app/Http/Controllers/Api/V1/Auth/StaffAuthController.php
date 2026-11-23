@@ -16,6 +16,11 @@ use Dedoc\Scramble\Attributes\Group;
 #[Group('Authentication', weight: 1)]
 class StaffAuthController extends Controller
 {
+    /**
+     * Staff login
+     *
+     * @unauthenticated
+     */
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
@@ -59,7 +64,7 @@ class StaffAuthController extends Controller
             'token_type'   => 'Bearer',
             'access_token' => $token->plainTextToken,
             'expires_at'   => $expires->toIso8601String(),
-            'staff'        => (new StaffResource($user))->resolve(),
+            'staff'        => new StaffResource($user),
         ]]);
     }
 }

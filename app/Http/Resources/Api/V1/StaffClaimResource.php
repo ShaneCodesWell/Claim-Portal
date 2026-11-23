@@ -9,6 +9,7 @@ use App\Support\StaffAccess;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Models\Claim */
 class StaffClaimResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -23,7 +24,9 @@ class StaffClaimResource extends JsonResource
             'status_label'          => ClaimStatus::labels()[$this->status] ?? $this->status,
             'claim_type'            => $this->claim_type,
             'source'                => $this->source,
-            'amount'                => $this->amount,   // sum insured at submission
+            /** Sum insured at submission. This is not an approved amount. */
+            'amount'                => $this->amount,
+            /** Estimated repair cost, when the claim form provided one. */
             'estimated_repair_cost' => $this->estimated_repair_cost,
             'submitted_at'          => $this->submitted_at?->toIso8601String(),
             'updated_at'            => $this->updated_at?->toIso8601String(),
@@ -69,8 +72,10 @@ class StaffClaimResource extends JsonResource
                 'decided_at' => $this->committee_decided_at?->toIso8601String(),
             ]),
 
+            /** @var array<string, mixed> */
             'form_data' => $this->when($detail, fn() => ClaimFormSchema::present($this->claim_type, $this->form_data ?? [])),
 
+            /** @var array<int, array{id: int, name: string, mime_type: string|null, size_bytes: int|null, type: string|null, uploaded_by: string|null, uploaded_at: string|null, url: string}> */
             'documents' => $this->when($detail, fn() => $this->documents->map(fn($d) => [
                 'id'          => $d->id,
                 'name'        => $d->original_name,
@@ -82,6 +87,7 @@ class StaffClaimResource extends JsonResource
                 'url'         => route('api.v1.staff.documents.show', $d->id),
             ])->values()),
 
+            /** @var array<int, array{id: int, status: string, note: string, requested_by: string|null, requested_at: string|null, sms_status: string|null, response_note: string|null, responded_at: string|null}> */
             'info_requests' => $this->when($detail, fn() => $this->infoRequests->map(fn($r) => [
                 'id'            => $r->id,
                 'status'        => $r->status,
@@ -93,6 +99,7 @@ class StaffClaimResource extends JsonResource
                 'responded_at'  => $r->responded_at?->toIso8601String(),
             ])->values()),
 
+            /** @var array<int, array{event: string, label: string, note: string|null, actor: string, actor_type: string, at: string|null}> */
             'timeline' => $this->when($detail, fn() => $this->activities->map(fn($a) => [
                 'event'      => $a->action,
                 'label'      => ClaimActivityAction::label($a->action),

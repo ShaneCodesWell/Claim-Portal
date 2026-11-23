@@ -60,6 +60,19 @@ class ClaimController extends Controller
         return new ClaimResource($claim);
     }
 
+    /**
+     * File a claim
+     *
+     * Send JSON for a claim without files, then add documents with `POST /claims/{id}/documents`.
+     * If you send files in the same request, use `multipart/form-data` and write nested fields as
+     * `form_data[accident_date]` and list fields as `form_data[your_vehicle_injured][0][name]`.
+     *
+     * Returns 201 for a new claim, or 200 with the header `Idempotent-Replay: true` when the
+     * `Idempotency-Key` was already used.
+     *
+     * @status 201
+     * @response \App\Http\Resources\Api\V1\ClaimResource
+     */
     public function store(Request $request)
     {
         $customer = $request->user();
@@ -69,6 +82,11 @@ class ClaimController extends Controller
             'policy_id'   => ['required', 'integer'],
             'risk_id'     => ['nullable', 'string', 'max:50'],
             'claim_type'  => ['required', Rule::in(ClaimFormSchema::types())],
+            /**
+             * The claim fields. See "Claim forms" in the overview for the fields of each `claim_type`.
+             *
+             * @var array<string, mixed>
+             */
             'form_data'   => ['required', 'array'],
             'documents'   => ['nullable', 'array', 'max:' . $docs['max_files']],
             'documents.*' => ['file', 'max:' . $docs['max_size_kb'], 'mimes:' . implode(',', $docs['accepted'])],
