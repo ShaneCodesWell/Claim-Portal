@@ -171,10 +171,12 @@ class CustomerAuthController extends Controller
         Cache::forget($this->key($challengeId)); // single use
 
         // Pull policies in the background. Never let this block a login.
-        try {
-            SyncCustomerPoliciesJob::dispatch($customer, $profile['secondary_code'] ?? null)->onQueue('high');
-        } catch (\Throwable $e) {
-            Log::error('API issueToken: sync dispatch failed', ['customer_id' => $customer->id, 'error' => $e->getMessage()]);
+        if (! Sandbox::active()) {
+            try {
+                SyncCustomerPoliciesJob::dispatch($customer, $profile['secondary_code'] ?? null)->onQueue('high');
+            } catch (\Throwable $e) {
+                Log::error('API issueToken: sync dispatch failed', ['customer_id' => $customer->id, 'error' => $e->getMessage()]);
+            }
         }
 
         $expires = now()->addMinutes(config('api.customer_token_minutes'));

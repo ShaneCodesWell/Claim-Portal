@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Services\GenovaApiService;
 use App\Services\GlimsApiService;
 use App\Support\NameMatcher;
+use App\Support\Sandbox;
 
 class CustomerIdentityService
 {
@@ -25,6 +26,22 @@ class CustomerIdentityService
 
         if ($loginType === 'mobile_no') {
             $identifier = $this->normalizePhone($identifier);
+        }
+
+        // Sandbox: only the seeded ECLTEST customers, never Genova or GLIMS
+        if (Sandbox::active()) {
+            $customer = $loginType === 'mobile_no'
+                ? Customer::where('phone', $identifier)->where('genova_customer_code', 'like', 'ECLTEST%')->first()
+                : null;
+
+            return $customer
+                ? $this->result($customer->phone, [[
+                    'code'   => $customer->genova_customer_code,
+                    'name'   => $customer->name,
+                    'phone'  => $customer->phone,
+                    'source' => 'genova',
+                ]])
+                : null;
         }
 
         // 1. Genova API
