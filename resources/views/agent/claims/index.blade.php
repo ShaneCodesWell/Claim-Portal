@@ -35,7 +35,8 @@
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
             <span class="h-2 w-2 rounded-full bg-amber-400"></span>
             <span class="text-sm text-gray-600">Pending Info</span>
-            <span class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'pending_info')->count() }}</span>
+            <span
+                class="text-sm font-semibold text-gray-900">{{ $claims->where('status', 'pending_info')->count() }}</span>
         </div>
 
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
@@ -139,7 +140,7 @@
                                 <template x-teleport="body">
                                     <div x-show="open" @click.outside="open = false" x-transition
                                         x-anchor.bottom-end="$refs.claimActionsBtn"
-                                        class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-9999">
+                                        class="fixed w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-99">
 
                                         <a href="{{ route('agent.claims.show', $claim->id) }}"
                                             class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
@@ -150,11 +151,11 @@
                                         @if (in_array($claim->status, \App\Enums\ClaimStatus::customerCancellable()))
                                             <form method="POST"
                                                 action="{{ route('agent.claims.cancel', $claim->id) }}"
-                                                onsubmit="return confirm('Are you sure you want to cancel this claim? It will be sent back to Submitted.')">
+                                                class="js-cancel-claim-form">
                                                 @csrf
                                                 <button type="submit"
                                                     class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                                    <i class="fas fa-undo text-xs"></i>
+                                                    <i class="fas fa-times text-xs"></i>
                                                     Cancel Claim
                                                 </button>
                                             </form>
@@ -208,10 +209,36 @@
                 Contact our claims support team for assistance with pending or in-progress claims.
             </p>
         </div>
-        <button
+        <a href="tel:+233302666485"
             class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 w-full sm:w-auto justify-center">
             <i class="fas fa-headset"></i> Contact Support
-        </button>
+        </a>
     </div>
+    <script>
+        // Bound on document because the dropdown is teleported to <body>,
+        // so the form is not inside the page's normal DOM tree.
+        document.addEventListener('submit', (e) => {
+            const form = e.target.closest('.js-cancel-claim-form');
+            if (!form) return;
 
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Cancel this claim?',
+                text: 'Processing will stop and the claim will be marked as cancelled. This cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, cancel claim',
+                cancelButtonText: 'Keep claim',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                reverseButtons: true,
+                customClass: {
+                    container: 'z-[10000]'
+                },
+            }).then((result) => {
+                if (result.isConfirmed) form.submit(); // native submit, won't re-trigger this listener
+            });
+        });
+    </script>
 </x-layouts.agent>

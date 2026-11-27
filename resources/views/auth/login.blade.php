@@ -404,7 +404,7 @@
                     <i class="fas fa-arrow-left mr-1"></i>Back to Portal
                 </a>
                 <span class="text-white/20 hidden xs:inline">|</span>
-                <a href="#"
+                <a href="tel:+233302666485"
                     class="text-white/80 hover:text-white transition-colors whitespace-nowrap text-xs sm:text-sm">
                     <i class="fas fa-headset mr-1"></i>Contact Support
                 </a>

@@ -151,6 +151,34 @@
                 e.preventDefault();
                 load(link.href);
             });
+
+            // Cancel claim confirmation (SweetAlert).
+            // Bound on document because the dropdown is teleported to <body>,
+            // so the form is no longer inside #queue-results.
+            document.addEventListener('submit', (e) => {
+                const form = e.target.closest('.js-cancel-claim-form');
+                if (!form) return;
+
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Cancel this claim?',
+                    text: 'Processing will stop and the claim will be marked as cancelled. This cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, cancel claim',
+                    cancelButtonText: 'Keep claim',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true,
+                    customClass: {
+                        container: 'z-[10000]'
+                    },
+                }).then((result) => {
+                    if (result.isConfirmed) form
+                .submit(); // native submit, won't re-trigger this listener
+                });
+            });
         })();
     </script>
 </x-layouts.staff>

@@ -381,7 +381,7 @@
 
             <!-- Nav Links -->
             <div class="nav-links flex items-center gap-2 sm:gap-4 text-sm font-medium">
-                <a href="#"
+                <a href="tel:+233302666485"
                     class="text-white/80 hover:text-white transition-colors whitespace-nowrap text-xs sm:text-sm">
                     <i class="fas fa-headset mr-1"></i>Contact Support
                 </a>
