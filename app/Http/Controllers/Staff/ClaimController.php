@@ -775,9 +775,9 @@ class ClaimController extends Controller
         abort_unless(Auth::user()->isAdmin(), 403);
 
         $query = Claim::with(['customer', 'policy', 'assignedTo', 'committeeDecidedBy'])
-            ->whereIn('status', ClaimStatus::terminal());
+            ->whereIn('status', ClaimStatus::archived());
 
-        if ($request->filled('status')) {
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
@@ -805,16 +805,7 @@ class ClaimController extends Controller
             'surveyor',
             'committeeDecidedBy',
             'pendingInfoRequest.requester',
-        ])
-            ->whereIn('status', [
-                ClaimStatus::UNDER_REVIEW,
-                ClaimStatus::PENDING_INFO,
-                ClaimStatus::UNDER_SURVEY,
-                ClaimStatus::SURVEY_COMPLETED,
-                ClaimStatus::COMMITTEE_REVIEW,
-                ClaimStatus::CANCELLED,
-            ])
-            ->latest();
+        ])->whereIn('status', ClaimStatus::tracked())->latest();
 
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);

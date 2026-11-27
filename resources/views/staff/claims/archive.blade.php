@@ -6,7 +6,7 @@
                 Claims Archive
             </h2>
             <p class="text-gray-500 text-sm mt-1">
-                All resolved claims · approved, rejected, and closed
+                Approved, rejected, closed, and cancelled claims will appear here.
             </p>
         </div>
         <div class="flex items-center gap-3">
@@ -29,11 +29,12 @@
     {{-- Status Filter Tabs --}}
     <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-2">
         @foreach ([
-        'all' => 'All Resolved',
-        'approved' => 'Approved',
-        'rejected' => 'Rejected',
-        'closed' => 'Closed',
-    ] as $value => $label)
+            'all' => 'All Archived',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'closed' => 'Closed',
+            'cancelled' => 'Cancelled',
+        ] as $value => $label)
             <a href="{{ route('staff.claims.archive', array_merge(request()->only('search'), ['status' => $value])) }}"
                 class="px-4 py-2 text-sm font-medium
                     {{ request('status', 'all') === $value

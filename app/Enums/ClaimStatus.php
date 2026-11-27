@@ -106,6 +106,29 @@ enum ClaimStatus: string
         ];
     }
 
+    // Statuses that belong in the archive (no longer tracked or actioned)
+    public static function archived(): array
+    {
+        return [
+            self::APPROVED,
+            self::REJECTED,
+            self::CLOSED,
+            self::CANCELLED,
+        ];
+    }
+
+    // Statuses shown on the admin tracking board
+    public static function tracked(): array
+    {
+        return [
+            self::UNDER_REVIEW,
+            self::PENDING_INFO,
+            self::UNDER_SURVEY,
+            self::SURVEY_COMPLETED,
+            self::COMMITTEE_REVIEW,
+        ];
+    }
+
     public static function incoming(): array
     {
         return [

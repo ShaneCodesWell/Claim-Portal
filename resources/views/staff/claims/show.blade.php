@@ -25,13 +25,7 @@
         <div class="flex gap-2">
             {{-- Reopen Claim --}}
             @if (Auth::user()->isAdmin() && $claim->status === \App\Enums\ClaimStatus::CANCELLED)
-                <form action="{{ route('staff.claims.reopen', $claim) }}" method="POST" class="flex gap-2">
-                    @csrf
-                    <input type="text" name="note" required maxlength="500" placeholder="Reason for reopening"
-                        class="text-sm border border-gray-300 rounded-lg px-3 py-2">
-                    <button
-                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Reopen</button>
-                </form>
+                <x-reopen-claim-modal :claim="$claim" />
             @endif
             {{-- Send to Survey --}}
             @if (
